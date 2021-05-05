@@ -16,7 +16,7 @@
         ); ?>
         <?php echo $form->hiddenField($model, 'gift_name'); ?>
     </div>
-    <?php echo TbHtml::link(Yii::t("redeem","gift details"),Yii::app()->createUrl('giftType/view',array("index"=>$model->gift_id)),array("target"=>"_blank")); ?>
+    <?php echo TbHtml::link(Yii::t("redeem","gift details"),Yii::app()->createUrl('redeem/edit',array("index"=>$model->gift_id)),array("target"=>"_blank")); ?>
 </div>
 <div class="form-group">
     <?php echo $form->labelEx($model,'bonus_point',array('class'=>"col-sm-2 control-label")); ?>
@@ -35,7 +35,7 @@
     </div>
 </div>
 <div class="form-group">
-    <?php echo $form->labelEx($model,'备注',array('class'=>"col-sm-2 control-label")); ?>
+    <?php echo $form->labelEx($model,'remark',array('class'=>"col-sm-2 control-label")); ?>
     <div class="col-sm-5">
         <?php echo $form->textArea($model, 'remark',
             array('rows'=>4,'cols'=>50,'maxlength'=>1000,'readonly'=>($readonly),'id'=>'remark')

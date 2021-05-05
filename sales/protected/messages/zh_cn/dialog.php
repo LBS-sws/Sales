@@ -19,6 +19,7 @@ return array(
 	'Save' => '保存',
 	'Save Record' => '保存记录',
 	'Save Done' => '记录保存完成',
+    'Save no Done' => '记录保存失败',
 	'Validation Message' => '验证信息',
 	'Warning'=>'警告',
 	'Confirmation'=>'确认',

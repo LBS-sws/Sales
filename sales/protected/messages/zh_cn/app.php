@@ -109,5 +109,10 @@ return array(
 	'Sales points other settings'=>'销售积分其他设置',
     'Sales points other settings List'=>'销售积分其他设置列表',
     'Sales points other settings Form'=>'销售积分其他设置表单',
+
+    'Redeem'=>'积分',
+	'Redeem index'=>'积分兌換',
+    'Redeem list'=>'积分兌換列表',
+	'Redeem prize list'=>'积分兌換奖项列表',
 );
 ?>

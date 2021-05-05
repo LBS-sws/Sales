@@ -88,6 +88,7 @@ class RankScoreForm extends CFormModel
 			";
             $records = Yii::app()->db->createCommand($sql)->queryAll();
         }
+       // var_dump($records);die();
         foreach ($records as $record) {
             if (strpos("/'CS'/'H-N'/'HK'/'TC'/'ZS1'/'TP'/'TY'/'KS'/'TN'/'XM'/'ZY'/'MO'/'RN'/'MY'/'WL'/'JMS'/'RW'/","'".$record['city']."'")===false) {
                 $temp = array();
@@ -140,13 +141,18 @@ class RankScoreForm extends CFormModel
                 foreach ($level as $a){
                     $rank+=$a['all_score'];
                 }
+
                 $temp['rank']= $rank;
                 $temp['level'] = $rank_name['level'];
                 $this->ranking[] = $temp;
             }
         }
-        $last_names = array_column($this->ranking,'rank');
-        array_multisort($last_names,SORT_DESC,$this->ranking);
+       // var_dump($this->ranking);die();
+        if ($this->ranking){
+            $last_names = array_column($this->ranking,'rank');
+            array_multisort($last_names,SORT_DESC,$this->ranking);
+        }
+
         //$models = array_slice($models, 0, 20);
 
         return true;

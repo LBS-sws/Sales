@@ -380,4 +380,16 @@ EOF;
 			throw new CException(Yii::t('yii','{widget} cannot find the view "{view}".',
 				array('{widget}'=>get_class($this), '{view}'=>$view)));
 	}
+    public function needHrefButton($access, $url, $hrefType, $param) {
+        $rw = Yii::app()->user->validRWFunction($access);
+        if($rw){
+            $icon = $hrefType == 'edit' ? "glyphicon glyphicon-pencil" : "glyphicon glyphicon-eye-open";
+            $alt = $hrefType == 'edit' ? Yii::t('misc','Edit') : Yii::t('misc','View');
+            $lnk=Yii::app()->createUrl($url,$param);
+
+            return "<a href=\"$lnk\"><span class=\"$icon\"></span></a>";
+        }else{
+            return "&nbsp;";
+        }
+    }
 }

@@ -103,7 +103,20 @@ return array(
 			),
 		),
 	),
-
+    'Redeem'=>array(
+        'access'=>'HE',
+        'icon'=>'fa-diamond',
+        'items'=>array(
+            'Redeem index'=>array(
+                'access'=>'HE01',
+                'url'=>'redeem/index',
+            ),
+            'Redeem list'=>array(
+                'access'=>'HE02',
+                'url'=>'/rgapply/index',
+            ),
+        ),
+    ),
 	
 	'System Setting'=>array(
 		'access'=>'HC',
@@ -142,6 +155,11 @@ return array(
             'Sales points other settings'=>array(
                 'access'=>'HC07',
                 'url'=>'/points/index',
+                'tag'=>'@',
+            ),
+            'Redeem prize list'=>array(
+                'access'=>'HC08',
+                'url'=>'/prize/index',
                 'tag'=>'@',
             ),
 		),
