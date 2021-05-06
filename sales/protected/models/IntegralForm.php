@@ -575,6 +575,7 @@ class IntegralForm extends CFormModel
         $i=$i+2;
         $objActSheet->setCellValue('G'.$i, $model['cust_type_name']['fuwu_sum']) ;
         $i=$i+3;
+        $objActSheet->setCellValue('E'.$i, $model['cust_type_name']['zhuangji']['fraction']) ;
         $objActSheet->setCellValue('F'.$i, $model['cust_type_name']['zhuangji']['number']) ;
         $objActSheet->setCellValue('G'.$i, $model['cust_type_name']['zhuangji']['sum']) ;
         foreach ($model['cust_type_name']['yushou'] as $arr ){
