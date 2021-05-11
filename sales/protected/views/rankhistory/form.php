@@ -53,6 +53,7 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
 			<?php echo $form->hiddenField($model, 'scenario'); ?>
 			<?php echo $form->hiddenField($model, 'id'); ?>
             <div class="lists">
+                <?php if(sizeof($model['rank'])>=1){?>
                 <?php  foreach ($model['rank'] as $a){?>
                     <div class="cardlist">
                         <!--                <img src="../images/--><?php //echo $a['rank'].'.png'?><!--">-->
@@ -62,6 +63,9 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                         <span><?php $b=$a['month'];if(date('m', strtotime("$b"))%2==1){$b=date('Y-m', strtotime("$b +1 month"));}echo date('Y-m', strtotime("$b -1 month")).'至'.date('Y-m', strtotime("$b"));?></span>
                     </div>
                 <?php }?>
+                <?php }else{
+                    echo "无数据";
+                }?>
             </div>
 
 		</div>
