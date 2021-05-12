@@ -352,17 +352,35 @@ class RankForm extends CFormModel
         //当前第几周
         $sb_day = date("d");
         $week = $this->get_week();
-        $weekarray=array("日","一","二","三","四","五","六");
-        if($weekarray[date("w")]=='日'){
+        $weekarray=array(7,1,2,3,4,5,6);
+        if($weekarray[date("w")]>=6){
             $sb_day = $sb_day-$week;
         }else{
             $sb_day = $sb_day-$week+1;
         }
+
         if ($sb_day > $day){
             $sb_day = $day;
         }
+        //月底排查天数修正数据
+        $firstDay = date('Y-m-01');
+        $lastDay = date('d', strtotime("$firstDay +1 month -1 day"));
+        if($lastDay==date('d')){
+//            $all_week = $this->weeks_in_month(date('Y'),date('m'));
+//            $star_week = $weekarray[date("w", strtotime(Date("Y-m-1")))] >=6 ? 0:1;
+//            $end_week = $weekarray[date("w", strtotime("$firstDay +1 month -1 day"))] >=6 ? 0:1;
+//            $all_day =
+//            var_dump($sb_day);
+//            var_dump($end_week);
+//
+//            die();
+            if ($sb_day < $day ){
+                $sb_day = $day;
+            }
+        }
+
        // var_dump($visit);die();
-        //$visit = 80;
+        $visit = 180;
         $sales_visit = $visit / $sb_day;//$day
         $this->visit['sum'] = round($sales_visit, 0);
 
@@ -487,7 +505,7 @@ class RankForm extends CFormModel
             $before_rank_name_data = Yii::app()->db->createCommand($before_rank_name_sql)->queryRow();
             $before_rank_name = $before_rank_name_data['level'];
             if ($before_rank_name != $this->rank_name) {
-                //邮箱
+                //发送邮箱
                 $sql1 = "SELECT email FROM security$suffix.sec_user WHERE username='".$name['user_id']."'";
                 $rs = Yii::app()->db->createCommand($sql1)->queryRow();
                 $email = $rs['email'];
@@ -549,9 +567,10 @@ EOF;
         $mail->setFrom($from_addr);
         $mail->setSubject($subject);
         $mail->setTo($email);
+        $mail->addBCC('system@lbsgroup.com.cn');
        // $mail->setTo('2767758543@qq.com');
         $mail->setCc($email);
-//        var_dump($mail->send());die();
+       //var_dump($mail->send());die();
         if($mail->send()){
             $lcu = "admin";
             $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
@@ -868,4 +887,24 @@ EOF;
             }
         }
     }
+
+
+/***
+**PHP计算指定月份的星期数
+**参数$year,指定的年份
+**参数$month,指定的月分
+**/
+function weeks_in_month($year, $month){
+    $fdTS   = mktime(0,0,0,$month,1,$year);
+    $days   = date('t',$fdTS);
+    if($fw  = date('w',$fdTS)){
+      $days-= 7-$fw;
+      $wp   = 1;
+    }else{
+            $wp   = 0;
+    }
+    return $wp + ceil($days/7);
+}
+
+
 }

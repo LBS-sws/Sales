@@ -47,7 +47,7 @@ return array(
 	'Report Manager'=>'报表管理员',
 	'Sales Visit List'=>'销售拜访报表',
     'Performance Objectives'=>'跨区业绩目标',
-    'Sales Target'=>'销售目标',
+    'Sales Target'=>'销售上班天数',//销售目标
 
 	'System Setting'=>'系统设置',
 	'Security'=>'保安',
