@@ -493,7 +493,8 @@ class RankForm extends CFormModel
         }
         //当前赛季总分（继承后）
         $this->now_score = round($this->all_score + $this->last_score, 2);
-        //$this->now_score = 30001;
+       // $this->now_score = 30001;
+        //上赛季段位
         //上赛季段位
         $sql_rank_name = "select * from sal_level where start_fraction <='" . $this->now_score . "' and end_fraction >='" . $this->now_score . "'";
         $rank_name = Yii::app()->db->createCommand($sql_rank_name)->queryRow();
@@ -509,7 +510,7 @@ class RankForm extends CFormModel
                 $sql1 = "SELECT email FROM security$suffix.sec_user WHERE username='".$name['user_id']."'";
                 $rs = Yii::app()->db->createCommand($sql1)->queryRow();
                 $email = $rs['email'];
-                $this->Rankchageemail($suffix,$email,$cityname, $this->name,  $this->season, $this->date, $before_rank_name, $this->rank_name);
+              //  $this->Rankchageemail($suffix,$email,$cityname, $this->name,  $this->season, $this->date, $before_rank_name, $this->rank_name);
             }
 
         }
@@ -559,38 +560,19 @@ class RankForm extends CFormModel
 EOF;
         $from_addr = "it@lbsgroup.com.hk";
         $to_addr = "[\"" .$email."\"]";
-//var_dump($email);die();
-        $mail= new YiiMailer;
-        $data = array('message' => $message, 'description'=>'', 'mailer'=>$mail);
-        $mail->setData($data);
-       $mail->useFileTransport = false;
-        $mail->setFrom($from_addr);
-        $mail->setSubject($subject);
-        $mail->setTo($email);
-        $mail->addBCC('system@lbsgroup.com.cn');
-       // $mail->setTo('2767758543@qq.com');
-        $mail->setCc($email);
-       //var_dump($mail->send());die();
-        if($mail->send()){
-            $lcu = "admin";
-            $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
-                'request_dt' => date('Y-m-d H:i:s'),
-                'from_addr' => $from_addr,
-                'to_addr' => $to_addr,
-                'subject' => $subject,//郵件主題
-                'description' => '',//郵件副題
-                'message' => $message,//郵件內容（html）
-                'status' => "P",
-                'lcu' => $lcu,
-                'lcd' => date('Y-m-d H:i:s'),
-            ));
-        }else{
-           // echo "failse";
-        }
 
-
-
-
+        $lcu = "admin";
+        $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
+            'request_dt' => date('Y-m-d H:i:s'),
+            'from_addr' => $from_addr,
+            'to_addr' => $to_addr,
+            'subject' => $subject,//郵件主題
+            'description' => '',//郵件副題
+            'message' => $message,//郵件內容（html）
+            'status' => "P",
+            'lcu' => $lcu,
+            'lcd' => date('Y-m-d H:i:s'),
+        ));
     }
 
     public function getFive($five_time1, $username, $five_type)
