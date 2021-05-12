@@ -380,7 +380,7 @@ class RankForm extends CFormModel
         }
 
        // var_dump($visit);die();
-        $visit = 180;
+//        $visit = 180;
         $sales_visit = $visit / $sb_day;//$day
         $this->visit['sum'] = round($sales_visit, 0);
 
@@ -585,7 +585,7 @@ EOF;
                 'lcd' => date('Y-m-d H:i:s'),
             ));
         }else{
-            echo "failse";
+           // echo "failse";
         }
 
 
