@@ -85,5 +85,7 @@ return array(
 ',
     'RankScoreForm'=>'销售段位总分榜',
     'You can only select one of them separately to view season data and annual data'=>'查看赛季数据和查看年度数据只能单独选择其中一项',
+    'Score No'=>'积分不足',
+    'Inventory No'=>'库存不足',
 );
 ?>
