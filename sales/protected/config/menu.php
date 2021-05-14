@@ -1,5 +1,5 @@
 <?php
-
+//HK01HK02HK03HK04HK05HA01HA02HA03HA04HA05HA06HA07HD01HD02HD03HD09HD01HD02HE01HE02HC01HC02HC03HC04HC05HC06HC07HC08
 return array(
 
 	'Data Entry'=>array(
@@ -98,7 +98,7 @@ return array(
                 'url'=>'report/five',
             ),
 			'Report Manager'=>array(
-				'access'=>'HB01',
+				'access'=>'HD01',
 				'url'=>'/queue/index',
 			),
 		),
@@ -159,7 +159,7 @@ return array(
             ),
             'Redeem prize list'=>array(
                 'access'=>'HC08',
-                'url'=>'/prize/index',
+                'url'=>'/redeemsetting/index',
                 'tag'=>'@',
             ),
 		),
