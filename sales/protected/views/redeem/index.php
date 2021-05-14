@@ -26,16 +26,11 @@ $this->pageTitle=Yii::app()->name . ' - Redeem';
 <section class="content">
     <div class="box">
         <div class="box-body">
-            <?php
-            if (Yii::app()->user->validRWFunction('HE01'))
-                echo TbHtml::button('<span class="fa fa-file-o"></span> '.Yii::t('misc','Add Record'), array(
-                    'submit'=>Yii::app()->createUrl('redeem/new'),
-                ));
-            ?>
+
             <?php
             $listArrIntegral = RedeemGifts::getNowIntegral();
 //            echo  '<div class="btn-group pull-left text-right"><span class="text-success">'.date("Y")."年".Yii::t('redeem','Sum Gift')."：".$listArrIntegral["sum"]."</span></div>";
-            echo  '<div class="btn-group pull-right text-right"><span class="text-success">'."可用".Yii::t('redeem','Sum Gift')."：".$listArrIntegral["cut"]."</span></div>";
+            echo  '<div class="btn-group pull-left text-left"><span class="text-success">'."可用".Yii::t('redeem','Sum Gift')."：".$listArrIntegral["cut"]."</span></div>";
 
             ?>
         </div>

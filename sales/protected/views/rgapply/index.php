@@ -28,7 +28,7 @@ $this->pageTitle=Yii::app()->name . ' - Apply';
 <!--            <div class="btn-group pull-left" role="group">-->
 <!--                <span class="text-success">--><?php //echo date("Y")."年".Yii::t("integral","Sum Gift")."：".$cutIntegral["sum"];?><!--</span>-->
 <!--            </div>-->
-            <div class="btn-group pull-right" role="group">
+            <div class="btn-group pull-left" role="group">
                 <span class="text-success">可用<?php echo Yii::t('redeem','Sum Gift')."：".$cutIntegral["cut"];?></span>
             </div>
         </div>

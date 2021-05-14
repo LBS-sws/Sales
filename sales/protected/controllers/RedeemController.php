@@ -24,7 +24,7 @@ class RedeemController extends Controller
     {
         return array(
             array('allow',
-                'actions'=>array('new','edit','delete','save','downs','test','apply'),
+                'actions'=>array('new','edit','delete','save','downs','test','apply','settings'),
                 'expression'=>array('RedeemController','allowReadWrite'),
             ),
             array('allow',
@@ -79,6 +79,28 @@ class RedeemController extends Controller
                 $this->render('index',array('model'=>$model,'cutIntegral'=>$cutIntegral));*/
         //var_dump($model);die();
         $this->render('index',array('model'=>$model));
+    }
+    public function actionSettings($pageNum=0)
+    {
+        $model = new RedeemGifts();
+        if (isset($_POST['GiftList'])) {
+            $model->attributes = $_POST['GiftList'];
+        } else {
+            $session = Yii::app()->session;
+            if (isset($session['gift_op01']) && !empty($session['gift_op01'])) {
+                $criteria = $session['gift_op01'];
+                $model->setCriteria($criteria);
+            }
+        }
+        if (isset($_POST['RedeemGifts'])){
+            $model->attributes = $_POST['RedeemGifts'];
+        }
+        $model->determinePageNum($pageNum);
+        $model->retrieveDataByPage($model->pageNum);
+        /*        $cutIntegral = IntegralCutView::getNowIntegral();
+                $this->render('index',array('model'=>$model,'cutIntegral'=>$cutIntegral));*/
+        //var_dump($model);die();
+        $this->render('settings',array('model'=>$model));
     }
     public function actionNew()
     {

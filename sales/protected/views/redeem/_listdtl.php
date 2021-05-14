@@ -1,8 +1,7 @@
 
-<tr class='clickable-row' data-href='<?php echo $this->getLink('HE01', 'redeem/edit', 'redeem/edit', array('index'=>$this->record['id']));?>'>
+<tr class='clickable-row' data-href=''>
     <td>
-        <?php echo $this->needHrefButton('HE01', 'redeem/edit', 'edit', array('index'=>$this->record['id'])); ?>
-<!--        --><?php //echo $this->needHrefButton('HE01', 'redeem/delete', 'delete', array('index'=>$this->record['id'])); ?>
+
     </td>
 
     <td class="integral_name"><?php echo $this->record['gift_name']; ?></td>
