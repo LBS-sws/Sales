@@ -34,6 +34,8 @@ class RankiconWidget extends CWidget
 					<td align="center">$image</td>
 					<td align="center"><h2><strong>$level</strong></h2></td>
 					<td width="10%">&nbsp;</td>
+					<td width="10%">&nbsp;</td>
+					<td width="10%">&nbsp;</td>
 				</tr></table>
 			</div>
 		</div>
