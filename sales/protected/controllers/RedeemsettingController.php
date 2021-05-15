@@ -37,27 +37,6 @@ class RedeemsettingController extends Controller
         );
     }
 
-//    public function actionIndex($pageNum=0){
-//        $this->render('index');
-//        if(GiftRequestForm::validateNowUser()){
-//            $model = new GiftRequestList;
-//            if (isset($_POST['GiftRequestList'])) {
-//                $model->attributes = $_POST['GiftRequestList'];
-//            } else {
-//                $session = Yii::app()->session;
-//                if (isset($session['giftRequest_01']) && !empty($session['giftRequest_01'])) {
-//                    $criteria = $session['giftRequest_01'];
-//                    $model->setCriteria($criteria);
-//                }
-//            }
-//            $model->determinePageNum($pageNum);
-//            $model->retrieveDataByPage($model->pageNum);
-//            $listArrIntegral = GiftList::getNowIntegral();
-//            $this->render('index',array('model'=>$model,'cutIntegral'=>$listArrIntegral));
-//        }else{
-//            throw new CHttpException(404,'您的账号未绑定员工，请与管理员联系');
-//        }
-//    }
     public function actionIndex($pageNum=0)
     {
         $model = new RedeemGifts();
@@ -85,33 +64,16 @@ class RedeemsettingController extends Controller
         $model = new RedeemGifts('new');
         $this->render('form',array('model'=>$model,));
     }
-    public function actionApply(){
-        $model = new RedeemgiftApply("apply");
-        if($model->validateNowUser(true)){
-            if (isset($_POST['GiftApply'])) {
-                $model->attributes = $_POST['GiftApply'];
-                if ($model->validate()) {
-                    $model->saveData();
-                    Dialog::message(Yii::t('dialog','Information'), Yii::t('dialog','Save Done'));
-                    $this->redirect(Yii::app()->createUrl('redeemsetting/index'));
-                } else {
-                    $message = CHtml::errorSummary($model);
-                    Dialog::message(Yii::t('dialog','Validation Message'), $message);
-                    $this->redirect(Yii::app()->createUrl('redeemsetting/index'));
-                }
-            }
-        }else{
-            throw new CHttpException(404,'您的账号未绑定员工，请与管理员联系');
-        }
-    }
     public function actionSave()
     {
         $data = $_POST['RedeemGifts'];
         if ($data['id']>0){
-            $result = Yii::app()->db->createCommand()->update('sal_redeem_gifts', array('gift_name' => $data['gift_name'],'inventory' => $data['inventory'],'bonus_point' => $data['bonus_point'],'city'=>$data['city'],'city_name'=>$data['city_name']), 'id=:id', array(':id' => $data['id']));
+            $result = Yii::app()->db->createCommand()->update('sal_redeem_gifts', array('gift_name' => $data['gift_name'],'inventory' => $data['inventory'],'bonus_point' => $data['bonus_point'],'remark'=>$data['remark']), 'id=:id', array(':id' => $data['id']));
             $id = $data['id'];
         }else{
-            $result = Yii::app()->db->createCommand()->insert('sal_redeem_gifts', array('gift_name' => $data['gift_name'],'inventory' => $data['inventory'],'bonus_point' => $data['bonus_point'],'city'=>$data['city'],'city_name'=>$data['city_name']));
+            $city = Yii::app()->user->city();
+            $city_name = Yii::app()->user->city_name();
+            $result = Yii::app()->db->createCommand()->insert('sal_redeem_gifts', array('gift_name' => $data['gift_name'],'inventory' => $data['inventory'],'bonus_point' => $data['bonus_point'],'city'=>$city,'city_name'=>$city_name,'remark'=>$data['remark'],'c_time'=>date('Y-m-d h:i:s', time())));
             $id = Yii::app()->db->getLastInsertID();
         }
         if ($result) {

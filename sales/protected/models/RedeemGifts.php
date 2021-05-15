@@ -39,6 +39,7 @@ class RedeemGifts extends CListPageModel
             'inventory'=>Yii::t('redeem','Inventory'),
             'city'=>Yii::t('redeem','City'),
             'city_name'=>Yii::t('redeem','City Name'),
+            'remark'=>Yii::t('redeem','Remark'),
         );
     }
 
@@ -95,6 +96,7 @@ class RedeemGifts extends CListPageModel
                     'bonus_point'=>$record['bonus_point'],
                     'inventory'=>$record['inventory'],
                     'city'=>Yii::app()->user->city,
+                    'remark'=>$record['remark'],
                 );
             }
         }
@@ -129,6 +131,7 @@ class RedeemGifts extends CListPageModel
                 $this->inventory = $row['inventory'];
                 $this->city_name = $row['city_name'];
                 $this->city = $row['city'];
+                $this->remark = $row['remark'];
                 $this->no_of_attm['icut'] = $row['icutdoc'];
                 break;
 
