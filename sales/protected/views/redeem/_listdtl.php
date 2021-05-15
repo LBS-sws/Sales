@@ -1,11 +1,11 @@
 
-<tr class='clickable-row' data-href=''>
+<tr class='clickable-row' data-href='<?php echo $this->getLink('HE01', 'redeem/edit', 'redeem/edit', array('index'=>$this->record['id']));?>'>
     <td>
 
     </td>
 
     <td class="integral_name"><?php echo $this->record['gift_name']; ?></td>
-    <td class="integral_name"><?php echo $this->record['city']; ?></td>
+    <td class="integral_name"><?php echo $this->record['city_name']; ?></td>
     <td class="integral_num"><?php echo $this->record['bonus_point']; ?></td>
     <td><?php echo $this->record['inventory']; ?></td>
     <td>

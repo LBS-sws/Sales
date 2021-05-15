@@ -27,13 +27,13 @@ $this->pageTitle=Yii::app()->name . ' - Credits for';
 		<?php echo TbHtml::button('<span class="fa fa-reply"></span> '.Yii::t('misc','Back'), array(
 				'submit'=>Yii::app()->createUrl('redeem/index')));
 		?>
-        <?php
-        echo TbHtml::button('<span class="fa  fa-cube"></span> '.Yii::t('redeem','Save'), array(
-            'submit'=>Yii::app()->createUrl('redeem/save')));
-        ?>
-        <?php echo TbHtml::button('<span class="fa fa-remove"></span> '.Yii::t('redeem','Delete'), array( 'submit'=>Yii::app()->createUrl('redeem/delete'))
-        );
-        ?>
+<!--        --><?php
+//        echo TbHtml::button('<span class="fa  fa-cube"></span> '.Yii::t('redeem','Save'), array(
+//            'submit'=>Yii::app()->createUrl('redeem/save')));
+//        ?>
+<!--        --><?php //echo TbHtml::button('<span class="fa fa-remove"></span> '.Yii::t('redeem','Delete'), array( 'submit'=>Yii::app()->createUrl('redeem/delete'))
+//        );
+//        ?>
 	</div>
             <div class="btn-group pull-right" role="group">
 <!--                --><?php
@@ -45,52 +45,44 @@ $this->pageTitle=Yii::app()->name . ' - Credits for';
             </div>
 	</div></div>
 
-	<div class="box box-info">
-		<div class="box-body">
-			<?php echo $form->hiddenField($model, 'scenario'); ?>
-			<?php echo $form->hiddenField($model, 'id',array("id"=>"rq_gift_id")); ?>
+    <div class="box box-info" style=" padding-bottom: 10px;">
+        <div class="box-body">
+            <?php echo $form->hiddenField($model, 'scenario'); ?>
+            <?php echo $form->hiddenField($model, 'id',array("id"=>"rq_gift_id")); ?>
 
             <div class="form-group">
                 <?php echo $form->labelEx($model,'gift_name',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-4">
                     <?php echo $form->textField($model, 'gift_name',
-                        array('size'=>40,'maxlength'=>250,"id"=>"rq_gift_name")
+                        array('size'=>40,'maxlength'=>250,"id"=>"rq_gift_name",'readonly'=>true)
                     ); ?>
                 </div>
             </div>
+        </div>
+        <div class="form-group">
+            <?php echo $form->labelEx($model,'bonus_point',array('class'=>"col-sm-2 control-label")); ?>
+            <div class="col-sm-4">
+                <?php echo $form->numberField($model, 'bonus_point',
+                    array("id"=>"rq_bonus_point",'readonly'=>true)
+                ); ?>
             </div>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'bonus_point',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-4">
-                    <?php echo $form->numberField($model, 'bonus_point',
-                        array("id"=>"rq_bonus_point")
-                    ); ?>
-                </div>
+        </div>
+        <div class="form-group" style="padding-bottom: 10px;">
+            <?php echo $form->labelEx($model,'inventory',array('class'=>"col-sm-2 control-label")); ?>
+            <div class="col-sm-4">
+                <?php echo $form->numberField($model, 'inventory',array('readonly'=>true)
+                ); ?>
             </div>
-            <div class="form-group" style="padding-bottom: 10px;">
-                <?php echo $form->labelEx($model,'inventory',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-4">
-                    <?php echo $form->numberField($model, 'inventory'
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group" style="padding-bottom: 10px;">
-                <?php echo $form->labelEx($model,'city',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-4">
-                    <?php echo $form->textField($model, 'city'
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group" style="padding-bottom: 10px;">
-                <?php echo $form->labelEx($model,'city_name',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-4">
-                    <?php echo $form->textField($model, 'city_name'
-                    ); ?>
-                </div>
-            </div>
+        </div>
 
-		</div>
-	</div>
+        <div class="form-group">
+            <?php echo $form->labelEx($model,'remark',array('class'=>"col-sm-2 control-label")); ?>
+            <div class="col-sm-7">
+                <?php echo $form->textArea($model, 'remark',
+                    array('rows'=>3,'cols'=>60,'maxlength'=>5000,'readonly'=>true)
+                ); ?>
+            </div>
+        </div>
 </section>
 
 <?php $this->renderPartial('//site/fileupload',array('model'=>$model,

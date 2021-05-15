@@ -121,7 +121,16 @@ class RedeemController extends Controller
             throw new CHttpException(404,'您的账号未绑定员工，请与管理员联系');
         }
     }
-
+    public function actionEdit($index)
+    {
+        $model = new RedeemGifts('view');
+        if (!$model->retrieveData($index)) {
+            throw new CHttpException(404,'The requested page does not exist.');
+        } else {
+            // print_r($model);exit();
+            $this->render('form',array('model'=>$model));
+        }
+    }
     public static function allowReadWrite() {
         return Yii::app()->user->validRWFunction('HE01');
     }
