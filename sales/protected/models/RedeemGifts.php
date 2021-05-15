@@ -68,8 +68,9 @@ class RedeemGifts extends CListPageModel
                     $clause .= General::getSqlConditionClause('bonus_point', $svalue);
                     break;
                 case 'city_name':
-                    $clause .= ' and city in '.CreditRequestList::getCityCodeSqlLikeName($svalue);
+                    $clause .= General::getSqlConditionClause('city_name',$svalue);
                     break;
+//                   $clause .= ' and city_name in '.CreditRequestList::getCityCodeSqlLikeName($svalue);//CreditRequestList::getCityCodeSqlLikeName($svalue)
             }
         }
 
@@ -95,6 +96,7 @@ class RedeemGifts extends CListPageModel
                     'gift_name'=>$record['gift_name'],
                     'bonus_point'=>$record['bonus_point'],
                     'inventory'=>$record['inventory'],
+                    'city_name'=>$record['city_name'],
                     'city'=>Yii::app()->user->city,
                     'remark'=>$record['remark'],
                 );
