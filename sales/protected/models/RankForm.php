@@ -510,7 +510,7 @@ class RankForm extends CFormModel
                 $sql1 = "SELECT email FROM security$suffix.sec_user WHERE username='".$name['user_id']."'";
                 $rs = Yii::app()->db->createCommand($sql1)->queryRow();
                 $email = $rs['email'];
-              //  $this->Rankchageemail($suffix,$email,$cityname, $this->name,  $this->season, $this->date, $before_rank_name, $this->rank_name);
+                $this->Rankchageemail($suffix,$email,$cityname, $this->name,  $this->season, $this->date, $before_rank_name, $this->rank_name);
             }
 
         }
