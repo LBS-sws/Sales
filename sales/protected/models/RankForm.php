@@ -524,7 +524,7 @@ class RankForm extends CFormModel
     public function Rankchageemail($suffix,$email,$city, $name, $season, $ondate, $before_rank, $after_rank)
     {
         $this->webroot = Yii::app()->params['webroot'];
-        $subject = date('Y-m-d');
+        $subject = "段位变动提醒".date('Y-m-d');
         $message = <<<EOF
 <table border="" cellpadding="0" cellspacing="0" height="148" style="width:663px;" width="">
 	<colgroup>
@@ -536,9 +536,7 @@ class RankForm extends CFormModel
 		<col />
 	</colgroup>
 	<tbody>
-		<tr height="36">
-			<td colspan="6" height="36" style="height:36px;width:663px;" x:num="44275"><span style="font-size:14px;">{$subject}</span></td>
-		</tr>
+	
 		<tr height="56">
 			<td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:18px;"><span style="font-family:arial,helvetica,sans-serif;"><strong>地区</strong></span></span></td>
 			<td style="text-align: center;" x:str=""><span style="font-size:18px;"><span style="font-family:arial,helvetica,sans-serif;"><strong>姓名</strong></span></span></td>
@@ -558,16 +556,19 @@ class RankForm extends CFormModel
 	</tbody>
 </table>
 EOF;
+//        	<tr height="36">
+//			<td colspan="6" height="36" style="height:36px;width:663px;" x:num="44275"><span style="font-size:14px;">{$subject}</span></td>
+//		</tr>
         $from_addr = "it@lbsgroup.com.hk";
         $to_addr = "[\"" .$email."\"]";
-
+        $description = "</<br>" .date('Y-m-d');
         $lcu = "admin";
         $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
             'request_dt' => date('Y-m-d H:i:s'),
             'from_addr' => $from_addr,
             'to_addr' => $to_addr,
             'subject' => $subject,//郵件主題
-            'description' => '',//郵件副題
+            'description' => $description,//郵件副題
             'message' => $message,//郵件內容（html）
             'status' => "P",
             'lcu' => $lcu,
