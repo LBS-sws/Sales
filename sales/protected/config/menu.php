@@ -98,7 +98,7 @@ return array(
                 'url'=>'report/five',
             ),
 			'Report Manager'=>array(
-				'access'=>'HD01',
+				'access'=>'HB01',
 				'url'=>'/queue/index',
 			),
 		),
