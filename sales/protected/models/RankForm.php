@@ -519,7 +519,7 @@ class RankForm extends CFormModel
         }
 
 
-        $sql1 = "update sal_rank set all_score='" . $this->all_score . "',last_score='" . $rows['last_score'] . "',now_score='" . $this->now_score . "',initial_score='" . $this->initial_score . "' where id='" . $index . "'";
+        $sql1 = "update sal_rank set all_score='" . $this->all_score . "',last_score='" . $this->last_score . "',now_score='" . $this->now_score . "',initial_score='" . $this->initial_score . "' where id='" . $index . "'";
         $command = Yii::app()->db->createCommand($sql1)->execute();
         return true;
     }
