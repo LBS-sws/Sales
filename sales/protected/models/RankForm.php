@@ -497,7 +497,7 @@ class RankForm extends CFormModel
         }
         //当前赛季总分（继承后）
         $this->now_score = round($this->all_score + $this->last_score, 2);
-       $this->now_score = 60001;
+      // $this->now_score = 60001;
         //上赛季段位
         //上赛季段位
         $sql_rank_name = "select * from sal_level where start_fraction <='" . $this->now_score . "' and end_fraction >='" . $this->now_score . "'";
