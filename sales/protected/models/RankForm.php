@@ -85,6 +85,10 @@ class RankForm extends CFormModel
             $rows['last_score'] = 0;
         }
         $this->last_score = $rows['last_score'];
+//        var_dump($rows);
+//        var_dump($rows['last_score']);
+//        var_dump($this->last_score);
+//        die();
         //赛季
         $this->season = $this->numToWord($rows['season']);
         //销售人员名称
@@ -516,7 +520,7 @@ class RankForm extends CFormModel
         }
 
 
-        $sql1 = "update sal_rank set all_score='" . $this->all_score . "',last_score='" . $rows['now_score'] . "',now_score='" . $this->now_score . "',initial_score='" . $this->initial_score . "' where id='" . $index . "'";
+        $sql1 = "update sal_rank set all_score='" . $this->all_score . "',last_score='" . $rows['last_score'] . "',now_score='" . $this->now_score . "',initial_score='" . $this->initial_score . "' where id='" . $index . "'";
         $command = Yii::app()->db->createCommand($sql1)->execute();
         return true;
     }
