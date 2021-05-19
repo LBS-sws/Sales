@@ -85,6 +85,10 @@ class RankForm extends CFormModel
             $rows['last_score'] = 0;
         }
         $this->last_score = $rows['last_score'];
+        var_dump($rows);
+        var_dump($rows['last_score']);
+        var_dump($this->last_score);
+        die();
         //赛季
         $this->season = $this->numToWord($rows['season']);
         //销售人员名称
