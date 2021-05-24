@@ -1824,7 +1824,7 @@ class ReportVisitForm extends CReportForm
             $cname = Yii::app()->db->createCommand($sqls)->queryRow();
             $sql1="select id  from sal_visit where username='".$peoples."'  and  visit_dt >= '$start_dt'and visit_dt <= '$end_dt' and visit_obj like '%10%'";
             $arr = Yii::app()->db->createCommand($sql1)->queryAll();
-            $start_dt1= date("Y-m-01", strtotime($end_dt));
+            $start_dt1= date("Y-m-01", strtotime($start_dt));
             $end_dt1=date("Y-m-31", strtotime($end_dt));
             $sql_rank="select now_score  from sal_rank where username='".$peoples."'  and  month >= '$start_dt1' and month <= '$end_dt1'";
             $rank = Yii::app()->db->createCommand($sql_rank)->queryRow();
