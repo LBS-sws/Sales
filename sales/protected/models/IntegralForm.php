@@ -519,6 +519,9 @@ class IntegralForm extends CFormModel
         }
         $sql="select * from hr$suffix.hr_binding  where user_id='".$row['username']."' ";
         $name = Yii::app()->db->createCommand($sql)->queryRow();
+        //列表更新
+        $sql1="update sal_integral set point='".$this->cust_type_name['point']."',all_sum='".$this->cust_type_name['all_sum']."' where id='".$index."'";
+        $command=Yii::app()->db->createCommand($sql1)->execute();
         $this->name=$name['employee_name'];
         $this->sum=count($bf);
 		return true;
