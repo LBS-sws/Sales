@@ -1831,7 +1831,7 @@ class ReportVisitForm extends CReportForm
             $arr = Yii::app()->db->createCommand($sql1)->queryAll();
             $start_dt1= date("Y-m-01", strtotime($start_dt));
             $end_dt1=date("Y-m-31", strtotime($end_dt));
-            $sql_rank="select now_score  from sal_rank where username='".$peoples."'  and  month >= '$start_dt1' and month <= '$end_dt1'";
+            $sql_rank="select now_score  from sal_rank where username='".$peoples."'  and  month >= '$start_dt1' and month <= '$end_dt1' order by month desc";//add order by desc
             $rank = Yii::app()->db->createCommand($sql_rank)->queryRow();
             foreach ($arr as $id){
                 $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and field_value>'0' and visit_id='".$id['id']."'";
