@@ -31,6 +31,7 @@ class RankNoticeWidget extends CWidget
 	}
 
 	protected function renderContent($records) {
+	    var_dump($records);die();
 //		$image = CHtml::image(Yii::app()->baseUrl."/images/rank/$level.png",'image',array('width'=>140,'height'=>160));
 		$out = <<<EOF
 <style>
