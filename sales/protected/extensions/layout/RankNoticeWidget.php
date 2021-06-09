@@ -7,16 +7,21 @@ class RankNoticeWidget extends CWidget
         $time= date('Y-m-d', strtotime(date('Y-m-01') ));
         $suffix = Yii::app()->params['envSuffix'];
         $models = array();
-        $sql = "select a.city, a.username,a.now_score,c.name,a.id
+        $sql = "select d.name as city, a.username,a.now_score,c.name,a.id
 				from sal_rank  a
 				left outer join  hr$suffix.hr_binding b on a.username=b.user_id
 				left outer join  hr$suffix.hr_employee c on b.employee_id=c.id
+				left outer join  security$suffix.sec_city d on d.code=c.city
 				where
 				a.month >= '$time'
                 order by a.now_score desc limit 5
 			";
         $records = Yii::app()->db->createCommand($sql)->queryAll();
-
+        foreach ($records as $record) {
+            $sql = "select * from sal_level where start_fraction <='" . $record['now_score'] . "' and end_fraction >='" . $record['now_score'] . "'";
+            $rank_name = Yii::app()->db->createCommand($sql)->queryRow();
+            $record['level'] = $rank_name['level'];
+        }
         var_dump($records);die();
 		if (!empty($records) && !$this->hasRead()) {
 			$content .= $this->renderContent($records);
