@@ -81,7 +81,7 @@ class RankNoticeWidget extends CWidget
         left: 40%;
     }
 </style>
-<div class="content">
+<div class="modal fade" id="modal-ranknotice">
 	<div class="modal-dialog modal-dialog-centered modal-md">
 		<div class="modal-content">
 			<div class="modal-header">
