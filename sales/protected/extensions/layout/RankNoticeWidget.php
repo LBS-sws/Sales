@@ -22,7 +22,6 @@ class RankNoticeWidget extends CWidget
             $rank_name = Yii::app()->db->createCommand($sql)->queryRow();
             $record['level'] = $rank_name['level'];
         }
-        var_dump($records);die();
 		if (!empty($records) && !$this->hasRead()) {
 			$content .= $this->renderContent($records);
 			$this->renderScript();
