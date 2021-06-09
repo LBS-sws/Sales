@@ -54,7 +54,7 @@ class RankNoticeWidget extends CWidget
     #divtest{
         margin: 15px;
         height:750px;
-        background-image: url("../sa-uat/images/dw.jpg");
+        background-image: url("../sa-uat/images/rank/ph_b.jpg");
         background-size: 100% 100%;/*按比例缩放*/
         background-repeat: no-repeat;/*还有repeat-x,y等*/
         font-size: 18px;
@@ -65,7 +65,7 @@ class RankNoticeWidget extends CWidget
         top: 35%;
         left: 40%;
     }
-    #one img{
+    #one .level_img{
         width: 120px;
     }
     #two{
@@ -73,7 +73,7 @@ class RankNoticeWidget extends CWidget
         top: 43%;
         left: 10%;
     }
-    #two img{
+    #two .level_img{
         width: 100px;
     }
     .city span{
@@ -89,7 +89,7 @@ class RankNoticeWidget extends CWidget
         top: 43%;
         right: 8%;
     }
-    #three img{
+    #three .level_img{
         width: 100px;
     }
     #four{
@@ -102,6 +102,24 @@ class RankNoticeWidget extends CWidget
         top: 87%;
         left: 40%;
     }
+     .hg_01{
+        position: absolute;
+        width: 80px;
+        top: -33px;
+        left: 20px;
+    }
+    .hg_02{
+        position: absolute;
+        width: 66px;
+        top: -30px;
+        left: 17px;
+    }
+    .hg_03{
+        position: absolute;
+        width: 67px;
+        top: -30px;
+        left: 17px;
+    }
 </style>
 <div class="modal fade" id="modal-ranknotice">
 	<div class="modal-dialog modal-dialog-centered modal-md">
@@ -110,22 +128,25 @@ class RankNoticeWidget extends CWidget
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
-				<h3 class="modal-title">段位榜</h3>
+				<h3 class="modal-title">段位明星榜</h3>
 			</div>
 			<div class="modal-body" id="divtest">
                 <div class="phb">
                     <div id="two" >
-                        <img src="../sa-uat/images/rank/$two_level.png">
+                        <img class="hg_02" src="../sa-uat/images/rank/hg_02.png">  
+                        <img class="level_img" src="../sa-uat/images/rank/$two_level.png">
                         <div class="city"><span style="color: #8F0808;">$two_city</span><span>$two_name</span></div>
                         <div class="level">$two_level</div>
                     </div>
                     <div id="one" >
-                        <img src="../sa-uat/images/rank/$one_level.png">
+                        <img class="hg_01" src="../sa-uat/images/rank/hg_01.png">
+                        <img class="level_img" src="../sa-uat/images/rank/$one_level.png">
                         <div class="city"><span style="color: #8F0808;padding-right: 20px;">$one_city</span><span>$one_name</span></div>
                         <div class="level">$one_level</div>
                     </div>
                     <div id="three" >
-                        <img src="../sa-uat/images/rank/$three_level.png">
+                        <img class="hg_03" src="../sa-uat/images/rank/hg_03.png">
+                        <img class="level_img" src="../sa-uat/images/rank/$three_level.png">
                         <div class="city"><span style="color: #8F0808;">$three_city</span><span>$three_name</span></div>
                         <div class="level">$three_level</div>
                     </div>
