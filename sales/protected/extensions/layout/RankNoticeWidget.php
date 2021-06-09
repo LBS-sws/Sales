@@ -31,6 +31,11 @@ class RankNoticeWidget extends CWidget
 	}
 
 	protected function renderContent($records) {
+	    $one_level = $records[0]['level'];
+        $two_level = $records[1]['level'];
+        $three_level = $records[2]['level'];
+        $four_level = $records[3]['level'];
+        $five_level = $records[4]['level'];
 //		$image = CHtml::image(Yii::app()->baseUrl."/images/rank/$level.png",'image',array('width'=>140,'height'=>160));
 		$out = <<<EOF
 <style>
@@ -43,12 +48,20 @@ class RankNoticeWidget extends CWidget
         font-size: 18px;
         font-weight: 600;
     }
-    #one{
+     #one{
+        position: absolute;
+        top: 35%;
+        left: 40%;
+    }
+    #one img{
+        width: 120px;
+    }
+    #two{
         position: absolute;
         top: 43%;
         left: 10%;
     }
-    #one img{
+    #two img{
         width: 100px;
     }
     .city span{
@@ -58,14 +71,7 @@ class RankNoticeWidget extends CWidget
         margin: 5px 10px 0px 0px;
         text-align: center;
     }
-    #two{
-        position: absolute;
-        top: 35%;
-        left: 40%;
-    }
-    #two img{
-        width: 120px;
-    }
+   
     #three{
         position: absolute;
         top: 43%;
@@ -96,13 +102,13 @@ class RankNoticeWidget extends CWidget
 			</div>
 			<div class="modal-body" id="divtest">
                 <div class="phb">
-                    <div id="one" >
-                        <img src="../sa-uat/images/rank/<?php echo $records[1]['level'];?>.png">
+                    <div id="two" >
+                        <img src="../sa-uat/images/rank/$two_level.png">
                         <div class="city"><span style="color: #8F0808;">$records[1]['city']</span><span>$records[1]['name']</span></div>
                         <div class="level">$records[1]['level']</div>
                     </div>
-                    <div id="two" >
-                        <img src="../sa-uat/images/rank/$records[0]['level'].png">
+                    <div id="one" >
+                        <img src="../sa-uat/images/rank/$one_level.png">
                         <div class="city"><span style="color: #8F0808;padding-right: 20px;">$records[0]['city']</span><span>$records[0]['name']</span></div>
                         <div class="level">$records[0]['level']</div>
                     </div>
