@@ -23,7 +23,7 @@ class RankNoticeWidget extends CWidget
             $record['level'] = $rank_name['level'];
         }
 		if (!empty($records) && !$this->hasRead()) {
-			$content .= $this->renderContent($records);
+			$content .= $this->renderContent(json_encode($records));
 			$this->renderScript();
 			$this->setRead();
 		}
