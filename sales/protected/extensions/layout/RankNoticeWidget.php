@@ -32,13 +32,13 @@ class RankNoticeWidget extends CWidget
 
 	protected function renderContent($records) {
 //		$image = CHtml::image(Yii::app()->baseUrl."/images/rank/$level.png",'image',array('width'=>140,'height'=>160));
-		
+		var_dump($records);
 		$out = <<<EOF
 <style>
     #divtest{
         margin: 15px;
         height:750px;
-        background-image: url("../images/dw.jpg");
+        background-image: url("../sa-uat/images/dw.jpg");
         background-size: 100% 100%;/*按比例缩放*/
         background-repeat: no-repeat;/*还有repeat-x,y等*/
         font-size: 18px;
