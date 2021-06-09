@@ -4,19 +4,19 @@ class RankNoticeWidget extends CWidget
 	public function run() {
 		$content = '';
 		//获取前5位排行榜
-//        $time= date('Y-m-d', strtotime(date('Y-m-01') ));
-//        $suffix = Yii::app()->params['envSuffix'];
-//        $models = array();
-//        $sql = "select a.city, a.username,a.now_score,c.name,a.id
-//				from sal_rank  a
-//				left outer join  hr$suffix.hr_binding b on a.username=b.user_id
-//				left outer join  hr$suffix.hr_employee c on b.employee_id=c.id
-//				where
-//				a.month >= '$time'
-//                order by a.now_score desc limit 5
-//			";
-//        $records = Yii::app()->db->createCommand($sql)->queryAll();
-        $records = Yii::app()->createAbsoluteUrl("dashboard/ranklist");
+        $time= date('Y-m-d', strtotime(date('Y-m-01') ));
+        $suffix = Yii::app()->params['envSuffix'];
+        $models = array();
+        $sql = "select a.city, a.username,a.now_score,c.name,a.id
+				from sal_rank  a
+				left outer join  hr$suffix.hr_binding b on a.username=b.user_id
+				left outer join  hr$suffix.hr_employee c on b.employee_id=c.id
+				where
+				a.month >= '$time'
+                order by a.now_score desc limit 5
+			";
+        $records = Yii::app()->db->createCommand($sql)->queryAll();
+
         var_dump($records);die();
 		if (!empty($records) && !$this->hasRead()) {
 			$content .= $this->renderContent($records);
