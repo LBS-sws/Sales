@@ -36,6 +36,18 @@ class RankNoticeWidget extends CWidget
         $three_level = $records[2]['level'];
         $four_level = $records[3]['level'];
         $five_level = $records[4]['level'];
+
+        $one_city = $records[0]['city'];
+        $two_city = $records[1]['city'];
+        $three_city = $records[2]['city'];
+        $four_city = $records[3]['city'];
+        $five_city = $records[4]['city'];
+
+        $one_name = $records[0]['name'];
+        $two_name = $records[1]['name'];
+        $three_name = $records[2]['name'];
+        $four_name = $records[3]['name'];
+        $five_name = $records[4]['name'];
 //		$image = CHtml::image(Yii::app()->baseUrl."/images/rank/$level.png",'image',array('width'=>140,'height'=>160));
 		$out = <<<EOF
 <style>
@@ -104,26 +116,26 @@ class RankNoticeWidget extends CWidget
                 <div class="phb">
                     <div id="two" >
                         <img src="../sa-uat/images/rank/$two_level.png">
-                        <div class="city"><span style="color: #8F0808;">$records[1]['city']</span><span>$records[1]['name']</span></div>
-                        <div class="level">$records[1]['level']</div>
+                        <div class="city"><span style="color: #8F0808;">$two_city</span><span>$two_name</span></div>
+                        <div class="level">$two_level</div>
                     </div>
                     <div id="one" >
                         <img src="../sa-uat/images/rank/$one_level.png">
-                        <div class="city"><span style="color: #8F0808;padding-right: 20px;">$records[0]['city']</span><span>$records[0]['name']</span></div>
-                        <div class="level">$records[0]['level']</div>
+                        <div class="city"><span style="color: #8F0808;padding-right: 20px;">$one_city</span><span>$one_name</span></div>
+                        <div class="level">$one_level</div>
                     </div>
                     <div id="three" >
-                        <img src="../sa-uat/images/rank/$records[2]['level'].png">
-                        <div class="city"><span style="color: #8F0808;">$records[2]['city']</span><span>$records[2]['name']</span></div>
-                        <div class="level">$records[2]['level']</div>
+                        <img src="../sa-uat/images/rank/$three_level.png">
+                        <div class="city"><span style="color: #8F0808;">$three_city</span><span>$three_name</span></div>
+                        <div class="level">$three_level</div>
                     </div>
 
                     <!--   4.5-->
                     <div id="four" >
-                        <div class="city" style="color: #dab582;"><span>$records[3]['city']</span><span>$records[3]['name']</span><span>$records[3]['level']</span></div>
+                        <div class="city" style="color: #dab582;"><span>$four_city</span><span>$four_name</span><span>$four_level</span></div>
                     </div>
                     <div id="five" >
-                        <div class="city" style="color: #dab582;"><span>$records[4]['city']</span><span>$records[4]['name']</span><span>$records[4]['level']</span></div>
+                        <div class="city" style="color: #dab582;"><span>$five_city</span><span>$five_name</span><span>$five_level</span></div>
                     </div>
                 </div>
 
