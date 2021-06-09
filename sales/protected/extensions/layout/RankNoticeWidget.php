@@ -31,7 +31,6 @@ class RankNoticeWidget extends CWidget
 	}
 
 	protected function renderContent($records) {
-	   var_dump($records[1]['level']);die();
 //		$image = CHtml::image(Yii::app()->baseUrl."/images/rank/$level.png",'image',array('width'=>140,'height'=>160));
 		$out = <<<EOF
 <style>
@@ -98,7 +97,7 @@ class RankNoticeWidget extends CWidget
 			<div class="modal-body" id="divtest">
                 <div class="phb">
                     <div id="one" >
-                        <img src="../sa-uat/images/rank/$records[1]['level'].png">
+                        <img src="../sa-uat/images/rank/<?php echo $records[1]['level'];?>.png">
                         <div class="city"><span style="color: #8F0808;">$records[1]['city']</span><span>$records[1]['name']</span></div>
                         <div class="level">$records[1]['level']</div>
                     </div>
