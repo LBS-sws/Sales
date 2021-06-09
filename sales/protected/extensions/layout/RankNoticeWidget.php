@@ -23,7 +23,7 @@ class RankNoticeWidget extends CWidget
             $record['level'] = $rank_name['level'];
         }
 		if (!empty($records) && !$this->hasRead()) {
-			$content .= $this->renderContent(json_encode($records));
+			$content .= $this->renderContent($records);
 			$this->renderScript();
 			$this->setRead();
 		}
@@ -31,7 +31,7 @@ class RankNoticeWidget extends CWidget
 	}
 
 	protected function renderContent($records) {
-	    //var_dump($records);die();
+	   var_dump($records[1]['level']);die();
 //		$image = CHtml::image(Yii::app()->baseUrl."/images/rank/$level.png",'image',array('width'=>140,'height'=>160));
 		$out = <<<EOF
 <style>
