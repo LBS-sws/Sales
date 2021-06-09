@@ -17,8 +17,8 @@ class RankNoticeWidget extends CWidget
                 order by a.now_score desc limit 5
 			";
         $records = Yii::app()->db->createCommand($sql)->queryAll();
-        foreach ($records as $record) {
-            $sql = "select * from sal_level where start_fraction <='" . $record['now_score'] . "' and end_fraction >='" . $record['now_score'] . "'";
+        foreach ($records as &$record) {
+            $sql = "select * from sal_level where start_fraction <='" . $record['now_score'] . "' and end_fraction >'" . $record['now_score'] . "'";
             $rank_name = Yii::app()->db->createCommand($sql)->queryRow();
             $record['level'] = $rank_name['level'];
         }
