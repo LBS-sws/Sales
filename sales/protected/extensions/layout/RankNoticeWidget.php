@@ -23,7 +23,7 @@ class RankNoticeWidget extends CWidget
             $record['level'] = $rank_name['level'];
         }
 		if (!empty($records) && !$this->hasRead()) {
-			$content .= $this->renderContent(json_encode($records));
+			$content .= $this->renderContent($records);
 			$this->renderScript();
 			$this->setRead();
 		}
@@ -32,7 +32,6 @@ class RankNoticeWidget extends CWidget
 
 	protected function renderContent($records) {
 //		$image = CHtml::image(Yii::app()->baseUrl."/images/rank/$level.png",'image',array('width'=>140,'height'=>160));
-		var_dump($records);
 		$out = <<<EOF
 <style>
     #divtest{
@@ -98,17 +97,17 @@ class RankNoticeWidget extends CWidget
 			<div class="modal-body" id="divtest">
                 <div class="phb">
                     <div id="one" >
-                        <img src="../images/rank/$records[1]['level'].png">
+                        <img src="../sa-uat/images/rank/$records[1]['level'].png">
                         <div class="city"><span style="color: #8F0808;">$records[1]['city']</span><span>$records[1]['name']</span></div>
                         <div class="level">$records[1]['level']</div>
                     </div>
                     <div id="two" >
-                        <img src="../images/rank/$records[0]['level'].png">
+                        <img src="../sa-uat/images/rank/$records[0]['level'].png">
                         <div class="city"><span style="color: #8F0808;padding-right: 20px;">$records[0]['city']</span><span>$records[0]['name']</span></div>
                         <div class="level">$records[0]['level']</div>
                     </div>
                     <div id="three" >
-                        <img src="../images/rank/$records[2]['level'].png">
+                        <img src="../sa-uat/images/rank/$records[2]['level'].png">
                         <div class="city"><span style="color: #8F0808;">$records[2]['city']</span><span>$records[2]['name']</span></div>
                         <div class="level">$records[2]['level']</div>
                     </div>
