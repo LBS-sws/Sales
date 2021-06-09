@@ -17,6 +17,7 @@ class RankNoticeWidget extends CWidget
 //			";
 //        $records = Yii::app()->db->createCommand($sql)->queryAll();
         $records = Yii::app()->createAbsoluteUrl("dashboard/ranklist");
+        var_dump($records);die();
 		if (!empty($records) && !$this->hasRead()) {
 			$content .= $this->renderContent($records);
 			$this->renderScript();
