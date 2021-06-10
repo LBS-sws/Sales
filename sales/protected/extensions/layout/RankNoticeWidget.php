@@ -51,7 +51,7 @@ class RankNoticeWidget extends CWidget
 //		$image = CHtml::image(Yii::app()->baseUrl."/images/rank/$level.png",'image',array('width'=>140,'height'=>160));
 		$out = <<<EOF
 <script type="application/javascript">
-    if(/Android|iPhone|BlackBerry/i.test(navigator.userAgent)) {
+    if(/Android|iPhone/i.test(navigator.userAgent)) {
         document.write('<link href="../sa-uat/css/rannotice_phone.css" rel="stylesheet" type="text/css"/>');
     }else{
         document.write('<link href="../sa-uat/css/rannotice_pc.css" rel="stylesheet" type="text/css"/>');
