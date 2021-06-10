@@ -28,8 +28,8 @@ if (!isset($url) || empty($url)) {
 if (!isset($url) || empty($url)) {
 //	if (Yii::app()->params['showRank']=='on') $this->widget('ext.layout.RankiconWidget');
     if (Yii::app()->params['showRank']=='on') {
+        $this->widget('ext.layout.RankiconWidget');
         $this->widget('ext.layout.RankNoticeWidget');
-        $this->widget('ext.layout.RankiconWidget', array('show'=>false));
     }
 	$this->widget('ext.layout.AnnounceWidget');
 }
