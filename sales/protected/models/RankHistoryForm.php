@@ -74,7 +74,7 @@ class RankHistoryForm extends CFormModel
 
                 $stat_s=$this->numToWord($value['season']);
             }
-            $end=date('Y-m', strtotime("$a month"));
+            $end=date('Y-m', strtotime("$a"));
             $end_s=$this->numToWord($value['season']);
             $value['season']=$this->numToWord($value['season']);
             $sql_rank_name="select level from sal_level where start_fraction <='".$value['now_score']."' and end_fraction >='".$value['now_score']."'";
