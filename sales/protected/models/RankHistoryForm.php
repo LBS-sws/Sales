@@ -68,14 +68,13 @@ class RankHistoryForm extends CFormModel
                 $a=$value['month'];
                 if (date('m', strtotime("$a "))%2==1){
                     $start=date('Y-m', strtotime("$a "));
-                    $a = date('Y-m-01', strtotime("$a -1 month"));
                 }else{
                     $start=date('Y-m', strtotime("$a -1 month"));
                 }
 
                 $stat_s=$this->numToWord($value['season']);
             }
-            $end=date('Y-m', strtotime("$a +1 month"));
+            $end=date('Y-m', strtotime("$a month"));
             $end_s=$this->numToWord($value['season']);
             $value['season']=$this->numToWord($value['season']);
             $sql_rank_name="select level from sal_level where start_fraction <='".$value['now_score']."' and end_fraction >='".$value['now_score']."'";
