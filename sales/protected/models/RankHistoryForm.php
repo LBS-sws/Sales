@@ -68,9 +68,9 @@ class RankHistoryForm extends CFormModel
                 $a=$value['month'];
                 if (date('m', strtotime("$a "))%2==1){
                     $start=date('Y-m', strtotime("$a "));
+                    $a = date('Y-m-01', strtotime("$a -1 month"));
                 }else{
                     $start=date('Y-m', strtotime("$a -1 month"));
-                    $a = date('Y-m-01', strtotime("$a -1 month"));
                 }
 
                 $stat_s=$this->numToWord($value['season']);
