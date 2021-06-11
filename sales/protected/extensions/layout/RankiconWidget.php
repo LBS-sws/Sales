@@ -48,10 +48,9 @@ EOF;
 		return $out;
 	}
 	
-	protected function renderScript() {
-//		$js = <<<EOF
-//$('#modal-ranking').modal('show');
-        $js = $this->show ? "$('#modal-ranking').modal('show');" : "";
+	protected function renderScript() {//  $js = $this->show ? "$('#modal-ranking').modal('show');" : "";
+		$js = <<<EOF
+$('#modal-ranking').modal('show');
 
 EOF;
 		Yii::app()->clientScript->registerScript('rankicon',$js,CClientScript::POS_READY);
