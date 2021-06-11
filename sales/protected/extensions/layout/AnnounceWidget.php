@@ -97,7 +97,7 @@ EOF;
 		$js = <<<EOF
 $('#modal-default').modal('show');
 $('#modal-default').on("hidden.bs.modal", function() {
-	$('#modal-ranking').modal('show');
+	
 });
 EOF;
 		Yii::app()->clientScript->registerScript('announcement',$js,CClientScript::POS_READY);
