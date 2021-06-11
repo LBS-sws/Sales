@@ -100,6 +100,7 @@ $('#modal-default').on("hidden.bs.modal", function() {
 	$('#modal-ranking').modal('show');
 });
 EOF;
+            Yii::app()->clientScript->registerScript('announcement',$js,CClientScript::POS_READY);
             $this->widget('ext.layout.RankiconWidget')
         }else{
             $js = <<<EOF
@@ -108,10 +109,11 @@ $('#modal-default').on("hidden.bs.modal", function() {
 	$('#modal-ranknotice').modal('show');
 });
 EOF;
+            Yii::app()->clientScript->registerScript('announcement',$js,CClientScript::POS_READY);
      $this->widget('ext.layout.RankNoticeWidget');
         }
 
-		Yii::app()->clientScript->registerScript('announcement',$js,CClientScript::POS_READY);
+
 	}
 
 	protected function hasRead() {
