@@ -96,9 +96,6 @@ EOF;
 	protected function renderScript() {
 		$js = <<<EOF
 $('#modal-default').modal('show');
-EOF;
-        $js = $this->show ? "$('#modal-default').modal('show');" : "";
-        $js .= <<<EOF
 $('#modal-default').on("hidden.bs.modal", function() {
 	$('#modal-ranking').modal('show');
 });
