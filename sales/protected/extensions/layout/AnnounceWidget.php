@@ -92,8 +92,11 @@ EOF;
 	}
 
 	protected function renderScript() {
-	    if(Yii::app()->params['showRank']=='on'){
-          
+
+        $js = <<<EOF
+$('#modal-default').modal('show');
+EOF;
+		Yii::app()->clientScript->registerScript('announcement',$js,CClientScript::POS_READY);
 	}
 
 	protected function hasRead() {
