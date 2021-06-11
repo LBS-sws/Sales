@@ -81,7 +81,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 						<div class="input-group-addon">
 							<i class="fa fa-calendar"></i>
 						</div>
-						<?php echo $form->textField($model, 'visit_dt', array('class'=>'form-control pull-right','readonly'=>($model->isReadOnly()||$model->status!='N'))); ?>
+						<?php echo $form->textField($model, 'visit_dt', array('class'=>'form-control pull-right','readonly'=>($model->scenario!='new'))); ?>
 					</div>
 				</div>
 <!--
@@ -605,7 +605,7 @@ EOF;
 	Yii::app()->clientScript->registerScript('visited',$js,CClientScript::POS_READY);
 }
 
-if (!$model->isReadOnly() && $model->status=='N') {
+if ($model->scenario=='new') {
 	$js = Script::genDatePicker(array(
 			'VisitForm_visit_dt',
 		));

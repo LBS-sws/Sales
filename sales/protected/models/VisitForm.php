@@ -205,6 +205,7 @@ class VisitForm extends CFormModel
 	public function rules() {
 		return array(
 			array('visit_dt, username, district, visit_type, visit_obj,service_type, cust_type, cust_type_group, cust_name','required'),
+			array('visit_dt','validateVisitDt'),
 			array('service','validateServiceAmount'),
 			array('service','validateServices'),
 			array('id, city, city_name, remarks, staff, dept_name, post_name, street, cust_person, cust_person_role, cust_vip,quotation,
@@ -214,9 +215,19 @@ class VisitForm extends CFormModel
 		);
 	}
 
+    public function validateVisitDt($attribute, $params) {
+        $visit_dt = date("Y-m-d",strtotime($this->visit_dt));
+        $nowDate = date("Y-m-d");
+        $firstDate = date("Y-m-01",strtotime($nowDate));
+        $firstDate = date("Y-m-01",strtotime("$firstDate - 2 month"));
+        if($visit_dt<$firstDate){
+            $this->addError($attribute, "拜访日期必须大于".$firstDate);
+        }
+    }
+
     public function validateTaxSlip($attribute, $params) {
         $count = $this->no_of_attm['visit'];
-        if (in_array('10',$this->visit_obj)&&(empty($count) || $count==0)) {
+        if (is_array($this->visit_obj)&&in_array('10',$this->visit_obj)&&(empty($count) || $count==0)) {
             $this->addError($attribute, Yii::t('dialog','No visit Slip'));
         }
     }
