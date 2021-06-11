@@ -205,7 +205,7 @@ class VisitForm extends CFormModel
 	public function rules() {
 		return array(
 			array('visit_dt, username, district, visit_type, visit_obj,service_type, cust_type, cust_type_group, cust_name','required'),
-			array('visit_dt','validateVisitDt'),
+			array('visit_dt','validateVisitDt','on'=>array('new')),
 			array('service','validateServiceAmount'),
 			array('service','validateServices'),
 			array('id, city, city_name, remarks, staff, dept_name, post_name, street, cust_person, cust_person_role, cust_vip,quotation,
