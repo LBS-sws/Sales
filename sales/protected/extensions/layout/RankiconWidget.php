@@ -9,10 +9,8 @@ class RankiconWidget extends CWidget
 		
 		if (!empty($level) && (!$this->hasRead() || !$this->hasReadInSalesSystem())) {
 			$content .= $this->renderContent($level);
-            if (Yii::app()->params['showRank']!='on'){
-                $this->renderScript();
-            }
 
+			$this->renderScript();
 			$this->setRead();
 		}
 		echo $content;

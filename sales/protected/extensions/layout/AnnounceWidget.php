@@ -92,12 +92,22 @@ EOF;
 	}
 
 	protected function renderScript() {
-		$js = <<<EOF
+	    if(Yii::app()->params['showRank']=='on'){
+            $js = <<<EOF
 $('#modal-default').modal('show');
 $('#modal-default').on("hidden.bs.modal", function() {
 	$('#modal-ranking').modal('show');
 });
 EOF;
+        }else{
+            $js = <<<EOF
+$('#modal-default').modal('show');
+$('#modal-default').on("hidden.bs.modal", function() {
+	$('#modal-ranknotice').modal('show');
+});
+EOF;
+        }
+
 		Yii::app()->clientScript->registerScript('announcement',$js,CClientScript::POS_READY);
 	}
 
