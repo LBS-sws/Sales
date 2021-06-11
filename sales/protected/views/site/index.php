@@ -26,9 +26,10 @@ if (!isset($url) || empty($url)) {
 
 <?php
 if (!isset($url) || empty($url)) {
-    $this->widget('ext.layout.AnnounceWidget');
+
     if (Yii::app()->params['showRank']=='on') $this->widget('ext.layout.RankiconWidget');
     if (Yii::app()->params['showRankNotice']!='on') $this->widget('ext.layout.RankNoticeWidget');
+    $this->widget('ext.layout.AnnounceWidget');
 
 }
 ?>
