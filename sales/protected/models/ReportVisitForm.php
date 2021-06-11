@@ -837,9 +837,14 @@ class ReportVisitForm extends CReportForm
         $sum_arr=array();
         for($i=0;$i<count($records);$i++){
 	        if(strpos($records[$i]['visit_obj_name'],'签单')!==false){
-                $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7') and field_value>'0' and visit_id='".$records[$i]['id']."'";
-                $model = Yii::app()->db->createCommand($sqlid)->queryRow();
-                $sum_arr[]=$model['sum'];
+                // 签单数量
+                $sqlid_sum="select count(visit_id) as sum from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and field_value>'0' and visit_id='".$records[$i]['id']."'";
+                $moder_sum = Yii::app()->db->createCommand($sqlid_sum)->queryRow();
+                //签单金额
+//                $sqlid="select sum(convert(field_value, decimal(12,2))) as money  from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7') and field_value>'0' and visit_id='".$records[$i]['id']."'";
+//                $model_money = Yii::app()->db->createCommand($sqlid)->queryRow();
+
+                $sum_arr[]=$moder_sum['sum'];
 	            $sql="select * from sal_visit_info where visit_id = '".$records[$i]['id']."'";
                 $rows = Yii::app()->db->createCommand($sql)->queryAll();
                foreach ($rows as $v){
@@ -866,7 +871,7 @@ class ReportVisitForm extends CReportForm
                 if(empty($arr['svc_G3'])){
                     $arr['svc_G3']=0;
                 }
-                $sum[]=$arr['svc_A7']+$arr['svc_B6']+$arr['svc_C7']+$arr['svc_D6']+$arr['svc_E7']+$arr['svc_F4']+$arr['svc_G3'];
+                $sum[]=$arr['svc_A7']+$arr['svc_B6']+$arr['svc_C7']+$arr['svc_D6']+$arr['svc_E7'];//+$arr['svc_F4']+$arr['svc_G3']
 
             }
         }
@@ -1824,7 +1829,9 @@ class ReportVisitForm extends CReportForm
             $cname = Yii::app()->db->createCommand($sqls)->queryRow();
             $sql1="select id  from sal_visit where username='".$peoples."'  and  visit_dt >= '$start_dt'and visit_dt <= '$end_dt' and visit_obj like '%10%'";
             $arr = Yii::app()->db->createCommand($sql1)->queryAll();
-            $sql_rank="select now_score  from sal_rank where username='".$peoples."'  and  month >= '$start_dt'and month <= '$end_dt'";
+            $start_dt1= date("Y-m-01", strtotime($start_dt));
+            $end_dt1=date("Y-m-31", strtotime($end_dt));
+            $sql_rank="select now_score  from sal_rank where username='".$peoples."'  and  month >= '$start_dt1' and month <= '$end_dt1' order by month desc";//add order by desc
             $rank = Yii::app()->db->createCommand($sql_rank)->queryRow();
             foreach ($arr as $id){
                 $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and field_value>'0' and visit_id='".$id['id']."'";
@@ -1916,7 +1923,9 @@ class ReportVisitForm extends CReportForm
             $people['svc_E7s']=$svc_E7;
             $people['svc_F4s']=$svc_F4;
             $people['svc_G3s']=$svc_G3;
-            $people['rank']=$rank['now_score'];
+            $sql_rank_name="select * from sal_level where start_fraction <='".$rank['now_score']."' and end_fraction >='".$rank['now_score']."'";
+            $rank_name= Yii::app()->db->createCommand($sql_rank_name)->queryRow();
+            $people['rank']=$rank_name['level'];
             $models[$code]=$people;
 
         }

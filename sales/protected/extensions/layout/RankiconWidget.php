@@ -1,7 +1,9 @@
 <?php
 class RankiconWidget extends CWidget
 {
-	public function run() {
+    public $show = true;
+
+    public function run() {
 		$content = '';
 		$level = Yii::app()->user->ranklevel();
 		
@@ -47,10 +49,12 @@ EOF;
 	}
 	
 	protected function renderScript() {
-		$js = <<<EOF
-$('#modal-ranking').modal('show');
+//		$js = <<<EOF
+//$('#modal-ranking').modal('show');
+        $js = $this->show ? "$('#modal-ranking').modal('show');" : "";
+        $js .= <<<EOF
 $('#modal-ranking').on("hidden.bs.modal", function() {
-	$('#modal-default').modal('show');
+	$('#modal-ranknotice').modal('show');
 });
 EOF;
 		Yii::app()->clientScript->registerScript('rankicon',$js,CClientScript::POS_READY);

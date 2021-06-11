@@ -182,5 +182,46 @@ class ImportCommand extends CConsoleCommand {
 		}
 		return $ts;
 	}
+	protected function getredeemscore(){
+        $start_time = date('Y-m-01 00:00:00', strtotime('-1 month'));
+        $end_time = date('Y-m-31 23:59:59', strtotime('-1 month'));
+        $sql="select a.*,b.* from sal_rank a
+              left join  sal_rankday b on  a.id=b.rank_id
+              where a.month>= '".$start_time."' and a.month<='".$end_time."'";
+        $rows = Yii::app()->db->createCommand($sql)->queryAll();
+
+        //用户排行榜积分累加
+        for ($i=0;$i<sizeof($rows);$i++){
+            if($rows[$i]['employee_id']){
+                $employee_id = $rows[$i]['employee_id'];
+                //计算上个赛季得分
+                $now_score = $rows[$i]['now_score'];
+                $add_score = 0;
+                //获取所有等级
+                $sql1 = 'select * from sal_level';
+                $level_list = Yii::app()->db->createCommand($sql1)->queryAll();
+                for ($j=0;$j<sizeof($level_list);$j++){
+                    if ($level_list[$j]['start_fraction']>=$now_score && $now_score<=$level_list[$j]['end_fraction']){
+                        $add_score = $level_list[$j]['reward'];
+                    }
+                }
+                if($add_score>0){
+                    $sql2 = 'select * from sal_redeem_score where employee_id ='.$employee_id;
+                    $al=Yii::app()->db->createCommand($sql2)->queryRow();
+                    if ($al){
+                        $add_score = $add_score+$al['score'];
+                        $up = Yii::app()->db->createCommand()->update('sal_redeem_score', array('score' => $add_score), 'id=:id', array(':id' => $al['id']));
+                    }else{
+                        $add =Yii::app()->db->createCommand()->insert('sal_redeem_score', array('score' => $add_score,'employee_id' => $employee_id));
+                    }
+
+                }
+
+            }
+
+        }
+
+
+    }
 }
 ?>

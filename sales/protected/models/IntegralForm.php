@@ -79,10 +79,11 @@ class IntegralForm extends CFormModel
                         if(empty($m)){
                             $m=0;
                         }
+
                         if($value['toplimit']>0){//有上限
                             if((($m<$value['toplimit'])&&$two==0)||(($m<$value['toplimit'])&&count($list)==1)){
                                 if($s>$value['toplimit']){
-                                    $sum_c[]=$s;
+                                    $sum_c[]=$value['toplimit'];//$s
                                     $sum_s[]=$value['toplimit']-$m;
                                     $value['list'][]=$list;
                                 }else{
@@ -172,7 +173,7 @@ class IntegralForm extends CFormModel
                         if($value['toplimit']>0){
                             if(($m<$value['toplimit'])&&$two==0){
                                 if($s>$value['toplimit']){
-                                    $sum_f[]=$s;
+                                    $sum_f[]=$value['toplimit'];//$s
                                     $sum_ff[]=$value['toplimit']-$m;
                                     $value['list'][]=$list;;
                                 }else{
@@ -518,6 +519,9 @@ class IntegralForm extends CFormModel
         }
         $sql="select * from hr$suffix.hr_binding  where user_id='".$row['username']."' ";
         $name = Yii::app()->db->createCommand($sql)->queryRow();
+        //列表更新
+        $sql1="update sal_integral set point='".$this->cust_type_name['point']."',all_sum='".$this->cust_type_name['all_sum']."' where id='".$index."'";
+        $command=Yii::app()->db->createCommand($sql1)->execute();
         $this->name=$name['employee_name'];
         $this->sum=count($bf);
 		return true;

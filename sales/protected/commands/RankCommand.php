@@ -82,7 +82,7 @@ class RankCommand extends CConsoleCommand
                             $time2 = date("Y/m/d", strtotime("$date -3 month"));
                             $rank_id=Yii::app()->db->getLastInsertID();
                             $entry = date("Y/m/d", strtotime($entry_time['entry_time']));
-                            if($entry<'2020/10/01'){
+                            if($entry<'2021/03/01'){
                                 $sql_rank_day="insert into sal_rankday (employee_id,rank_day,rank_id) value ('".$entry_time['id']."',4,'$rank_id')";
                                 $rankday=Yii::app()->db->createCommand($sql_rank_day)->execute();
                                 $sql_rank_five="update sal_rankday set five_rank=2 where rank_id='$rank_id'";

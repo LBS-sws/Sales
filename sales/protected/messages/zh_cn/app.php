@@ -16,7 +16,7 @@ return array(
 	'Operation'=>'营运系统',
 	'Personnel'=>'人事系统',
 	'Sales'=>'销售系统',
-    'Quiz'=>'培训测验系统',
+    'Quiz'=>'培训系统',
     'Academic Credit'=>'学分系统',
 	'Online Library'=>'网上文库',
 	'Charitable Credit'=>'慈善分系统',
@@ -47,7 +47,7 @@ return array(
 	'Report Manager'=>'报表管理员',
 	'Sales Visit List'=>'销售拜访报表',
     'Performance Objectives'=>'跨区业绩目标',
-    'Sales Target'=>'销售目标',
+    'Sales Target'=>'销售上班天数',//销售目标
 
 	'System Setting'=>'系统设置',
 	'Security'=>'保安',
@@ -109,5 +109,10 @@ return array(
 	'Sales points other settings'=>'销售积分其他设置',
     'Sales points other settings List'=>'销售积分其他设置列表',
     'Sales points other settings Form'=>'销售积分其他设置表单',
+
+    'Redeem'=>'积分',
+	'Redeem index'=>'积分兌換',
+    'Redeem list'=>'积分兌換列表',
+	'Redeem prize list'=>'积分兌換奖项列表',
 );
 ?>

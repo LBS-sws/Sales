@@ -7,17 +7,17 @@ class RankemailCommand extends CConsoleCommand {
         $firstDay = date("Y-m-01");
         $endDay = date("Y-m-31");
         $month=date("m");
-        $sql="select * from rank            
+        $sql="select * from sal_rank 
               WHERE  month<='$endDay' and month>='$firstDay'";
         $records = Yii::app()->db->createCommand($sql)->queryAll();
         if (count($records) > 0) {
             foreach ($records as $record) {
                 $sql1 = "SELECT email FROM security$suffix.sec_user WHERE username='".$record['username']."'";
                 $rs = Yii::app()->db->createCommand($sql1)->queryAll();
-                $sql2 = "SELECT b.name,c.name as cityname FROM hr$suffix.hr_employee a 
+                $sql2 = "SELECT a.name,c.name as cityname FROM hr$suffix.hr_employee a 
                         inner join hr$suffix.hr_binding b on a.id = b.employee_id
                         left outer join security$suffix.sec_city c on c.code=a.city
-                        WHERE username='".$record['username']."'";
+                        WHERE b.user_id='".$record['username']."'";
                 $name = Yii::app()->db->createCommand($sql2)->queryRow();
                 $from_addr = "it@lbsgroup.com.hk";
                 $to_addr = "[\"" .$rs[0]['email']."\"]";
@@ -25,7 +25,7 @@ class RankemailCommand extends CConsoleCommand {
                 $sql_rank_name="select * from sal_level where start_fraction <='".$record['now_score']."' and end_fraction >='".$record['now_score']."'";
                 $rank_name= Yii::app()->db->createCommand($sql_rank_name)->queryRow();
                 $saiji=RankForm::numToWord($record['season']);
-               // $description = "五部曲提醒-" . $record['name'];
+                // $description = "五部曲提醒-" . $record['name'];
                 $pip=Yii::app()->baseUrl."/images/".$rank_name['level'].".png";
                 $message = <<<EOF
 <table border="" cellpadding="0" cellspacing="0" height="148" style="width:663px;" width="">
@@ -54,7 +54,7 @@ class RankemailCommand extends CConsoleCommand {
 			<td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$name['name']}</span></span></td>
 			<td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">第{$saiji}赛季</span></span></td>
 			<td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$month}月</span></span></td>
-			<td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img height="46" src="{$pip}" width="" />{$rank_name}</span></span></td>
+			<td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$rank_name['level']}</span></span></td>
 			<td style="text-align: center;" x:num="2500"><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$record['now_score']}</span></span></td>
 		</tr>
 	</tbody>

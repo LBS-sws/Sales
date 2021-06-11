@@ -88,12 +88,12 @@ class ReportRankinglistForm extends CReportForm
             $row = Yii::app()->db->createCommand($sql)->queryRow();
             $temp['city'] = $row!==false ? $row['city_name'] : $record['city'];
             $temp['quyu'] = $row!==false ? str_replace(array('1','2','3','4','5','6','7','8','9','0'),'',$row['region_name']) : '空';
-            $sql_rank="select id from rank where month>= '$start' and month<= '$end' and user_name='".$record['username']."'";
+            $sql_rank="select now_score from sal_rank where month>= '$start' and month<= '$end' and username='".$record['username']."'";
             $rank = Yii::app()->db->createCommand($sql_rank)->queryRow();
-            $model = new RankForm('view');
-            $model->retrieveData($rank['id']);
-            $temp['level'] = $model['rank_name'];
-            $temp['rank'] = $model['now_score'];
+            $sql = "select * from sal_level where start_fraction <='" . $rank['now_score'] . "' and end_fraction >='" . $rank['now_score'] . "'";
+            $rank_name = Yii::app()->db->createCommand($sql)->queryRow();
+            $temp['level'] = $rank_name['level'];
+            $temp['rank'] = $rank['now_score'];
             $models[] = $temp;
         }
         $last_names = array_column($models,'money');
@@ -245,7 +245,8 @@ class ReportRankinglistForm extends CReportForm
                 $models[] = $temp;
             }
         }
-        $last_names = array_column($models,'now_score');
+        //print_r();exit()
+        $last_names = array_column($models,'rank');
         array_multisort($last_names,SORT_DESC,$models);
         $models = array_slice($models, 0, 20);
         return $models;

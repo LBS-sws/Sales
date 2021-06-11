@@ -19,6 +19,7 @@ return array(
 	'Save' => '保存',
 	'Save Record' => '保存记录',
 	'Save Done' => '记录保存完成',
+    'Save no Done' => '记录保存失败',
 	'Validation Message' => '验证信息',
 	'Warning'=>'警告',
 	'Confirmation'=>'确认',
@@ -84,5 +85,9 @@ return array(
 ',
     'RankScoreForm'=>'销售段位总分榜',
     'You can only select one of them separately to view season data and annual data'=>'查看赛季数据和查看年度数据只能单独选择其中一项',
+    'Score No'=>'积分不足',
+    'Inventory No'=>'库存不足',
+	'Saving' => '保存中',
+	'Invalid file type.'=>'无效的文件类型.',
 );
 ?>

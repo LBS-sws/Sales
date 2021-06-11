@@ -1,5 +1,5 @@
 <?php
-
+//HK01HK02HK03HK04HK05HA01HA02HA03HA04HA05HA06HA07HD01HD02HD03HD09HD01HD02HE01HE02HC01HC02HC03HC04HC05HC06HC07HC08
 return array(
 
 	'Data Entry'=>array(
@@ -103,7 +103,20 @@ return array(
 			),
 		),
 	),
-
+    'Redeem'=>array(
+        'access'=>'HE',
+        'icon'=>'fa-diamond',
+        'items'=>array(
+            'Redeem index'=>array(
+                'access'=>'HE01',
+                'url'=>'redeem/index',
+            ),
+            'Redeem list'=>array(
+                'access'=>'HE02',
+                'url'=>'/rgapply/index',
+            ),
+        ),
+    ),
 	
 	'System Setting'=>array(
 		'access'=>'HC',
@@ -142,6 +155,11 @@ return array(
             'Sales points other settings'=>array(
                 'access'=>'HC07',
                 'url'=>'/points/index',
+                'tag'=>'@',
+            ),
+            'Redeem prize list'=>array(
+                'access'=>'HC08',
+                'url'=>'/redeemsetting/index',
                 'tag'=>'@',
             ),
 		),

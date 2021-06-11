@@ -45,21 +45,33 @@ class RankHistoryForm extends CFormModel
               where b.id='$index' and a.city=b.city 
               ";
         $rows = Yii::app()->db->createCommand($sql)->queryAll();
+
+        if(!$rows){
+            return true;
+        }
         foreach ($rows as $v) {
             $month=date('m', strtotime( $v['month']));
             if (strpos("01.03.05.07.09.12", $month) === false) {
                 $this->rank[] = $v;
-            }if(end($rows)==$v&&count($rows)%2==1){
+            }
+            if(end($rows)==$v&&count($rows)%2==1){
                 $this->rank[] = $v;
             }
         }
         $i=1;
-
+        if(!$this->rank){
+            return true;
+        }
         foreach ($this->rank as &$value){
             $a=$value['month'];
             if($i==1){
                 $a=$value['month'];
-                $start=date('Y-m', strtotime("$a -1 month"));
+                if (date('m', strtotime("$a "))%2==1){
+                    $start=date('Y-m', strtotime("$a "));
+                }else{
+                    $start=date('Y-m', strtotime("$a -1 month"));
+                }
+
                 $stat_s=$this->numToWord($value['season']);
             }
             $end=date('Y-m', strtotime("$a"));
