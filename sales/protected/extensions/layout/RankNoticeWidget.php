@@ -24,7 +24,9 @@ class RankNoticeWidget extends CWidget
         }
 		if (!empty($records) && !$this->hasRead()) {
 			$content .= $this->renderContent($records);
-			$this->renderScript();
+            if (Yii::app()->params['showRankNotice']!='on'){
+                $this->renderScript();
+            }
 			$this->setRead();
 		}
 		echo $content;
