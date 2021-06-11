@@ -52,10 +52,7 @@ EOF;
 //		$js = <<<EOF
 //$('#modal-ranking').modal('show');
         $js = $this->show ? "$('#modal-ranking').modal('show');" : "";
-        $js .= <<<EOF
-$('#modal-ranking').on("hidden.bs.modal", function() {
-	$('#modal-default').modal('show');
-});
+
 EOF;
 		Yii::app()->clientScript->registerScript('rankicon',$js,CClientScript::POS_READY);
 	}
