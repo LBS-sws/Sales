@@ -108,11 +108,11 @@ EOF;
 		return $out;
 	}
 	
-	protected function renderScript() {
+	protected function renderScript() {//$('#modal-ranking').modal('show');
 		$js = <<<EOF
 $('#modal-ranknotice').modal('show');
 $('#modal-ranknotice').on("hidden.bs.modal", function() {
-	$('#modal-ranking').modal('show');
+	
 });
 EOF;
 		Yii::app()->clientScript->registerScript('ranknotice',$js,CClientScript::POS_READY);
