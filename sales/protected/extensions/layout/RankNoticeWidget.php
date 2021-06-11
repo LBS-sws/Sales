@@ -122,18 +122,25 @@ EOF;
 		$session = Yii::app()->session;
 		return (isset($session['ranknotice']) && !empty($session['ranknotice'])) ?  $session['ranknotice'] : false;
 	}
-	
-	protected function setRead() {
-		$session = Yii::app()->session;
-		$session['ranknotice'] = true;
-	}
 
-	public function render($view,$data=null,$return=false) {
-		$ctrl = $this->getController();
-		if(($viewFile=$ctrl->getViewFile($view))!==false)
-			return $this->renderFile($viewFile,$data,$return);
-		else
-			throw new CException(Yii::t('yii','{widget} cannot find the view "{view}".',
-				array('{widget}'=>get_class($this), '{view}'=>$view)));
-	}
+    protected function hasReadInSalesSystem() {
+        if (Yii::app()->user->system()!='sal') return true;
+        $session = Yii::app()->session;
+        return (isset($session['ranknotice']) && !empty($session['ranknotice'])) ?  $session['ranknotice'] : false;
+    }
+
+    protected function setRead() {
+        $session = Yii::app()->session;
+        $session['ranknotice'] = true;
+        if (Yii::app()->user->system()=='sal') $session['ranknotice'] = true;
+    }
+
+    public function render($view,$data=null,$return=false) {
+        $ctrl = $this->getController();
+        if(($viewFile=$ctrl->getViewFile($view))!==false)
+            return $this->renderFile($viewFile,$data,$return);
+        else
+            throw new CException(Yii::t('yii','{widget} cannot find the view "{view}".',
+                array('{widget}'=>get_class($this), '{view}'=>$view)));
+    }
 }
