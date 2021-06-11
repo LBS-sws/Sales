@@ -13,10 +13,15 @@ class AnnounceWidget extends CWidget
 			
 				$level = Yii::app()->user->ranklevel();
                 $this->renderScript();
-//				if (Yii::app()->params['showRank']!='on' || empty($level)) {
-//					if (Yii::app()->params['showRankNotice']!='on') $this->renderScript();
-//				}
-				$this->setRead();
+                $this->setRead();
+				if (Yii::app()->params['showRank']!='on' || empty($level)) {
+					if (Yii::app()->params['showRankNotice']!='on'){
+                      $this->widget('ext.layout.RankiconWidget');
+                    }else{
+                        $this->widget('ext.layout.RankNoticeWidget');
+                    }
+				}
+
 			}
 		}
 		echo $content;
