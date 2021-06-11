@@ -101,7 +101,7 @@ $('#modal-default').on("hidden.bs.modal", function() {
 });
 EOF;
             Yii::app()->clientScript->registerScript('announcement',$js,CClientScript::POS_READY);
-            $this->widget('ext.layout.RankiconWidget')
+            $this->widget('ext.layout.RankiconWidget');
         }else{
             $js = <<<EOF
 $('#modal-default').modal('show');
