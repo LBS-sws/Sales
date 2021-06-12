@@ -12,16 +12,12 @@ class AnnounceWidget extends CWidget
 				$content .= $this->renderFooter();
 			
 				$level = Yii::app()->user->ranklevel();
-                $this->renderScript();
-                $this->setRead();
-				if (Yii::app()->params['showRank']!='on' || empty($level)) {
-					if (Yii::app()->params['showRankNotice']!='on'){
-                      $this->widget('ext.layout.RankiconWidget');
-                    }else{
-                        $this->widget('ext.layout.RankNoticeWidget');
-                    }
-				}
 
+
+				if (Yii::app()->params['showRank']!='on' || empty($level)) {
+                    if (Yii::app()->params['showRankNotice']!='on') $this->renderScript();
+				}
+                $this->setRead();
 			}
 		}
 		echo $content;
@@ -34,7 +30,7 @@ class AnnounceWidget extends CWidget
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close" id = "close">
 					<span aria-hidden="true">&times;</span>
 				</button>
 				<h4 class="modal-title">$title</h4>
@@ -97,21 +93,12 @@ EOF;
 	}
 
 	protected function renderScript() {
-	    if(Yii::app()->params['showRank']=='on'){
+
             $js = <<<EOF
-$('#modal-default').modal('show');
-$('#modal-default').on("hidden.bs.modal", function() {
-	$('#modal-ranking').modal('show');
-});
+        $('#modal-default').modal('show');
 EOF;
-        }else{
-            $js = <<<EOF
-$('#modal-default').modal('show');
-$('#modal-default').on("hidden.bs.modal", function() {
-	$('#modal-ranknotice').modal('show');
-});
-EOF;
-        }
+
+
 
 		Yii::app()->clientScript->registerScript('announcement',$js,CClientScript::POS_READY);
 	}
