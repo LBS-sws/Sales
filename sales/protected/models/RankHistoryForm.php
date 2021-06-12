@@ -62,6 +62,7 @@ class RankHistoryForm extends CFormModel
         if(!$this->rank){
             return true;
         }
+        var_dump($this->rank);die();
         foreach ($this->rank as &$value){
             $a=$value['month'];
             if($i==1){
