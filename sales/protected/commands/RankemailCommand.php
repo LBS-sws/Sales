@@ -48,13 +48,14 @@ class RankemailCommand extends CConsoleCommand {
         $four_name = $ph_records[3]['name'];
         $five_name = $ph_records[4]['name'];
 
-        $back_img = Yii::app()->baseUrl."/images/rank/ph_b.jpg";
-        $one_img = Yii::app()->baseUrl."/images/rank/".$one_level.".png";
-        $two_img=Yii::app()->baseUrl."/images/rank/".$two_level.".png";
-        $three_img= Yii::app()->baseUrl."/images/rank/".$three_level.".png";
-        $one_img_hg = Yii::app()->baseUrl."/images/rank/hg_01.png";
-        $two_img_hg = Yii::app()->baseUrl."/images/rank/hg_02.png";
-        $three_img_hg = Yii::app()->baseUrl."/images/rank/hg_03.png";
+        $url_t = "https://".$_SERVER['SERVER_NAME']."/sa-uat";
+        $back_img = $url_t."/images/rank/ph_b.jpg";
+        $one_img = $url_t."/images/rank/".$one_level.".png";
+        $two_img=$url_t."/images/rank/".$two_level.".png";
+        $three_img= $url_t."/images/rank/".$three_level.".png";
+        $one_img_hg = $url_t."/images/rank/hg_01.png";
+        $two_img_hg = $url_t."/images/rank/hg_02.png";
+        $three_img_hg = $url_t."/images/rank/hg_03.png";
         if (count($records) > 0) {
             foreach ($records as $record) {
                 $sql1 = "SELECT email FROM security$suffix.sec_user WHERE username='".$record['username']."'";
@@ -110,7 +111,7 @@ class RankemailCommand extends CConsoleCommand {
 #divtest{
     height:750px;
     width: 600px;
-    background-image: url(<?php echo $back_img;?>);
+    background-image: url({$back_img});
     background-size: 100% 100%;/*按比例缩放*/
     background-repeat: no-repeat;/*还有repeat-x,y等*/
     font-size: 18px;
@@ -181,20 +182,20 @@ class RankemailCommand extends CConsoleCommand {
 			<div class="modal-body" id="divtest">
                 <div class="phb">
                     <div id="two" >
-                        <img class="hg_02" src="<?php echo $two_img_hg;?>">  
-                        <img class="level_img" src="<?php echo $two_img;?>">
+                        <img class="hg_02" src="{$two_img_hg}">  
+                        <img class="level_img" src="{$two_img}">
                         <div class="city"><span style="color: #8F0808;">$two_city</span><span>$two_name</span></div>
                         <div class="level">$two_level</div>
                     </div>
                     <div id="one" >
-                        <img class="hg_01" src="<?php echo $one_img_hg;?>">
-                        <img class="level_img" src="<?php echo $one_img;?>">
+                        <img class="hg_01" src="{$one_img_hg}">
+                        <img class="level_img" src="{$one_img}">
                         <div class="city"><span style="color: #8F0808;padding-left: 10px;">$one_city</span><span>$one_name</span></div>
                         <div class="level">$one_level</div>
                     </div>
                     <div id="three" >
-                        <img class="hg_03" src="<?php echo $three_img_hg;?>">
-                        <img class="level_img" src="<?php echo $three_img;?>">
+                        <img class="hg_03" src="{$three_img_hg}">
+                        <img class="level_img" src="{$three_img}">
                         <div class="city"><span style="color: #8F0808;">$three_city</span><span>$three_name</span></div>
                         <div class="level">$three_level</div>
                     </div>
