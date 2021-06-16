@@ -12,7 +12,6 @@ $ph_sql = "select d.name as city, a.username,a.now_score,c.name,a.id
 			";
 $ph_records = Yii::app()->db->createCommand($ph_sql)->queryAll();
 foreach ($ph_records as &$ph_record) {
-    var_dump($ph_record);die();
     $sql = "select * from sal_level where start_fraction <='" . $ph_record['now_score'] . "' and end_fraction >'" . $ph_record['now_score'] . "'";
     $rank_name = Yii::app()->db->createCommand($sql)->queryRow();
     $ph_records['level'] = $rank_name['level'];
