@@ -25,10 +25,9 @@ class RankemailCommand extends CConsoleCommand {
 			";
         $ph_records = Yii::app()->db->createCommand($ph_sql)->queryAll();
         foreach ($ph_records as &$ph_record) {
-            $ph_record['now_score'] = isset($ph_record['now_score'])?$ph_record['now_score']:0;
             $sql = "select * from sal_level where start_fraction <='" . $ph_record['now_score'] . "' and end_fraction >'" . $ph_record['now_score'] . "'";
             $rank_name = Yii::app()->db->createCommand($sql)->queryRow();
-            $ph_records['level'] = $rank_name['level'];
+            $ph_record['level'] = $rank_name['level'];
         }
         $one_level = $ph_records[0]['level'];
         $two_level = $ph_records[1]['level'];
