@@ -110,78 +110,80 @@ class RankemailCommand extends CConsoleCommand {
 
 <style>
 #ph{
-    margin-top: 31px;
-    margin-left: 37px;
+    margin-top:32px;
+    margin-left:43px;
 }
 #divtest{
     height: 750px;
     width: 570px;
     background-size: 100% 100%;/*按比例缩放*/
     background-repeat: no-repeat;/*还有repeat-x,y等*/
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 600;
 }
-#one {
-    position: absolute;
-    top: 51.2%;
-    left: 16.3%;
+#one{
+    position:absolute;
+    top:50%;
+    left:35%;
 }
 #one .level_img{
-    width: 120px;
+    width: 80px;
 }
-#two {
-    position: absolute;
-    top: 57%;
-    left: 6.5%;
+#two{
+    position:absolute;
+    top:55.6%;
+    left:14.5%;
 }
 #two .level_img{
-    width: 100px;
+    width: 70px;
 }
 .city span{
-    padding-right: 10px;
+    padding-right: 4px;
 }
 .level{
     margin: 5px 10px 0px 0px;
     text-align: center;
 }
-#three {
-    position: absolute;
-    top: 56.8%;
-    left: 27.3%;
+
+#three{
+    position:absolute;
+    top:55.8%;
+    right:28.4%;
 }
 #three .level_img{
-    width: 100px;
+    width: 70px;
 }
 #four{
-    position: absolute;
-    top: 82.5%;
-    left: 18%;
+    position:absolute;
+    top:80.8%;
+    left:39%;
 }
 #five{
-    position: absolute;
-    top: 90%;
-    left: 18%;
+    position:absolute;
+    top:88%;
+    left:39%;
 }
 .hg_01{
     position: absolute;
-    width: 80px;
-    top: -33px;
-    left: 20px;
+    width: 55px;
+    top: -20px;
+    left: 15%;
 }
 .hg_02{
     position: absolute;
-    width: 66px;
-    top: -30px;
-    left: 17px;
+    width: 45px;
+    top: -20px;
+    left: 16%;
 }
 .hg_03{
     position: absolute;
-    width: 67px;
-    top: -30px;
-    left: 17px;
+    width: 45px;
+    top: -22px;
+    left: 16%;
 }
-.city{
-    margin-top: 6px;
+#one .city{
+    padding-top: 8%;
+    margin-left: -8%;
 }
 </style>
 
