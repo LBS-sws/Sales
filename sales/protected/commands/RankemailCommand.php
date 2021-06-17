@@ -110,9 +110,9 @@ class RankemailCommand extends CConsoleCommand {
 <style>
 <script type="application/javascript">
     if(/Android|iPhone/i.test(navigator.userAgent)) {
-        <link href="../css/email_rannotice_phone.css" rel="stylesheet" type="text/css"/>;
+        <link href="https://dms.lbsapps.cn/sa-uat/css/email_rannotice_phone.css" rel="stylesheet" type="text/css"/>;
     }else{
-       <link href="../css/email_rannotice_pc.css" rel="stylesheet" type="text/css"/>;
+       <link href="https://dms.lbsapps.cn/sa-uat/css/email_rannotice_pc.css" rel="stylesheet" type="text/css"/>;
     }
 </script>
 
