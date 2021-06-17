@@ -49,13 +49,11 @@ class RankemailCommand extends CConsoleCommand {
         $five_name = $ph_records[4]['name'];
 
         $url_t = "https://dms.lbsapps.cn/sa-uat";
-        $back_img = $url_t."/images/rank/ph_b.jpg";
         $one_img = $url_t."/images/rank/".$one_level.".png";
         $two_img=$url_t."/images/rank/".$two_level.".png";
         $three_img= $url_t."/images/rank/".$three_level.".png";
-        $one_img_hg = $url_t."/images/rank/hg_01.png";
-        $two_img_hg = $url_t."/images/rank/hg_02.png";
-        $three_img_hg = $url_t."/images/rank/hg_03.png";
+        $four_img = $url_t."/images/rank/".$four_level.".png";
+        $five_img = $url_t."/images/rank/".$five_level.".png";
         if (count($records) > 0) {
             foreach ($records as $record) {
                 $sql1 = "SELECT email FROM security$suffix.sec_user WHERE username='".$record['username']."'";
@@ -108,121 +106,55 @@ class RankemailCommand extends CConsoleCommand {
 	</tbody>
 </table>
 
-<style>
-#ph{
-    margin-top:32px;
-    margin-left:43px;
-}
-#divtest{
-    height: 750px;
-    width: 570px;
-    background-size: 100% 100%;/*按比例缩放*/
-    background-repeat: no-repeat;/*还有repeat-x,y等*/
-    font-size: 15px;
-    font-weight: 600;
-}
-#one{
-    position:absolute;
-    top:50%;
-    left:35%;
-}
-#one .level_img{
-    width: 80px;
-}
-#two{
-    position:absolute;
-    top:55.6%;
-    left:14.5%;
-}
-#two .level_img{
-    width: 70px;
-}
-.city span{
-    padding-right: 4px;
-}
-.level{
-    margin: 5px 10px 0px 0px;
-    text-align: center;
-}
 
-#three{
-    position:absolute;
-    top:55.8%;
-    right:28.4%;
-}
-#three .level_img{
-    width: 70px;
-}
-#four{
-    position:absolute;
-    top:80.8%;
-    left:39%;
-}
-#five{
-    position:absolute;
-    top:88%;
-    left:39%;
-}
-.hg_01{
-    position: absolute;
-    width: 55px;
-    top: -20px;
-    left: 15%;
-}
-.hg_02{
-    position: absolute;
-    width: 45px;
-    top: -20px;
-    left: 16%;
-}
-.hg_03{
-    position: absolute;
-    width: 45px;
-    top: -22px;
-    left: 16%;
-}
-#one .city{
-    padding-top: 8%;
-    margin-left: -8%;
-}
-</style>
+<table border="" cellpadding="0" cellspacing="0" height="148" style="width:663px;" width="">
+    <colgroup>
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+    </colgroup>
+    <tbody>
+    <tr height="36">
+        <td colspan="6" height="36" style="height:36px;width:663px;" x:num="44275"><span style="font-size:14px;">当前段位明星榜</span></td>
+    </tr>
+    <tr height="56">
+        <td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;color: #d40606;font-weight: bold;">TOP1</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$one_city}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$one_name}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$one_img}' style="width: 34px;">{$one_level}</span></span></td>
+    </tr>
+    <tr height="56">
+        <td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;color: #d40606;font-weight: bold;">TOP2</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$two_city}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$two_name}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$two_img}' style="width: 34px;">{$two_level}</span></span></td>
+    </tr>
+    <tr height="56">
+        <td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;color: #d40606;font-weight: bold;">TOP3</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$three_city}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$three_name}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$three_img}' style="width: 34px;">{$three_level}</span></span></td>
+    </tr>
+    <tr height="56">
+        <td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;font-weight: bold;">TOP4</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$four_city}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$four_name}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$four_img}' style="width:34px; ">{$four_level}</span></span></td>
+    </tr>
+    <tr height="56">
+        <td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;font-weight: bold;">TOP5</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$five_city}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$five_name}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$five_img}' style="width: 34px;">{$five_level}</span></span></td>
+    </tr>
+    </tbody>
+</table>
 
-<div class="content" id="ph">
-			<div class="modal-body" id="divtest" style="background-image: url({$back_img})">
-                <div class="phb">
-                    <div id="two" >
-                        <img class="hg_02" src="{$two_img_hg}">  
-                        <img class="level_img" src="{$two_img}">
-                        <div class="city"><span style="color: #8F0808;">{$two_city}</span><span>{$two_name}</span></div>
-                        <div class="level">{$two_level}</div>
-                    </div>
-                    <div id="one" >
-                        <img class="hg_01" src="{$one_img_hg}">
-                        <img class="level_img" src="{$one_img}">
-                        <div class="city"><span style="color: #8F0808;padding-left: 10px;">{$one_city}</span><span>{$one_name}</span></div>
-                        <div class="level">{$one_level}</div>
-                    </div>
-                    <div id="three" >
-                        <img class="hg_03" src="{$three_img_hg}">
-                        <img class="level_img" src="{$three_img}">
-                        <div class="city"><span style="color: #8F0808;">{$three_city}</span><span>{$three_name}</span></div>
-                        <div class="level">{$three_level}</div>
-                    </div>
-
-                    <!--   4.5-->
-                    <div id="four" >
-                        <div class="city" style="color: #dab582;"><span>{$four_city}</span><span>{$four_name}</span><span>{$four_level}</span></div>
-                    </div>
-                    <div id="five" >
-                        <div class="city" style="color: #dab582;"><span>{$five_city}</span><span>{$five_name}</span><span>{$five_level}</span></div>
-                    </div>
-                </div>
-
-		<!-- /.modal-content -->
-	</div>
-	<!-- /.modal-dialog -->
-</div>
 EOF;
+
                 $lcu = "admin";
                 $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
                     'request_dt' => date('Y-m-d H:i:s'),
