@@ -48,7 +48,7 @@ class RankemailCommand extends CConsoleCommand {
         $four_name = $ph_records[3]['name'];
         $five_name = $ph_records[4]['name'];
 
-        $url_t = "https://".$_SERVER['SERVER_NAME']."/sa-uat";
+        $url_t = "https://dms.lbsapps.cn/sa-uat";
         $back_img = $url_t."/images/rank/ph_b.jpg";
         $one_img = $url_t."/images/rank/".$one_level.".png";
         $two_img=$url_t."/images/rank/".$two_level.".png";
@@ -184,28 +184,28 @@ class RankemailCommand extends CConsoleCommand {
                     <div id="two" >
                         <img class="hg_02" src="{$two_img_hg}">  
                         <img class="level_img" src="{$two_img}">
-                        <div class="city"><span style="color: #8F0808;">$two_city</span><span>$two_name</span></div>
-                        <div class="level">$two_level</div>
+                        <div class="city"><span style="color: #8F0808;">{$two_city}</span><span>{$two_name}</span></div>
+                        <div class="level">{$two_level}</div>
                     </div>
                     <div id="one" >
                         <img class="hg_01" src="{$one_img_hg}">
                         <img class="level_img" src="{$one_img}">
-                        <div class="city"><span style="color: #8F0808;padding-left: 10px;">$one_city</span><span>$one_name</span></div>
-                        <div class="level">$one_level</div>
+                        <div class="city"><span style="color: #8F0808;padding-left: 10px;">{$one_city}</span><span>{$one_name}</span></div>
+                        <div class="level">{$one_level}</div>
                     </div>
                     <div id="three" >
                         <img class="hg_03" src="{$three_img_hg}">
                         <img class="level_img" src="{$three_img}">
-                        <div class="city"><span style="color: #8F0808;">$three_city</span><span>$three_name</span></div>
-                        <div class="level">$three_level</div>
+                        <div class="city"><span style="color: #8F0808;">{$three_city}</span><span>{$three_name}</span></div>
+                        <div class="level">{$three_level}</div>
                     </div>
 
                     <!--   4.5-->
                     <div id="four" >
-                        <div class="city" style="color: #dab582;"><span>$four_city</span><span>$four_name</span><span>$four_level</span></div>
+                        <div class="city" style="color: #dab582;"><span>{$four_city}</span><span>{$four_name}</span><span>{$four_level}</span></div>
                     </div>
                     <div id="five" >
-                        <div class="city" style="color: #dab582;"><span>$five_city</span><span>$five_name</span><span>$five_level</span></div>
+                        <div class="city" style="color: #dab582;"><span>{$five_city}</span><span>{$five_name}</span><span>{$five_level}</span></div>
                     </div>
                 </div>
 
