@@ -108,78 +108,16 @@ class RankemailCommand extends CConsoleCommand {
 	</tbody>
 </table>
 <style>
-#divtest{
-    height:750px;
-    width: 600px;
-    background-image: url({$back_img});
-    background-size: 100% 100%;/*按比例缩放*/
-    background-repeat: no-repeat;/*还有repeat-x,y等*/
-    font-size: 18px;
-    font-weight: 600;
-}
-#one{
-    position: absolute;
-    top: 35%;
-    left: 40%;
-}
-#one .level_img{
-    width: 120px;
-}
-#two{
-    position: absolute;
-    top: 43%;
-    left: 10%;
-}
-#two .level_img{
-    width: 100px;
-}
-.city span{
-    padding-right: 10px;
-}
-.level{
-    margin: 5px 10px 0px 0px;
-    text-align: center;
-}
+<script type="application/javascript">
+    if(/Android|iPhone/i.test(navigator.userAgent)) {
+        <link href="../css/email_rannotice_phone.css" rel="stylesheet" type="text/css"/>;
+    }else{
+       <link href="../css/email_rannotice_pc.css" rel="stylesheet" type="text/css"/>;
+    }
+</script>
 
-#three{
-    position: absolute;
-    top: 43%;
-    right: 8%;
-}
-#three .level_img{
-    width: 100px;
-}
-#four{
-    position: absolute;
-    top: 77%;
-    left: 40%;
-}
-#five{
-    position: absolute;
-    top: 87%;
-    left: 40%;
-}
-.hg_01{
-    position: absolute;
-    width: 80px;
-    top: -33px;
-    left: 20px;
-}
-.hg_02{
-    position: absolute;
-    width: 66px;
-    top: -30px;
-    left: 17px;
-}
-.hg_03{
-    position: absolute;
-    width: 67px;
-    top: -30px;
-    left: 17px;
-}
-</style>
-<div class="content" style="margin-top: 10px">
-			<div class="modal-body" id="divtest">
+<div class="content" id="ph">
+			<div class="modal-body" id="divtest" style="background-image: url({$back_img})">
                 <div class="phb">
                     <div id="two" >
                         <img class="hg_02" src="{$two_img_hg}">  
