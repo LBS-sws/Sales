@@ -107,14 +107,83 @@ class RankemailCommand extends CConsoleCommand {
 		</tr>
 	</tbody>
 </table>
+
 <style>
-<script type="application/javascript">
-    if(/Android|iPhone/i.test(navigator.userAgent)) {
-        <link href="https://dms.lbsapps.cn/sa-uat/css/email_rannotice_phone.css" rel="stylesheet" type="text/css"/>;
-    }else{
-       <link href="https://dms.lbsapps.cn/sa-uat/css/email_rannotice_pc.css" rel="stylesheet" type="text/css"/>;
-    }
-</script>
+#ph{
+    margin-top: 31px;
+    margin-left: 37px;
+}
+#divtest{
+    height: 750px;
+    width: 570px;
+    background-size: 100% 100%;/*按比例缩放*/
+    background-repeat: no-repeat;/*还有repeat-x,y等*/
+    font-size: 17px;
+    font-weight: 600;
+}
+#one {
+    position: absolute;
+    top: 51.2%;
+    left: 16.3%;
+}
+#one .level_img{
+    width: 120px;
+}
+#two {
+    position: absolute;
+    top: 57%;
+    left: 6.5%;
+}
+#two .level_img{
+    width: 100px;
+}
+.city span{
+    padding-right: 10px;
+}
+.level{
+    margin: 5px 10px 0px 0px;
+    text-align: center;
+}
+#three {
+    position: absolute;
+    top: 56.8%;
+    left: 27.3%;
+}
+#three .level_img{
+    width: 100px;
+}
+#four{
+    position: absolute;
+    top: 82.5%;
+    left: 18%;
+}
+#five{
+    position: absolute;
+    top: 90%;
+    left: 18%;
+}
+.hg_01{
+    position: absolute;
+    width: 80px;
+    top: -33px;
+    left: 20px;
+}
+.hg_02{
+    position: absolute;
+    width: 66px;
+    top: -30px;
+    left: 17px;
+}
+.hg_03{
+    position: absolute;
+    width: 67px;
+    top: -30px;
+    left: 17px;
+}
+.city{
+    margin-top: 6px;
+}
+</style>
 
 <div class="content" id="ph">
 			<div class="modal-body" id="divtest" style="background-image: url({$back_img})">
