@@ -70,7 +70,7 @@ class RankemailCommand extends CConsoleCommand {
                 $rank_name= Yii::app()->db->createCommand($sql_rank_name)->queryRow();
                 $saiji=RankForm::numToWord($record['season']);
                 // $description = "五部曲提醒-" . $record['name'];
-                $pip=Yii::app()->baseUrl."/images/".$rank_name['level'].".png";
+                $pip=$url_t."/images/rank/".$rank_name['level'].".png";
 
 
                 $message = <<<EOF
@@ -100,14 +100,14 @@ class RankemailCommand extends CConsoleCommand {
 			<td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$name['name']}</span></span></td>
 			<td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">第{$saiji}赛季</span></span></td>
 			<td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$month}月</span></span></td>
-			<td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$rank_name['level']}</span></span></td>
+			<td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$pip}' style="width: 34px;vertical-align:middle">{$rank_name['level']}</span></span></td>
 			<td style="text-align: center;" x:num="2500"><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$record['now_score']}</span></span></td>
 		</tr>
 	</tbody>
 </table>
 
 
-<table border="" cellpadding="0" cellspacing="0" height="148" style="width:663px;" width="">
+<table border="" cellpadding="0" cellspacing="0" height="148" style="width:663px;margin-top: 35px;" width="">
     <colgroup>
         <col />
         <col />
@@ -118,37 +118,37 @@ class RankemailCommand extends CConsoleCommand {
     </colgroup>
     <tbody>
     <tr height="36">
-        <td colspan="6" height="36" style="height:36px;width:663px;" x:num="44275"><span style="font-size:14px;">当前段位明星榜</span></td>
+        <td colspan="6" height="36" style="height: 70px;width: 663px;text-align: center;font-size: 22px;font-weight: bold;" x:num="44275"><span>当前段位明星榜</span></td>
     </tr>
     <tr height="56">
         <td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;color: #d40606;font-weight: bold;">TOP1</span></span></td>
         <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$one_city}</span></span></td>
         <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$one_name}</span></span></td>
-        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$one_img}' style="width: 34px;">{$one_level}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$one_img}' style="width: 34px;vertical-align:middle">{$one_level}</span></span></td>
     </tr>
     <tr height="56">
         <td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;color: #d40606;font-weight: bold;">TOP2</span></span></td>
         <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$two_city}</span></span></td>
         <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$two_name}</span></span></td>
-        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$two_img}' style="width: 34px;">{$two_level}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$two_img}' style="width: 34px;vertical-align:middle">{$two_level}</span></span></td>
     </tr>
     <tr height="56">
         <td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;color: #d40606;font-weight: bold;">TOP3</span></span></td>
         <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$three_city}</span></span></td>
         <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$three_name}</span></span></td>
-        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$three_img}' style="width: 34px;">{$three_level}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$three_img}' style="width: 34px;vertical-align:middle">{$three_level}</span></span></td>
     </tr>
     <tr height="56">
         <td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;font-weight: bold;">TOP4</span></span></td>
         <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$four_city}</span></span></td>
         <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$four_name}</span></span></td>
-        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$four_img}' style="width:34px; ">{$four_level}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$four_img}' style="width:34px; vertical-align:middle">{$four_level}</span></span></td>
     </tr>
     <tr height="56">
         <td height="56" style="height: 56px; text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;font-weight: bold;">TOP5</span></span></td>
         <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$five_city}</span></span></td>
         <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;">{$five_name}</span></span></td>
-        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$five_img}' style="width: 34px;">{$five_level}</span></span></td>
+        <td style="text-align: center;" x:str=""><span style="font-size:16px;"><span style="font-family:arial,helvetica,sans-serif;"><img src='{$five_img}' style="width: 34px;vertical-align:middle">{$five_level}</span></span></td>
     </tr>
     </tbody>
 </table>
