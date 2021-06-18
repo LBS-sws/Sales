@@ -162,10 +162,12 @@ class VisitController extends Controller
 	
 	public function actionReadcust($name) {
 		$uid = Yii::app()->user->id;
-		$sql = "select a.cust_person, a.cust_person_role, a.cust_tel, a.district, a.street, a.cust_type, b.cust_vip  ,a.visit_id
+		$sql = "select f.remarks,d.type_group as cust_type_group,a.cust_person, a.cust_person_role, a.cust_tel, a.district, a.street, a.cust_type, b.cust_vip  ,a.visit_id
 				from sal_custcache a
+				LEFT JOIN sal_visit f ON a.visit_id = f.id
+				inner join sal_cust_type d on f.cust_type = d.id
 				left outer join sal_custstar b on a.username=b.username and a.cust_name=b.cust_name
-				where a.username='$uid' and a.cust_name='$name'
+				where a.username='$uid' and a.cust_name='$name' ORDER BY a.lcd DESC 
 			";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
         if(!empty($row)){

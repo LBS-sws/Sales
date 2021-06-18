@@ -222,7 +222,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 							echo $form->hiddenField($model, 'cust_type_group');
 							echo TbHtml::textField('cust_type_group_name', $typegrouplist[$model->cust_type_group], array('readonly'=>true));
 						} else {
-							echo $form->dropDownList($model, 'cust_type_group', $typegrouplist); 
+							echo $form->dropDownList($model, 'cust_type_group', $typegrouplist,array('class'=>'de_class','de_type'=>'val'));
 						}
 					?>
 				</div>
@@ -234,7 +234,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 							echo $form->hiddenField($model, 'cust_type');
 							echo TbHtml::textField('cust_type_name', $typelist[$model->cust_type], array('readonly'=>true));
 						} else {
-							echo $form->dropDownList($model, 'cust_type', $typelist); 
+							echo $form->dropDownList($model, 'cust_type', $typelist,array('class'=>'de_class','de_type'=>'val'));
 						}
 					?>
 				</div>
@@ -243,18 +243,18 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 			<div class="form-group">
 				<?php echo $form->labelEx($model,'cust_person',array('class'=>"col-sm-2 control-label")); ?>
 				<div class="col-sm-3">
-					<?php echo $form->textField($model, 'cust_person', array('readonly'=>$model->isReadOnly())); ?>
+					<?php echo $form->textField($model, 'cust_person', array('readonly'=>$model->isReadOnly(),'class'=>'de_class','de_type'=>'val')); ?>
 				</div>
 				<?php echo $form->labelEx($model,'cust_tel',array('class'=>"col-sm-2 control-label")); ?>
 				<div class="col-sm-3">
-					<?php echo $form->textField($model, 'cust_tel', array('readonly'=>$model->isReadOnly())); ?>
+					<?php echo $form->textField($model, 'cust_tel', array('readonly'=>$model->isReadOnly(),'class'=>'de_class','de_type'=>'val')); ?>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<?php echo $form->labelEx($model,'cust_person_role',array('class'=>"col-sm-2 control-label")); ?>
 				<div class="col-sm-3">
-					<?php echo $form->textField($model, 'cust_person_role', array('readonly'=>$model->isReadOnly())); ?>
+					<?php echo $form->textField($model, 'cust_person_role', array('readonly'=>$model->isReadOnly(),'class'=>'de_class','de_type'=>'val')); ?>
 				</div>
 			</div>
 
@@ -267,13 +267,13 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 							echo $form->hiddenField($model, 'district');
 							echo TbHtml::textField('district_name', $districtlist[$model->district], array('readonly'=>true));
 						} else {
-							echo $form->dropDownList($model, 'district', $districtlist);
+							echo $form->dropDownList($model, 'district', $districtlist,array('class'=>'de_class','de_type'=>'val'));
 						}
 					?>
 				</div>
 				<?php echo $form->labelEx($model,'street',array('class'=>"col-sm-2 control-label")); ?>
 				<div class="col-sm-3">
-					<?php echo $form->textField($model, 'street', array('readonly'=>($model->isReadOnly()))); ?>
+					<?php echo $form->textField($model, 'street', array('readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val')); ?>
 				</div>
 			</div>
 
@@ -281,7 +281,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 				<?php echo $form->labelEx($model,'remarks',array('class'=>"col-sm-2 control-label")); ?>
 				<div class="col-sm-7">
 					<?php echo $form->textArea($model, 'remarks', 
-						array('rows'=>3,'cols'=>60,'maxlength'=>5000,'readonly'=>($model->isReadOnly()))
+						array('rows'=>3,'cols'=>60,'maxlength'=>5000,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val')
 					); ?>
 				</div>
 			</div>
@@ -294,7 +294,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 		$fieldvalue = isset($model->service['svc_'.$gid]) ? $model->service['svc_'.$gid] : '';
 		
 		$content = "<legend>".$items['name']."</legend>";
-		$content .= "<div class='form-group'>";
+		$content .= "<div class='form-group' data-num='11111'>";
 		switch ($items['type']) {
 			case 'qty':
 				$content .= TbHtml::label(Yii::t('sales','Qty'),$fieldid, array('class'=>"col-sm-2 control-label"));
@@ -331,8 +331,10 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 
 		$cnt = 0;
 		$out = '';
+		$de_bool=2;//默認值專用 1：默認 2：空白
 		foreach ($items['items'] as $fid=>$fv) {
-			$fieldid = get_class($model).'_service_svc_'.$fid;
+            $de_bool = $items['type']=="none"||in_array($fid,array('A7','B6','C7','D6','E7'))?2:1;
+            $fieldid = get_class($model).'_service_svc_'.$fid;
 			$fieldname = get_class($model).'[service][svc_'.$fid.']';
 			$fieldvalue = $model->service['svc_'.$fid];
 			
@@ -345,7 +347,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 				case 'pct':
 					$out .= '<div class="col-sm-2">';
 					$out .= TbHtml::numberField($fieldname, $fieldvalue, 
-								array('size'=>5,'min'=>0,'max'=>100,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),
+								array('size'=>5,'min'=>0,'max'=>100,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
 									'placeholder'=>Yii::t('sales','Percentage'),
 								)
 							); 
@@ -353,7 +355,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 				case 'qty':
 					$out .= '<div class="col-sm-2">';
 					$out .= TbHtml::numberField($fieldname, $fieldvalue, 
-								array('size'=>5,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),
+								array('size'=>5,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
 									'placeholder'=>Yii::t('sales','Qty'),
 								)
 							); 
@@ -362,7 +364,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 				case 'amount':
 					$out .= '<div class="col-sm-2">';
 					$out .= TbHtml::numberField($fieldname, $fieldvalue, 
-								array('size'=>8,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),	
+								array('size'=>8,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
 									'placeholder'=>Yii::t('sales','Amount'),
 								)
 							); 
@@ -370,7 +372,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 				case 'text':
 					$out .= '<div class="col-sm-2">';
 					$out .= TbHtml::textField($fieldname, $fieldvalue, 
-								array('id'=>$fieldid,'readonly'=>($model->isReadOnly()),	
+								array('id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
 									'placeholder'=>Yii::t('sales','Text'),
 								)
 							); 
@@ -378,7 +380,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 				case 'rmk':
 					$out .= '<div class="col-sm-7">';
 					$out .= TbHtml::textArea($fieldname, $fieldvalue, 
-								array('id'=>$fieldid,'rows'=>3,'cols'=>60,'maxlength'=>5000,
+								array('id'=>$fieldid,'rows'=>3,'cols'=>60,'maxlength'=>5000,'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
 									'placeholder'=>Yii::t('sales','Remarks'),
 									'readonly'=>($model->isReadOnly())
 								)
@@ -387,7 +389,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 				case 'checkbox':
 					$out .= '<div class="col-sm-2">';
 					$out .= TbHtml::checkBox($fieldname, ($fieldvalue=='Y'), 
-								array('id'=>$fieldid,'disabled'=>($model->isReadOnly()),
+								array('id'=>$fieldid,'disabled'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'checked','de_bool'=>$de_bool,
 									'uncheckValue'=>'N', 'value'=>'Y',
 								)
 							); 
@@ -478,6 +480,7 @@ $('#VisitForm_service_type').on('select2:opening select2:closing', function( eve
 
 $('#VisitForm_cust_type_group').on('change',function() {
 	var group = $(this).val();
+	var cust_type = $(this).data('cust_type');
 	var data = "group="+group;
 	$.ajax({
 		type: 'GET',
@@ -485,6 +488,10 @@ $('#VisitForm_cust_type_group').on('change',function() {
 		data: data,
 		success: function(data) {
 			$('#VisitForm_cust_type').html(data);
+			if(cust_type != undefined){
+			    $('#VisitForm_cust_type').val(cust_type);
+			    $('#VisitForm_cust_type_group').removeData('cust_type');
+			}
 		},
 		error: function(data) { // if error occured
 			var x = 1;
@@ -516,14 +523,28 @@ $('#VisitForm_cust_name').on('change', function(){
 		url: '$link2',
 		data: data,
 		success: function(data) {
-			$('#VisitForm_cust_person').val(data.cust_person);
-			$('#VisitForm_cust_person_role').val(data.cust_person_role);
-			$('#VisitForm_cust_tel').val(data.cust_tel);
-			$('#VisitForm_cust_type').val(data.cust_type);
-			$('#VisitForm_district').val(data.district);
-			$('#VisitForm_street').val(data.street);
-			$('#VisitForm_cust_alt_name').val(data.cust_alt_name);
-			$('#VisitForm_cust_vip').prop('checked', data.cust_vip=='Y');
+		//达大厦的
+		    $('.de_class').each(function(){
+		        var de_type = $(this).attr('de_type');
+		        var de_bool = $(this).attr('de_bool');
+		        var str = $(this).attr('name');
+		        str = str.split("[").pop();
+		        str = str.split("]")[0];
+		        var dataValue = data.hasOwnProperty(str)?data[str]:false;
+		        if(de_bool != 2&&dataValue!==false&&dataValue!==false){
+		            switch(de_type){
+		                case 'checked':
+                            $(this).prop('checked', dataValue=='Y');
+		                    break;
+                        default:
+                            $(this).val(dataValue);
+		            }
+		            if(str == 'cust_type_group'){
+		                $(this).data('cust_type',data['cust_type']);
+		                $(this).trigger('change');
+		            }
+		        }
+		    });
 		  
 		},
 		error: function(data) { // if error occured
