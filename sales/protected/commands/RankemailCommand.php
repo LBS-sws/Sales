@@ -48,7 +48,7 @@ class RankemailCommand extends CConsoleCommand {
         $four_name = $ph_records[3]['name'];
         $five_name = $ph_records[4]['name'];
 
-        $url_t = "https://dms.lbsapps.cn/sa-uat";
+        $url_t = "https://dms.lbsapps.cn/sa-prod/";//"https://dms.lbsapps.cn/sa-uat";
         $one_img = $url_t."/images/rank/".$one_level.".png";
         $two_img=$url_t."/images/rank/".$two_level.".png";
         $three_img= $url_t."/images/rank/".$three_level.".png";
