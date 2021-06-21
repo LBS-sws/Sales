@@ -12,12 +12,10 @@ class AnnounceWidget extends CWidget
 				$content .= $this->renderFooter();
 			
 				$level = Yii::app()->user->ranklevel();
-
-
-				if (Yii::app()->params['showRank']!='on' || empty($level)) {
-                    if (Yii::app()->params['showRankNotice']!='on') $this->renderScript();
-				}
-                $this->setRead();
+//				if (Yii::app()->params['showRank']!='on' || empty($level))
+				if ((Yii::app()->params['showRank']!='on' || empty($level)) && Yii::app()->params['showRankNotice']!='on')
+					$this->renderScript();
+				$this->setRead();
 			}
 		}
 		echo $content;
@@ -30,7 +28,7 @@ class AnnounceWidget extends CWidget
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close" id = "close">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
 				<h4 class="modal-title">$title</h4>
@@ -93,13 +91,9 @@ EOF;
 	}
 
 	protected function renderScript() {
-
-            $js = <<<EOF
-        $('#modal-default').modal('show');
+		$js = <<<EOF
+$('#modal-default').modal('show');
 EOF;
-
-
-
 		Yii::app()->clientScript->registerScript('announcement',$js,CClientScript::POS_READY);
 	}
 

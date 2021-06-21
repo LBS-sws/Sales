@@ -1,15 +1,13 @@
 <?php
 class RankiconWidget extends CWidget
 {
-    public $show = true;
-
-    public function run() {
+	public function run() {
 		$content = '';
 		$level = Yii::app()->user->ranklevel();
 		
 		if (!empty($level) && (!$this->hasRead() || !$this->hasReadInSalesSystem())) {
 			$content .= $this->renderContent($level);
-
+			
 			$this->renderScript();
 			$this->setRead();
 		}
@@ -31,12 +29,17 @@ class RankiconWidget extends CWidget
 				<h3 class="modal-title">$title</h3>
 			</div>
 			<div class="modal-body">
-				<table width="100%"><tr>
-					<td width="10%">&nbsp;</td>
-					<td align="center">$image</td>
-					<td align="center"><h2><strong>$level</strong></h2></td>
-					<td width="10%">&nbsp;</td>
-				</tr></table>
+				<table width="100%">
+					<tr>
+						<td width="10%">&nbsp;</td>
+						<td align="center">$image</td>
+						<td align="center"><h2><strong>$level</strong></h2></td>
+						<td width="10%">&nbsp;</td>
+					</tr>
+					<tr><td colspan=4>&nbsp;</td></tr>
+					<tr><td colspan=4>&nbsp;</td></tr>
+					<tr><td colspan=4>&nbsp;</td></tr>
+				</table>
 			</div>
 		</div>
 		<!-- /.modal-content -->
@@ -49,14 +52,13 @@ EOF;
 	}
 	
 	protected function renderScript() {
-//		$js = <<<EOF
-//$('#modal-ranking').modal('show');
-        $js = $this->show ? "$('#modal-ranking').modal('show');" : "";
-//        $js .= <<<EOF
-//$('#modal-ranking').on("hidden.bs.modal", function() {
-//	$('#modal-ranknotice').modal('show');
-//});
-//EOF;
+		$modalWindow = Yii::app()->params['showRankNotice']=='on' ? 'modal-ranknotice' : 'modal-default';
+		$js = <<<EOF
+$('#modal-ranking').modal('show');
+$('#modal-ranking').on("hidden.bs.modal", function() {
+	$('#$modalWindow').modal('show');
+});
+EOF;
 		Yii::app()->clientScript->registerScript('rankicon',$js,CClientScript::POS_READY);
 	}
 
