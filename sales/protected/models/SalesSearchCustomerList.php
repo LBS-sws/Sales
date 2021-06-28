@@ -96,26 +96,24 @@ class SalesSearchCustomerList extends CListPageModel
 		
 		$sql = $sql1.$clause.$order;
 		$sql = $this->sqlWithPageCriteria($sql, $this->pageNum);
-		$records = Yii::app()->db->createCommand($sql)->queryAll();
+		$record = Yii::app()->db->createCommand($sql)->queryRow();
 		
 		$list = array();
 		$this->attr = array();
-		if (count($records) > 0) {
+		if ($record) {
             $this->countBool = true;
-			foreach ($records as $k=>$record) {
-				$detail = $this->getServiceList($record['id'], $record['code'], $record['name'], $record['city']);
-				$this->attr[] = array(
-					'company_id'=>$record['id'],
-					'company_code'=>$record['code'],
-					'company_name'=>$record['name'],
-					'full_name'=>$record['full_name'],
-					'cont_name'=>$record['cont_name'],
-					'cont_phone'=>$record['cont_phone'],
-					'city_name'=>$record['city_name'],
-					'company_status'=>$this->statusDesc($record['status']),
-					'detail'=>$detail,
-				);
-			}
+            $detail = $this->getServiceList($record['id'], $record['code'], $record['name'], $record['city']);
+            $this->attr[] = array(
+                'company_id'=>$record['id'],
+                'company_code'=>$record['code'],
+                'company_name'=>$record['name'],
+                'full_name'=>$record['full_name'],
+                'cont_name'=>$record['cont_name'],
+                'cont_phone'=>$record['cont_phone'],
+                'city_name'=>$record['city_name'],
+                'company_status'=>$this->statusDesc($record['status']),
+                'detail'=>$detail,
+            );
 		}
 /*		$session = Yii::app()->session;
 		$session[$this->criteraName()] = $this->getCriteria();*/
