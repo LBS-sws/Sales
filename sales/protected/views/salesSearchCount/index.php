@@ -63,38 +63,19 @@ $this->pageTitle=Yii::app()->name . ' - Sales Count';
 <?php $this->endWidget(); ?>
 <?php
 
-$js = '
-    var lineChartData = {
-        labels : ["January","February","March","April","May","June","July"],
-        datasets : [
-            {
-                label: "My First dataset",
-                fillColor : "rgba(220,220,220,0.2)",
-                strokeColor : "rgba(220,220,220,1)",
-                pointColor : "rgba(220,220,220,1)",
-                pointStrokeColor : "#fff",
-                pointHighlightFill : "#fff",
-                pointHighlightStroke : "rgba(220,220,220,1)",
-                data : [1,4,50,80,44,51,33]
-            },
-            {
-                label: "M1y First dataset",
-                fillColor : "rgba(220,220,220,0.2)",
-                strokeColor : "rgba(220,220,220,1)",
-                pointColor : "rgba(220,220,220,1)",
-                pointStrokeColor : "#fff",
-                pointHighlightFill : "#fff",
-                pointHighlightStroke : "rgba(220,220,220,1)",
-                data : [1,4,50,80,44,51,33]
-            }
-        ]
-    }
-    var ctx = document.getElementById("canvas").getContext("2d");
-    window.myLine = new Chart(ctx).Line(lineChartData, {
-        responsive: true
-    });
-';
-Yii::app()->clientScript->registerScript('selectAll',$js,CClientScript::POS_READY);
+$js = <<<EOF
+function showdetail(id) {
+	var icon = $('#btn_'+id).attr('class');
+	if (icon.indexOf('plus') >= 0) {
+		$('.detail_'+id).show();
+		$('#btn_'+id).attr('class', 'fa fa-minus-square');
+	} else {
+		$('.detail_'+id).hide();
+		$('#btn_'+id).attr('class', 'fa fa-plus-square');
+	}
+}
+EOF;
+Yii::app()->clientScript->registerScript('rowClick',$js,CClientScript::POS_HEAD);
 ?>
 
 

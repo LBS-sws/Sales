@@ -117,8 +117,8 @@ class SalesSearchCustomerList extends CListPageModel
 				);
 			}
 		}
-		$session = Yii::app()->session;
-		$session[$this->criteraName()] = $this->getCriteria();
+/*		$session = Yii::app()->session;
+		$session[$this->criteraName()] = $this->getCriteria();*/
 		$this->insertSearchHistory();
 		return true;
 	}

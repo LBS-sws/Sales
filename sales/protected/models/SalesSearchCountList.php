@@ -14,6 +14,7 @@ class SalesSearchCountList extends CListPageModel
             'employee_code'=>Yii::t('sales','Staff Code'),
             'employee_name'=>Yii::t('sales','Staff Name'),
             'search_date'=>Yii::t('sales','sales search date'),
+            'search_str'=>Yii::t('sales','sales search keyword'),
             'search_num'=>Yii::t('sales','sales search count'),
 		);
 	}
@@ -76,12 +77,15 @@ class SalesSearchCountList extends CListPageModel
 		$this->attr = array();
 		if (count($records) > 0) {
 			foreach ($records as $k=>$record) {
+                $details = json_decode($record['search_json'],true);
 				$this->attr[] = array(
+					'id'=>$record['id'],
 					'employee_code'=>$record['employee_code'],
 					'employee_name'=>$record['employee_name'],
 					'city'=>$record['name'],
 					'search_date'=>$record['search_date'],
 					'search_num'=>$record['search_num'],
+					'detail'=>$details,
 				);
 			}
 		}
