@@ -120,6 +120,7 @@ class TbApiEx extends TbApi {
 		$cs->registerScriptFile($this->assetPath.'/plugins/timepicker/bootstrap-timepicker.min.js',CClientScript::POS_END);
 		$cs->registerScriptFile($this->assetPath.'/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js',CClientScript::POS_END);
 		$cs->registerScriptFile($this->assetPath.'/dist/js/adminlte.min.js',CClientScript::POS_END);
+        $cs->registerScriptFile($this->assetPath.'/bower_components/chart.js/Chart.min.js',CClientScript::POS_END);
         $this->registerTooltipAndPopover();
 	}
 	

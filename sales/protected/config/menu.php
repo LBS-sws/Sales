@@ -20,6 +20,14 @@ return array(
 			'access'=>'HK03',
 				'url'=>'/fivestep/index',
 			),
+			'Sales Search Customer'=>array(
+			'access'=>'HK06',
+				'url'=>'/SalesSearchCustomer/index',
+			),
+			'Sales Search Count'=>array(
+			'access'=>'HK07',
+				'url'=>'/SalesSearchCount/index',
+			),
             'Performance Objectives'=>array(
                 'access'=>'HK04',
                 'url'=>'/performance/index',

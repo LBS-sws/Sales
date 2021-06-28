@@ -104,6 +104,10 @@ return array(
 'Total rank score'=>'銷售段位總分榜',
 'Sales Rank'=>'銷售段位設置',
 'Sales Turnover'=>'銷售成交率報表',
-'Sales segment coefficient'=>'销售段位係數設置'
+'Sales segment coefficient'=>'销售段位係數設置',
+
+	//沈超添加
+	'Sales Search Customer'=>'銷售客戶查詢',
+	'Sales Search Count'=>'銷售客戶查詢統計',
 );
 ?>

@@ -114,5 +114,9 @@ return array(
 	'Redeem index'=>'积分兌換',
     'Redeem list'=>'积分兌換列表',
 	'Redeem prize list'=>'积分兌換奖项列表',
+
+	//沈超添加
+	'Sales Search Customer'=>'销售客户查询',
+	'Sales Search Count'=>'销售客户查询统计',
 );
 ?>
