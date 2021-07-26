@@ -78,10 +78,12 @@ return array(
         'access'=>'HD',
         'icon'=>'fa-edit',
         'items'=>array(
+/*
             'Sales segment details query111'=>array(
                 'access'=>'HD09',
                 'url'=>'/rankzhixing/index',
             ),
+*/
             'Sales segment details query'=>array(
                 'access'=>'HD01',
                 'url'=>'/rank/index',
