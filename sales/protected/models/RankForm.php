@@ -6,6 +6,7 @@ class RankForm extends CFormModel
     public $id;
     public $season;
     public $city;
+    public $year;
     public $date;
     public $visit = array();
     public $ia = array();
@@ -72,12 +73,19 @@ class RankForm extends CFormModel
               left outer join  sal_rankday b on  a.id=b.rank_id
               where a.id='$index'";
         $rows = Yii::app()->db->createCommand($sql)->queryRow();
+        if($rows){
+            $last_score = "select now_score from sales$suffix.sal_rank
+              where season='".$rows['season']."' and  username='".$rows['username']."' and id<".$index." order by id desc";
+            $last_score = Yii::app()->db->createCommand($last_score)->queryScalar();
+            $rows['last_score']=$last_score;
+        }
         $this->id = $index;
         $city = $rows['city'];
         $cityname = $this->cityname($city);
         $year = date("Y", strtotime($rows['month']));//当前赛季时间年
         $month = date("m", strtotime($rows['month']));//当前赛季时间月
         $this->date = $month;
+        $this->year = $year;
         $star_time = date("Y-m-01", strtotime($rows['month']));//当前赛季開始时间
         $end_time = date("Y-m-31", strtotime($rows['month']));//当前赛季結束时间
         //上赛季分数
@@ -354,10 +362,17 @@ class RankForm extends CFormModel
         }
         //当前上班天数
         //当前第几周
-        $sb_day = date("d");
-        $week = $this->get_week();
+        $time_rank=$this->year."/".$this->date;
+        if($time_rank==date("Y/m")){ //当月
+            $time_rank.="/".date("d");
+        }else{
+            $time_rank.="/01";
+            $time_rank = date('Y/m/d', strtotime("$time_rank +1 month -1 day"));
+        }
+        $sb_day = date("d",strtotime($time_rank));
+        $week = $this->get_week($time_rank);//計算今天是當月的第几周
         $weekarray=array(7,1,2,3,4,5,6);
-        if($weekarray[date("w")]>=6){
+        if($weekarray[date("w",strtotime($time_rank))]>=6){ //如果是星期六、星期日
             $sb_day = $sb_day-$week;
         }else{
             $sb_day = $sb_day-$week+1;
@@ -367,9 +382,9 @@ class RankForm extends CFormModel
             $sb_day = $day;
         }
         //月底排查天数修正数据
-        $firstDay = date('Y-m-01');
+        $firstDay = date('Y-m-01',strtotime($time_rank));
         $lastDay = date('d', strtotime("$firstDay +1 month -1 day"));
-        if($lastDay==date('d')){
+        if($lastDay==date('d',strtotime($time_rank))){
 //            $all_week = $this->weeks_in_month(date('Y'),date('m'));
 //            $star_week = $weekarray[date("w", strtotime(Date("Y-m-1")))] >=6 ? 0:1;
 //            $end_week = $weekarray[date("w", strtotime("$firstDay +1 month -1 day"))] >=6 ? 0:1;
@@ -518,9 +533,9 @@ class RankForm extends CFormModel
 
         }
 
-
         $sql1 = "update sal_rank set all_score='" . $this->all_score . "',last_score='" . $this->last_score . "',now_score='" . $this->now_score . "',initial_score='" . $this->initial_score . "' where id='" . $index . "'";
         $command = Yii::app()->db->createCommand($sql1)->execute();
+
         return true;
     }
 
@@ -818,13 +833,14 @@ EOF;
     {
         return Yii::app()->user->validFunction('CN10');
     }
-    function get_week(){
+    function get_week($time=""){
+        $time=empty($time)?time():strtotime($time);
         #  本月第一天
-        $oneDay = date('Y-m-01', time());
+        $oneDay = date('Y-m-01', $time);
         #  本月天数
         $tolDay = date('d', strtotime("$oneDay +1 month -1 day"));
         #  获取今天的日期
-        $day = date('d',time());
+        $day = date('d',$time);
         #  计算本月第一天是周几
         $week = date('w',strtotime($oneDay));
         #  获取本月第一周有多少天
