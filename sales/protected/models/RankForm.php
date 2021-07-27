@@ -73,12 +73,13 @@ class RankForm extends CFormModel
               left outer join  sal_rankday b on  a.id=b.rank_id
               where a.id='$index'";
         $rows = Yii::app()->db->createCommand($sql)->queryRow();
+        $last_score = 0;
         if($rows){
             $last_score = "select now_score from sales$suffix.sal_rank
               where season='".$rows['season']."' and  username='".$rows['username']."' and id<".$index." order by id desc";
             $last_score = Yii::app()->db->createCommand($last_score)->queryScalar();
-            $rows['last_score']=$last_score;
         }
+        $rows['last_score']=$last_score;
         $this->id = $index;
         $city = $rows['city'];
         $cityname = $this->cityname($city);
