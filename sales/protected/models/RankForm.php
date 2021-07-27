@@ -75,9 +75,23 @@ class RankForm extends CFormModel
         $rows = Yii::app()->db->createCommand($sql)->queryRow();
         $last_score = 0;
         if($rows){
-            $last_score = "select now_score from sales$suffix.sal_rank
+            $sql = "select now_score from sales$suffix.sal_rank
               where season='".$rows['season']."' and  username='".$rows['username']."' and id<".$index." order by id desc";
-            $last_score = Yii::app()->db->createCommand($last_score)->queryScalar();
+            $last_score = Yii::app()->db->createCommand($sql)->queryRow();
+            if($last_score){//當前賽季的繼承分數
+                $last_score = $last_score["now_score"];
+            }else{//下一個賽季的繼承分數計算
+                $sql="select now_score from sales$suffix.sal_rank
+              where season<'".$rows['season']."' and  username='".$rows['username']."' and id<".$index." order by season desc,id desc";
+                $seasonRow = Yii::app()->db->createCommand($sql)->queryRow();
+                if($seasonRow&&$seasonRow['now_score']>9000){
+                    $sql1="select new_fraction from sales$suffix.sal_level where start_fraction<='".$seasonRow['now_score']."' and end_fraction>='".$seasonRow['now_score']."'";
+                    $record=Yii::app()->db->createCommand($sql1)->queryRow();
+                    if($record){
+                        $last_score = $record["new_fraction"];
+                    }
+                }
+            }
         }
         $rows['last_score']=$last_score;
         $this->id = $index;
