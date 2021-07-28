@@ -119,6 +119,7 @@ $this->pageTitle=Yii::app()->name . ' - Five Steps Form';
                             0=>Yii::t('misc','Insecticidal'),
                             1=>Yii::t('misc','Restroom'),
                             2=>Yii::t('misc','Third'),
+                            3=>Yii::t('misc','Air Purifier'),
                         );
                         $scoreright = ($model->isManagerRight() || $model->isDirectorRight());
                         if ($model->isReadOnly() ||  $model->username!=Yii::app()->user->id || !empty($model->mgr_score) || !empty($model->dir_score)) {
