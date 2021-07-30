@@ -111,7 +111,7 @@ class ExcelTool {
 		if (isset($definition['italic']) && is_bool($definition['italic']))
 			$this->objPHPExcel->getActiveSheet()->getStyleByColumnAndRow($col,$row)->getFont()->setItalic($definition['italic']);
 		if (isset($definition['bold']) && is_bool($definition['bold']))
-			$this->objPHPExcel->getActiveSheet()->getStyleByColumnAndRow($col,$row)->getFont()->setItalic($definition['bold']);
+			$this->objPHPExcel->getActiveSheet()->getStyleByColumnAndRow($col,$row)->getFont()->setBold($definition['bold']);
 			
 	}
 	

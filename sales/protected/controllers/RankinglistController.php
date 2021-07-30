@@ -41,7 +41,7 @@ class RankinglistController extends Controller
                 'expression'=>array('RankinglistController','allowReadWrite'),
             ),
             array('allow',
-                'actions'=>array('index','view','downs'),
+                'actions'=>array('index','view','downs','download'),
                 'expression'=>array('RankinglistController','allowReadOnly'),
             ),
             array('deny',  // deny all users
@@ -77,6 +77,21 @@ class RankinglistController extends Controller
         $this->render('form',array('model'=>$model,'peopel'=>$peopel,'list'=>$list,'lists'=>$lists,'rank'=>$rank));
 
     }
+
+	public function actionDownload($start, $end) {
+		$model = new ReportRankinglistForm();
+        $people=$model->salepeople($start,$end);
+        $list=$model->salelist($start,$end);
+        $lists=$model->salelists($start,$end);
+        $rank=$model->ranklist($start,$end);
+		$output = $model->export($start, $people, $list, $lists, $rank);
+
+		header('Content-Type: application/vnd.ms-excel');
+		header('Content-Disposition: inline;filename="rankinglist'.date('Ym',strtotime($start)).'.xlsx"');
+		header('Cache-Control: max-age=0');
+		echo $output;
+		Yii::app()->end();
+	}
 
 //    public function actiondowns(){
 //        $model = new ReportG02Form;

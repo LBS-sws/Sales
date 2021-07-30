@@ -10,15 +10,29 @@
     <!-- /.box-header -->
 
     <div class="box-body">
+<?php if (!isset($popup) || !$popup): ?>
         <div id='ranklist' class="direct-chat-messages" style="height: 250px;">
             <div class="overlay">
               <i class="fa fa-refresh fa-spin"></i>
             </div>
         </div>
+<?php else: ?>
+        <div id='ranklist'>
+            <div class="overlay">
+              <i class="fa fa-refresh fa-spin"></i>
+            </div>
+        </div>
+<?php endif; ?>
     </div>
     <!-- /.box-body -->
 
     <div class="box-footer">
+<?php
+if (!isset($popup) || !$popup) {
+	$url = Yii::app()->createAbsoluteUrl("dashboard/showranklist");
+	echo TbHtml::link('<span class="fa fa-external-link"></span>',"javascript:window.open('$url','popup','directories=no,titlebar=no,toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no,width=400,height=600');");
+}
+?>
         <small><?php echo Yii::t('report','Refresh data immediately when signing');?></small>
     </div>
     <!-- /.box-footer -->
