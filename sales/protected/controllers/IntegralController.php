@@ -24,7 +24,7 @@ class IntegralController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','delete','save','downs'),
+				'actions'=>array('new','edit','delete','save','downs','test'),
 				'expression'=>array('IntegralController','allowReadWrite'),
 			),
 			array('allow', 
@@ -36,6 +36,43 @@ class IntegralController extends Controller
 			),
 		);
 	}
+
+    public function actionTest($month=6,$id=0,$year="2021")
+    {
+        $suffix = Yii::app()->params['envSuffix'];
+        $row = Yii::app()->db->createCommand()->select("a.code,a.name,a.city,c.user_id")
+            ->from("hr$suffix.hr_employee a")
+            ->leftJoin("hr$suffix.hr_binding c","a.id = c.employee_id")
+            ->where("a.id=:id",array(":id"=>$id))->queryRow();
+        if($row){
+            $id = Yii::app()->db->createCommand()->select("id")
+                ->from("sal_integral")
+                ->where("year=:year and month=:month and username=:username",
+                    array(":year"=>$year,":month"=>$month,":username"=>$row["user_id"])
+                )->queryScalar();
+            if($id){
+                $model = new IntegralForm('view');
+                $model->retrieveData($id);
+                Yii::app()->db->createCommand()->update("sal_integral",array(
+                    "point"=>$model['cust_type_name']['point'],
+                    "all_sum"=>$model['cust_type_name']['all_sum']
+                ),"id='$id'");
+                echo "update success";
+            }else{
+                Yii::app()->db->createCommand()->insert("sal_integral",
+                    array(
+                        "year"=>2021,
+                        "month"=>$month,
+                        "username"=>$row["user_id"],
+                        "city"=>$row["city"]
+                    )
+                );
+                echo "add success";
+            }
+        }else{
+            echo "error staff_id";
+        }
+    }
 
 	public function actionIndex($pageNum=0) 
 	{
