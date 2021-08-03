@@ -252,4 +252,137 @@ class ReportRankinglistForm extends CReportForm
         return $models;
     }
 
+	public function export($date, $data_1, $data_2, $data_3, $data_4) {
+		$excel = new ExcelToolEx;
+		$excel->start();
+		$excel->newFile();
+		
+		$excel->setActiveSheet(0);
+		$excel->setColWidth(0,10);
+		$excel->setColWidth(1,10);
+		$excel->setColWidth(2,10);
+		$excel->setColWidth(3,15);
+		$excel->setColWidth(4,15);
+		$excel->setColWidth(5,25);
+		$excel->setCellFont(0,3,array('bold'=>true));
+		$excel->setCellFont(1,3,array('bold'=>true));
+		$excel->setCellFont(2,3,array('bold'=>true));
+		$excel->setCellFont(3,3,array('bold'=>true));
+		$excel->setCellFont(4,3,array('bold'=>true));
+		$excel->setCellFont(5,3,array('bold'=>true));
+		$title = Yii::t('report','List of total amount of individual sales signing').' '.date('Y/m',strtotime($date));
+		$excel->writeReportTitle($title);
+		$excel->writeCell(0,3,Yii::t('report','ranking'));
+		$excel->writeCell(1,3,Yii::t('report','city'));
+		$excel->writeCell(2,3,Yii::t('report','quyu'));
+		$excel->writeCell(3,3,Yii::t('report','name'));
+		$excel->writeCell(4,3,Yii::t('report','level'));
+		$excel->writeCell(5,3,Yii::t('report','fuwumoney'));
+		$row = 4;
+		foreach ($data_1 as $record) {
+			$excel->writeCell(0, $row, $row-3);
+			$excel->writeCell(1, $row, $record['city']);
+			$excel->writeCell(2, $row, $record['quyu']);
+			$excel->writeCell(3, $row, $record['name']);
+			$excel->writeCell(4, $row, $record['level']);
+			$excel->writeCell(5, $row, number_format($record['money'],2));
+			$row += 1;
+		}
+
+		$excel->createSheet();
+		$excel->setActiveSheet(1);
+		$excel->setColWidth(0,10);
+		$excel->setColWidth(1,10);
+		$excel->setColWidth(2,10);
+		$excel->setColWidth(3,20);
+		$excel->setColWidth(4,20);
+		$excel->setCellFont(0,3,array('bold'=>true));
+		$excel->setCellFont(1,3,array('bold'=>true));
+		$excel->setCellFont(2,3,array('bold'=>true));
+		$excel->setCellFont(3,3,array('bold'=>true));
+		$excel->setCellFont(4,3,array('bold'=>true));
+		$title = Yii::t('report','List of regional sales per capita order signing volume').' '.date('Y/m',strtotime($date));
+		$excel->writeReportTitle($title);
+		$excel->writeCell(0,3,Yii::t('report','ranking'));
+		$excel->writeCell(1,3,Yii::t('report','city'));
+		$excel->writeCell(2,3,Yii::t('report','quyu'));
+		$excel->writeCell(3,3,Yii::t('report','sum'));
+		$excel->writeCell(4,3,Yii::t('report','renjun'));
+		$row = 4;
+		foreach ($data_2 as $record) {
+			$excel->writeCell(0, $row, $row-3);
+			$excel->writeCell(1, $row, $record['city']);
+			$excel->writeCell(2, $row, $record['quyu']);
+			$excel->writeCell(3, $row, $record['people']);
+			$excel->writeCell(4, $row, number_format($record['renjun'],2));
+			$row += 1;
+		}
+		
+		$excel->createSheet();
+		$excel->setActiveSheet(2);
+		$excel->setColWidth(0,10);
+		$excel->setColWidth(1,10);
+		$excel->setColWidth(2,10);
+		$excel->setColWidth(3,20);
+		$excel->setColWidth(4,20);
+		$excel->setCellFont(0,3,array('bold'=>true));
+		$excel->setCellFont(1,3,array('bold'=>true));
+		$excel->setCellFont(2,3,array('bold'=>true));
+		$excel->setCellFont(3,3,array('bold'=>true));
+		$excel->setCellFont(4,3,array('bold'=>true));
+		$title = Yii::t('report','List of regional sales per capita signed amount').' '.date('Y/m',strtotime($date));
+		$excel->writeReportTitle($title);
+		$excel->writeCell(0,3,Yii::t('report','ranking'));
+		$excel->writeCell(1,3,Yii::t('report','city'));
+		$excel->writeCell(2,3,Yii::t('report','quyu'));
+		$excel->writeCell(3,3,Yii::t('report','sum'));
+		$excel->writeCell(4,3,Yii::t('report','money'));
+		$row = 4;
+		foreach ($data_3 as $record) {
+			$excel->writeCell(0, $row, $row-3);
+			$excel->writeCell(1, $row, $record['city']);
+			$excel->writeCell(2, $row, $record['quyu']);
+			$excel->writeCell(3, $row, $record['people']);
+			$excel->writeCell(4, $row, number_format($record['money'],2));
+			$row += 1;
+		}
+
+		$excel->createSheet();
+		$excel->setActiveSheet(3);
+		$excel->setColWidth(0,10);
+		$excel->setColWidth(1,15);
+		$excel->setColWidth(2,15);
+		$excel->setColWidth(3,25);
+		$excel->setColWidth(4,10);
+		$excel->setColWidth(5,10);
+		$excel->setCellFont(0,3,array('bold'=>true));
+		$excel->setCellFont(1,3,array('bold'=>true));
+		$excel->setCellFont(2,3,array('bold'=>true));
+		$excel->setCellFont(3,3,array('bold'=>true));
+		$excel->setCellFont(4,3,array('bold'=>true));
+		$excel->setCellFont(5,3,array('bold'=>true));
+		$title = Yii::t('report','Sales ranking').' '.date('Y/m',strtotime($date));
+		$excel->writeReportTitle($title);
+		$excel->writeCell(0,3,Yii::t('report','ranking'));
+		$excel->writeCell(1,3,Yii::t('report','level'));
+		$excel->writeCell(2,3,Yii::t('report','name'));
+		$excel->writeCell(3,3,Yii::t('report','rank'));
+		$excel->writeCell(4,3,Yii::t('report','city'));
+		$excel->writeCell(5,3,Yii::t('report','quyu'));
+		$row = 4;
+		foreach ($data_4 as $record) {
+			$excel->writeCell(0, $row, $row-3);
+			$excel->writeCell(1, $row, $record['level']);
+			$excel->writeCell(2, $row, $record['name']);
+			$excel->writeCell(3, $row, $record['rank']);
+			$excel->writeCell(4, $row, $record['city']);
+			$excel->writeCell(5, $row, $record['quyu']);
+			$row += 1;
+		}
+
+		$rtn = $excel->getOutput();
+		$excel->end();
+		
+		return $rtn;
+	}
 }

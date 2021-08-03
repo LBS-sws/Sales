@@ -49,5 +49,14 @@ class ExcelToolEx extends ExcelTool {
 			->setRGB('AFECFF');
 		$this->mergeCells($row1, $col1, $row2, $col2);
 	}
+
+	public function getOutput() {
+		$objWriter = PHPExcel_IOFactory::createWriter($this->objPHPExcel, 'Excel2007');
+		ob_start();
+		$objWriter->save('php://output');
+		$output = ob_get_clean();
+		
+		return $output;
+	}
 }
 ?>

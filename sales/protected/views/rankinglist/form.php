@@ -23,18 +23,17 @@ $this->pageTitle=Yii::app()->name . ' - Month Report';
 </section>
 <div class="box"><div class="box-body">
         <div class="btn-group" role="group">
-
             <?php echo TbHtml::button('<span class="fa fa-reply"></span> '.Yii::t('misc','Back'), array(
                 'submit'=>Yii::app()->createUrl('rankinglist/index')));
             ?>
-
+            <?php 
+				$start = $model['scenario']['start_dt'].'-'.$model['scenario']['start_dt1'].'-01';
+				$end = date('Y-m-t',strtotime($start));
+				echo TbHtml::button('<span class="fa fa-download"></span> '.Yii::t('misc','Download'), array(
+					'submit'=>Yii::app()->createUrl('rankinglist/download', array('start'=>$start, 'end'=>$end))));
+            ?>
         </div>
-<!--        <div class="btn-group pull-right" role="group">-->
-<!--            --><?php //echo TbHtml::button('<span class="fa fa-download"></span> '.Yii::t('misc','xiazai'), array(
-//                'submit'=>Yii::app()->createUrl('rankinglist/downs')));
-//            ?>
-<!--        </div>-->
-    </div></div>
+</div></div>
 
 <section class="content" >
     <div class="row"></div>

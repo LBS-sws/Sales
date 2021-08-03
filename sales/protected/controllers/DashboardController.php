@@ -24,7 +24,7 @@ class DashboardController extends Controller
 	{
 		return array(
 			array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('notify','salepeople','Salelist','Salelists','ranklist',),
+				'actions'=>array('notify','salepeople','Salelist','Salelists','ranklist','showranklist',),
 				'users'=>array('@'),
 			),
 			array('deny',  // deny all users
@@ -196,6 +196,10 @@ foreach ($models as $key=>$item) {
         echo json_encode($result);
     }
 
+	public function actionShowranklist() {
+		$this->layout = "main_nm";
+		$this->render('//dashboard/ranklist',array('popup'=>true));
+	}
 
     public function actionRanklist(){
         $suffix = Yii::app()->params['envSuffix'];

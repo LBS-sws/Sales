@@ -100,6 +100,7 @@ return array(
     'Five Type'=>'五部曲类型',
     'Click to download and view the segment calculation rule report.'=>'点击可下载查看段位得分规则报表',
 	'Your ranking is:'=>'你当前的段位为:',
+	'Air Purifier'=>'空气净化',
 );
 
 ?>
