@@ -410,7 +410,14 @@ class FivestepForm extends CFormModel
         $from_addr = "it@lbsgroup.com.hk";
         $subject = "五部曲提醒";
         $description = "五部曲提醒";
-        $message = "姓名：" . $rows['disp_name'] . ",您的五部曲评分为不合格，请重新上传";
+		$steplist = $this->getStepList();
+		$typelist = $this->getFiveTypeList();
+
+        $message = "您的五部曲评分为不合格，请重新上传<br>";
+		$message .= "姓名：" . $rows['disp_name']."<br>";
+		$message .= Yii::t('sales','Position')."：".$this->post_name."<br>";
+		$message .= Yii::t('sales','5 Steps')."：".$steplist[$this->step]."<br>";
+		$message .= Yii::t('sales','Five Type')."：".$typelist[$this->five_type]."<br>";
         $lcu = "admin";
 			$suffix = $suffix=='dev' ? '_w' : $suffix;
         $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
@@ -475,6 +482,15 @@ class FivestepForm extends CFormModel
 					'4'=>Yii::t('sales','Step 4'),
 					'5'=>Yii::t('sales','Step 5'),
 					);	
+	}
+	
+	public function getFiveTypeList() {
+		return array(
+			0=>Yii::t('misc','Insecticidal'),
+			1=>Yii::t('misc','Restroom'),
+			2=>Yii::t('misc','Third'),
+			3=>Yii::t('misc','Air Purifier'),
+		);
 	}
 	
 	public function getStepDesc() {

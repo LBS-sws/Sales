@@ -113,14 +113,9 @@ $this->pageTitle=Yii::app()->name . ' - Five Steps Form';
 				</div>
 <!--                <div class="form-group">-->
                     <?php echo $form->labelEx($model,'five_type',array('class'=>"col-sm-2 control-label")); ?>
-                    <div class="col-sm-1">
+                    <div class="col-sm-2">
                         <?php
-                        $typelist = array(
-                            0=>Yii::t('misc','Insecticidal'),
-                            1=>Yii::t('misc','Restroom'),
-                            2=>Yii::t('misc','Third'),
-                            3=>Yii::t('misc','Air Purifier'),
-                        );
+                        $typelist = $model->getFiveTypeList();
                         $scoreright = ($model->isManagerRight() || $model->isDirectorRight());
                         if ($model->isReadOnly() ||  $model->username!=Yii::app()->user->id || !empty($model->mgr_score) || !empty($model->dir_score)) {
                             echo $form->hiddenField($model, 'five_type');
