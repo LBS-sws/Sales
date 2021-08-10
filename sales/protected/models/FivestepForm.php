@@ -417,7 +417,7 @@ class FivestepForm extends CFormModel
 		$message .= "姓名：" . $rows['disp_name']."<br>";
 		$message .= Yii::t('sales','Position')."：".$this->post_name."<br>";
 		$message .= Yii::t('sales','5 Steps')."：".$steplist[$this->step]."<br>";
-		$message .= Yii::t('sales','Five Type')."：".$typelist[$this->five_type]."<br>";
+		$message .= Yii::t('misc','Five Type')."：".$typelist[$this->five_type]."<br>";
         $lcu = "admin";
 			$suffix = $suffix=='dev' ? '_w' : $suffix;
         $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(

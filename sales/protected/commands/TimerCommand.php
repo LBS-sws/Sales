@@ -41,7 +41,7 @@ class TimerCommand extends CConsoleCommand {
                     $message = "姓名：" . $record['name'] . ",入职日期为：" . $record['entry_time'] . ",已经到上传五部曲的时间了<br>";
 					$message .= Yii::t('sales','Position')."：".$record['post_name']."<br>";
 					$message .= Yii::t('sales','5 Steps')."：".$steplist[$record['step']]."<br>";
-					$message .= Yii::t('sales','Five Type')."：".$typelist[$record['five_type']]."<br>";
+					$message .= Yii::t('misc','Five Type')."：".$typelist[$record['five_type']]."<br>";
 					$lcu = "admin";
                     $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
                         'request_dt' => date('Y-m-d H:i:s'),
@@ -68,7 +68,7 @@ class TimerCommand extends CConsoleCommand {
                     $message = "姓名：" . $record['name'] . ",入职日期为：" . $record['entry_time'] . ",賬戶五部曲還是空白请提醒上传";
 					$message .= Yii::t('sales','Position')."：".$record['post_name']."<br>";
 					$message .= Yii::t('sales','5 Steps')."：".$steplist[$record['step']]."<br>";
-					$message .= Yii::t('sales','Five Type')."：".$typelist[$record['five_type']]."<br>";
+					$message .= Yii::t('misc','Five Type')."：".$typelist[$record['five_type']]."<br>";
                     $lcu = "admin";
                     $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
                         'request_dt' => date('Y-m-d H:i:s'),
