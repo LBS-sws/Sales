@@ -41,7 +41,7 @@ $this->pageTitle=Yii::app()->name . ' - Five Steps Form';
 			?>
 <?php endif ?>
 <?php if ($model->scenario!='new' && $model->scenario!='view'
-			&& ($model->isManagerRight() || $model->username==Yii::app()->user->id) && empty($model->mgr_score_user) && empty($model->dir_score_user)
+			&& ($model->isRemoveRight() || ($model->username==Yii::app()->user->id && empty($model->sup_score_user) && empty($model->mgr_score_user) && empty($model->dir_score_user)))
 	   ): 
 ?>
 	<?php echo TbHtml::button('<span class="fa fa-remove"></span> '.Yii::t('misc','Delete'), array(

@@ -535,4 +535,7 @@ class FivestepForm extends CFormModel
 		return Yii::app()->user->validFunction('CN02');
 	}
 
+	public function isRemoveRight() {
+		return Yii::app()->user->validFunction('CN11');
+	}
 }

@@ -11,4 +11,5 @@ return array(
     'Signature details email'=>array('access'=>'CN08',),
     'Integarl (Read All)'=>array('access'=>'CN09',),
     'Rank (Read All)'=>array('access'=>'CN10',),
+    'Remove Five Step Right'=>array('access'=>'CN11',),
 );

@@ -61,7 +61,9 @@ return array(
 'Sales List'=>'銷售排行榜單',
 'Signature details email'=>'簽單明細電郵',
 'Integarl (Read All)'=>'積分表 (全部閱讀)',
-
+'Rank (Read All)'=>'段位人員(全部閱讀) ',
+'Remove Five Step Right'=>'刪除五步曲記錄',
+	
 'User'=>'帳戶',
 'Group'=>'群組',
 'Access Template'=>'權限範本',

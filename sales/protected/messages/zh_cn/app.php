@@ -67,6 +67,7 @@ return array(
     'Signature details email'=>'签单明细电邮',
     'Integarl (Read All)'=>'积分表 (全部阅读)',
     'Rank (Read All)'=>'段位人员(全部阅读) ',
+	'Remove Five Step Right'=>'删除五步曲记录',
 
 	'User'=>'帐户',
 	'Group'=>'群组',
