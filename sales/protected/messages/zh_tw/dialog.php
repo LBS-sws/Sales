@@ -83,6 +83,7 @@ return array(
     'You can only select one of them separately to view season data and annual data'=>'查看賽季數據和查看年度數據只能單獨選擇其中一項',
 'Saving' => '保存中',
 'Invalid file type.'=>'無效的文件類型.',
+'Advice'=>'温馨提示',
 );
 
 ?>

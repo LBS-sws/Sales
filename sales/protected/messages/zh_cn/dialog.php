@@ -89,5 +89,6 @@ return array(
     'Inventory No'=>'库存不足',
 	'Saving' => '保存中',
 	'Invalid file type.'=>'无效的文件类型.',
+	'Advice'=>'温馨提示',
 );
 ?>
