@@ -67,6 +67,15 @@ class RptVisitList extends CReport {
 			'svc_D5'=>array('label'=>Yii::t('sales','预估成交率').'(0-100%)','width'=>10,'align'=>'C'),
 			'svc_D6'=>array('label'=>Yii::t('sales','合同年金额'),'width'=>10,'align'=>'C'),
 			'svc_D7'=>array('label'=>Yii::t('sales','备注'),'width'=>30,'align'=>'L'),
+
+			'svc_H'=>array('label'=>Yii::t('sales','Monthly Amount'),'width'=>10,'align'=>'C'),
+			'svc_H1'=>array('label'=>Yii::t('sales','类别'),'width'=>10,'align'=>'C'),
+			'svc_H4'=>array('label'=>Yii::t('sales','延长维保'),'width'=>10,'align'=>'C'),
+			'svc_H2'=>array('label'=>Yii::t('sales','RA488'),'width'=>10,'align'=>'C'),
+			'svc_H3'=>array('label'=>Yii::t('sales','RA800'),'width'=>10,'align'=>'C'),
+			'svc_H5'=>array('label'=>Yii::t('sales','预估成交率').'(0-100%)','width'=>10,'align'=>'C'),
+			'svc_H6'=>array('label'=>Yii::t('sales','合同年金额'),'width'=>10,'align'=>'C'),
+			'svc_H7'=>array('label'=>Yii::t('sales','备注'),'width'=>30,'align'=>'L'),
 			
 			'svc_E'=>array('label'=>Yii::t('sales','Monthly Amount'),'width'=>10,'align'=>'C'),
 			'svc_E1'=>array('label'=>Yii::t('sales','服务面积'),'width'=>10,'align'=>'C'),
@@ -87,7 +96,6 @@ class RptVisitList extends CReport {
 			'svc_G1'=>array('label'=>Yii::t('sales','种类'),'width'=>10,'align'=>'C'),
 			'svc_G2'=>array('label'=>Yii::t('sales','备注'),'width'=>30,'align'=>'L'),
 		);
-		
 		return ($this->readAll ? array_merge($field1, $field2) : $field2);
 	}
 	
@@ -177,6 +185,20 @@ class RptVisitList extends CReport {
 				),
 			),
 			
+			array(
+				'label'=>Yii::t('sales','蔚诺空气业务').Yii::t('sales','报价'),
+				'child'=>array(
+					'svc_H',
+					'svc_H1',
+					'svc_H4',
+					'svc_H2',
+					'svc_H3',
+					'svc_H5',
+					'svc_H6',
+					'svc_H7',
+				),
+			),
+
 			array(
 				'label'=>Yii::t('sales','甲醛').Yii::t('sales','报价'),
 				'child'=>array(
@@ -310,10 +332,20 @@ class RptVisitList extends CReport {
 				$sqld = "select field_id, field_value from sal_visit_info where visit_id=".$row['id'];
 				$lines = Yii::app()->db->createCommand($sqld)->queryAll();
 				foreach ($lines as $line) {
-					if (strpos('svc_C2,svc_C3,svc_C4,svc_C5,svc_C9,',$line['field_id'].',')===false)
-						$temp[$line['field_id']] = $line['field_value'];
-					else 
-						$temp[$line['field_id']] = $line['field_value']=='Y' ? 'Y' : '';
+                    //svc_H1,svc_G1
+				    switch ($line['field_id']){
+                        case "svc_H1"://蔚诺空气业务 類別
+                            $temp[$line['field_id']] = VisitForm::getTypeListForH($line['field_value'],true);
+                            break;
+                        case "svc_G1"://一次性售卖 種類
+                            $temp[$line['field_id']] = VisitForm::getTypeListForG($line['field_value'],true);
+                            break;
+                        default:
+                            if (strpos('svc_C2,svc_C3,svc_C4,svc_C5,svc_C9,',$line['field_id'].',')===false)
+                                $temp[$line['field_id']] = $line['field_value'];
+                            else
+                                $temp[$line['field_id']] = $line['field_value']=='Y' ? 'Y' : '';
+                    }
 				}
 				
 				$this->data[] = $temp;
