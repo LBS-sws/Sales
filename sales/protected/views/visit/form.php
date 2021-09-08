@@ -377,6 +377,22 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 								)
 							); 
 					break;
+				case 'select':
+				    if(key_exists("func",$fv)){
+                        $fvList = $fv["func"];
+                        $fvList = $model->$fvList($fieldvalue);
+                    }elseif (key_exists("list",$fv)){
+                        $fvList = $fv["list"];
+                    }else{
+                        $fvList = array();
+                    }
+					$out .= '<div class="col-sm-2">';
+					$out .= TbHtml::dropDownList($fieldname, $fieldvalue,$fvList,
+								array('id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
+									'placeholder'=>Yii::t('sales','select'),
+								)
+							);
+					break;
 				case 'rmk':
 					$out .= '<div class="col-sm-7">';
 					$out .= TbHtml::textArea($fieldname, $fieldvalue, 

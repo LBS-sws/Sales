@@ -208,5 +208,10 @@ return array(
 =>'By observing the performance of trainer during first time visit with trainee, Regional Director or above can summarize whether the training process is up to standard and able to improve.',
 '媒体'=>'Media',
 '客户名称（包括分店名）'=>'Customer Name (incl. Branch Name)',
+'延长维保'=>'Extended maintenance',
+'蔚诺空气业务'=>'Renaud Air',
+'类别'=>'Type',
+'轻松派'=>'Easy to send',
+'随意派'=>'Sent at random',
 );
 ?>

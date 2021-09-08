@@ -187,5 +187,10 @@ return array(
     'only sales statistics'=>'销售员工统计',
     'all sales statistics'=>'城市统计',
     'city statistics'=>'地区统计',
+
+    'display'=>'是否显示',
+    'show'=>'显示',
+    'none'=>'隐藏',
+    'type for'=>'类别归属',
 );
 ?>

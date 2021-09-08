@@ -110,6 +110,19 @@ class VisitForm extends CFormModel
 								'D7'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
 							),
 				),
+			'H'=>array(
+					'name'=>Yii::t('sales','蔚诺空气业务'),
+					'type'=>'annual',
+					'items'=>array(
+								'H1'=>array('name'=>Yii::t('sales','类别'),'type'=>'select','func'=>'getTypeListForH'),
+                                'H4'=>array('name'=>Yii::t('sales','延长维保'),'type'=>'qty','eol'=>true),
+								'H2'=>array('name'=>Yii::t('sales','RA488'),'type'=>'qty'),
+								'H3'=>array('name'=>Yii::t('sales','RA800'),'type'=>'qty','eol'=>true),
+								'H5'=>array('name'=>Yii::t('sales','预估成交率').'(0-100%)','type'=>'pct'),
+								'H6'=>array('name'=>Yii::t('sales','合同年金额'),'type'=>'amount','eol'=>true),
+								'H7'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
+							),
+				),
 			'E'=>array(
 					'name'=>Yii::t('sales','甲醛'),
 					'type'=>'annual',
@@ -139,13 +152,57 @@ class VisitForm extends CFormModel
 					'type'=>'none',
 					'items'=>array(
 								'G3'=>array('name'=>Yii::t('sales','合同金额'),'type'=>'amount','eol'=>true),
-								'G1'=>array('name'=>Yii::t('sales','种类'),'type'=>'text','eol'=>true),
+								'G1'=>array('name'=>Yii::t('sales','种类'),'type'=>'select','func'=>'getTypeListForG','eol'=>true),
 								'G2'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
 							),
 				),
 		);
 	}
-	
+
+	//蔚诺空气业务的类型列表
+	public static function getTypeListForH($type=0,$bool=false){
+        $arr = array(""=>"");
+	    $rows = Yii::app()->db->createCommand()->select("id,name")->from("sal_attr_type")
+            ->where("(rpt_type='H' and display_num=1) or id=:id",array(":id"=>$type))
+            ->queryAll();
+	    if($rows){
+            foreach ($rows as $row){
+                $arr[$row["id"]] = $row["name"];
+            }
+        }
+        if($bool){
+            if (key_exists($type,$arr)){
+                return $arr[$type];
+            }else{
+                return $type;
+            }
+        }else{
+            return $arr;
+        }
+    }
+
+	//一次性售卖的类型列表
+	public static function getTypeListForG($type=0,$bool=false){
+        $arr = array(""=>"");
+        $rows = Yii::app()->db->createCommand()->select("id,name")->from("sal_attr_type")
+            ->where("(rpt_type='G' and display_num=1) or id=:id",array(":id"=>$type))
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $arr[$row["id"]] = $row["name"];
+            }
+        }
+        if($bool){
+            if (key_exists($type,$arr)){
+                return $arr[$type];
+            }else{
+                return $type;
+            }
+        }else{
+            return $arr;
+        }
+    }
+
 	public function init() {
 		$this->city = Yii::app()->user->city();
 		$this->username = Yii::app()->user->id;

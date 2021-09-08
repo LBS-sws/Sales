@@ -182,5 +182,10 @@ return array(
     'only sales statistics'=>'銷售員工統計',
     'all sales statistics'=>'城市統計',
     'city statistics'=>'地區統計',
+
+    'display'=>'是否顯示',
+    'show'=>'顯示',
+    'none'=>'隱藏',
+    'type for'=>'類別歸屬',
 );
 ?>

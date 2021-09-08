@@ -172,6 +172,11 @@ return array(
                 'url'=>'/redeemsetting/index',
                 'tag'=>'@',
             ),
+            'Attribute category'=>array(
+                'access'=>'HC09',
+                'url'=>'/attrType/index',
+                'tag'=>'@',
+            ),
 		),
 	),
 

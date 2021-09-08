@@ -120,5 +120,6 @@ return array(
 	//沈超添加
 	'Sales Search Customer'=>'销售客户查询',
 	'Sales Search Count'=>'销售客户查询统计',
+	'Attribute category'=>'属性类别',
 );
 ?>

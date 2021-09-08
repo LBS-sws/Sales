@@ -112,5 +112,6 @@ return array(
 	//沈超添加
 	'Sales Search Customer'=>'銷售客戶查詢',
 	'Sales Search Count'=>'銷售客戶查詢統計',
+    'Attribute category'=>'屬性類別',
 );
 ?>
