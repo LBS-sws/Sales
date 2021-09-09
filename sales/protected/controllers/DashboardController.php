@@ -24,7 +24,7 @@ class DashboardController extends Controller
 	{
 		return array(
 			array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('notify','salepeople','Salelist','Salelists','ranklist','showranklist',),
+				'actions'=>array('notify','salepeople','Salelist','Salelists','ranklist','showranklist','renaudlist',),
 				'users'=>array('@'),
 			),
 			array('deny',  // deny all users
@@ -88,6 +88,58 @@ class DashboardController extends Controller
 
 		echo json_encode($models);
 	}
+
+
+    public function actionRenaudlist($type="money") {
+	    $orderList = array("money","amount","number");
+	    $type = in_array($type,$orderList)?$type:"money";
+        $suffix = Yii::app()->params['envSuffix'];
+        $models = array();
+        $time= date('Y/m');
+        //生成查詢sql
+        $tableSql = Yii::app()->db->createCommand()
+            ->select("a.visit_id,b.username,
+            MAX(CASE a.field_id WHEN 'svc_H2' THEN a.field_value+0 ELSE 0 END) as 'svc_H2',
+            MAX(CASE a.field_id WHEN 'svc_H3' THEN a.field_value+0 ELSE 0 END) as 'svc_H3',
+            MAX(CASE a.field_id WHEN 'svc_H6' THEN a.field_value+0 ELSE 0 END) as 'svc_H6'
+            ")
+            ->from("sal_visit_info a")
+            ->leftJoin("sal_visit b","a.visit_id = b.id")
+            ->where("date_format(b.visit_dt,'%Y/%m')='$time' and b.visit_obj like '%10%'")
+            ->group("a.visit_id,b.username")
+            ->getText();
+        //排序及統計
+        $result = Yii::app()->db->createCommand()
+            ->select("f.username,
+            COUNT(f.username) as amount,SUM(f.svc_H2)+SUM(f.svc_H3) as number,
+            SUM(f.svc_H6) as money
+            ")
+            ->from("($tableSql) f")
+            ->where("f.svc_H6 != 0")
+            ->group("f.username")
+            ->order("$type desc")
+            ->limit(20)
+            ->queryAll();
+        if($result){
+            //登錄賬戶補充員工名字、城市、區域
+            foreach ($result as &$row){
+                $list = Yii::app()->db->createCommand()
+                    ->select("f.name as city_name,g.name as region_name,b.name")
+                    ->from("hr$suffix.hr_binding a")
+                    ->leftJoin("hr$suffix.hr_employee b","a.employee_id=b.id")
+                    ->leftJoin("security$suffix.sec_city f","b.city=f.code")
+                    ->leftJoin("security$suffix.sec_city g","f.region=g.code")
+                    ->where("a.user_id=:user_id",array(":user_id"=>$row["username"]))
+                    ->queryRow();
+                $row["city_name"] = $list?$list["city_name"]:"";
+                $row["region_name"] = $list?($list["region_name"]==null?"":$list["region_name"]):"";
+                $row["name"] = $list?$list["name"]:"";
+            }
+            echo json_encode($result);
+        }else{
+            echo json_encode(array());
+        }
+    }
 
 
     public function actionSalelist() {

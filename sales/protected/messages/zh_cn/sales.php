@@ -192,5 +192,7 @@ return array(
     'show'=>'显示',
     'none'=>'隐藏',
     'type for'=>'类别归属',
+    'singular'=>'单数',
+    'Score Ari'=>'机器总数量',
 );
 ?>

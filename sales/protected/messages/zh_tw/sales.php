@@ -187,5 +187,7 @@ return array(
     'show'=>'顯示',
     'none'=>'隱藏',
     'type for'=>'類別歸屬',
+    'singular'=>'單數',
+    'Score Ari'=>'機器總數量',
 );
 ?>

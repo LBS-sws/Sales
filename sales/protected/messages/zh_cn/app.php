@@ -121,5 +121,6 @@ return array(
 	'Sales Search Customer'=>'销售客户查询',
 	'Sales Search Count'=>'销售客户查询统计',
 	'Attribute category'=>'属性类别',
+	'Renaud Air List'=>'蔚诺空气业务签单排行榜',
 );
 ?>

@@ -29,7 +29,7 @@ class VisitForm extends CFormModel
 
 	public $service = array();
 	protected $dynamic_fields = array('latitude', 'longitude', 'deal');
-	protected $amount_fields = array('A7','B6','C7','D6','E7','F4','G3');
+	protected $amount_fields = array('A7','B6','C7','D6','E7','F4','G3','H6');
 	
 	public $city;
 	public $city_name;

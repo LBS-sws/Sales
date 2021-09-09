@@ -113,5 +113,6 @@ return array(
 	'Sales Search Customer'=>'銷售客戶查詢',
 	'Sales Search Count'=>'銷售客戶查詢統計',
     'Attribute category'=>'屬性類別',
+    'Renaud Air List'=>'蔚诺空气业务签单排行榜',
 );
 ?>
