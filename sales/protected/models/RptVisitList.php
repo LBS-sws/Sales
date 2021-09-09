@@ -337,9 +337,6 @@ class RptVisitList extends CReport {
                         case "svc_H1"://蔚诺空气业务 類別
                             $temp[$line['field_id']] = VisitForm::getTypeListForH($line['field_value'],true);
                             break;
-                        case "svc_G1"://一次性售卖 種類
-                            $temp[$line['field_id']] = VisitForm::getTypeListForG($line['field_value'],true);
-                            break;
                         default:
                             if (strpos('svc_C2,svc_C3,svc_C4,svc_C5,svc_C9,',$line['field_id'].',')===false)
                                 $temp[$line['field_id']] = $line['field_value'];

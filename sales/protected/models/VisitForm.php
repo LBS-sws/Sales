@@ -152,7 +152,7 @@ class VisitForm extends CFormModel
 					'type'=>'none',
 					'items'=>array(
 								'G3'=>array('name'=>Yii::t('sales','合同金额'),'type'=>'amount','eol'=>true),
-								'G1'=>array('name'=>Yii::t('sales','种类'),'type'=>'select','func'=>'getTypeListForG','eol'=>true),
+								'G1'=>array('name'=>Yii::t('sales','种类'),'type'=>'text','eol'=>true),
 								'G2'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
 							),
 				),

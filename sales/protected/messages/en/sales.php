@@ -213,5 +213,6 @@ return array(
 '类别'=>'Type',
 '轻松派'=>'Easy to send',
 '随意派'=>'Sent at random',
+'包含延长维保'=>'And Extended maintenance',
 );
 ?>

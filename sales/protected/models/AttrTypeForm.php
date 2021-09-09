@@ -36,8 +36,9 @@ class AttrTypeForm extends CFormModel
 	public static function getRPTTypeList($id=0,$bool=false)
 	{
 	    $arr = array(
+	        ""=>"",
 	        "H"=>Yii::t('sales','蔚诺空气业务'),
-	        "G"=>Yii::t('sales','一次性售卖')
+	        //"G"=>Yii::t('sales','一次性售卖')
         );
 	    if($bool){
 	        if(key_exists($id,$arr)){

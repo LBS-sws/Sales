@@ -287,8 +287,10 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 			</div>
 
 <?php
+$currcode = City::getCurrency($model->city);
+$sign = Currency::getSign($currcode);
 
-	foreach($model->serviceDefinition() as $gid=>$items) {
+foreach($model->serviceDefinition() as $gid=>$items) {
 		$fieldid = get_class($model).'_service_svc_'.$gid;
 		$fieldname = get_class($model).'[service][svc_'.$gid.']';
 		$fieldvalue = isset($model->service['svc_'.$gid]) ? $model->service['svc_'.$gid] : '';
@@ -311,7 +313,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 				$content .= "<div class='col-sm-2'>"
 							.TbHtml::numberField($fieldname, $fieldvalue, 
 								array('size'=>8,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),	
-									'placeholder'=>Yii::t('sales','Amount'),
+									'placeholder'=>Yii::t('sales','Amount'),'prepend'=>'<span class="fa '.$sign.'"></span>'
 								)
 							)
 							."</div>"; 
@@ -321,7 +323,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 				$content .= "<div class='col-sm-2'>"
 							.TbHtml::numberField($fieldname, $fieldvalue, 
 								array('size'=>8,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),	
-									'placeholder'=>Yii::t('sales','Amount'),
+									'placeholder'=>Yii::t('sales','Amount'),'prepend'=>'<span class="fa '.$sign.'"></span>'
 								)
 							)
 							."</div>"; 
@@ -341,6 +343,9 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 			if ($cnt==0) $out .= '<div class="form-group">';
 
 //			$out .= '<div class="col-sm-2">';
+            if($fid=="H6"){
+                $fv['name'].="(".Yii::t('sales','包含延长维保').")";
+            }
 			$out .= TbHtml::label($fv['name'], $fieldid, array('class'=>"col-sm-2 control-label"));
 //			$out .= '</div>';
 			switch ($fv['type']) {
@@ -348,7 +353,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 					$out .= '<div class="col-sm-2">';
 					$out .= TbHtml::numberField($fieldname, $fieldvalue, 
 								array('size'=>5,'min'=>0,'max'=>100,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
-									'placeholder'=>Yii::t('sales','Percentage'),
+									'placeholder'=>Yii::t('sales','Percentage'),'append'=>'<span>%</span>'
 								)
 							); 
 					break;
@@ -365,7 +370,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 					$out .= '<div class="col-sm-2">';
 					$out .= TbHtml::numberField($fieldname, $fieldvalue, 
 								array('size'=>8,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
-									'placeholder'=>Yii::t('sales','Amount'),
+									'placeholder'=>Yii::t('sales','Amount'),'prepend'=>'<span class="fa '.$sign.'"></span>'
 								)
 							); 
 					break;
