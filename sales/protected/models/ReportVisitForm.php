@@ -1848,7 +1848,8 @@ class ReportVisitForm extends CReportForm
             $people['visit']=$baifang;
             $people['singular']=$sums;
             $people['cityname']=$cname['cityname'];
-            $people['names']=$cname['names'];
+            $people['names']=$cname['names'];//员工名字
+            $people['username']=$peoples;//账号名字
             //其他金额
             $svc_A7=0;
             $svc_B6=0;

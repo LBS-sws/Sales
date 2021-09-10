@@ -7,6 +7,9 @@ class VisitCommand extends CConsoleCommand
         $firstDay = date("Y-m-d");
         $arr['start_dt'] = date("Y-m-d", strtotime("$firstDay - 6 day"));
         $arr['end_dt'] = $firstDay;
+        $month = date("m",strtotime($arr['start_dt']));
+        $month = intval($month);
+        $integralList = $this->getIntegralList($arr['start_dt']);
         $Day = date("Y-m-01");
         //收件人
         $sql = "select a.username,a.email,a.city,c.name from  security$suffix.sec_user a 
@@ -40,6 +43,7 @@ class VisitCommand extends CConsoleCommand
                         $arr['sale'] = array_column($people, 'username');
                         $arr['sort'] = 'singular';
                         $arr_email = ReportVisitForm::Summary($arr);
+                        $sumIntegral = 0;
                         $sum['money'] = array_sum(array_map(create_function('$val', 'return $val["money"];'), $arr_email));
                         $sum['visit'] = array_sum(array_map(create_function('$val', 'return $val["visit"];'), $arr_email));
                         $sum['singular'] = array_sum(array_map(create_function('$val', 'return $val["singular"];'), $arr_email));
@@ -84,6 +88,7 @@ class VisitCommand extends CConsoleCommand
 						<td class="et3" height="56" rowspan="2" style="height: 20px; width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;"><strong><span style="font-size:18px;">姓名</span></strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>地区</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>段位</strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><strong><span style="font-size:18px;">{$month}月积分</span></strong></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><strong><span style="font-size:18px;">当周拜访数量</span></strong></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><strong><span style="font-size:18px;">当周签单数量</span></strong></span></td>
 						<td class="et3" rowspan="2" style="width: 110pt; text-align: center;" width="132"><span style="color:#000000;"><strong><span style="font-size:18px;">服务签单总金额</span></strong></span></td>
@@ -100,6 +105,7 @@ class VisitCommand extends CConsoleCommand
 					<tr height="28" style="height:5px;">
 						<td class="et3" colspan="2" height="56" rowspan="2" style="height: 20px; width: 151.5pt; text-align: center;" width="202"><span style="color:#000000;"><span style="font-size:16px;"><span style="font-size:18px;"><strong>总金额/总数量</strong></span></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>:sumIntegral:</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>{$sum['visit']}</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>{$sum['singular']}</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 110pt; text-align: center;" width="132"><span style="color:#000000;"><span style="font-size:16px;"><span style="font-size:18px;"><strong>{$sum['money']}</strong></span></span></span></td>
@@ -122,11 +128,14 @@ class VisitCommand extends CConsoleCommand
 					</tr>
 EOF;
                         foreach ($arr_email as $value) {
+                            $numIntegral = key_exists($value["username"],$integralList)?$integralList[$value["username"]]:0;
+                            $sumIntegral+=$numIntegral;
                             $message.= <<<EOF
 					<tr height="46" style="height:35.00pt;">
 						<td class="et5" height="46" style="height: 35pt; width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><a target="_Blank" href="$url&sales={$value['names']}"><span style="font-size:16px;">{$value['names']}</span></a></span></td>
 						<td class="et5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['cityname']}</span></span></td>
 							<td class="et5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['rank']}</span></span></td>
+						<td class="et5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$numIntegral}</span></span></td>
 						<td class="et5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['visit']}</span></span></td>
 						<td class="et5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['singular']}</span></span></td>
 						<td class="et5" style="width: 110pt; text-align: center;" width="132"><span style="color:#000000;"><span style="font-size:16px;">{$value['money']}</span></span></td>
@@ -172,6 +181,7 @@ EOF;
 	</tbody>
 </table>
 EOF;
+                        $message = str_replace(':sumIntegral:',$sumIntegral,$message);
                         $lcu = "admin";
                         $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
                             'request_dt' => date('Y-m-d H:i:s'),
@@ -211,6 +221,7 @@ EOF;
 						<td class="et3" height="56" rowspan="2" style="height: 20px; width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;"><strong><span style="font-size:18px;">姓名</span></strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>地区</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>段位</strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><strong><span style="font-size:18px;">{$month}月积分</span></strong></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><strong><span style="font-size:18px;">当周拜访数量</span></strong></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><strong><span style="font-size:18px;">当周签单数量</span></strong></span></td>
 						<td class="et3" rowspan="2" style="width: 110pt; text-align: center;" width="132"><span style="color:#000000;"><strong><span style="font-size:18px;">服务签单总金额</span></strong></span></td>
@@ -227,6 +238,7 @@ EOF;
 					<tr height="28" style="height:5px;">			
 						<td class="et3" colspan="2" height="56" rowspan="2" style="height: 20px; width: 151.5pt; text-align: center;" width="202"><span style="color:#000000;"><span style="font-size:16px;"><span style="font-size:18px;"><strong>总金额/总数量</strong></span></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>0</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>0</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 110pt; text-align: center;" width="132"><span style="color:#000000;"><span style="font-size:16px;"><span style="font-size:18px;"><strong>0</strong></span></span></span></td>
 						<td class="et3" rowspan="2" style="width: 110pt; text-align: center;" width="132"><span style="color:#000000;"><span style="font-size:16px;"><span style="font-size:18px;"><strong>0</strong></span></span></span></td>
@@ -287,5 +299,23 @@ EOF;
                     }
                 }
             }
+    }
+
+    private function getIntegralList($date){
+        $year = date("Y", strtotime($date));
+        $month = date("m", strtotime($date));
+        $month = intval($month);
+        $rows = Yii::app()->db->createCommand()->select("username,all_sum")->from("sal_integral")
+            ->where("year='{$year}' and month='{$month}'")->queryAll();
+        if($rows){
+            $arr = array();
+            foreach ($rows as $row){
+                $arr[$row["username"]] = is_numeric($row["all_sum"])?floatval($row["all_sum"]):0;
+            }
+            return $arr;
+        }else{
+            return array();
         }
+    }
+
 }
