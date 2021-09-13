@@ -57,7 +57,7 @@ class IntegralForm extends CFormModel
         $this->year=$row['year'];
         $this->month=$row['month'];
         $i=0;
-        foreach ($this->cust_type_name['canpin'] as &$value){//产品的
+        foreach ($this->cust_type_name['canpin'] as &$value){//产品的(INV服務)
             $sum_c=array();
             $sum_s=array();
             $sql1="select a.* from swoper$suffix.swo_service a
@@ -332,17 +332,17 @@ class IntegralForm extends CFormModel
         foreach ($this->cust_type_name['yushou'] as &$value){
             $sum_y3=array();
             if($value['toplimit']==3){
-                $sql_ys="select * from swoper$suffix.swo_service a
+                $sql_ys="select a.* from swoper$suffix.swo_service a
                inner join hr$suffix.hr_employee b on a.salesman=concat(b.name, ' (', b.code, ')')
                inner join hr$suffix.hr_binding c on b.id=c.employee_id 
                where c.user_id='".$row['username']."'  and a.status_dt>='$startime' and a.status_dt<='$endtime' and a.status='N' and  prepay_month>=3 and prepay_month <6 ";
             }elseif ($value['toplimit']==6){
-                $sql_ys="select * from swoper$suffix.swo_service a
+                $sql_ys="select a.* from swoper$suffix.swo_service a
                inner join hr$suffix.hr_employee b on a.salesman=concat(b.name, ' (', b.code, ')')
                inner join hr$suffix.hr_binding c on b.id=c.employee_id 
                where c.user_id='".$row['username']."'  and a.status_dt>='$startime' and a.status_dt<='$endtime' and a.status='N' and  prepay_month>=6 and prepay_month <12 ";
             }elseif ($value['toplimit']==12){
-                $sql_ys="select * from swoper$suffix.swo_service a
+                $sql_ys="select a.* from swoper$suffix.swo_service a
                inner join hr$suffix.hr_employee b on a.salesman=concat(b.name, ' (', b.code, ')')
                inner join hr$suffix.hr_binding c on b.id=c.employee_id 
                where c.user_id='".$row['username']."'  and a.status_dt>='$startime' and a.status_dt<='$endtime' and a.status='N' and  prepay_month >=12  ";
@@ -352,10 +352,10 @@ class IntegralForm extends CFormModel
                 foreach ($service as $arr){
                     $arr['company_name']=str_replace("'","''",$arr['company_name']);
                     if(empty($arr['cust_type_name'])){
-                        $sql_calculation="select * from swoper$suffix.swo_service where company_name='".$arr['company_name']."' and cust_type='".$arr['cust_type']."' and cust_type_name=' ' and salesman='".$arr['salesman']."'  and status='N' and status_dt<'$endtime'";
+                        $sql_calculation="select * from swoper$suffix.swo_service where company_name='".$arr['company_name']."' and cust_type='".$arr['cust_type']."' and cust_type_name=' ' and salesman='".$arr['salesman']."'  and status='N' and status_dt<='$endtime'";
 
                     }else{
-                        $sql_calculation="select * from swoper$suffix.swo_service where company_name='".$arr['company_name']."' and cust_type_name='".$arr['cust_type_name']."' and salesman='".$arr['salesman']."'  and status='N' and status_dt<'$endtime'";
+                        $sql_calculation="select * from swoper$suffix.swo_service where company_name='".$arr['company_name']."' and cust_type_name='".$arr['cust_type_name']."' and salesman='".$arr['salesman']."'  and status='N' and status_dt<='$endtime'";
                     }
                     $m = Yii::app()->db->createCommand($sql_calculation)->queryAll();
                     $sql_list="select * from swoper$suffix.swo_service where company_name='".$arr['company_name']."' and cust_type='".$arr['cust_type']."' and cust_type_name='".$arr['cust_type_name']."' and salesman='".$arr['salesman']."'  and status='N' and status_dt>='$startime' and status_dt<='$endtime'";
