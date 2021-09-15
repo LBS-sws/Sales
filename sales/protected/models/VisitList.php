@@ -136,7 +136,7 @@ class VisitList extends CListPageModel
 		$this->attr = array();
 		if (count($records) > 0) {
 			foreach ($records as $k=>$record) {
-                $sql = "select field_id, field_value from sal_visit_info where field_id in ('svc_A','svc_B','svc_C','svc_D','svc_E','svc_F4','svc_G3') and visit_id = '".$record['id']."'";
+                $sql = "select field_id, field_value from sal_visit_info where field_id in ('svc_A','svc_B','svc_C','svc_D','svc_E','svc_F4','svc_G3','svc_H') and visit_id = '".$record['id']."'";
                 $rows = Yii::app()->db->createCommand($sql)->queryAll();
                 foreach ($rows as $a) {
                     for ($i = 0; $i < count($rows); $i++) {
@@ -155,6 +155,9 @@ class VisitList extends CListPageModel
                 }
                 if(!empty($list['svc_D'])){
                     $quote.=$list['svc_D']."(飘盈香) / -";
+                }
+                if(!empty($list['svc_H'])){
+                    $quote.=$list['svc_H']."(蔚诺空气业务) / -";
                 }
                 if(!empty($list['svc_E'])){
                     $quote.=$list['svc_E']."(甲醛) / -";
@@ -290,7 +293,7 @@ class VisitList extends CListPageModel
         $this->attr = array();
         if (count($records) > 0) {
             foreach ($records as $k=>$record) {
-                $sql = "select field_id, field_value from sal_visit_info where field_id in ('svc_A','svc_B','svc_C','svc_D','svc_E','svc_F4','svc_G3') and visit_id = '".$record['id']."'";
+                $sql = "select field_id, field_value from sal_visit_info where field_id in ('svc_A','svc_B','svc_C','svc_D','svc_E','svc_F4','svc_G3','svc_H') and visit_id = '".$record['id']."'";
                 $rows = Yii::app()->db->createCommand($sql)->queryAll();
                 foreach ($rows as $a) {
                     for ($i = 0; $i < count($rows); $i++) {
@@ -309,6 +312,9 @@ class VisitList extends CListPageModel
                 }
                 if(!empty($list['svc_D'])){
                     $quote.=$list['svc_D']."(飘盈香) / -";
+                }
+                if(!empty($list['svc_H'])){
+                    $quote.=$list['svc_H']."(蔚诺空气业务) / -";
                 }
                 if(!empty($list['svc_E'])){
                     $quote.=$list['svc_E']."(甲醛) / -";

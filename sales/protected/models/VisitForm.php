@@ -699,7 +699,7 @@ class VisitForm extends CFormModel
 		$svcmsg_en = "";
 		$services = $this->serviceDefinition();
 		foreach($services as $key=>$value) {
-			if (strpos("ABCDEFG", $key)!==false) {
+			if (strpos("ABCDEFGH", $key)!==false) {
 				foreach($value['items'] as $k=>$v) {
 					if ($v['type']=='amount') {
 						$fldid = 'svc_'.$k;
