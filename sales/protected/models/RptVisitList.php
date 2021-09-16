@@ -1,6 +1,7 @@
 <?php
 class RptVisitList extends CReport {
 	protected $readAll = false;
+	protected $dateRangeValue = '0';
 	
 	protected function fields() {
 		$field1 = array(
@@ -254,6 +255,7 @@ class RptVisitList extends CReport {
 		$this->searchField = $criteria->searchField;
 		$this->searchValue = $criteria->searchValue;
 		$this->filter = json_decode($criteria->filter);
+		$this->dateRangeValue = $criteria->dateRangeValue;
 	}
 	
 	public function retrieveData() {
@@ -293,6 +295,10 @@ class RptVisitList extends CReport {
 				$fldid = $this->searchField;
 				$clause .= General::getSqlConditionClause($columns->$fldid,$svalue);
 			}
+		}
+		if ($this->dateRangeValue!='0') {
+			$d = date('Y-m-d', strtotime('-'.$this->dateRangeValue.' months'));
+			$clause .= " and a.visit_dt >= '$d' ";
 		}
 		$order = $this->readAll	? " order by a.visit_dt desc, f.code" : " order by a.visit_dt desc, b.name, f.code";
 		$sql = $sql.$clause.$order;

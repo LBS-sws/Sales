@@ -356,7 +356,7 @@ class VisitList extends CListPageModel
     }
 
 
-
+/*
     public function getCriteria() {
         return array(
             'searchField'=>$this->searchField,
@@ -366,8 +366,10 @@ class VisitList extends CListPageModel
             'noOfItem'=>$this->noOfItem,
             'pageNum'=>$this->pageNum,
             'filter'=>$this->filter,
+			'dateRangeValue'=>$this->dateRangeValue,
         );
     }
+*/
 	
 	public function submitReport() {
 		$session = Yii::app()->session;
