@@ -115,7 +115,7 @@ class VisitForm extends CFormModel
 					'type'=>'annual',
 					'items'=>array(
 								'H1'=>array('name'=>Yii::t('sales','类别'),'type'=>'select','func'=>'getTypeListForH'),
-                                'H4'=>array('name'=>Yii::t('sales','延长维保'),'type'=>'qty','eol'=>true),
+                                'H4'=>array('name'=>Yii::t('sales','延长维保'),'type'=>'amount','eol'=>true),
 								'H2'=>array('name'=>Yii::t('sales','RA488'),'type'=>'qty'),
 								'H3'=>array('name'=>Yii::t('sales','RA800'),'type'=>'qty','eol'=>true),
 								'H5'=>array('name'=>Yii::t('sales','预估成交率').'(0-100%)','type'=>'pct'),
