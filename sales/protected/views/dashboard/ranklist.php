@@ -41,6 +41,7 @@ if (!isset($popup) || !$popup) {
 
 <?php
 $link = Yii::app()->createAbsoluteUrl("dashboard/ranklist");
+$imagepath = Yii::app()->baseUrl."/images/";
 $paiming= Yii::t('report','ranking');
 $city= Yii::t('report','city');
 $quyu= Yii::t('report','quyu');
@@ -66,7 +67,7 @@ $js = <<<EOF
 					}
 					now_score = i+1;
 					style1 = 'style="winth=20px;height=10px"';
-					line += '<td '+style+'>'+now_score+'</td><td '+style+'><img src="images/'+data[i].level+'.png" width="20px;">'+data[i].level+'</td><td '+style+'>'+data[i].name+'</td><td '+style+'>'+data[i].rank+'</td><td '+style+'>'+data[i].city+'</td><td '+style+'>'+data[i].quyu+'</td>';
+					line += '<td '+style+'>'+now_score+'</td><td '+style+'><img src="$imagepath'+data[i].level+'.png" width="20px;">'+data[i].level+'</td><td '+style+'>'+data[i].name+'</td><td '+style+'>'+data[i].rank+'</td><td '+style+'>'+data[i].city+'</td><td '+style+'>'+data[i].quyu+'</td>';
 					line += '</tr>';
 				}	
 				
