@@ -24,7 +24,7 @@ class IntegralController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','delete','save','downs','test'),
+				'actions'=>array('new','edit','delete','save','downs','downsNew','test'),
 				'expression'=>array('IntegralController','allowReadWrite'),
 			),
 			array('allow', 
@@ -91,33 +91,23 @@ class IntegralController extends Controller
 		$this->render('index',array('model'=>$model));
 	}
 
-
-//	public function actionSave()
-//	{
-//		if (isset($_POST['IntegralForm'])) {
-//			$model = new IntegralForm($_POST['IntegralForm']['scenario']);
-//			$model->attributes = $_POST['IntegralForm'];
-//			if ($model->validate()) {
-//				$model->saveData();
-//				Dialog::message(Yii::t('dialog','Information'), Yii::t('dialog','Save Done'));
-//				$this->redirect(Yii::app()->createUrl('performance/edit',array('index'=>$model->id)));
-//			} else {
-//				$message = CHtml::errorSummary($model);
-//				Dialog::message(Yii::t('dialog','Validation Message'), $message);
-//				$this->render('form',array('model'=>$model,));
-//			}
-//		}
-//	}
-
 	public function actionView($index)
 	{
 		$model = new IntegralForm('view');
 		if (!$model->retrieveData($index)) {
 			throw new CHttpException(404,'The requested page does not exist.');
 		} else {
-//            print_r('<pre>');
-//            print_r($model);
 			$this->render('form',array('model'=>$model,));
+		}
+	}
+
+	public function actionEdit($index)
+	{
+		$model = new IntegralForm('view');
+		if (!$model->retrieveDataNew($index)) {
+			throw new CHttpException(404,'The requested page does not exist.');
+		} else {
+			$this->render('form2',array('model'=>$model,));
 		}
 	}
 	
@@ -133,31 +123,13 @@ class IntegralController extends Controller
         $model->retrieveData($index);
         $model->downEx($model);
     }
-//	public function actionEdit($index)
-//	{
-//		$model = new IntegralForm('edit');
-//		if (!$model->retrieveData($index)) {
-//			throw new CHttpException(404,'The requested page does not exist.');
-//		} else {
-//			$this->render('form',array('model'=>$model,));
-//		}
-//	}
-	
-//	public function actionDelete()
-//	{
-//		$model = new CusttypeForm('delete');
-//		if (isset($_POST['IntegralForm'])) {
-//			$model->attributes = $_POST['IntegralForm'];
-//			if ($model->isOccupied($model->id)) {
-//				Dialog::message(Yii::t('dialog','Warning'), Yii::t('dialog','This record is already in use'));
-//				$this->redirect(Yii::app()->createUrl('custtype/edit',array('index'=>$model->id)));
-//			} else {
-//				$model->saveData();
-//				Dialog::message(Yii::t('dialog','Information'), Yii::t('dialog','Record Deleted'));
-//				$this->redirect(Yii::app()->createUrl('custtype/index'));
-//			}
-//		}
-//	}
+
+    public function actionDownsNew($index)
+    {
+        $model = new IntegralForm('new');
+        $model->retrieveDataNew($index);
+        $model->downExNew($model);
+    }
 	
 	public static function allowReadWrite() {
 		return Yii::app()->user->validRWFunction('HA06');
