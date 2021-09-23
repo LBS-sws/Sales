@@ -355,6 +355,9 @@ class IntegralForm extends CFormModel
                 $fraction = $pieces*$fraction;
             }
             if($fraction>0){//下载只显示已计算的服务
+                if($maxNum!=0){
+                    $serviceRow["expr_num"] = $exprNum;//剩余可算积分的数量
+                }
                 $this->cust_type_name[$type]["service"][]=$serviceRow;
             }
             $this->cust_type_name[$type]["list"][$id]['sum']+=$fraction;
@@ -1160,6 +1163,7 @@ var_dump($sum);
                     $objActSheetTwo->setCellValue('A'.$o,$rows["name"]);
                     $this->setExcelRowForTwo($o,$rows['service'],$objActSheetTwo);
                 }else{
+                    $objActSheetTwo->setCellValue('L1',"剩余可算积分的数量\n(不包含本条服务的数量)");
                     $objActSheetTwo->setCellValue('A'.$o,"装机");
                     $this->setExcelRowForTwo($o,$rows['insertService'],$objActSheetTwo);
                     $o++;
@@ -1215,6 +1219,7 @@ var_dump($sum);
     protected function setExcelRowForTwo(&$o,$rows,$objActSheet){
         if(!empty($rows)){
             foreach ($rows as $list){
+                $expr_num = key_exists("expr_num",$list)?$list["expr_num"]:"";
                 $o++;
                 $objActSheet->setCellValue('B'.$o,$this->getStatusName($list['status'])) ;
                 $objActSheet->setCellValue('C'.$o,	date_format(date_create($list['status_dt']),"Y/m/d")) ;
@@ -1226,6 +1231,7 @@ var_dump($sum);
                 $objActSheet->setCellValue('I'.$o,$list['amt_install']) ;
                 $objActSheet->setCellValue('J'.$o,$this->employee_name." ({$this->employee_code})") ;
                 $objActSheet->setCellValue('K'.$o,$list['prepay_month']) ;
+                $objActSheet->setCellValue('L'.$o,$expr_num) ;
             }
         }
     }
