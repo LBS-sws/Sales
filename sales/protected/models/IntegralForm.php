@@ -220,6 +220,7 @@ class IntegralForm extends CFormModel
                 $typeList["num"]+=1;
                 $typeList["sum"]+=$num*$fraction;
                 if($num>0){
+                    $serviceRow["integralNum"]=1;//积分实际计算的数量
                     $this->cust_type_name["OTHER"]["insertService"][]=$serviceRow;//下载需要
                 }
                 //小计
@@ -243,6 +244,8 @@ class IntegralForm extends CFormModel
                     if($typeList[$key]["conditions"]==1||$this->selectNewService($serviceRow)){
                         $typeList[$key]["num"]+=1;
                         $typeList[$key]["sum"]+=$typeList[$key]["fraction"];
+
+                        $serviceRow["integralNum"]=1;//积分实际计算的数量
                         $this->cust_type_name["OTHER"]["payMonthService"][]=$serviceRow;//下载需要
                         //小计
                         $this->cust_type_name["OTHER"]["count"]+=$typeList[$key]["fraction"];
@@ -347,9 +350,11 @@ class IntegralForm extends CFormModel
         $maxNum = $serviceRow["toplimit"];//產品上限（歷史記錄的總上限）不會每月重置
         $exprNum = $maxNum-$historySum;//允許計算積分的產品數量
         $exprNum = $exprNum<0?0:$exprNum;
+        $integralNum = $pieces;
         if(key_exists($id,$this->cust_type_name[$type]["list"])){
             $this->cust_type_name[$type]["list"][$id]['num']+=$pieces;
             if($maxNum!=0&&$pieces>$exprNum){
+                $integralNum = $exprNum;
                 $fraction = $exprNum*$fraction;
             }else{
                 $fraction = $pieces*$fraction;
@@ -358,6 +363,7 @@ class IntegralForm extends CFormModel
                 if($maxNum!=0){
                     $serviceRow["expr_num"] = $exprNum;//剩余可算积分的数量
                 }
+                $serviceRow["integralNum"]=$integralNum;//积分实际计算的数量
                 $this->cust_type_name[$type]["service"][]=$serviceRow;
             }
             $this->cust_type_name[$type]["list"][$id]['sum']+=$fraction;
@@ -1163,7 +1169,11 @@ var_dump($sum);
                     $objActSheetTwo->setCellValue('A'.$o,$rows["name"]);
                     $this->setExcelRowForTwo($o,$rows['service'],$objActSheetTwo);
                 }else{
+                    $objActSheetTwo->getRowDimension('1')->setRowHeight(41);
+                    $objActSheetTwo->getColumnDimension('L')->setWidth(25);
+                    $objActSheetTwo->getColumnDimension('M')->setWidth(25);
                     $objActSheetTwo->setCellValue('L1',"剩余可算积分的数量\n(不包含本条服务的数量)");
+                    $objActSheetTwo->setCellValue('M1',"积分实际计算数量");
                     $objActSheetTwo->setCellValue('A'.$o,"装机");
                     $this->setExcelRowForTwo($o,$rows['insertService'],$objActSheetTwo);
                     $o++;
@@ -1220,6 +1230,7 @@ var_dump($sum);
         if(!empty($rows)){
             foreach ($rows as $list){
                 $expr_num = key_exists("expr_num",$list)?$list["expr_num"]:"";
+                $integral_num = key_exists("integralNum",$list)?$list["integralNum"]:"";
                 $o++;
                 $objActSheet->setCellValue('B'.$o,$this->getStatusName($list['status'])) ;
                 $objActSheet->setCellValue('C'.$o,	date_format(date_create($list['status_dt']),"Y/m/d")) ;
@@ -1232,6 +1243,7 @@ var_dump($sum);
                 $objActSheet->setCellValue('J'.$o,$this->employee_name." ({$this->employee_code})") ;
                 $objActSheet->setCellValue('K'.$o,$list['prepay_month']) ;
                 $objActSheet->setCellValue('L'.$o,$expr_num) ;
+                $objActSheet->setCellValue('M'.$o,$integral_num) ;
             }
         }
     }
