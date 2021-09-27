@@ -202,6 +202,9 @@ class IntegralForm extends CFormModel
 
     //安装维护费计算
     protected function computeInstallForSwo($serviceRow){
+        if($serviceRow["sql_type_name"]=="D"){
+            return false;//ID服務不計算安裝費
+        }
         if(!key_exists("other",$this->cust_type_name["OTHER"]["list"])){
             return false;//如果没有配置安装服务费则不计算
         }
@@ -234,6 +237,9 @@ class IntegralForm extends CFormModel
         $month = empty($serviceRow["prepay_month"])?0:floatval($serviceRow["prepay_month"]);
         if($month==0){
             return false;
+        }
+        if($serviceRow["sql_type_name"]=="D"&&$month<12){
+            return false;//ID服務必須預收12月以上
         }
         $typeList = &$this->cust_type_name["OTHER"]["list"];//装机的列表
         $rows = array_reverse($typeList,true);//反转数组
@@ -319,6 +325,13 @@ class IntegralForm extends CFormModel
     protected function computeServiceForSwo($serviceRow){
 	    //产品数量
         $pieces = empty($serviceRow["pieces"])?0:intval($serviceRow["pieces"]);
+
+        //ID產品（更改）必須先算出更改的數量
+        if($serviceRow["sql_type_name"]=="D"&&$serviceRow["status"]=="A"){
+            $b4_pieces=empty($serviceRow["pieces"])?0:intval($serviceRow["pieces"]);
+            $pieces-=$b4_pieces;
+            $pieces=$pieces>0?$pieces:0;
+        }
         //单个积分
         $fraction = empty($serviceRow["fraction"])?0:intval($serviceRow["fraction"]);
         $id = $serviceRow["sql_type_name"].$serviceRow["cust_type_name"];
