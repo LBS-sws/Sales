@@ -328,7 +328,7 @@ class IntegralForm extends CFormModel
 
         //ID產品（更改）必須先算出更改的數量
         if($serviceRow["sql_type_name"]=="D"&&$serviceRow["status"]=="A"){
-            $b4_pieces=empty($serviceRow["pieces"])?0:intval($serviceRow["pieces"]);
+            $b4_pieces=empty($serviceRow["b4_pieces"])?0:intval($serviceRow["b4_pieces"]);
             $pieces-=$b4_pieces;
             $pieces=$pieces>0?$pieces:0;
         }
