@@ -18,6 +18,8 @@ class IntegralForm extends CFormModel
     public $year;
     public $month;
 
+    protected $boolNew="";
+
 	/**
 	 * Declares customized attribute labels.
 	 * If not declared here, an attribute would have a label that is
@@ -92,6 +94,7 @@ class IntegralForm extends CFormModel
             $endDate = $this->year."-".$this->month."-31";
             //产品（INV）只统计新增，服务（非INV）统计新增、续约、更改
             $exprSql = " and ((a.status in('A','C') and f.rpt_cat<>'INV') or (a.status='N'))";
+            $IDExprSql = " and (((a.status='A' or (a.status = 'C' and a.ctrt_period>=12)) and f.rpt_cat<>'INV') or (a.status='N'))";
             $selectSql = "a.*,
             f.rpt_cat,f.description,b.cust_type_name as cust_type_name_name,b.conditions,b.fraction,b.toplimit";
             //所有需要計算的客戶服務(客戶服務)
@@ -108,7 +111,7 @@ class IntegralForm extends CFormModel
                 ->from("swoper$suffix.swo_serviceid a")
                 ->leftJoin("swoper$suffix.swo_customer_type_info b","a.cust_type_name=b.id")
                 ->leftJoin("swoper$suffix.swo_customer_type_id f","a.cust_type=f.id")
-                ->where("a.status_dt BETWEEN '$startDate' and '$endDate' and a.salesman_id='$this->employee_id' $exprSql")->queryAll();
+                ->where("a.status_dt BETWEEN '$startDate' and '$endDate' and a.salesman_id='$this->employee_id' $IDExprSql")->queryAll();
             $serviceRowsID=$serviceRowsID?$serviceRowsID:array();
             $serviceRows = array_merge($serviceRows,$serviceRowsID);
             $typeForINV = $this->getServiceTypeList("INV");//產品類型
@@ -140,6 +143,7 @@ class IntegralForm extends CFormModel
             );
             if(!empty($serviceRows)){
                 foreach ($serviceRows as $serviceRow){
+                    $this->boolNew="";
                     //計算日報表系統的所有設置
                     $this->computeServiceForSwo($serviceRow);
                     if($serviceRow["status"]=="N"){ //只有新增類的服務才計算
@@ -165,19 +169,35 @@ class IntegralForm extends CFormModel
 	    if($serviceRow["status"]!="N"){
 	        return false;
         }
+        if($this->boolNew!=""){//每個循環只需要執行一次
+            return $this->boolNew;
+        }
         $bool = true;
-        $date = General::toMyDate($serviceRow["status_dt"]);
-        $suffix = Yii::app()->params['envSuffix'];
-        $row = Yii::app()->db->createCommand()->select("a.id")->from("swoper$suffix.swo_service a")
-            ->where("a.status_dt<='$date' and a.status='N' 
+	    switch ($serviceRow["sql_type_name"]){
+            case "A"://非ID服務
+                $startDate = strtotime("{$serviceRow["status_dt"]} - 3 month");
+                $date = General::toMyDate($serviceRow["status_dt"]);
+                $suffix = Yii::app()->params['envSuffix'];
+                $row = Yii::app()->db->createCommand()->select("a.status,a.status_dt")->from("swoper$suffix.swo_service a")
+                    ->where("a.status_dt<='$date' 
             and a.salesman_id='$this->employee_id' 
             and a.company_id='{$serviceRow['company_id']}' 
             and a.cust_type='{$serviceRow['cust_type']}' 
             and a.cust_type_name='{$serviceRow['cust_type_name']}' 
-            and a.id!='{$serviceRow['id']}'")->queryRow();
-        if($row){
-            $bool = false;//不是最新的客户
+            and a.id!='{$serviceRow['id']}'")->order("a.status_dt desc")->queryRow();
+                if($row){
+                    if(in_array($row["status"],array("T","S"))&&$startDate>=strtotime($row["status_dt"])){
+                        //終止時間或者暫停時間大於3個月
+                        $bool = true;//是最新的客户
+                    }else{
+                        $bool = false;//不是最新的客户
+                    }
+                }
+                break;
+            case "D"://ID服務
+                break;
         }
+        $this->boolNew = $bool;
         return $bool;
     }
 
@@ -348,9 +368,7 @@ class IntegralForm extends CFormModel
             case 3://每个新客户订购一包
             case 4://每个新客户每桶
             case 5://每个新客户每箱
-                if($this->selectNewService($serviceRow)){
-                    $this->addServiceSum($id,$pieces,$fraction,$serviceRow,$historySum);
-                }
+                $this->addServiceSum($id,$pieces,$fraction,$serviceRow,$historySum);
                 break;
             case 6://每月
                 break;
@@ -365,7 +383,6 @@ class IntegralForm extends CFormModel
         $exprNum = $exprNum<0?0:$exprNum;
         $integralNum = $pieces;
         if(key_exists($id,$this->cust_type_name[$type]["list"])){
-            $this->cust_type_name[$type]["list"][$id]['num']+=$pieces;
             if($maxNum!=0&&$pieces>$exprNum){
                 $integralNum = $exprNum;
                 $fraction = $exprNum*$fraction;
@@ -378,6 +395,8 @@ class IntegralForm extends CFormModel
                 }
                 $serviceRow["integralNum"]=$integralNum;//积分实际计算的数量
                 $this->cust_type_name[$type]["service"][]=$serviceRow;
+                //奇葩要求，所以放到if之內
+                $this->cust_type_name[$type]["list"][$id]['num']+=$pieces;
             }
             $this->cust_type_name[$type]["list"][$id]['sum']+=$fraction;
             //小计
