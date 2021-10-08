@@ -273,21 +273,23 @@ class RankForm extends CFormModel
             $this->lhmoney['sum'] = '无';
         }
         if (!empty($salepeople)) {
+            $minSalePeople = floor(count($salepeople)*0.1);
+            $minSalePeople = count($salepeople) - $minSalePeople;
             for ($a = 0; $a < count($salepeople); $a++) {
                 if ($salepeople[$a]['user'] == $rows['username']) {
-                    if ($a == 0) {
+                    if ($a == 0) {//第一名
                         $salepeople_money = 5000;
-                    } elseif ($a == 1) {
+                    } elseif ($a == 1) {//第二名
                         $salepeople_money = 3000;
-                    } elseif ($a == 2) {
+                    } elseif ($a == 2) {//第三名
                         $salepeople_money = 1500;
-                    } elseif ($a > 2 && $a < 10) {
+                    } elseif ($a > 2 && $a < 10) {//第4-9名
                         $salepeople_money = 500;
-                    } elseif ($a >= 10 && $a < 15) {
+                    } elseif ($a >= 10 && $a < 15) {//第10-14名
                         $salepeople_money = 300;
-                    } elseif ($a >= 15 && $a <= 20) {
+                    } elseif ($a >= 15 && $a <= 20) {//第15-20名
                         $salepeople_money = 100;
-                    } elseif ($a >= (count($salepeople) - 10) && $a < count($salepeople)) {
+                    } elseif ($a >= $minSalePeople) {
                         $salepeople_money = -500;
                     } else {
                         $salepeople_money = 0;

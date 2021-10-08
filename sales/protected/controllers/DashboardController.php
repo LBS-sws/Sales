@@ -24,7 +24,7 @@ class DashboardController extends Controller
 	{
 		return array(
 			array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('notify','salepeople','Salelist','Salelists','ranklist','showranklist','renaudlist',),
+				'actions'=>array('notify','salepeople','showsalepeople','Salelist','Salelists','ranklist','showranklist','renaudlist',),
 				'users'=>array('@'),
 			),
 			array('deny',  // deny all users
@@ -43,7 +43,7 @@ class DashboardController extends Controller
 	}
 
 
-	public function actionSalepeople() {
+	public function actionSalepeople($type = 0) {
 		$suffix = Yii::app()->params['envSuffix'];
 		$models = array();
 		$time= date('Y-m-d', strtotime(date('Y-m-01') ));
@@ -83,9 +83,9 @@ class DashboardController extends Controller
 		}
 		$last_names = array_column($models,'money');
 		array_multisort($last_names,SORT_DESC,$models);
-		$models = array_slice($models, 0, 20);
-
-
+		if($type==0){
+            $models = array_slice($models, 0, 20);
+        }
 		echo json_encode($models);
 	}
 
@@ -247,6 +247,11 @@ foreach ($models as $key=>$item) {
 //print_r($result);
         echo json_encode($result);
     }
+
+	public function actionShowsalepeople() {
+		$this->layout = "main_nm";
+		$this->render('//dashboard/salepeople',array('popup'=>true));
+	}
 
 	public function actionShowranklist() {
 		$this->layout = "main_nm";

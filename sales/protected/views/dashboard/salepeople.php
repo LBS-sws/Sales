@@ -10,15 +10,31 @@
     <!-- /.box-header -->
 
     <div class="box-body">
-        <div id='salepeople' class="direct-chat-messages" style="height: 250px;">
-            <div class="overlay">
-              <i class="fa fa-refresh fa-spin"></i>
+        <?php if (!isset($popup) || !$popup): ?>
+            <div id='salepeople' class="direct-chat-messages" style="height: 250px;">
+                <div class="overlay">
+                    <i class="fa fa-refresh fa-spin"></i>
+                </div>
             </div>
-        </div>
+        <?php else: ?>
+            <div id='salepeople'>
+                <div class="overlay">
+                    <i class="fa fa-refresh fa-spin"></i>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
     <!-- /.box-body -->
 
     <div class="box-footer">
+        <?php
+        $only_type = 1;//是否顯示所有 1：是
+        if (!isset($popup) || !$popup) {
+            $only_type = 0;
+            $url = Yii::app()->createAbsoluteUrl("dashboard/showsalepeople");
+            echo TbHtml::link('<span class="fa fa-external-link"></span>',"javascript:window.open('$url','popup','directories=no,titlebar=no,toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no,width=400,height=600');");
+        }
+        ?>
         <small><?php echo Yii::t('report','Refresh data immediately when signing');?></small>
     </div>
     <!-- /.box-footer -->
@@ -26,7 +42,7 @@
 <!-- /.box -->
 
 <?php
-$link = Yii::app()->createAbsoluteUrl("dashboard/salepeople");
+$link = Yii::app()->createAbsoluteUrl("dashboard/salepeople",array("type"=>$only_type));
 $paiming= Yii::t('report','ranking');
 $city= Yii::t('report','city');
 $quyu= Yii::t('report','quyu');
