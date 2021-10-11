@@ -98,7 +98,7 @@ class ReportRankinglistForm extends CReportForm
         }
         $last_names = array_column($models,'money');
         array_multisort($last_names,SORT_DESC,$models);
-        $models = array_slice($models, 0, 20);
+        //$models = array_slice($models, 0, 20);
 
         return $models;
     }

@@ -49,7 +49,6 @@ $quyu= Yii::t('report','quyu');
 $sum= Yii::t('report','name');
 $level= Yii::t('report','level');
 $jine= Yii::t('report','fuwumoney');
-$imgSrc = $only_type==1?"../":"";
 $js = <<<EOF
 	$.ajax({
 		type: 'GET',
@@ -68,7 +67,7 @@ $js = <<<EOF
 						case 2: style = 'style="color:#0000FF"'; break;
 					}
 					rank = i+1;
-					line += '<td '+style+'>'+rank+'</td><td '+style+'>'+data[i].city+'</td><td '+style+'>'+data[i].quyu+'</td><td '+style+'>'+data[i].name+'</td><td '+style+'><img src="{$imgSrc}images/'+data[i].level+'.png" width="20px;">'+data[i].level+'</td><td '+style+'>'+data[i].money+'</td>';
+					line += '<td '+style+'>'+rank+'</td><td '+style+'>'+data[i].city+'</td><td '+style+'>'+data[i].quyu+'</td><td '+style+'>'+data[i].name+'</td><td '+style+'><img src="'+data[i].levelImg+'" width="20px;">'+data[i].level+'</td><td '+style+'>'+data[i].money+'</td>';
 					line += '</tr>';
 				}	
 				
