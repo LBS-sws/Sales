@@ -76,8 +76,7 @@ class DashboardController extends Controller
             $rank = Yii::app()->db->createCommand($sql_rank)->queryRow();
             $sql = "select * from sal_level where start_fraction <='" . $rank['now_score'] . "' and end_fraction >='" . $rank['now_score'] . "'";
             $rank_name = Yii::app()->db->createCommand($sql)->queryRow();
-            $temp['level'] = $type==0?"":"../";
-            $temp['level'].= "images/".$rank_name['level'];
+            $temp['level'] = $rank_name['level'];
             $temp['rank'] = $rank['now_score'];
 
 			$models[] = $temp;
