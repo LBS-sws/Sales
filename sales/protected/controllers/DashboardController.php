@@ -62,12 +62,8 @@ class DashboardController extends Controller
 
             $sql = "select a.name from hr$suffix.hr_employee a 
                     LEFT JOIN hr$suffix.hr_binding b ON a.id = b.employee_id
-                    LEFT JOIN hr$suffix.hr_dept f on a.position=f.id
-                    where b.user_id='".$record['username']."' and f.manager_leave=1";
+                    where b.user_id='".$record['username']."'";
 			$row = Yii::app()->db->createCommand($sql)->queryRow();
-			if(!$row){
-			    continue;
-            }
 			$temp['name']= $row!==false ? $row['name'] : $record['username'];
 		
 			$sql = "select a.name as city_name, b.name as region_name 
