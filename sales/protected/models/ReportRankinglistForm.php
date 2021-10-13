@@ -59,7 +59,7 @@ class ReportRankinglistForm extends CReportForm
         $this->date=$year_arr;
     }
 
-    public function salepeople($start,$end) {
+    public function salepeople($start,$end,$onlyBool=true) {
         $suffix = Yii::app()->params['envSuffix'];
         $models = array();
        // $time= date('Y-m-d', strtotime(date('Y-m-01') ));
@@ -80,7 +80,7 @@ class ReportRankinglistForm extends CReportForm
                     LEFT JOIN hr$suffix.hr_dept f on a.position=f.id
                     where b.user_id='".$record['username']."' and f.manager_leave=1";
             $row = Yii::app()->db->createCommand($sql)->queryRow();
-            if(!$row){
+            if($onlyBool&&!$row){
                 continue;
             }
             $temp['name']= $row!==false ? $row['name'] : $record['username'];

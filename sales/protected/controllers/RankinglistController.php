@@ -68,7 +68,7 @@ class RankinglistController extends Controller
         $model=new ReportRankinglistForm($_POST['ReportRankinglistForm']);
         $start=$model['scenario']['start_dt']."-".$model['scenario']['start_dt1']."-01";
         $end=$model['scenario']['start_dt']."-".$model['scenario']['start_dt1']."-31";
-        $peopel=$model->salepeople($start,$end);
+        $peopel=$model->salepeople($start,$end,false);
         $list=$model->salelist($start,$end);
         $lists=$model->salelists($start,$end);
         $rank=$model->ranklist($start,$end);
@@ -80,7 +80,7 @@ class RankinglistController extends Controller
 
 	public function actionDownload($start, $end) {
 		$model = new ReportRankinglistForm();
-        $people=$model->salepeople($start,$end);
+        $people=$model->salepeople($start,$end,false);
         $list=$model->salelist($start,$end);
         $lists=$model->salelists($start,$end);
         $rank=$model->ranklist($start,$end);
