@@ -263,7 +263,7 @@ class RankForm extends CFormModel
         $score_salemoney_two = $salemoney_two['city'] == $cityname ? -2000 : 0;
         $this->lhsum['score'] = $score_salemoney_one + $score_salemoney_two;
         //每月销售龙虎榜销售排名
-        $salepeople = ReportRankinglistForm::salepeople($star_time, $end_time);
+        $salepeople = ReportRankinglistForm::salepeople($star_time, $end_time,true);
         foreach ($salepeople as $k => $v) {
             if ($v['user'] == $rows['username']) {
                 $this->lhmoney['sum'] = $k + 1;

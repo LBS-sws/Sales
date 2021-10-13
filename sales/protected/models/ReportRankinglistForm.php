@@ -59,7 +59,7 @@ class ReportRankinglistForm extends CReportForm
         $this->date=$year_arr;
     }
 
-    public function salepeople($start,$end,$onlyBool=true) {
+    public function salepeople($start,$end,$onlyBool=false) {
         $suffix = Yii::app()->params['envSuffix'];
         $models = array();
        // $time= date('Y-m-d', strtotime(date('Y-m-01') ));
@@ -75,13 +75,15 @@ class ReportRankinglistForm extends CReportForm
             $temp['user']=$record['username'];
             $temp['money']=$record['money'];
 
-            $sql = "select a.name from hr$suffix.hr_employee a 
+            $sql = "select a.name,f.manager_leave from hr$suffix.hr_employee a 
                     LEFT JOIN hr$suffix.hr_binding b ON a.id = b.employee_id
                     LEFT JOIN hr$suffix.hr_dept f on a.position=f.id
-                    where b.user_id='".$record['username']."' and f.manager_leave=1";
+                    where b.user_id='".$record['username']."'";
             $row = Yii::app()->db->createCommand($sql)->queryRow();
-            if($onlyBool&&!$row){
-                continue;
+            if($onlyBool){
+                if(!$row||($row&&$row["manager_leave"]!=1)){
+                    continue;
+                }
             }
             $temp['name']= $row!==false ? $row['name'] : $record['username'];
 
