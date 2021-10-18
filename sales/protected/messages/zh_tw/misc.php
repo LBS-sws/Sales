@@ -97,6 +97,7 @@ return array(
 'Five Type'=>'五部曲類型',
 'Your ranking is:'=>'你當前的段位為:',
 'Air Purifier'=>'空氣淨化',
+'Oil separator'=>'隔油池',
 );
 
 ?>

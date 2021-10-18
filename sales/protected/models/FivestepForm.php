@@ -490,6 +490,7 @@ class FivestepForm extends CFormModel
 			1=>Yii::t('misc','Restroom'),
 			2=>Yii::t('misc','Third'),
 			3=>Yii::t('misc','Air Purifier'),
+			4=>Yii::t('misc','Oil separator'),
 		);
 	}
 	
