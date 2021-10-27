@@ -61,6 +61,7 @@ class RptVisitList extends CReport {
 			'svc_C8'=>array('label'=>Yii::t('sales','备注'),'width'=>30,'align'=>'L'),
 			
 			'svc_D'=>array('label'=>Yii::t('sales','Monthly Amount'),'width'=>10,'align'=>'C'),
+			'svc_D8'=>array('label'=>Yii::t('sales','装机费'),'width'=>10,'align'=>'C'),
 			'svc_D1'=>array('label'=>Yii::t('sales','迷你小机'),'width'=>10,'align'=>'C'),
 			'svc_D2'=>array('label'=>Yii::t('sales','小机'),'width'=>10,'align'=>'C'),
 			'svc_D3'=>array('label'=>Yii::t('sales','中机'),'width'=>10,'align'=>'C'),
@@ -176,6 +177,7 @@ class RptVisitList extends CReport {
 				'label'=>Yii::t('sales','飘盈香').Yii::t('sales','报价'),
 				'child'=>array(
 					'svc_D',
+					'svc_D8',
 					'svc_D1',
 					'svc_D2',
 					'svc_D3',

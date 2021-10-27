@@ -101,6 +101,7 @@ class VisitForm extends CFormModel
 					'name'=>Yii::t('sales','飘盈香'),
 					'type'=>'annual',
 					'items'=>array(
+								'D8'=>array('name'=>Yii::t('sales','装机费'),'type'=>'amount','eol'=>true),
 								'D1'=>array('name'=>Yii::t('sales','迷你小机'),'type'=>'qty'),
 								'D2'=>array('name'=>Yii::t('sales','小机'),'type'=>'qty'),
 								'D3'=>array('name'=>Yii::t('sales','中机'),'type'=>'qty'),
