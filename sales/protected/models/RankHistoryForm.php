@@ -51,7 +51,7 @@ class RankHistoryForm extends CFormModel
         }
         foreach ($rows as $v) {
             $month=date('m', strtotime( $v['month']));
-            if (strpos("01.03.05.07.09.12", $month) === false) {
+            if (strpos("01.03.05.07.09.11", $month) === false) {
                 $this->rank[] = $v;
             }
             if(end($rows)==$v&&count($rows)%2==1){
