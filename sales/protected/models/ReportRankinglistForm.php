@@ -259,7 +259,55 @@ class ReportRankinglistForm extends CReportForm
         return $models;
     }
 
-	public function export($date, $data_1, $data_2, $data_3, $data_4) {
+    public function renaudlist($start,$end) {
+        $suffix = Yii::app()->params['envSuffix'];
+        $time= date('Y/m',strtotime($start));
+        //生成查詢sql
+        $tableSql = Yii::app()->db->createCommand()
+            ->select("a.visit_id,b.username,
+            MAX(CASE a.field_id WHEN 'svc_H2' THEN a.field_value+0 ELSE 0 END) as 'svc_H2',
+            MAX(CASE a.field_id WHEN 'svc_H3' THEN a.field_value+0 ELSE 0 END) as 'svc_H3',
+            MAX(CASE a.field_id WHEN 'svc_H6' THEN a.field_value+0 ELSE 0 END) as 'svc_H6'
+            ")
+            ->from("sal_visit_info a")
+            ->leftJoin("sal_visit b","a.visit_id = b.id")
+            ->where("date_format(b.visit_dt,'%Y/%m')='$time' and b.visit_obj like '%10%'")
+            ->group("a.visit_id,b.username")
+            ->getText();
+        //排序及統計
+        $result = Yii::app()->db->createCommand()
+            ->select("f.username,
+            COUNT(f.username) as amount,SUM(f.svc_H2)+SUM(f.svc_H3) as number,
+            SUM(f.svc_H6) as money
+            ")
+            ->from("($tableSql) f")
+            ->where("f.svc_H6 != 0")
+            ->group("f.username")
+            ->order("money desc")
+            ->queryAll();
+        if($result){
+            //登錄賬戶補充員工名字、城市、區域
+            foreach ($result as &$row){
+                $list = Yii::app()->db->createCommand()
+                    ->select("f.name as city_name,g.name as region_name,b.name")
+                    ->from("hr$suffix.hr_binding a")
+                    ->leftJoin("hr$suffix.hr_employee b","a.employee_id=b.id")
+                    ->leftJoin("security$suffix.sec_city f","b.city=f.code")
+                    ->leftJoin("security$suffix.sec_city g","f.region=g.code")
+                    ->where("a.user_id=:user_id",array(":user_id"=>$row["username"]))
+                    ->queryRow();
+                $row["city_name"] = $list?$list["city_name"]:"";
+                $row["region_name"] = $list?($list["region_name"]==null?"":$list["region_name"]):"";
+                $row["name"] = $list?$list["name"]:"";
+            }
+            //var_dump($result);die();
+            return $result;
+        }else{
+            return array();
+        }
+    }
+
+	public function export($date, $data_1, $data_2, $data_3, $data_4, $renaudlist) {
 		$excel = new ExcelToolEx;
 		$excel->start();
 		$excel->newFile();
@@ -384,6 +432,43 @@ class ReportRankinglistForm extends CReportForm
 			$excel->writeCell(3, $row, $record['rank']);
 			$excel->writeCell(4, $row, $record['city']);
 			$excel->writeCell(5, $row, $record['quyu']);
+			$row += 1;
+		}
+
+		$excel->createSheet();
+		$excel->setActiveSheet(4);
+		$excel->setColWidth(0,10);
+		$excel->setColWidth(1,15);
+		$excel->setColWidth(2,15);
+		$excel->setColWidth(3,25);
+		$excel->setColWidth(4,10);
+		$excel->setColWidth(5,25);
+		$excel->setColWidth(6,25);
+		$excel->setCellFont(0,3,array('bold'=>true));
+		$excel->setCellFont(1,3,array('bold'=>true));
+		$excel->setCellFont(2,3,array('bold'=>true));
+		$excel->setCellFont(3,3,array('bold'=>true));
+		$excel->setCellFont(4,3,array('bold'=>true));
+		$excel->setCellFont(5,3,array('bold'=>true));
+		$excel->setCellFont(6,3,array('bold'=>true));
+		$title = Yii::t('app','Renaud Air List').' '.date('Y/m',strtotime($date));
+		$excel->writeReportTitle($title);
+		$excel->writeCell(0,3,Yii::t('report','ranking'));
+		$excel->writeCell(1,3,Yii::t('report','name'));
+		$excel->writeCell(2,3,Yii::t('report','city'));
+		$excel->writeCell(3,3,Yii::t('report','quyu'));
+		$excel->writeCell(4,3,Yii::t('sales','singular'));
+		$excel->writeCell(5,3,Yii::t('sales','Score Ari'));
+		$excel->writeCell(6,3,Yii::t('report','fuwumoney'));
+		$row = 4;
+		foreach ($renaudlist as $record) {
+			$excel->writeCell(0, $row, $row-3);
+			$excel->writeCell(1, $row, $record['name']);
+			$excel->writeCell(2, $row, $record['city_name']);
+			$excel->writeCell(3, $row, $record['region_name']);
+			$excel->writeCell(4, $row, $record['amount']);
+			$excel->writeCell(5, $row, $record['number']);
+			$excel->writeCell(6, $row, $record['money']);
 			$row += 1;
 		}
 

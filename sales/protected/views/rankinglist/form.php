@@ -60,6 +60,45 @@ $this->pageTitle=Yii::app()->name . ' - Month Report';
 <!--                </div>-->
             </div>
         </div>
+        <div class="col-md-6">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title"><?php echo Yii::t('app','Renaud Air List');?>(<?php echo $model['scenario']['start_dt']."/".$model['scenario']['start_dt1'];?>)</h3>
+                </div>
+                <div class="box-body">
+                    <div id="renaudlist" class="direct-chat-messages" style="height: 250px;">
+                        <table class="table table-bordered small">
+                            <tbody>
+                            <?php
+                            $paiming= Yii::t('report','ranking');
+                            $name= Yii::t('report','name');
+                            $city= Yii::t('report','city');
+                            $quyu= Yii::t('report','quyu');
+                            $singular= Yii::t('sales','singular');
+                            $sum= Yii::t('sales','Score Ari');
+                            $renjun= Yii::t('report','fuwumoney');
+                            echo "<tr><td><b>$paiming</b></td><td><b>$name</b></td><td><b>$city</b></td><td><b>$quyu</b></td><td><b>$singular</b></td><td><b>$sum</b></td><td><b>$renjun</b></td></tr>";
+                            ?>
+                            <?php for ($i=0;$i<count($renaudlist);$i++){ ?>
+                            <tr <?php if($i==0){ echo "style='color:#FF0000'";}if($i==1){ echo "style='color:#871F78'";}if($i==2){ echo "style='color:#0000FF'";}?>>
+                                <td><?php echo $i+1;?></td>
+                                <td><?php echo $renaudlist[$i]['name'];?></td>
+                                <td><?php echo $renaudlist[$i]['city_name'];?></td>
+                                <td><?php echo $renaudlist[$i]['region_name'];?></td>
+                                <td><?php echo $renaudlist[$i]['amount'];?></td>
+                                <td><?php echo $renaudlist[$i]['number'];?></td>
+                                <td><?php echo $renaudlist[$i]['money'];?></td>
+                            </tr>
+                            <?php }?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+<!--                <div class="box-footer">-->
+<!--                    <small>每出现签单时即时刷新数据</small>-->
+<!--                </div>-->
+            </div>
+        </div>
     </div>
     <div class="row">
         <div class="col-md-4">

@@ -72,9 +72,10 @@ class RankinglistController extends Controller
         $list=$model->salelist($start,$end);
         $lists=$model->salelists($start,$end);
         $rank=$model->ranklist($start,$end);
+        $renaudlist=$model->renaudlist($start,$end);
 //        print_r('<pre>');
 //        print_r($start);
-        $this->render('form',array('model'=>$model,'peopel'=>$peopel,'list'=>$list,'lists'=>$lists,'rank'=>$rank));
+        $this->render('form',array('model'=>$model,'renaudlist'=>$renaudlist,'peopel'=>$peopel,'list'=>$list,'lists'=>$lists,'rank'=>$rank));
 
     }
 
@@ -84,7 +85,8 @@ class RankinglistController extends Controller
         $list=$model->salelist($start,$end);
         $lists=$model->salelists($start,$end);
         $rank=$model->ranklist($start,$end);
-		$output = $model->export($start, $people, $list, $lists, $rank);
+        $renaudlist=$model->renaudlist($start,$end);
+		$output = $model->export($start, $people, $list, $lists, $rank, $renaudlist);
 
 		header('Content-Type: application/vnd.ms-excel');
 		header('Content-Disposition: inline;filename="rankinglist'.date('Ym',strtotime($start)).'.xlsx"');
