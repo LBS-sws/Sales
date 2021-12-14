@@ -143,6 +143,9 @@ class IntegralForm extends CFormModel
             );
             if(!empty($serviceRows)){
                 foreach ($serviceRows as $serviceRow){
+                    if($serviceRow["id"]==119174){
+                        var_dump("start:<br/>");
+                    }
                     $this->boolNew="";
                     //計算日報表系統的所有設置
                     $this->computeServiceForSwo($serviceRow);
@@ -178,13 +181,22 @@ class IntegralForm extends CFormModel
                 $startDate = strtotime("{$serviceRow["status_dt"]} - 3 month");
                 $date = General::toMyDate($serviceRow["status_dt"]);
                 $suffix = Yii::app()->params['envSuffix'];
-                $row = Yii::app()->db->createCommand()->select("a.status,a.status_dt")->from("swoper$suffix.swo_service a")
+                $row = Yii::app()->db->createCommand()->select("a.id,a.status,a.status_dt")->from("swoper$suffix.swo_service a")
                     ->where("a.status_dt<='$date' 
             and a.salesman_id='$this->employee_id' 
             and a.company_id='{$serviceRow['company_id']}' 
             and a.cust_type='{$serviceRow['cust_type']}' 
             and a.cust_type_name='{$serviceRow['cust_type_name']}' 
             and a.id!='{$serviceRow['id']}'")->order("a.status_dt desc")->queryRow();
+
+                if($serviceRow["id"]==119174){
+                    var_dump($row);
+                    echo "<br/>";
+                    var_dump("startDate:".$startDate);
+                    echo "<br/>";
+                    var_dump("date:".$date);
+                    echo "<br/>";
+                }
                 if($row){
                     if(in_array($row["status"],array("T","S"))&&$startDate>=strtotime($row["status_dt"])){
                         //終止時間或者暫停時間大於3個月
@@ -362,6 +374,9 @@ class IntegralForm extends CFormModel
                 break;
             case 2://每个新客户
                 if($this->selectNewService($serviceRow)){
+                    if($serviceRow["id"]==119174){
+                        var_dump("bool:{$this->boolNew}<br/>");
+                    }
                     $this->addServiceSum($id,1,$fraction,$serviceRow,$historySum);
                 }
                 break;
