@@ -92,6 +92,9 @@ class IntegralForm extends CFormModel
             $this->name = $row["employee_name"];
             $startDate = $this->year."-".$this->month."-01";
             $endDate = $this->year."-".$this->month."-31";
+            var_dump($this->employee_id);
+            var_dump($startDate);
+            var_dump($endDate);
             //产品（INV）只统计新增，服务（非INV）统计新增、续约、更改
             $exprSql = " and ((a.status in('A','C') and f.rpt_cat<>'INV') or (a.status='N'))";
             $IDExprSql = " and (((a.status='A' or (a.status = 'C' and a.ctrt_period>=12)) and f.rpt_cat<>'INV') or (a.status='N'))";
