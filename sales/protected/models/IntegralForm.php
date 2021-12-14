@@ -143,6 +143,9 @@ class IntegralForm extends CFormModel
             );
             if(!empty($serviceRows)){
                 foreach ($serviceRows as $serviceRow){
+                    if($serviceRow["sql_type_name"]=="A"){
+                        var_dump("id:{$serviceRow["id"]}<br/>");
+                    }
                     if($serviceRow["id"]==119174){
                         var_dump("start:<br/>");
                     }
