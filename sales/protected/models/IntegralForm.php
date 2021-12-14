@@ -92,9 +92,6 @@ class IntegralForm extends CFormModel
             $this->name = $row["employee_name"];
             $startDate = $this->year."-".$this->month."-01";
             $endDate = $this->year."-".$this->month."-31";
-            var_dump($this->employee_id);
-            var_dump($startDate);
-            var_dump($endDate);
             //产品（INV）只统计新增，服务（非INV）统计新增、续约、更改
             $exprSql = " and ((a.status in('A','C') and f.rpt_cat<>'INV') or (a.status='N'))";
             $IDExprSql = " and (((a.status='A' or (a.status = 'C' and a.ctrt_period>=12)) and f.rpt_cat<>'INV') or (a.status='N'))";
@@ -146,12 +143,6 @@ class IntegralForm extends CFormModel
             );
             if(!empty($serviceRows)){
                 foreach ($serviceRows as $serviceRow){
-                    if($serviceRow["sql_type_name"]=="A"){
-                        var_dump("id:{$serviceRow["id"]}<br/>");
-                    }
-                    if($serviceRow["id"]==119174){
-                        var_dump("start:<br/>");
-                    }
                     $this->boolNew="";
                     //計算日報表系統的所有設置
                     $this->computeServiceForSwo($serviceRow);
@@ -195,14 +186,6 @@ class IntegralForm extends CFormModel
             and a.cust_type_name='{$serviceRow['cust_type_name']}' 
             and a.id!='{$serviceRow['id']}'")->order("a.status_dt desc")->queryRow();
 
-                if($serviceRow["id"]==119174){
-                    var_dump($row);
-                    echo "<br/>";
-                    var_dump("startDate:".$startDate);
-                    echo "<br/>";
-                    var_dump("date:".$date);
-                    echo "<br/>";
-                }
                 if($row){
                     if(in_array($row["status"],array("T","S"))&&$startDate>=strtotime($row["status_dt"])){
                         //終止時間或者暫停時間大於3個月
@@ -380,9 +363,6 @@ class IntegralForm extends CFormModel
                 break;
             case 2://每个新客户
                 if($this->selectNewService($serviceRow)){
-                    if($serviceRow["id"]==119174){
-                        var_dump("bool:{$this->boolNew}<br/>");
-                    }
                     $this->addServiceSum($id,1,$fraction,$serviceRow,$historySum);
                 }
                 break;
@@ -673,8 +653,6 @@ class IntegralForm extends CFormModel
                             }
                         }
                     }elseif($value['conditions']==1){
-                        var_dump("status:{$arr["status"]}  pieces:{$arr["pieces"]}");
-                        echo "<br/>";
                         if($arr['status']=='N'){
                             $sum_f[]= $arr['pieces'];
                             if(($arr['pieces']>$value['toplimit'])&&$value['toplimit']!=0){
@@ -722,7 +700,7 @@ class IntegralForm extends CFormModel
                             $sum = Yii::app()->db->createCommand($sql_calculation)->queryScalar();
                             $sql="select * from swoper$suffix.swo_service where company_name='".$arr['company_name']."' and cust_type_name='".$arr['cust_type_name']."' and salesman='".$arr['salesman']."'  and (status='N' or status='A') and status_dt<='".$arr['status_dt']."' order by  id desc";
                             $m = Yii::app()->db->createCommand($sql)->queryRow();
-var_dump($sum);
+
                             if(!empty($m)){
                                 if(($sum<$value['toplimit'])&&$value['toplimit']!=0){
                                     $cha=$value['toplimit']-$sum;
