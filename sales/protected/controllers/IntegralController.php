@@ -39,6 +39,8 @@ class IntegralController extends Controller
 
     public function actionTest($month=6,$id=0,$year="2021")
     {
+        $year = floatval($year);
+        $month= floatval($month);
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()->select("a.code,a.name,a.city,c.user_id")
             ->from("hr$suffix.hr_employee a")
@@ -61,7 +63,7 @@ class IntegralController extends Controller
             }else{
                 Yii::app()->db->createCommand()->insert("sal_integral",
                     array(
-                        "year"=>2021,
+                        "year"=>$year,
                         "month"=>$month,
                         "username"=>$row["user_id"],
                         "city"=>$row["city"]

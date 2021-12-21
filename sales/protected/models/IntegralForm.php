@@ -19,6 +19,7 @@ class IntegralForm extends CFormModel
     public $month;
 
     protected $boolNew="";
+    protected $oneAndTwo=0;
 
 	/**
 	 * Declares customized attribute labels.
@@ -96,7 +97,7 @@ class IntegralForm extends CFormModel
             $exprSql = " and ((a.status in('A','C') and f.rpt_cat<>'INV') or (a.status='N'))";
             $IDExprSql = " and (((a.status='A' or (a.status = 'C' and a.ctrt_period>=12)) and f.rpt_cat<>'INV') or (a.status='N'))";
             $selectSql = "a.*,
-            f.rpt_cat,f.description,b.cust_type_name as cust_type_name_name,b.conditions,b.fraction,b.toplimit";
+            f.rpt_cat,f.description,b.cust_type_name as cust_type_name_name,b.conditions,b.fraction,b.toplimit,b.single";
             //所有需要計算的客戶服務(客戶服務)
             $serviceRows = Yii::app()->db->createCommand()
                 ->select("$selectSql,CONCAT('A') as sql_type_name")
@@ -151,6 +152,8 @@ class IntegralForm extends CFormModel
                         $this->computeInstallForSwo($serviceRow);
                         //预收月数计算
                         $this->computePayMonthForSwo($serviceRow);
+                        //当月销售净化机器+隔油池金额 >= 1500
+                        $this->computeOneAndTwo($serviceRow);
                     }
                 }
             }
@@ -253,6 +256,27 @@ class IntegralForm extends CFormModel
         }
     }
 
+    //当月销售净化机器+隔油池金额 >= 1500
+    protected function computeOneAndTwo($serviceRow){
+        if($this->oneAndTwo===1){//1:需要執行 2:執行中
+            if($serviceRow["sql_type_name"]=="D"){ //ID服務
+                $this->cust_type_name["OTHER"]["list"]["oneAndTwo"]["money"]+=$serviceRow["amt_money"];
+            }
+            //IA服務的非一次性服務
+            if($serviceRow["sql_type_name"]=="A"&&$serviceRow["cust_type_name"]>0&&$serviceRow["single"]!=1){
+                $money=$serviceRow["amt_paid"];
+                if($serviceRow["paid_type"]=="M"){
+                    $money*=$serviceRow["ctrt_period"];
+                }
+                $this->cust_type_name["OTHER"]["list"]["oneAndTwo"]["money"]+=$money;
+            }
+            if($this->cust_type_name["OTHER"]["list"]["oneAndTwo"]["money"]>=1500){
+                $this->cust_type_name["OTHER"]["list"]["oneAndTwo"]["num"]=0;
+                $this->cust_type_name["OTHER"]["list"]["oneAndTwo"]["sum"]=0;
+            }
+        }
+    }
+
     //预收月数计算
     protected function computePayMonthForSwo($serviceRow){
         $month = empty($serviceRow["prepay_month"])?0:floatval($serviceRow["prepay_month"]);
@@ -305,8 +329,6 @@ class IntegralForm extends CFormModel
                 if($row["toplimit"]<=$average){
                     $typeList[$key]["num"]=1;
                     $typeList[$key]["sum"]=$typeList[$key]["fraction"];
-                    //小计
-                    $this->cust_type_name["OTHER"]["count"]+=$typeList[$key]["fraction"];
                     return true;
                 }
             }
@@ -315,6 +337,11 @@ class IntegralForm extends CFormModel
 
     //统计汇总
     protected function computeSum(){
+        //其它類別的小計（由於後續擴充，需要單獨統計）
+        $this->cust_type_name["OTHER"]["count"] = 0;
+        foreach ($this->cust_type_name["OTHER"]["list"] as $row){
+            $this->cust_type_name["OTHER"]["count"] += $row["sum"];
+        }
         $this->cust_type_name["all_sum"]+=$this->cust_type_name["INV"]["count"];
         $this->cust_type_name["all_sum"]+=$this->cust_type_name["AUTO"]["count"];
         $this->cust_type_name["all_sum"]+=$this->cust_type_name["OTHER"]["count"];
@@ -474,6 +501,23 @@ class IntegralForm extends CFormModel
                 }
                 $list[$id] = $row;
             }
+        }
+        $date = date("Y-m-d",strtotime("{$this->year}-{$this->month}-01"));
+        if($date>="2022-01-01"){
+            $this->oneAndTwo = 1;
+            $list["oneAndTwo"] = array(
+                "cust_type_name"=>"当月销售净化机器+隔油池金额 >= 1500",
+                "con_name"=>"每月",
+                "description"=>"其它",
+                "fraction"=>-5,
+                "toplimit"=>0,
+                "rpt_cat"=>"oneAndTwo",
+                "num"=>1,
+                "historySum"=>0,
+                "sum"=>-5,
+                "money"=>0,
+                "remark"=>"0为满足条件，1为不满足条件",
+            );
         }
         return $list;
     }
