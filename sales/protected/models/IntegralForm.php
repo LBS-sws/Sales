@@ -97,10 +97,10 @@ class IntegralForm extends CFormModel
             $exprSql = " and ((a.status in('A','C') and f.rpt_cat<>'INV') or (a.status='N'))";
             $IDExprSql = " and (((a.status='A' or (a.status = 'C' and a.ctrt_period>=12)) and f.rpt_cat<>'INV') or (a.status='N'))";
             $selectSql = "a.*,
-            f.rpt_cat,f.description,b.cust_type_name as cust_type_name_name,b.conditions,b.fraction,b.toplimit,b.single";
+            f.rpt_cat,f.description,b.cust_type_name as cust_type_name_name,b.conditions,b.fraction,b.toplimit";
             //所有需要計算的客戶服務(客戶服務)
             $serviceRows = Yii::app()->db->createCommand()
-                ->select("$selectSql,CONCAT('A') as sql_type_name")
+                ->select("$selectSql,b.bring,CONCAT('A') as sql_type_name")
                 ->from("swoper$suffix.swo_service a")
                 ->leftJoin("swoper$suffix.swo_customer_type_twoname b","a.cust_type_name=b.id")
                 ->leftJoin("swoper$suffix.swo_customer_type f","a.cust_type=f.id")
@@ -263,7 +263,7 @@ class IntegralForm extends CFormModel
                 $this->cust_type_name["OTHER"]["list"]["oneAndTwo"]["money"]+=$serviceRow["amt_money"];
             }
             //IA服務的非一次性服務
-            if($serviceRow["sql_type_name"]=="A"&&$serviceRow["cust_type_name"]>0&&$serviceRow["single"]!=1){
+            if($serviceRow["sql_type_name"]=="A"&&$serviceRow["cust_type_name"]>0&&$serviceRow["bring"]==1){
                 $money=$serviceRow["amt_paid"];
                 if($serviceRow["paid_type"]=="M"){
                     $money*=$serviceRow["ctrt_period"];
