@@ -39,6 +39,10 @@ class IntegralController extends Controller
 
     public function actionTest($month=6,$id=0,$year="2021")
     {
+        if(!is_numeric($month)||!is_numeric($id)||!is_numeric($year)){
+            echo "error number";
+            die();
+        }
         $year = floatval($year);
         $month= floatval($month);
         var_dump("year:{$year}");
