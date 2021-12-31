@@ -41,18 +41,26 @@ class IntegralController extends Controller
     {
         $year = floatval($year);
         $month= floatval($month);
+        var_dump("year:{$year}");
+        echo "<br/>";
+        var_dump("month:{$month}");
+        echo "<br/>";
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()->select("a.code,a.name,a.city,c.user_id")
             ->from("hr$suffix.hr_employee a")
             ->leftJoin("hr$suffix.hr_binding c","a.id = c.employee_id")
             ->where("a.id=:id",array(":id"=>$id))->queryRow();
         if($row){
+            var_dump("staff:{$row['name']}({$row['code']}) - {$row['city']}");
+            echo "<br/>";
             $id = Yii::app()->db->createCommand()->select("id")
                 ->from("sal_integral")
                 ->where("year=:year and month=:month and username=:username",
                     array(":year"=>$year,":month"=>$month,":username"=>$row["user_id"])
                 )->queryScalar();
             if($id){
+                var_dump("integral_id:{$id}");
+                echo "<br/>";
                 $model = new IntegralForm('view');
                 $model->retrieveData($id);
                 Yii::app()->db->createCommand()->update("sal_integral",array(
@@ -69,6 +77,9 @@ class IntegralController extends Controller
                         "city"=>$row["city"]
                     )
                 );
+                $id = Yii::app()->db->getLastInsertID();
+                var_dump("integral_id:{$id}");
+                echo "<br/>";
                 echo "add success";
             }
         }else{
