@@ -506,7 +506,7 @@ class IntegralForm extends CFormModel
         if($date>="2022-01-01"){
             $this->oneAndTwo = 1;
             $list["oneAndTwo"] = array(
-                "cust_type_name"=>"当月销售净化机器+隔油池金额 >= 1500",
+                "cust_type_name"=>"当月销售净化机器+隔油池金额小于1500",
                 "con_name"=>"每月",
                 "description"=>"其它",
                 "fraction"=>-5,
@@ -516,7 +516,7 @@ class IntegralForm extends CFormModel
                 "historySum"=>0,
                 "sum"=>-5,
                 "money"=>0,
-                "remark"=>"0为满足条件，1为不满足条件",
+                "remark"=>"当月数量显示1时扣5分，显示0时分数为0分",
             );
         }
         return $list;
