@@ -148,7 +148,8 @@ class RankForm extends CFormModel
         $sql_pyx = "select a.* from swoper$suffix.swo_service a
                   left outer join  hr$suffix.hr_employee b on  concat(b.name, ' (', b.code, ')')=a.salesman
                  left outer join  hr$suffix.hr_binding c on  c.employee_id=b.id
-                  where a.status_dt>='$star_time' and a.status_dt<='$end_time' and a.status='N' and (a.cust_type='5' or a.cust_type_name='50') and c.user_id='" . $rows['username'] . "' and a.city='$city'
+                 left outer join  swoper$suffix.swo_customer_type_twoname f on  a.cust_type_name=f.id
+                  where a.status_dt>='$star_time' and a.status_dt<='$end_time' and a.status='N' and (a.cust_type='5' or a.cust_type_name='50' or f.bring=1) and c.user_id='" . $rows['username'] . "' and a.city='$city'
                   ";
         $rows_pyx = Yii::app()->db->createCommand($sql_pyx)->queryAll();
         $pyx = 0;
@@ -164,6 +165,15 @@ class RankForm extends CFormModel
 
         }
         $pyx_A = count($rows_pyx);
+        //飘盈香含有ID服務（2022-01-17新增需求)
+        $serviceIDRows = Yii::app()->db->createCommand()->select("a.id,a.amt_money")->from("swoper$suffix.swo_serviceid a")
+            ->where("a.status_dt>='$star_time' and a.status_dt<='$end_time' and a.status='N'")->queryAll();
+        if($serviceIDRows){
+            $pyx_A+=count($serviceIDRows);
+            foreach ($serviceIDRows as $serviceIDRow){
+                $pyx+=floatval($serviceIDRow["amt_money"]);
+            }
+        }
         $amount_ia = $this->getAmount('2', $star_time, $pyx);//本单产品提成比例
         $score_pyx = $pyx * $amount_ia['coefficient'] * (1 + 0.02 * ($pyx_A - 1));
         $this->pyx['sum'] = $pyx_A;
