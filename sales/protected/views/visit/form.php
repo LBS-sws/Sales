@@ -194,6 +194,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
                 <div class="col-sm-8" <?php if($model->isReadOnly() || $model->status=='Y'){echo "style='pointer-events:none;'";}?>>
                     <?php
                     $typelist = $model->getServiceTypeList();
+                    $typelist['other_01']="隔油池服务";
                     //						if ($model->isReadOnly() || $model->status=='Y') {
                     //							echo $form->hiddenField($model, 'visit_obj');
                     //							echo TbHtml::textField('visit_obj_name', $typelist[$model->visit_obj], array('readonly'=>true));
