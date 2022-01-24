@@ -166,8 +166,10 @@ class RankForm extends CFormModel
         }
         $pyx_A = count($rows_pyx);
         //飘盈香含有ID服務（2022-01-17新增需求)
-        $serviceIDRows = Yii::app()->db->createCommand()->select("a.id,a.amt_money")->from("swoper$suffix.swo_serviceid a")
-            ->where("a.status_dt>='$star_time' and a.status_dt<='$end_time' and a.status='N'")->queryAll();
+        $serviceIDRows = Yii::app()->db->createCommand()->select("a.id,a.amt_money")
+            ->from("swoper$suffix.swo_serviceid a")
+            ->leftjoin("hr$suffix.hr_binding f","a.salesman_id=f.employee_id")
+            ->where("f.user_id='{$rows['username']}' and a.status_dt>='$star_time' and a.status_dt<='$end_time' and a.status='N'")->queryAll();
         if($serviceIDRows){
             $pyx_A+=count($serviceIDRows);
             foreach ($serviceIDRows as $serviceIDRow){
