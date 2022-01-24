@@ -92,10 +92,18 @@ return array(
                 'access'=>'HD02',
                 'url'=>'/rankhistory/index',
             ),
-           'Total rank score'=>array(
-            'access'=>'HD03',
-            'url'=>'/rankscore/index',
-        ),
+            'Total rank score'=>array(
+                'access'=>'HD03',
+                'url'=>'/rankscore/index',
+            ),
+            'Club sales'=>array(
+                'access'=>'HD04',
+                'url'=>'/clubSales/index',
+            ),
+            'Club recommend'=>array(
+                'access'=>'HD05',
+                'url'=>'/clubRec/index',
+            ),
         ),
     ),
 
@@ -175,6 +183,11 @@ return array(
             'Attribute category'=>array(
                 'access'=>'HC09',
                 'url'=>'/attrType/index',
+                'tag'=>'@',
+            ),
+            'Club setting'=>array(
+                'access'=>'HC10',
+                'url'=>'/clubSetting/index',
                 'tag'=>'@',
             ),
 		),
