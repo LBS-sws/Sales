@@ -115,18 +115,18 @@ class ClubSettingForm extends CFormModel
             $salesCount = self::getSalesCount($date);
         }
         foreach ($list as $key => $setting){
-            if(key_exists($key,$row)){
+            $list[$key]["userList"] = array();
+            if(key_exists($key,$row)){ //加載數據庫裡的配置
                 $list[$key]["number"] = $row[$key]["number"];
                 $list[$key]["type"] = $row[$key]["type"];
-                $list[$key]["userList"] = array();
-                if($row[$key]["type"]==1){ //百分比
-                    $people = $salesCount*$row[$key]["number"]*0.01;
-                    $people = round($people);
-                    $people = empty($people)?1:$people;//不足一人按照一人计算
-                    $list[$key]["people"] = $people;
-                }else{
-                    $list[$key]["people"] = $row[$key]["number"];
-                }
+            }
+            if($list[$key]["type"]==1){ //百分比
+                $people = $salesCount*$list[$key]["number"]*0.01;
+                $people = round($people);
+                $people = empty($people)?1:$people;//不足一人按照一人计算
+                $list[$key]["people"] = $people;
+            }else{
+                $list[$key]["people"] = $list[$key]["number"];
             }
         }
         return $list;

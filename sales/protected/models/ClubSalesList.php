@@ -254,9 +254,12 @@ class ClubSalesList extends CListPageModel
         if($recRows){
             foreach ($recRows as $recRow){
                 if(key_exists($recRow["employee_id"],$this->salesList)) { //该销售是否参加俱乐部
-                    $recRow["staffList"] = $this->salesList[$recRow["employee_id"]];
-                    $recRow["unifyStr"] = 1;//统一排序的字符串名字
-                    $list[]=$recRow;
+                    $username = $this->salesList[$recRow["employee_id"]]["user_id"];
+                    if(!in_array($username,$this->no_staff,true)) {//已加入俱乐部的员工不需要重复加入
+                        $recRow["staffList"] = $this->salesList[$recRow["employee_id"]];
+                        $recRow["unifyStr"] = 1;//统一排序的字符串名字
+                        $list[]=$recRow;
+                    }
                 }
             }
         }
@@ -280,8 +283,10 @@ class ClubSalesList extends CListPageModel
             foreach ($this->clubSetting as $key=>$list){
                 $html.= "<div class='col-lg-6'><div class='box box-primary'>";
                 $html.="<div class='box-header with-border'>".Yii::t("club",$list["name"])."</div>";
-                $html.="<div class='box-body' style='height: 250px'>";
+                $html.="<div class='box-body'>";
+                $html.="<div class='direct-chat-messages' style='height: 250px'>";
                 $html.=self::tableHtml($key,$list["userList"],true);
+                $html.="</div>";
                 $html.="</div>";
                 $html.="</div></div>";
             }
