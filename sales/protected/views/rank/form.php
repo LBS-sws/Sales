@@ -61,8 +61,8 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                 <tr><td>销售每月平均每天拜访数量</td><td><?php echo $model->visit['sum'];?>条</td><td>销售每月平均每天拜访数量得分</td><td><?php echo $model->visit['score'];?></td></tr>
                 <tr><td>销售每月IA，IB签单单数 (A)</td><td><?php echo $model->ia['sum'];?>张</td><td>销售每月IA，IB签单得分</td><td><?php echo $model->ia['score'];?></td></tr>
                 <tr><td>销售每月IA，IB签单金额</td><td><?php echo $model->ia['money'];?></td><td></td><td></td></tr>
-                <tr><td>销售每月飘盈香签单单数 (B)</td><td><?php echo $model->pyx['sum'];?>张</td><td>销售每月飘盈香签单得分</td><td><?php echo $model->pyx['score'];?></td></tr>
-                <tr><td>销售每月飘盈香签单金额</td><td><?php echo $model->pyx['money'];?></td><td></td><td></td></tr>
+                <tr><td>销售每月飘盈香/净化机器租赁/隔油池签单单数 (B)</td><td><?php echo $model->pyx['sum'];?>张</td><td>销售每月飘盈香签单得分</td><td><?php echo $model->pyx['score'];?></td></tr>
+                <tr><td>销售每月飘盈香/净化机器租赁/隔油池签单金额</td><td><?php echo $model->pyx['money'];?></td><td></td><td></td></tr>
                 <tr><td>销售每月产品（不包括洗地易）签单金額</td><td><?php echo $model->cp['money'];?></td>  <td>销售每月产品（不包括洗地易）签单得分</td><td><?php echo $model->cp['score'];?></td></tr>
                 <tr><td>销售每月洗地易签单单数 (D)</td><td><?php echo $model->xdy['sum'];?>张</td><td>销售每月洗地易签单得分</td><td><?php echo $model->xdy['score'];?></td></tr>
                 <tr><td>销售每月洗地易签单金额</td><td><?php echo $model->xdy['money'];?></td><td></td><td></td></tr>
