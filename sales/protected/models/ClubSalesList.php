@@ -98,7 +98,8 @@ class ClubSalesList extends CListPageModel
             ->leftJoin("hr{$suffix}.hr_dept b","a.position=b.id")
             ->leftJoin("hr{$suffix}.hr_binding f","a.id=f.employee_id")
             ->leftJoin("security{$suffix}.sec_city city","a.city=city.code")
-            ->where("f.user_id is not null and replace(a.entry_time,'/', '-')<='{$date}' and b.dept_class='Sales' and a.city not in ('{$noCitySql}') and b.manager_leave=1 and a.staff_status!=-1")->queryAll();
+            ->where("f.user_id is not null and replace(a.entry_time,'/', '-')<='{$date}' and b.dept_class='Sales' and a.city not in ('{$noCitySql}') and b.manager_leave=1 and a.staff_status!=-1")
+            ->order("a.city asc,a.code asc")->queryAll();
         if($rows){
             foreach ($rows as $row){
                 $this->salesList[$row["id"]] = $row;
