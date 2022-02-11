@@ -309,11 +309,35 @@ class ClubSalesList extends CListPageModel
         if($small){
             $html="<table class='table table-bordered table-striped small'>";
         }else{
-            $html="<table class='table table-bordered table-striped'>";
+            $html=self::tableExplainText($key);
+            $html.="<table class='table table-bordered table-striped'>";
         }
         $html.=self::tableHead($key,$small);
         $html.=self::tableBody($key,$rows,$small);
         $html.="</table>";
+        return $html;
+    }
+
+    public static function tableExplainText($key){
+        switch ($key){
+            case "sales_elite"://销售精英
+                $html="<p class='text-danger'>".Yii::t("club","Explain Elite")."</p>";
+                break;
+            case "sales_forward"://最佳进步表现人员
+                $html="<p class='text-danger'>".Yii::t("club","Explain Forward")."</p>";
+                break;
+            case "sales_out"://新业务杰出表现人员
+                $html="<p class='text-danger'>".Yii::t("club","Explain Out")."</p>";
+                break;
+            case "sales_visit"://陌生拜访记录最多销售
+                $html="<p class='text-danger'>".Yii::t("club","Explain Visit")."</p>";
+                break;
+            case "sales_rec"://总监推荐人选
+                $html="<p class='text-danger'>".Yii::t("club","Explain Rec")."</p>";
+                break;
+            default:
+                $html="";
+        }
         return $html;
     }
 
