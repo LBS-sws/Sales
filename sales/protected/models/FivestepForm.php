@@ -84,9 +84,39 @@ class FivestepForm extends CFormModel
 			array('sup_score, mgr_score, dir_score','in','range'=>range(-1,100)),
 			array('id, status, city, city_name, remarks, staff_name, staff_code, dept_name, post_name, sup_score, mgr_score, dir_score,
 				sup_score_dt, mgr_score_dt, dir_score_dt, sup_score_user, mgr_score_user, dir_score_user, filename, filetype, 
-				sup_remarks, mgr_remarks, dir_remarks','safe'), 
+				sup_remarks, mgr_remarks, dir_remarks','safe'),
+            array('id','validateID'),
 		);
 	}
+
+    public function validateID($attribute, $params) {
+	    if($this->getScenario()=="edit"){
+	        if($this->isSuperRight()){//经理权限
+                if(empty($this->sup_score)){
+                    $this->addError($attribute, "销售经理评分不能为空");
+                }
+                if(empty($this->sup_remarks)){
+                    $this->addError($attribute, "销售经理意见不能为空");
+                }
+            }
+	        if($this->isManagerRight()){//总经理权限
+                if(empty($this->mgr_score)){
+                    $this->addError($attribute, "总经理评分不能为空");
+                }
+                if(empty($this->mgr_remarks)){
+                    $this->addError($attribute, "总经理意见不能为空");
+                }
+            }
+	        if($this->isDirectorRight()){//经理权限
+                if(empty($this->dir_score)){
+                    $this->addError($attribute, "总监评分不能为空");
+                }
+                if(empty($this->dir_remarks)){
+                    $this->addError($attribute, "总监意见不能为空");
+                }
+            }
+        }
+    }
 
 	public function retrieveData($index) {
 		$suffix = Yii::app()->params['envSuffix'];
