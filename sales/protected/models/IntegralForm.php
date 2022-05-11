@@ -1249,6 +1249,9 @@ class IntegralForm extends CFormModel
                     $objActSheetTwo->getColumnDimension('M')->setWidth(25);
                     $objActSheetTwo->setCellValue('L1',"剩余可算积分的数量\n(不包含本条服务的数量)");
                     $objActSheetTwo->setCellValue('M1',"积分实际计算数量");
+                    $objActSheetTwo->setCellValue('N1',"录入日期");
+                    $objActSheetTwo->setCellValue('O1',"修改日期");
+                    $objActSheetTwo->setCellValue('P1',"修改人");
                     $objActSheetTwo->setCellValue('A'.$o,"装机");
                     $this->setExcelRowForTwo($o,$rows['insertService'],$objActSheetTwo);
                     $o++;
@@ -1319,6 +1322,9 @@ class IntegralForm extends CFormModel
                 $objActSheet->setCellValue('K'.$o,$list['prepay_month']) ;
                 $objActSheet->setCellValue('L'.$o,$expr_num) ;
                 $objActSheet->setCellValue('M'.$o,$integral_num) ;
+                $objActSheet->setCellValue('N'.$o,$list['lcd']) ;
+                $objActSheet->setCellValue('O'.$o,$list['lud']) ;
+                $objActSheet->setCellValue('P'.$o,$list['luu']) ;
             }
         }
     }
