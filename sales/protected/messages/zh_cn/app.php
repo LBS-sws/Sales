@@ -125,5 +125,10 @@ return array(
 	'Club sales'=>'销售段位俱乐部',
 	'Club setting'=>'俱乐部配置',
 	'Club recommend'=>'推荐俱乐部销售',
+	'Stop Back Type'=>'回访客户类型',
+	'Stop Customer Site'=>'终止客户回访配置',
+	'Stop Customer Other'=>'转移终止客户回访',
+	'Stop Customer Back'=>'终止客户回访',
+	'Stop Customer'=>'终止客户',
 );
 ?>

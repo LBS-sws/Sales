@@ -117,5 +117,10 @@ return array(
     'Club sales'=>'銷售段位俱樂部',
     'Club setting'=>'俱樂部配置',
     'Club recommend'=>'推薦俱樂部銷售',
+    'Stop Back Type'=>'回訪客戶類型',
+    'Stop Customer Site'=>'終止客戶回訪配置',
+    'Stop Customer Other'=>'轉移終止客戶回訪',
+    'Stop Customer Back'=>'終止客戶回訪',
+    'Stop Customer'=>'終止客戶',
 );
 ?>

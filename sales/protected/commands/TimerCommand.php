@@ -85,8 +85,96 @@ class TimerCommand extends CConsoleCommand {
 
             }
         }
+
+        //终止客户邮件提醒
+        $this->shiftEmailHint();
 	}
 
+    //终止客户邮件提醒
+	private function shiftEmailHint(){
+	    $shiftList = array();
+	    $this->setShiftList($shiftList);
+	    $this->sendForShiftList($shiftList);
+    }
 
+    //发送终止客户邮件
+    private function sendForShiftList($shiftList){
+        $systemId = Yii::app()->params['systemId'];
+	    if(!empty($shiftList)){
+            $subject = "超6个月终止客户回访提醒";
+            $messageEpr="<p>以下客户停单已超6个月，请及时电联或上门回访</p>";
+            $messageEpr.="<p>回访内容请在LBS系统-销售系统-终止客户-终止客户回访中完成</p>";
+            $messageEpr.="<p>客户服务的基本信息：</p>";
+            $tableHead="<table border='1' width='800px'><thead><tr>";
+            $tableHead.="<th width='30%'>客户名称</th>";
+            $tableHead.="<th width='13%'>停单日期</th>";
+            $tableHead.="<th width='13%'>客户类别</th>";
+            $tableHead.="<th width='13%'>性质</th>";
+            $tableHead.="<th width='30%'>业务员</th>";
+            $tableHead.="</tr></thead><tbody>";
+            $tableEnd="</tbody></table>";
+            $email = new Email($subject,"",$subject);
+	        foreach ($shiftList as $city=>$staffRows){
+	            $cityMessage = "";
+	            foreach ($staffRows as $staffId => $rows){
+	                $staffMessage="";
+	                foreach ($rows as $row){
+	                    $message="<tr>";
+	                    $message.="<td>{$row['company_name']}</td>";
+	                    $message.="<td>{$row['status_dt']}</td>";
+	                    $message.="<td>{$row['cust_type']}</td>";
+	                    $message.="<td>{$row['nature_name']}</td>";
+	                    $message.="<td>{$row['salesman']}</td>";
+	                    $message.="</tr>";
+	                    $staffMessage.=$message;//添加到员工邮件
+                        $cityMessage.=$message;//添加到城市邮件
+                    }
+                    $email->resetToAddr();
+                    if(!empty($staffMessage)){
+                        $message = $messageEpr.$tableHead.$staffMessage.$tableEnd;
+                        $email->setMessage($message);
+                        $email->addEmailToStaffId($staffId);
+                        $email->sent("销售系统",$systemId);
+                    }
+                }
+                $email->resetToAddr();
+                if(!empty($cityMessage)){
+                    $message = $messageEpr.$tableHead.$cityMessage.$tableEnd;
+                    $email->setMessage($message);
+                    $email->addEmailToCity($city);
+                    $email->sent("销售系统",$systemId);
+                }
+            }
+        }
+
+    }
+
+    //获取终止客户邮件
+    private function setShiftList(&$shiftList){
+        $suffix = Yii::app()->params['envSuffix'];
+        $expr_sql = StopOtherList::getExprSql();
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.id as service_id,a.city,a.status_dt,a.cust_type,a.nature_type,a.company_name,a.salesman,a.salesman_id,b.id,b.staff_id")
+            ->from("swoper{$suffix}.swo_service a")
+            ->leftJoin("sal_stop_back b","a.id=b.service_id ")
+            ->where("a.status = 'T' and a.salesman_id !=0 and b.back_date is null {$expr_sql}")
+            ->order("a.city asc,a.salesman_id asc")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $row["status_dt"]=General::toDate($row["status_dt"]);
+                $row["cust_type"]=StopOtherForm::getCustTypeStr($row["cust_type"]);
+                $row["nature_name"]=StopOtherForm::getNatureTypeStr($row["nature_type"]);
+                $staff_id = empty($row["staff_id"])?$row["salesman_id"]:$row["staff_id"];//判断是否转移数据
+                if(!key_exists($row["city"],$shiftList)){
+                    $shiftList[$row["city"]] = array();
+                }
+                if(!key_exists($staff_id,$shiftList[$row["city"]])){
+                    $shiftList[$row["city"]][$staff_id] = array();
+                }
+                $shiftList[$row["city"]][$staff_id][]=$row;
+            }
+        }
+    }
 }
 ?>

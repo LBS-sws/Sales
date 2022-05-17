@@ -104,5 +104,7 @@ if (!Yii::app()->user->isGuest) {
 		)
 	);
 }
+Yii::app()->clientScript->registerScriptFile(Yii::app()->baseUrl . "/js/message.js", CClientScript::POS_END);//日期輸入框語言選擇
+
 ?>
 </html>

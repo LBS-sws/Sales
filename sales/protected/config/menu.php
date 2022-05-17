@@ -39,6 +39,29 @@ return array(
 		),
 	),
 
+    'Stop Customer'=>array( //終止客戶
+        'access'=>'SC',
+		'icon'=>'fa-superpowers',
+        'items'=>array(
+            'Stop Customer Back'=>array( //終止客戶回訪
+                'access'=>'SC01',
+                'url'=>'stopBack/index',
+            ),
+            'Stop Customer Other'=>array( //轉移終止客戶回訪
+                'access'=>'SC02',
+                'url'=>'stopOther/index',
+            ),
+            'Stop Customer Site'=>array(// 終止客戶回訪配置
+                'access'=>'SC03',
+                'url'=>'stopSite/index',
+            ),
+            'Stop Back Type'=>array(// 回訪客戶類型
+                'access'=>'SC04',
+                'url'=>'stopType/index',
+            ),
+        )
+    ),
+
     'Class'=>array(
         'access'=>'HA',
 		'icon'=>'fa-database',
