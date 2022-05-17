@@ -71,7 +71,7 @@ class StopOtherForm extends CFormModel
 	{
         $city=Yii::app()->user->city();
 		$suffix = Yii::app()->params['envSuffix'];
-		$sql = "select * from sal_stop_back where service_id='".$index."' and company_id is not NULL and city='{$city}'";
+		$sql = "select * from sal_stop_back where service_id='".$index."'";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
 		$this->service_id = $index;
 		if ($row!==false) {
