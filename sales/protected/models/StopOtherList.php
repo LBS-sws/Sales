@@ -44,7 +44,7 @@ class StopOtherList extends CListPageModel
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
 				 LEFT JOIN hr{$suffix}.hr_employee h ON a.salesman_id=h.id 
 				 LEFT JOIN sal_stop_back d ON a.id=d.service_id 
-				where a.status = 'T' and a.city='{$city}' and h.staff_status=-1 and d.id is NULL {$expr_sql}
+				where a.status = 'T' and a.company_id is not NULL and a.city='{$city}' and h.staff_status=-1 and d.id is NULL {$expr_sql}
 			";
 		$sql2 = "select count(a.id)
 				from swoper{$suffix}.swo_service a 
@@ -52,7 +52,7 @@ class StopOtherList extends CListPageModel
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
 				 LEFT JOIN hr{$suffix}.hr_employee h ON a.salesman_id=h.id 
 				 LEFT JOIN sal_stop_back d ON a.id=d.service_id 
-				where a.status = 'T' and a.city='{$city}' and h.staff_status=-1 and d.id is NULL  {$expr_sql}
+				where a.status = 'T' and a.company_id is not NULL and a.city='{$city}' and h.staff_status=-1 and d.id is NULL  {$expr_sql}
 			";
 		$clause = "";
 		if (!empty($this->searchField) && !empty($this->searchValue)) {
@@ -128,7 +128,7 @@ class StopOtherList extends CListPageModel
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back d","a.id=d.service_id ")
             ->leftJoin("hr{$suffix}.hr_employee h","a.salesman_id=h.id")
-            ->where("a.status = 'T' and a.city='{$city}' and h.staff_status=-1 and d.id is NULL  {$expr_sql}")->queryScalar();
+            ->where("a.status = 'T' and a.company_id is not NULL and a.city='{$city}' and h.staff_status=-1 and d.id is NULL  {$expr_sql}")->queryScalar();
         return $row;
     }
 }

@@ -57,7 +57,7 @@ class StopOtherForm extends CFormModel
 	        foreach ($this->shiftId as $serviceId=>$value){
                 if($value==1){
                     $row = Yii::app()->db->createCommand()->select("id")->from("swoper{$suffix}.swo_service")
-                        ->where("id=:id and a.city='{$city}'",array(":id"=>$serviceId))->queryRow();
+                        ->where("id=:id and company_id is not NULL and city='{$city}'",array(":id"=>$serviceId))->queryRow();
                     if($row){
                         $list[$serviceId] = $value;
                     }
@@ -71,7 +71,7 @@ class StopOtherForm extends CFormModel
 	{
         $city=Yii::app()->user->city();
 		$suffix = Yii::app()->params['envSuffix'];
-		$sql = "select * from sal_stop_back where service_id='".$index."' and a.city='{$city}'";
+		$sql = "select * from sal_stop_back where service_id='".$index."' and company_id is not NULL and city='{$city}'";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
 		$this->service_id = $index;
 		if ($row!==false) {

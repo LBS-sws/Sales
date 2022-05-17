@@ -55,7 +55,7 @@ class StopBackForm extends CFormModel
             ->select("a.id as service_id,b.id")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.id=:id and a.city='{$city}' {$employee_sql}",array(":id"=>$this->service_id))->queryRow();
+            ->where("a.id=:id and a.company_id is not NULL and a.city='{$city}' {$employee_sql}",array(":id"=>$this->service_id))->queryRow();
         if($row){
             $this->id = $row["id"];
         }else{
@@ -75,7 +75,7 @@ class StopBackForm extends CFormModel
             ->select("a.id as service_id,b.*")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.id=:id and a.city='{$city}' {$employee_sql}",array(":id"=>$index))->queryRow();
+            ->where("a.id=:id and a.company_id is not NULL and a.city='{$city}' {$employee_sql}",array(":id"=>$index))->queryRow();
         $this->service_id = $index;
         if($row){
             $this->id = $row['id'];

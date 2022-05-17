@@ -157,7 +157,7 @@ class TimerCommand extends CConsoleCommand {
             ->select("a.id as service_id,a.city,a.status_dt,a.cust_type,a.nature_type,a.company_name,a.salesman,a.salesman_id,b.id,b.staff_id")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.status = 'T' and a.salesman_id !=0 and b.back_date is null {$expr_sql}")
+            ->where("a.status = 'T' and a.company_id is not NULL and a.salesman_id !=0 and b.back_date is null {$expr_sql}")
             ->order("a.city asc,a.salesman_id asc")
             ->queryAll();
         if($rows){
