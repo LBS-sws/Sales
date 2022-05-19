@@ -28,7 +28,7 @@ class RptVisitList extends CReport {
 			
 			'svc_A'=>array('label'=>Yii::t('sales','Monthly Amount'),'width'=>10,'align'=>'C'),
             'svc_A10'=>array('label'=>Yii::t('sales','安装费'),'width'=>10,'align'=>'C'),
-			'svc_A1'=>array('label'=>Yii::t('sales','马桶'),'width'=>10,'align'=>'C'),
+			'svc_A1'=>array('label'=>Yii::t('sales','马桶/蹲厕'),'width'=>10,'align'=>'C'),
 			'svc_A2'=>array('label'=>Yii::t('sales','尿斗'),'width'=>10,'align'=>'C'),
 			'svc_A3'=>array('label'=>Yii::t('sales','水盆'),'width'=>10,'align'=>'C'),
 			'svc_A4'=>array('label'=>Yii::t('sales','清新机'),'width'=>10,'align'=>'C'),

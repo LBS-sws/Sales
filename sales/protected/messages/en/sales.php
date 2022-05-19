@@ -155,6 +155,7 @@ return array(
 
 '清洁'=>'Hygiene',
 '马桶'=>'Toilet Bowl',
+'马桶/蹲厕'=>'Toilet Bowl',
 '尿斗'=>'Urinals',
 '水盆'=>'Basin',
 '清新机'=>'Air Freshener',

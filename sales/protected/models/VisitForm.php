@@ -56,7 +56,7 @@ class VisitForm extends CFormModel
 					'type'=>'annual',
 					'items'=>array(
                                 'A10'=>array('name'=>Yii::t('sales','安装费'),'type'=>'amount'),
-								'A1'=>array('name'=>Yii::t('sales','马桶'),'type'=>'qty'),
+								'A1'=>array('name'=>Yii::t('sales','马桶/蹲厕'),'type'=>'qty'),
 								'A2'=>array('name'=>Yii::t('sales','尿斗'),'type'=>'qty'),
 								'A3'=>array('name'=>Yii::t('sales','水盆'),'type'=>'qty','eol'=>true),
 								'A4'=>array('name'=>Yii::t('sales','清新机'),'type'=>'qty'),
