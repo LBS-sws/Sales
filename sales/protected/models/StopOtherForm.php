@@ -97,23 +97,30 @@ class StopOtherForm extends CFormModel
 	}
 	
 	public function shiftAll(){
+	    var_dump(1);
         if(!empty($this->shiftId)){
+            var_dump(2);
             foreach ($this->shiftId as $serviceId=>$value){
+                var_dump($serviceId);
                 $row = Yii::app()->db->createCommand()->select("id")->from("sal_stop_back")
                     ->where("service_id=:id",array(":id"=>$serviceId))->queryRow();
                 if($row){
-                    Yii::app()->db->createCommand()->update("sal_stop_back",array(
+                    var_dump("update:");
+                    $bool = Yii::app()->db->createCommand()->update("sal_stop_back",array(
                         "staff_id"=>$this->shiftStaff
                     ),"id=".$row["id"]);
                 }else{
-                    Yii::app()->db->createCommand()->insert("sal_stop_back",array(
+                    var_dump("insert:");
+                    $bool = Yii::app()->db->createCommand()->insert("sal_stop_back",array(
                         "service_id"=>$serviceId,
                         "bold_service"=>0,
                         "staff_id"=>$this->shiftStaff
                     ));
                 }
+                var_dump($bool);
             }
         }
+        die();
 	}
 
 	public static function getServiceList($serviceId){
