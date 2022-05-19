@@ -46,6 +46,8 @@ class StopOtherForm extends CFormModel
 	    $staffList = StopOtherList::saleman();
 	    if(!key_exists($this->shiftStaff,$staffList)){
 	        $this->shiftId=array();
+        }else{
+            $this->addError($attribute, "員工不存在，請重試");
         }
     }
 
@@ -53,6 +55,7 @@ class StopOtherForm extends CFormModel
         $city=Yii::app()->user->city();
         $suffix = Yii::app()->params['envSuffix'];
 	    $list = array();
+	    $errorId = "";
 	    if(!empty($this->shiftId)){
 	        foreach ($this->shiftId as $serviceId=>$value){
                 if($value==1){
@@ -60,9 +63,20 @@ class StopOtherForm extends CFormModel
                         ->where("id=:id and company_id is not NULL and city='{$city}'",array(":id"=>$serviceId))->queryRow();
                     if($row){
                         $list[$serviceId] = $value;
+                    }else{
+                        $errorId.=",N:{$serviceId}";
                     }
+                }else{
+                    $errorId.=",A:{$serviceId}";
                 }
             }
+            if(empty($list)){
+                $this->addError($attribute, "請選擇需要轉移的服務");
+                return false;
+            }
+        }
+        if(!empty($errorId)){
+            $this->addError($attribute, "服務id異常：{$errorId}");
         }
         $this->shiftId = $list;
     }
