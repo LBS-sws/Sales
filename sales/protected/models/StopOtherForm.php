@@ -46,7 +46,7 @@ class StopOtherForm extends CFormModel
 	    $staffList = StopOtherList::saleman();
 	    if(!key_exists($this->shiftStaff,$staffList)){
 	        $this->shiftId=array();
-            $this->addError($attribute, "員工不存在，請重試");
+            $this->addError($attribute, "員工不存在，請重試:{$this->shiftStaff}");
         }
     }
 
