@@ -44,7 +44,8 @@ class StopOtherForm extends CFormModel
 
     public function validateStaff($attribute, $params) {
 	    $staffList = StopOtherList::saleman();
-	    if(!key_exists($this->shiftStaff,$staffList)){
+        $staffList = array_column($staffList,"id");
+	    if(!in_array($this->shiftStaff,$staffList)){
 	        $this->shiftId=array();
             $this->addError($attribute, "員工不存在，請重試:{$this->shiftStaff}");
         }
@@ -55,11 +56,12 @@ class StopOtherForm extends CFormModel
         $suffix = Yii::app()->params['envSuffix'];
 	    $list = array();
 	    $errorId = "";
+        $expr_sql = StopOtherList::getExprSql();
 	    if(!empty($this->shiftId)){
 	        foreach ($this->shiftId as $serviceId=>$value){
                 if($value==1){
-                    $row = Yii::app()->db->createCommand()->select("id")->from("swoper{$suffix}.swo_service")
-                        ->where("id=:id and company_id is not NULL and city='{$city}'",array(":id"=>$serviceId))->queryRow();
+                    $row = Yii::app()->db->createCommand()->select("a.id")->from("swoper{$suffix}.swo_service a")
+                        ->where("a.status = 'T' and a.id=:id and a.company_id is not NULL and a.city='{$city}' {$expr_sql}",array(":id"=>$serviceId))->queryRow();
                     if($row){
                         $list[$serviceId] = $value;
                     }else{
@@ -96,40 +98,34 @@ class StopOtherForm extends CFormModel
 	}
 	
 	public function shiftAll(){
-	    var_dump(1);
         if(!empty($this->shiftId)){
-            var_dump(2);
             foreach ($this->shiftId as $serviceId=>$value){
-                var_dump($serviceId);
                 $row = Yii::app()->db->createCommand()->select("id")->from("sal_stop_back")
                     ->where("service_id=:id",array(":id"=>$serviceId))->queryRow();
                 if($row){
-                    var_dump("update:");
-                    $bool = Yii::app()->db->createCommand()->update("sal_stop_back",array(
+                    Yii::app()->db->createCommand()->update("sal_stop_back",array(
                         "staff_id"=>$this->shiftStaff
                     ),"id=".$row["id"]);
                 }else{
-                    var_dump("insert:");
-                    $bool = Yii::app()->db->createCommand()->insert("sal_stop_back",array(
+                    Yii::app()->db->createCommand()->insert("sal_stop_back",array(
                         "service_id"=>$serviceId,
                         "bold_service"=>0,
                         "staff_id"=>$this->shiftStaff
                     ));
                 }
-                var_dump($bool);
             }
         }
-        die();
 	}
 
 	public static function getServiceList($serviceId){
+        $expr_sql = StopOtherList::getExprSql();
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()
             ->select("a.*,b.contract_no")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("swoper{$suffix}.swo_service_contract_no b","a.id=b.service_id")
             ->leftJoin("swoper{$suffix}.swo_company d","a.company_id=d.id")
-            ->where("a.id=:id",array(":id"=>$serviceId))->queryRow();
+            ->where("a.status = 'T' and a.id=:id {$expr_sql}",array(":id"=>$serviceId))->queryRow();
         if($row){
             $row["status_dt"]=General::toDate($row["status_dt"]);
             $row["sign_dt"]=General::toDate($row["sign_dt"]);
