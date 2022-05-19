@@ -70,10 +70,6 @@ class StopOtherForm extends CFormModel
                     $errorId.=",A:{$serviceId}";
                 }
             }
-            if(empty($list)){
-                $this->addError($attribute, "請選擇需要轉移的服務");
-                return false;
-            }
         }
         if(!empty($errorId)){
             $this->addError($attribute, "服務id異常：{$errorId}");
