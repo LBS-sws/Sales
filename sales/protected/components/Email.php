@@ -446,18 +446,20 @@ class Email {
         }
 
 		//新增通知記錄
- 		$connection = Yii::app()->db;
-		SystemNotice::addNotice($connection, array(
-				'note_type'=>'notice',
-				'subject'=>$this->subject,//郵件主題
-				'description'=>$this->description,//郵件副題
-				'message'=>$this->message,
-				'username'=>json_encode($this->to_user),
-				'system_id'=>$systemId,
-				'form_id'=>$this->form_id,
-				'rec_id'=>$this->rec_id,
-			)
-		);
+        if(!empty($this->to_user)){
+            $connection = Yii::app()->db;
+            SystemNotice::addNotice($connection, array(
+                    'note_type'=>'notice',
+                    'subject'=>$this->subject,//郵件主題
+                    'description'=>$this->description,//郵件副題
+                    'message'=>$this->message,
+                    'username'=>json_encode($this->to_user),
+                    'system_id'=>$systemId,
+                    'form_id'=>$this->form_id,
+                    'rec_id'=>$this->rec_id,
+                )
+            );
+        }
    }
 
     //查找管轄某城市的所有城市（根據小城市查找大城市）

@@ -157,7 +157,9 @@ class TimerCommand extends CConsoleCommand {
                     $message = $messageEpr.$tableHead.$cityMessage.$tableEnd;
                     $email->setMessage($message);
                     $email->addEmailToCity($city);
-                    $email->sent("销售系统",$systemId);
+                    if(!empty($email->getToAddr())){
+                        $email->sent("销售系统",$systemId);
+                    }
                 }
             }
         }
