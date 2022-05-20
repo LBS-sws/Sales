@@ -6,6 +6,16 @@
         ?>
     </th>
     <th>
+        <?php echo TbHtml::link($this->getLabelName('back_date').$this->drawOrderArrow('d.back_date'),'#',$this->createOrderLink('stopBack-list','d.back_date'))
+        ;
+        ?>
+    </th>
+    <th>
+        <?php echo TbHtml::link($this->getLabelName('status_dt').$this->drawOrderArrow('a.status_dt'),'#',$this->createOrderLink('stopBack-list','a.status_dt'))
+        ;
+        ?>
+    </th>
+    <th>
         <?php echo TbHtml::link($this->getLabelName('company_name').$this->drawOrderArrow('b.name'),'#',$this->createOrderLink('stopBack-list','b.name'))
         ;
         ?>
@@ -16,12 +26,7 @@
         ?>
     </th>
     <th>
-        <?php echo TbHtml::link($this->getLabelName('service').$this->drawOrderArrow('a.service'),'#',$this->createOrderLink('stopBack-list','a.service'))
-        ;
-        ?>
-    </th>
-    <th>
-        <?php echo TbHtml::link($this->getLabelName('cont_info').$this->drawOrderArrow('a.cont_info'),'#',$this->createOrderLink('stopBack-list','a.cont_info'))
+        <?php echo TbHtml::link($this->getLabelName('amt_paid').$this->drawOrderArrow('a.amt_paid'),'#',$this->createOrderLink('stopBack-list','a.amt_paid'))
         ;
         ?>
     </th>
@@ -31,12 +36,7 @@
         ?>
     </th>
     <th>
-        <?php echo TbHtml::link($this->getLabelName('status_dt').$this->drawOrderArrow('a.status_dt'),'#',$this->createOrderLink('stopBack-list','a.status_dt'))
-        ;
-        ?>
-    </th>
-    <th>
-        <?php echo TbHtml::link($this->getLabelName('shiftStatus').$this->drawOrderArrow('d.back_date'),'#',$this->createOrderLink('stopBack-list','d.back_date'))
+        <?php echo TbHtml::link($this->getLabelName('back_name').$this->drawOrderArrow('g.type_name'),'#',$this->createOrderLink('stopBack-list','g.type_name'))
         ;
         ?>
     </th>

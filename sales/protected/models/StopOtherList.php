@@ -25,7 +25,7 @@ class StopOtherList extends CListPageModel
 	public static function getExprSql(){
 	    $list = StopSiteForm::getStopSiteList();
 	    $date = date("Y/m/d",strtotime(" - {$list['stop_month']} months"));
-        $sql = " and date_format(a.status_dt,'%Y/%m/%d')<='{$date}' and (
+        $sql = " and date_format(a.status_dt,'%Y')>=2021 and date_format(a.status_dt,'%Y/%m/%d')<='{$date}' and (
             (a.paid_type='M' and a.amt_paid>={$list['month_money']})or
             (a.paid_type='Y' and a.amt_paid>={$list['year_money']})
         )";

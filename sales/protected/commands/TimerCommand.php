@@ -2,9 +2,24 @@
 class TimerCommand extends CConsoleCommand {
 	
 	public function run() {
+	    /*报错代码
 		$obj = new FivestepForm();
 		$typelist = $obj->getFiveTypeList();
 		$steplist = $obj->getStepList();
+	    */
+        $typelist = array(
+            0=>Yii::t('misc','Insecticidal'),
+            1=>Yii::t('misc','Restroom'),
+            2=>Yii::t('misc','Third'),
+            3=>Yii::t('misc','Air Purifier'),
+            4=>Yii::t('misc','Oil separator'),
+        );
+        $steplist = array('1'=>Yii::t('sales','Step 1'),
+            '2'=>Yii::t('sales','Step 2'),
+            '3'=>Yii::t('sales','Step 3'),
+            '4'=>Yii::t('sales','Step 4'),
+            '5'=>Yii::t('sales','Step 5'),
+        );
 
         $suffix = Yii::app()->params['envSuffix'];
         $firstDay = date("Y/m/d");

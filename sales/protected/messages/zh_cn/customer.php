@@ -70,5 +70,7 @@ return array(
     'shift remark'=>'回访备注',
     'shift detail'=>'回访情况',
     'service detail'=>'服务详情',
+    'Stop Customer Search List'=>'已回访记录列表',
+    'Stop Customer Search Form'=>'已回访记录表单',
 );
 ?>

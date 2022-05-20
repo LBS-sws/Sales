@@ -1,6 +1,6 @@
 <?php
 
-class StopBackList extends CListPageModel
+class StopSearchList extends CListPageModel
 {
     public $employee_id;
 	/**
@@ -32,31 +32,31 @@ class StopBackList extends CListPageModel
 	public function retrieveDataByPage($pageNum=1)
 	{
         $city=Yii::app()->user->city();
+        $citylist = Yii::app()->user->city_allow();
         $employee_sql ="";
         if(!empty($this->employee_id)){
             $employee_sql =" and (a.salesman_id={$this->employee_id} or d.staff_id={$this->employee_id})";
         }
-        $expr_sql = StopOtherList::getExprSql();
         $suffix = Yii::app()->params['envSuffix'];
         $sql1 = "select b.code,b.name,f.description,a.id as service_id,a.amt_paid,a.paid_type,
                 a.cont_info,a.status,a.status_dt,h.code as sale_code,h.name as sale_name,a.salesman_id,
                 d.id,d.bold_service,d.back_date,g.type_name
-				from swoper{$suffix}.swo_service a 
+				from sal_stop_back d 
+				 LEFT JOIN swoper{$suffix}.swo_service a ON a.id=d.service_id 
 				 LEFT JOIN swoper{$suffix}.swo_company b ON a.company_id=b.id 
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
 				 LEFT JOIN hr{$suffix}.hr_employee h ON a.salesman_id=h.id 
-				 LEFT JOIN sal_stop_back d ON a.id=d.service_id 
 				 LEFT JOIN sal_stop_type g ON g.id=d.back_type 
-				where a.status = 'T' and a.company_id is not NULL and a.city='{$city}' {$employee_sql} {$expr_sql}
+				where d.back_date is not null and a.city in ($citylist) {$employee_sql}
 			";
         $sql2 = "select count(a.id)
-				from swoper{$suffix}.swo_service a 
+				from sal_stop_back d 
+				 LEFT JOIN swoper{$suffix}.swo_service a ON a.id=d.service_id 
 				 LEFT JOIN swoper{$suffix}.swo_company b ON a.company_id=b.id 
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
 				 LEFT JOIN hr{$suffix}.hr_employee h ON a.salesman_id=h.id 
-				 LEFT JOIN sal_stop_back d ON a.id=d.service_id 
 				 LEFT JOIN sal_stop_type g ON g.id=d.back_type 
-				where a.status = 'T' and a.company_id is not NULL and a.city='{$city}' {$employee_sql} {$expr_sql}
+				where d.back_date is not null and a.city in ($citylist) {$employee_sql}
 			";
         $clause = "";
         if (!empty($this->searchField) && !empty($this->searchValue)) {
@@ -72,11 +72,11 @@ class StopBackList extends CListPageModel
                     $clause .= General::getSqlConditionClause('g.type_name',$svalue);
                     break;
                 case 'status_dt':
-                    $svalue = self::searchDate($svalue);
+                    $svalue = StopBackList::searchDate($svalue);
                     $clause .= General::getSqlConditionClause('a.status_dt',$svalue);
                     break;
                 case 'back_date':
-                    $svalue = self::searchDate($svalue);
+                    $svalue = StopBackList::searchDate($svalue);
                     $clause .= General::getSqlConditionClause('d.back_date',$svalue);
                     break;
                 case 'salesman':
@@ -120,91 +120,7 @@ class StopBackList extends CListPageModel
             }
         }
 		$session = Yii::app()->session;
-		$session['stopBack_c01'] = $this->getCriteria();
+		$session['stopSearch_c01'] = $this->getCriteria();
 		return true;
 	}
-
-    public static function getEmployee(&$model,$search=false){
-        $suffix = Yii::app()->params['envSuffix'];
-        $uid = Yii::app()->user->id;
-        //$city = Yii::app()->user->city();
-        $row = Yii::app()->db->createCommand()
-            ->select("b.id,b.code,b.name")
-            ->from("hr{$suffix}.hr_binding a")
-            ->leftJoin("hr{$suffix}.hr_employee b","a.employee_id=b.id")
-            ->where("a.user_id=:id",array(":id"=>$uid))->queryRow();
-        if($row){
-            $model->employee_id = $row["id"];
-            return true;
-        }else{
-            $model->employee_id = 0;
-            return $search?true:false;
-        }
-
-    }
-
-    public function updateVip($serviceId){
-        $city=Yii::app()->user->city();
-        $employee_sql ="";
-        if(!empty($this->employee_id)){
-            $employee_sql =" and (a.salesman_id={$this->employee_id} or b.staff_id={$this->employee_id})";
-        }
-        $suffix = Yii::app()->params['envSuffix'];
-	    $list = array("status"=>0,"message"=>"");
-        $row = Yii::app()->db->createCommand()
-            ->select("a.id as service_id,b.id,b.bold_service")
-            ->from("swoper{$suffix}.swo_service a")
-            ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.id=:id and a.city='{$city}' {$employee_sql}",array(":id"=>$serviceId))->queryRow();
-        if($row){
-            $list["status"]=1;
-            if(empty($row["bold_service"])){
-                $bold_service = 1;
-                $list["message"]="fa fa-star";
-            }else{
-                $bold_service = 0;
-                $list["message"]="fa fa-star-o";
-            }
-            if(!empty($row["id"])){
-                Yii::app()->db->createCommand()->update("sal_stop_back",array(
-                    "bold_service"=>$bold_service
-                ),"id=".$row["id"]);
-            }else{
-                Yii::app()->db->createCommand()->insert("sal_stop_back",array(
-                    "service_id"=>$serviceId,
-                    "bold_service"=>1
-                ));
-            }
-        }else{
-            $list["message"]="服务不存在，请刷新重试";
-        }
-	    return $list;
-    }
-
-    public function countNotify(){
-        $city=Yii::app()->user->city();
-        $employee_sql ="";
-        if(!empty($this->employee_id)){
-            $employee_sql =" and (a.salesman_id={$this->employee_id} or b.staff_id={$this->employee_id})";
-        }
-        $suffix = Yii::app()->params['envSuffix'];
-        $expr_sql = StopOtherList::getExprSql();
-        $row = Yii::app()->db->createCommand()
-            ->select("count(a.id)")
-            ->from("swoper{$suffix}.swo_service a")
-            ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.status = 'T' and a.company_id is not NULL and a.city='{$city}' and b.back_date is null {$employee_sql} {$expr_sql}")->queryScalar();
-        return $row;
-    }
-
-    public static function searchDate($str){
-        $svalue = str_replace("/","-",$str);
-        $list = explode("-",$svalue);
-        if(count($list)==2){
-            $str = date("Y-m",strtotime($svalue."-01"));
-        }elseif (count($list)==3){
-            $str = date("Y-m-d",strtotime($svalue));
-        }
-        return $str;
-    }
 }

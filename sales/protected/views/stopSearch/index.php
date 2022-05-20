@@ -1,9 +1,9 @@
 <?php
-$this->pageTitle=Yii::app()->name . ' - StopSite';
+$this->pageTitle=Yii::app()->name . ' - StopSearch';
 ?>
 
 <?php $form=$this->beginWidget('TbActiveForm', array(
-'id'=>'StopSite-list',
+'id'=>'stopSearch-list',
 'enableClientValidation'=>true,
 'clientOptions'=>array('validateOnSubmit'=>true,),
 'layout'=>TbHtml::FORM_LAYOUT_INLINE,
@@ -11,7 +11,7 @@ $this->pageTitle=Yii::app()->name . ' - StopSite';
 
 <section class="content-header">
 	<h1>
-		<strong><?php echo Yii::t('app','Stop Customer Site'); ?></strong>
+		<strong><?php echo Yii::t('app','Stop Customer Search'); ?></strong>
 	</h1>
 <!--
 	<ol class="breadcrumb">
@@ -21,20 +21,29 @@ $this->pageTitle=Yii::app()->name . ' - StopSite';
 	</ol>
 -->
 </section>
-
 <?php
-echo TbHtml::button("test",array('class'=>'hide','submit'=>'#'));
+    echo TbHtml::button("test",array('class'=>'hide','submit'=>'#'));
 ?>
+
 <section class="content">
-	<?php $this->widget('ext.layout.ListPageWidget', array(
-			'title'=>Yii::t('app','Stop Customer Site'),
-			'model'=>$model,
-				'viewhdr'=>'//stopSite/_listhdr',
-				'viewdtl'=>'//stopSite/_listdtl',
-				'gridsize'=>'24',
-				'height'=>'600',
-		));
-	?>
+    <?php
+    $this->widget('ext.layout.ListPageWidget', array(
+        'title'=>Yii::t('customer','Stop Customer Search List'),
+        'model'=>$model,
+        'viewhdr'=>'//stopSearch/_listhdr',
+        'viewdtl'=>'//stopSearch/_listdtl',
+        'gridsize'=>'24',
+        'height'=>'600',
+        'search'=>array(
+            'company_name',
+            'status_dt',
+            'back_date',
+            'back_name',
+            'description',
+            'salesman',
+        ),
+    ));
+    ?>
 </section>
 <?php
 	echo $form->hiddenField($model,'pageNum');
@@ -45,6 +54,9 @@ echo TbHtml::button("test",array('class'=>'hide','submit'=>'#'));
 <?php $this->endWidget(); ?>
 
 <?php
+$js ="
+";
+Yii::app()->clientScript->registerScript('calcFunction',$js,CClientScript::POS_READY);
 	$js = Script::genTableRowClick();
 	Yii::app()->clientScript->registerScript('rowClick',$js,CClientScript::POS_READY);
 ?>

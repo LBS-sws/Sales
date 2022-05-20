@@ -128,6 +128,7 @@ return array(
 	'Stop Back Type'=>'回访客户类型',
 	'Stop Customer Site'=>'终止客户回访配置',
 	'Stop Customer Other'=>'转移终止客户回访',
+	'Stop Customer Search'=>'已回访记录查询',
 	'Stop Customer Back'=>'终止客户回访',
 	'Stop Customer'=>'终止客户',
 );

@@ -13,4 +13,5 @@ return array(
     'Rank (Read All)'=>array('access'=>'CN10',),
     'Remove Five Step Right'=>array('access'=>'CN11',),
     'Renaud Air List'=>array('access'=>'CN12',),
+    'Stop Customer Search(All)'=>array('access'=>'CN13',),
 );

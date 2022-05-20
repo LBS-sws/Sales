@@ -68,5 +68,7 @@ return array(
     'shift remark'=>'回訪備註',
     'shift detail'=>'回訪情況',
     'service detail'=>'服務詳情',
+    'Stop Customer Search List'=>'已回訪記錄列表',
+    'Stop Customer Search Form'=>'已回訪記錄表單',
 );
 ?>

@@ -21,6 +21,9 @@ $this->pageTitle=Yii::app()->name . ' - StopBack';
 	</ol>
 -->
 </section>
+<?php
+    echo TbHtml::button("test",array('class'=>'hide','submit'=>'#'));
+?>
 
 <section class="content">
     <?php
@@ -33,8 +36,10 @@ $this->pageTitle=Yii::app()->name . ' - StopBack';
         'height'=>'600',
         'search'=>array(
             'company_name',
-            'cont_info',
-            'service',
+            'status_dt',
+            'back_date',
+            'back_name',
+            'description',
             'salesman',
         ),
     ));

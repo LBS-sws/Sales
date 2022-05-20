@@ -120,6 +120,7 @@ return array(
     'Stop Back Type'=>'回訪客戶類型',
     'Stop Customer Site'=>'終止客戶回訪配置',
     'Stop Customer Other'=>'轉移終止客戶回訪',
+    'Stop Customer Search'=>'已回訪記錄查詢',
     'Stop Customer Back'=>'終止客戶回訪',
     'Stop Customer'=>'終止客戶',
 );
