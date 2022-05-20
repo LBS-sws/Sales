@@ -51,7 +51,11 @@ return array(
                 'access'=>'SC02',
                 'url'=>'stopOther/index',
             ),
-            'Stop Customer Search'=>array( //轉移終止客戶回訪
+            'Stop Customer None'=>array( //未回访客户查询
+                'access'=>'SC06',
+                'url'=>'stopNone/index',
+            ),
+            'Stop Customer Search'=>array( //已回访记录查询
                 'access'=>'SC05',
                 'url'=>'stopSearch/index',
             ),

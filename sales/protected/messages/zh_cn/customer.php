@@ -72,5 +72,9 @@ return array(
     'service detail'=>'服务详情',
     'Stop Customer Search List'=>'已回访记录列表',
     'Stop Customer Search Form'=>'已回访记录表单',
+    'lcu'=>'第一次操作人员',
+    'lcd'=>'第一次操作时间',
+    'luu'=>'最后一次操作人员',
+    'lud'=>'最后一次操作时间',
 );
 ?>

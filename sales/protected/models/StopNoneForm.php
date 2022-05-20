@@ -1,6 +1,6 @@
 <?php
 
-class StopBackForm extends CFormModel
+class StopNoneForm extends CFormModel
 {
 	/* User Fields */
     public $id;
@@ -46,17 +46,13 @@ class StopBackForm extends CFormModel
 
     public function validateID($attribute, $params) {
         $city=Yii::app()->user->city();
-        $employee_sql ="";
-        if(!empty($this->employee_id)){
-            $employee_sql =" and (a.salesman_id={$this->employee_id} or b.staff_id={$this->employee_id})";
-        }
         $expr_sql = StopOtherList::getExprSql();
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()
             ->select("a.id as service_id,b.id")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.status = 'T' and a.id=:id and a.company_id is not NULL and a.city='{$city}' {$employee_sql} {$expr_sql}",array(":id"=>$this->service_id))->queryRow();
+            ->where("a.status = 'T' and a.id=:id and a.company_id is not NULL and a.city='{$city}' {$expr_sql}",array(":id"=>$this->service_id))->queryRow();
         if($row){
             $this->id = $row["id"];
         }else{
@@ -67,17 +63,13 @@ class StopBackForm extends CFormModel
 	public function retrieveData($index)
 	{
         $city=Yii::app()->user->city();
-        $employee_sql ="";
-        if(!empty($this->employee_id)){
-            $employee_sql =" and (a.salesman_id={$this->employee_id} or b.staff_id={$this->employee_id})";
-        }
         $expr_sql = StopOtherList::getExprSql();
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()
             ->select("a.id as service_id,b.*")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.status = 'T' and a.id=:id and a.company_id is not NULL and a.city='{$city}' {$employee_sql} {$expr_sql}",array(":id"=>$index))->queryRow();
+            ->where("a.status = 'T' and a.id=:id and a.company_id is not NULL and a.city='{$city}' {$expr_sql}",array(":id"=>$index))->queryRow();
         $this->service_id = $index;
         if($row){
             $this->id = $row['id'];

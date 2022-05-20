@@ -369,7 +369,7 @@ class Email {
     public function addEmailToLcu($lcu){
         $suffix = Yii::app()->params['envSuffix'];
         $email = Yii::app()->db->createCommand()->select("email, username")->from("security$suffix.sec_user")
-            ->where("username=:username",array(":username"=>$lcu))
+            ->where("username=:username and email !=''",array(":username"=>$lcu))
             ->queryRow();
         if($email){
             if(!in_array($email["email"],$this->to_addr)){
@@ -386,7 +386,7 @@ class Email {
         $suffix = Yii::app()->params['envSuffix'];
         $email = Yii::app()->db->createCommand()->select("b.email, b.username")->from("hr$suffix.hr_binding a")
             ->leftJoin("security$suffix.sec_user b","b.username = a.user_id")
-            ->where("a.employee_id=:employee_id",array(":employee_id"=>$staffId))
+            ->where("a.employee_id=:employee_id and b.email !=''",array(":employee_id"=>$staffId))
             ->queryRow();
         if($email){
             if(!in_array($email["email"],$this->to_addr)){

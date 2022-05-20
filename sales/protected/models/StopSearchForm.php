@@ -13,6 +13,10 @@ class StopSearchForm extends CFormModel
     public $back_date;
     public $back_type;
     public $back_remark;
+    public $lcu;
+    public $luu;
+    public $lcd;
+    public $lud;
 
 	/**
 	 * Declares customized attribute labels.
@@ -28,6 +32,10 @@ class StopSearchForm extends CFormModel
             'back_date'=>Yii::t('customer','shift date'),
             'back_type'=>Yii::t('customer','shift type'),
             'back_remark'=>Yii::t('customer','shift remark'),
+            'lcu'=>Yii::t('customer','lcu'),
+            'luu'=>Yii::t('customer','luu'),
+            'lcd'=>Yii::t('customer','lcd'),
+            'lud'=>Yii::t('customer','lud'),
 		);
 	}
 
@@ -63,6 +71,10 @@ class StopSearchForm extends CFormModel
             $this->back_date = $row['back_date'];
             $this->staff_id = $row['staff_id'];
             $this->customer_name = $row['customer_name'];
+            $this->lcu = $row['lcu'];
+            $this->luu = $row['luu'];
+            $this->lcd = $row['lcd'];
+            $this->lud = empty($row['luu'])?"":$row['lud'];
             $this->bold_service = empty($row['bold_service'])?false:true;
             return true;
         }else{
