@@ -149,7 +149,9 @@ class TimerCommand extends CConsoleCommand {
                         $message = $messageEpr.$tableHead.$staffMessage.$tableEnd;
                         $email->setMessage($message);
                         $email->addEmailToStaffId($staffId);
-                        $email->sent("销售系统",$systemId);
+                        if(!empty($email->getToAddr())){
+                            $email->sent("销售系统",$systemId);
+                        }
                     }
                 }
                 $email->resetToAddr();
