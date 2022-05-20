@@ -121,6 +121,7 @@ return array(
     'Stop Customer Site'=>'終止客戶回訪配置',
     'Stop Customer Other'=>'轉移終止客戶回訪',
     'Stop Customer Search'=>'已回訪記錄查詢',
+    'Stop Customer Search(All)'=>'回訪記錄查詢(所有)',
     'Stop Customer None'=>'未回訪記錄查詢',
     'Stop Customer Back'=>'終止客戶回訪',
     'Stop Customer'=>'終止客戶',
