@@ -32,6 +32,7 @@ class StopNoneList extends CListPageModel
 	public function retrieveDataByPage($pageNum=1)
 	{
         $city=Yii::app()->user->city();
+        $citylist = Yii::app()->user->city_allow();
         $expr_sql = StopOtherList::getExprSql()." and d.back_date is null";
         $suffix = Yii::app()->params['envSuffix'];
         $sql1 = "select b.code,b.name,f.description,a.id as service_id,a.amt_paid,a.paid_type,
@@ -42,7 +43,7 @@ class StopNoneList extends CListPageModel
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
 				 LEFT JOIN hr{$suffix}.hr_employee h ON a.salesman_id=h.id 
 				 LEFT JOIN sal_stop_back d ON a.id=d.service_id 
-				where a.status = 'T' and a.company_id is not NULL and a.city='{$city}' {$expr_sql}
+				where a.status = 'T' and a.company_id is not NULL and a.city in ($citylist) {$expr_sql}
 			";
         $sql2 = "select count(a.id)
 				from swoper{$suffix}.swo_service a 
@@ -50,7 +51,7 @@ class StopNoneList extends CListPageModel
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
 				 LEFT JOIN hr{$suffix}.hr_employee h ON a.salesman_id=h.id 
 				 LEFT JOIN sal_stop_back d ON a.id=d.service_id 
-				where a.status = 'T' and a.company_id is not NULL and a.city='{$city}' {$expr_sql}
+				where a.status = 'T' and a.company_id is not NULL and a.city in ($citylist) {$expr_sql}
 			";
         $clause = "";
         if (!empty($this->searchField) && !empty($this->searchValue)) {
@@ -124,6 +125,7 @@ class StopNoneList extends CListPageModel
 
     public function updateVip($serviceId){
         $city=Yii::app()->user->city();
+        $citylist = Yii::app()->user->city_allow();
         $suffix = Yii::app()->params['envSuffix'];
         $expr_sql = StopOtherList::getExprSql();
 	    $list = array("status"=>0,"message"=>"");
@@ -131,7 +133,7 @@ class StopNoneList extends CListPageModel
             ->select("a.id as service_id,b.id,b.bold_service")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.id=:id and a.city='{$city}' {$expr_sql}",array(":id"=>$serviceId))->queryRow();
+            ->where("a.id=:id and a.city in ($citylist) {$expr_sql}",array(":id"=>$serviceId))->queryRow();
         if($row){
             $list["status"]=1;
             if(empty($row["bold_service"])){
@@ -161,13 +163,14 @@ class StopNoneList extends CListPageModel
 
     public function countNotify(){
         $city=Yii::app()->user->city();
+        $citylist = Yii::app()->user->city_allow();
         $suffix = Yii::app()->params['envSuffix'];
         $expr_sql = StopOtherList::getExprSql();
         $row = Yii::app()->db->createCommand()
             ->select("count(a.id)")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.status = 'T' and a.company_id is not NULL and a.city='{$city}' and b.back_date is null {$expr_sql}")->queryScalar();
+            ->where("a.status = 'T' and a.company_id is not NULL and a.city in ($citylist) and b.back_date is null {$expr_sql}")->queryScalar();
         return $row;
     }
 }

@@ -46,13 +46,14 @@ class StopNoneForm extends CFormModel
 
     public function validateID($attribute, $params) {
         $city=Yii::app()->user->city();
+        $citylist = Yii::app()->user->city_allow();
         $expr_sql = StopOtherList::getExprSql();
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()
             ->select("a.id as service_id,b.id")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.status = 'T' and a.id=:id and a.company_id is not NULL and a.city='{$city}' {$expr_sql}",array(":id"=>$this->service_id))->queryRow();
+            ->where("a.status = 'T' and a.id=:id and a.company_id is not NULL and a.city in ($citylist) {$expr_sql}",array(":id"=>$this->service_id))->queryRow();
         if($row){
             $this->id = $row["id"];
         }else{
@@ -63,13 +64,14 @@ class StopNoneForm extends CFormModel
 	public function retrieveData($index)
 	{
         $city=Yii::app()->user->city();
+        $citylist = Yii::app()->user->city_allow();
         $expr_sql = StopOtherList::getExprSql();
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()
             ->select("a.id as service_id,b.*")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
-            ->where("a.status = 'T' and a.id=:id and a.company_id is not NULL and a.city='{$city}' {$expr_sql}",array(":id"=>$index))->queryRow();
+            ->where("a.status = 'T' and a.id=:id and a.company_id is not NULL and a.city in ($citylist) {$expr_sql}",array(":id"=>$index))->queryRow();
         $this->service_id = $index;
         if($row){
             $this->id = $row['id'];
