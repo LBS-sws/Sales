@@ -27,6 +27,17 @@ $this->pageTitle=Yii::app()->name . ' - StopSearch';
 
 <section class="content">
     <?php
+    $search=array(
+        'company_name',
+        'status_dt',
+        'back_date',
+        'back_name',
+        'description',
+        'salesman',
+    );
+    if(!Yii::app()->user->isSingleCity()){
+        $search[]="city";
+    }
     $this->widget('ext.layout.ListPageWidget', array(
         'title'=>Yii::t('customer','Stop Customer Search List'),
         'model'=>$model,
@@ -34,14 +45,7 @@ $this->pageTitle=Yii::app()->name . ' - StopSearch';
         'viewdtl'=>'//stopSearch/_listdtl',
         'gridsize'=>'24',
         'height'=>'600',
-        'search'=>array(
-            'company_name',
-            'status_dt',
-            'back_date',
-            'back_name',
-            'description',
-            'salesman',
-        ),
+        'search'=>$search,
     ));
     ?>
 </section>
