@@ -86,7 +86,7 @@ class RptRenewalReminder extends CReport {
 				'subject'=>$subject,
 				'description'=>$desc,
 				'message'=>$msg,
-				'test'=>true,
+				'test'=>false,
 			);
 		$connection = Yii::app()->db;
 		$this->sendEmail($connection, $param);
