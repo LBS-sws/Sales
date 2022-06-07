@@ -23,6 +23,7 @@ class StopSearchList extends CListPageModel
             'city_name'=>Yii::t('misc','City'),
             'shiftStatus'=>Yii::t('customer','Shift Status'),
             'bold_service'=>Yii::t('sales','VIP'),
+            'city'=>Yii::t('sales','City'),
 
             'back_date'=>Yii::t('customer','shift date'),
             'back_name'=>Yii::t('customer','shift detail'),
@@ -39,14 +40,15 @@ class StopSearchList extends CListPageModel
         }
         $suffix = Yii::app()->params['envSuffix'];
         $sql1 = "select b.code,b.name,f.description,a.id as service_id,a.amt_paid,a.paid_type,
-                a.cont_info,a.status,a.status_dt,h.code as sale_code,h.name as sale_name,a.salesman_id,
-                d.id,d.bold_service,d.back_date,g.type_name
+                a.cont_info,a.city,a.status,a.status_dt,h.code as sale_code,h.name as sale_name,a.salesman_id,
+                d.id,d.bold_service,d.back_date,g.type_name,j.name as city_name
 				from sal_stop_back d 
 				 LEFT JOIN swoper{$suffix}.swo_service a ON a.id=d.service_id 
 				 LEFT JOIN swoper{$suffix}.swo_company b ON a.company_id=b.id 
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
 				 LEFT JOIN hr{$suffix}.hr_employee h ON a.salesman_id=h.id 
 				 LEFT JOIN sal_stop_type g ON g.id=d.back_type 
+			     LEFT join security$suffix.sec_city j on a.city=j.code	
 				where d.back_date is not null and a.city in ($citylist) {$employee_sql}
 			";
         $sql2 = "select count(a.id)
@@ -56,6 +58,7 @@ class StopSearchList extends CListPageModel
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
 				 LEFT JOIN hr{$suffix}.hr_employee h ON a.salesman_id=h.id 
 				 LEFT JOIN sal_stop_type g ON g.id=d.back_type 
+			     LEFT join security$suffix.sec_city j on a.city=j.code	
 				where d.back_date is not null and a.city in ($citylist) {$employee_sql}
 			";
         $clause = "";
@@ -67,6 +70,9 @@ class StopSearchList extends CListPageModel
                     break;
                 case 'description':
                     $clause .= General::getSqlConditionClause('f.description',$svalue);
+                    break;
+                case 'city':
+                    $clause .= General::getSqlConditionClause('j.name',$svalue);
                     break;
                 case 'back_name':
                     $clause .= General::getSqlConditionClause('g.type_name',$svalue);
@@ -106,6 +112,7 @@ class StopSearchList extends CListPageModel
                 $this->attr[] = array(
                     'id'=>$record['id'],
                     'service_id'=>$record['service_id'],
+                    'city'=>$record['city_name'],
                     'status_dt'=>General::toDate($record['status_dt']),
                     'back_date'=>empty($record['back_date'])?"":General::toDate($record['back_date']),
                     'amt_paid'=>StopOtherForm::getPaidTypeStr($record['paid_type'])."：".floatval($record['amt_paid']),

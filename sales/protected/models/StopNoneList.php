@@ -23,6 +23,7 @@ class StopNoneList extends CListPageModel
             'city_name'=>Yii::t('misc','City'),
             'shiftStatus'=>Yii::t('customer','Shift Status'),
             'bold_service'=>Yii::t('sales','VIP'),
+            'city'=>Yii::t('sales','City'),
 
             'back_date'=>Yii::t('customer','shift date'),
             'back_name'=>Yii::t('customer','shift detail'),
@@ -36,13 +37,14 @@ class StopNoneList extends CListPageModel
         $expr_sql = StopOtherList::getExprSql()." and d.back_date is null";
         $suffix = Yii::app()->params['envSuffix'];
         $sql1 = "select b.code,b.name,f.description,a.id as service_id,a.amt_paid,a.paid_type,
-                a.cont_info,a.status,a.status_dt,h.code as sale_code,h.name as sale_name,a.salesman_id,
-                d.id,d.bold_service,d.back_date,d.back_type as type_name
+                a.cont_info,a.city,a.status,a.status_dt,h.code as sale_code,h.name as sale_name,a.salesman_id,
+                d.id,d.bold_service,d.back_date,d.back_type as type_name,j.name as city_name
 				from swoper{$suffix}.swo_service a 
 				 LEFT JOIN swoper{$suffix}.swo_company b ON a.company_id=b.id 
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
 				 LEFT JOIN hr{$suffix}.hr_employee h ON a.salesman_id=h.id 
 				 LEFT JOIN sal_stop_back d ON a.id=d.service_id 
+			     LEFT join security$suffix.sec_city j on a.city=j.code	
 				where a.status = 'T' and a.company_id is not NULL and a.city in ($citylist) {$expr_sql}
 			";
         $sql2 = "select count(a.id)
@@ -51,6 +53,7 @@ class StopNoneList extends CListPageModel
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
 				 LEFT JOIN hr{$suffix}.hr_employee h ON a.salesman_id=h.id 
 				 LEFT JOIN sal_stop_back d ON a.id=d.service_id 
+			     LEFT join security$suffix.sec_city j on a.city=j.code	
 				where a.status = 'T' and a.company_id is not NULL and a.city in ($citylist) {$expr_sql}
 			";
         $clause = "";
@@ -62,6 +65,9 @@ class StopNoneList extends CListPageModel
                     break;
                 case 'description':
                     $clause .= General::getSqlConditionClause('f.description',$svalue);
+                    break;
+                case 'city':
+                    $clause .= General::getSqlConditionClause('j.name',$svalue);
                     break;
                 case 'back_name':
                     if (strpos(Yii::t("customer","No Shift"),$svalue)!==false){
@@ -105,6 +111,7 @@ class StopNoneList extends CListPageModel
                 $this->attr[] = array(
                     'id'=>$record['id'],
                     'service_id'=>$record['service_id'],
+                    'city'=>$record['city_name'],
                     'status_dt'=>General::toDate($record['status_dt']),
                     'back_date'=>empty($record['back_date'])?"":General::toDate($record['back_date']),
                     'amt_paid'=>StopOtherForm::getPaidTypeStr($record['paid_type'])."：".floatval($record['amt_paid']),

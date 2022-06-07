@@ -20,6 +20,13 @@
         ;
         ?>
     </th>
+    <?php if (!Yii::app()->user->isSingleCity()): ?>
+        <th>
+            <?php echo TbHtml::link($this->getLabelName('city').$this->drawOrderArrow('j.name'),'#',$this->createOrderLink('stopSearch-list','j.name'))
+            ;
+            ?>
+        </th>
+    <?php endif ?>
     <th>
         <?php echo TbHtml::link($this->getLabelName('description').$this->drawOrderArrow('f.description'),'#',$this->createOrderLink('stopSearch-list','f.description'))
         ;

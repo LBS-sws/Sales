@@ -12,6 +12,9 @@
     <td><?php echo $this->record['back_date']; ?></td>
     <td><?php echo $this->record['status_dt']; ?></td>
     <td><?php echo $this->record['company_name']; ?></td>
+    <?php if (!Yii::app()->user->isSingleCity()): ?>
+        <td><?php echo $this->record['city']; ?></td>
+    <?php endif ?>
     <td><?php echo $this->record['description']; ?></td>
     <td><?php echo $this->record['amt_paid']; ?></td>
     <td><?php echo $this->record['salesman']; ?></td>
