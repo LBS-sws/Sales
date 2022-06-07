@@ -41,11 +41,13 @@ class FivestepForm extends CFormModel
 						);
 
 	public function init() {
-		$this->city = Yii::app()->user->city();
-		$this->username = Yii::app()->user->id;
-		$this->rec_dt = date("Y/m/d");
-		$this->step = '1';
-		$this->getStaffInfo();
+		if (php_sapi_name() != "cli") {
+			$this->city = Yii::app()->user->city();
+			$this->username = Yii::app()->user->id;
+			$this->rec_dt = date("Y/m/d");
+			$this->step = '1';
+			$this->getStaffInfo();
+		}
 	}
 	
 	public function attributeLabels()
