@@ -518,6 +518,8 @@ class IntegralForm extends CFormModel
                 "money"=>0,
                 "remark"=>"当月数量显示1时扣5分，显示0时分数为0分",
             );
+        }else{
+            $this->oneAndTwo = 0;//防止重复调用
         }
         return $list;
     }
