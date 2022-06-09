@@ -124,6 +124,7 @@ return array(
     'Stop Customer Search(All)'=>'回訪記錄查詢(所有)',
     'Stop Customer None'=>'未回訪記錄查詢',
     'Stop Customer Back'=>'終止客戶回訪',
+    'Stop Customer Again'=>'再次回訪列表',
     'Stop Customer'=>'終止客戶',
 );
 ?>

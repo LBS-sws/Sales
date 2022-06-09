@@ -132,6 +132,7 @@ return array(
     'Stop Customer Search(All)'=>'回访记录查询(所有)',
 	'Stop Customer None'=>'未回访记录查询',
 	'Stop Customer Back'=>'终止客户回访',
+	'Stop Customer Again'=>'再次回访列表',
 	'Stop Customer'=>'终止客户',
 );
 ?>

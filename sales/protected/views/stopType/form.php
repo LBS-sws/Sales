@@ -62,6 +62,30 @@ $this->pageTitle=Yii::app()->name . ' - StopType Form';
 				</div>
 			</div>
 
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'again_type',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-5">
+                    <?php
+                    $list = array(Yii::t("Misc","No"),Yii::t("Misc","Yes"));
+                    echo $form->inlineRadioButtonList($model, 'again_type',$list,
+                        array('readonly'=>($model->scenario=='view'),'class'=>'again_type')
+                    ); ?>
+                </div>
+            </div>
+
+			<div class="form-group" <?php if (empty($model->again_type)){ echo 'style="display:none;"';}?>>
+				<?php echo $form->labelEx($model,'again_day',array('class'=>"col-lg-2 control-label")); ?>
+				<div class="col-lg-2">
+				<?php
+                echo $form->numberField($model, 'again_day',
+					array('readonly'=>($model->scenario=='view'),'id'=>'again_day','append'=>'天')
+				); ?>
+				</div>
+                <div class="col-lg-8">
+                    <p class="form-control-static">延迟多少天后，重新提示员工继续跟进</p>
+                </div>
+			</div>
+
 			<div class="form-group">
 				<?php echo $form->labelEx($model,'z_index',array('class'=>"col-lg-2 control-label")); ?>
 				<div class="col-lg-2">
@@ -92,6 +116,16 @@ $this->pageTitle=Yii::app()->name . ' - StopType Form';
 <?php $this->renderPartial('//site/removedialog'); ?>
 
 <?php
+$js ="
+    $('input:radio[name=\"StopTypeForm[again_type]\"]').change(function(){
+        if($(this).val()==1){
+            $(this).closest('.form-group').next('.form-group').show();
+        }else{
+            $(this).closest('.form-group').next('.form-group').hide();
+        }
+    });
+";
+Yii::app()->clientScript->registerScript('calcFunction',$js,CClientScript::POS_READY);
 $js = Script::genDeleteData(Yii::app()->createUrl('stopType/delete'));
 Yii::app()->clientScript->registerScript('deleteRecord',$js,CClientScript::POS_READY);
 

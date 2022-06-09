@@ -5,6 +5,8 @@ class StopTypeForm extends CFormModel
 	/* User Fields */
 	public $id;
 	public $type_name;
+	public $again_type=0;//再次跟進
+	public $again_day;//再次跟進間隔
 	public $z_index=0;
 	public $display=1;
 
@@ -18,6 +20,8 @@ class StopTypeForm extends CFormModel
 		return array(
             'type_name'=>Yii::t('customer','Stop Type Name'),
             'z_index'=>Yii::t('customer','z_index'),
+            'again_type'=>Yii::t('customer','again type'),
+            'again_day'=>Yii::t('customer','again day'),
             'display'=>Yii::t('customer','display'),
 		);
 	}
@@ -28,12 +32,25 @@ class StopTypeForm extends CFormModel
 	public function rules()
 	{
 		return array(
-            array('id,type_name,z_index,display','safe'),
+            array('id,type_name,z_index,display,again_type,again_day','safe'),
 			array('type_name','required'),
             array('z_index,display','numerical','allowEmpty'=>false,'integerOnly'=>true),
             array('id','validateID','on'=>array("delete")),
+            array('again_type','validateType'),
 		);
 	}
+
+    public function validateType($attribute, $params) {
+        if(empty($this->again_type)){
+            $this->again_type = 0;
+            $this->again_day = null;
+        }else{
+            $this->again_type = 1;
+            if(empty($this->again_day)||!is_numeric($this->again_day)){
+                $this->addError($attribute, Yii::t('customer','again day')." 不能为空");
+            }
+        }
+    }
 
     public function validateID($attribute, $params) {
         $id = $this->$attribute;
@@ -54,6 +71,8 @@ class StopTypeForm extends CFormModel
 			$this->id = $row['id'];
 			$this->type_name = $row['type_name'];
 			$this->display = $row['display'];
+			$this->again_type = $row['again_type'];
+			$this->again_day = $row['again_day'];
 			$this->z_index = $row['z_index'];
             return true;
 		}else{
@@ -68,7 +87,8 @@ class StopTypeForm extends CFormModel
             ->where("display=1 or id=:id",array(":id"=>$id))->order("z_index desc")->queryAll();
         if($rows){
             foreach ($rows as $row){
-                $list[$row["id"]] = $row["type_name"];
+                $day = empty($row["again_type"])?"":" - {$row["again_day"]}天";
+                $list[$row["id"]] = $row["type_name"].$day;
             }
         }
         return $list;
@@ -99,12 +119,14 @@ class StopTypeForm extends CFormModel
 				break;
 			case 'new':
 				$sql = "insert into sal_stop_type(
-						type_name, z_index, display, city, lcu, lcd) values (
-						:type_name, :z_index, :display, :city, :lcu, :lcd)";
+						type_name, z_index, again_day, again_type, display, city, lcu, lcd) values (
+						:type_name, :z_index, :again_day, :again_type, :display, :city, :lcu, :lcd)";
 				break;
 			case 'edit':
 				$sql = "update sal_stop_type set 
 					type_name = :type_name, 
+					again_day = :again_day,
+					again_type = :again_type,
 					z_index = :z_index,
 					display = :display,
 					city = :city,
@@ -124,6 +146,10 @@ class StopTypeForm extends CFormModel
 			$command->bindParam(':z_index',$this->z_index,PDO::PARAM_INT);
 		if (strpos($sql,':display')!==false)
 			$command->bindParam(':display',$this->display,PDO::PARAM_INT);
+		if (strpos($sql,':again_day')!==false)
+			$command->bindParam(':again_day',$this->again_day,PDO::PARAM_INT);
+		if (strpos($sql,':again_type')!==false)
+			$command->bindParam(':again_type',$this->again_type,PDO::PARAM_INT);
 		if (strpos($sql,':type_name')!==false)
 			$command->bindParam(':type_name',$this->type_name,PDO::PARAM_STR);
 

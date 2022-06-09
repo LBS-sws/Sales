@@ -70,9 +70,16 @@ return array(
     'service detail'=>'服務詳情',
     'Stop Customer Search List'=>'已回訪記錄列表',
     'Stop Customer Search Form'=>'已回訪記錄表單',
+    'Stop Customer Again List'=>'再次回訪列表',
+    'Stop Customer Again Form'=>'再次回訪表單',
     'lcu'=>'第一次操作人員',
     'lcd'=>'第一次操作時間',
     'luu'=>'最後一次操作人員',
     'lud'=>'最後一次操作時間',
+    'again type'=>'是否繼續跟進',
+    'again day'=>'跟進提示天數',
+    'visit to record'=>'回訪記錄',
+    'shift staff'=>'回訪賬號',
+    'again end date'=>'回訪提示日期',
 );
 ?>

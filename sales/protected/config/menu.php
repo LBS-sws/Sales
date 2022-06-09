@@ -47,6 +47,10 @@ return array(
                 'access'=>'SC01',
                 'url'=>'stopBack/index',
             ),
+            'Stop Customer Again'=>array( //再次回訪列表
+                'access'=>'SC07',
+                'url'=>'stopAgain/index',
+            ),
             'Stop Customer Other'=>array( //轉移終止客戶回訪
                 'access'=>'SC02',
                 'url'=>'stopOther/index',

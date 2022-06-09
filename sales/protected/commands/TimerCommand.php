@@ -103,6 +103,8 @@ class TimerCommand extends CConsoleCommand {
 
         //终止客户邮件提醒
         $this->shiftEmailHint();
+        //终止客户的再次回访邮件提醒
+        $this->shiftAgainEmailHint();
 	}
 
     //终止客户邮件提醒
@@ -186,6 +188,97 @@ class TimerCommand extends CConsoleCommand {
                 $row["status_dt"]=General::toDate($row["status_dt"]);
                 $row["cust_type"]=StopOtherForm::getCustTypeStr($row["cust_type"]);
                 $row["nature_name"]=StopOtherForm::getNatureTypeStr($row["nature_type"]);
+                $staff_id = empty($row["staff_id"])?$row["salesman_id"]:$row["staff_id"];//判断是否转移数据
+                if(!key_exists($row["city"],$shiftList)){
+                    $shiftList[$row["city"]] = array();
+                }
+                if(!key_exists($staff_id,$shiftList[$row["city"]])){
+                    $shiftList[$row["city"]][$staff_id] = array();
+                }
+                $shiftList[$row["city"]][$staff_id][]=$row;
+            }
+        }
+    }
+
+    //终止客户的再次回访邮件提醒
+    private function shiftAgainEmailHint(){
+        $shiftList = array();
+        $this->setShiftAgainList($shiftList);
+        $this->sendForShiftAgainList($shiftList);
+    }
+
+    //发送终止客户的再次回访邮件
+    private function sendForShiftAgainList($shiftList){
+        $systemId = Yii::app()->params['systemId'];
+	    if(!empty($shiftList)){
+            $subject = "终止客户再次回访提醒";
+            $messageEpr="<p>再次回访列表还有未完成的记录，请及时回访并登记到销售表系统-终止客户-再次回访处，谢谢</p>";
+            $messageEpr.="<p>客户服务的上次回访信息：</p>";
+            $tableHead="<table border='1' width='1000px'><thead><tr>";
+            $tableHead.="<th width='30%'>客户名称</th>";
+            $tableHead.="<th width='13%'>停单日期</th>";
+            $tableHead.="<th width='13%'>回访日期</th>";
+            $tableHead.="<th width='19%'>回访状态</th>";
+            $tableHead.="<th width='25%'>业务员</th>";
+            $tableHead.="</tr></thead><tbody>";
+            $tableEnd="</tbody></table>";
+            $email = new Email($subject,"",$subject);
+	        foreach ($shiftList as $city=>$staffRows){
+	            $cityMessage = "";
+	            foreach ($staffRows as $staffId => $rows){
+	                $staffMessage="";
+	                foreach ($rows as $row){
+	                    $message="<tr>";
+	                    $message.="<td>{$row['company_name']}</td>";
+	                    $message.="<td>{$row['status_dt']}</td>";
+	                    $message.="<td>{$row['back_date']}</td>";
+	                    $message.="<td>{$row['type_name']}</td>";
+	                    $message.="<td>{$row['salesman']}</td>";
+	                    $message.="</tr>";
+	                    $staffMessage.=$message;//添加到员工邮件
+                        $cityMessage.=$message;//添加到城市邮件
+                    }
+                    $email->resetToAddr();
+                    if(!empty($staffMessage)){
+                        $message = $messageEpr.$tableHead.$staffMessage.$tableEnd;
+                        $email->setMessage($message);
+                        $email->addEmailToStaffId($staffId);
+                        if(!empty($email->getToAddr())){
+                            $email->sent("销售系统",$systemId);
+                        }
+                    }
+                }
+                $email->resetToAddr();
+                if(!empty($cityMessage)){
+                    $message = $messageEpr.$tableHead.$cityMessage.$tableEnd;
+                    $email->setMessage($message);
+                    $email->addEmailToCity($city);
+                    if(!empty($email->getToAddr())){
+                        $email->sent("销售系统",$systemId);
+                    }
+                }
+            }
+        }
+
+    }
+
+    //获取终止客户的再次回访邮件
+    private function setShiftAgainList(&$shiftList){
+        $suffix = Yii::app()->params['envSuffix'];
+        $nowDate = date("Y-m-d");
+        $rows = Yii::app()->db->createCommand()
+            ->select("f.type_name,f.again_day,a.company_name,a.salesman,a.status_dt,info.back_date,a.city,b.staff_id,a.salesman_id")
+            ->from("sal_stop_back_info info")
+            ->leftJoin("sal_stop_type f","f.id=info.back_type")
+            ->leftJoin("sal_stop_back b","b.id=info.stop_id")
+            ->leftJoin("swoper{$suffix}.swo_service a","a.id=b.service_id")
+            ->where("info.end_bool=0 and f.again_type=1 and date_add(info.back_date, interval f.again_day day)='{$nowDate}'")
+            ->order("a.city asc,a.salesman_id asc")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $row["status_dt"]=General::toDate($row["status_dt"]);
+                $row["back_date"]=General::toDate($row["back_date"]);
                 $staff_id = empty($row["staff_id"])?$row["salesman_id"]:$row["staff_id"];//判断是否转移数据
                 if(!key_exists($row["city"],$shiftList)){
                     $shiftList[$row["city"]] = array();

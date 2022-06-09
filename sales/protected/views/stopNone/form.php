@@ -88,6 +88,7 @@ $this->pageTitle=Yii::app()->name . ' - StopNone Form';
                 </div>
             </div>
 
+            <?php $this->renderPartial('//site/stopAgain',array("stop_id"=>$model->id)); ?>
             <legend><?php echo Yii::t("customer","service detail");?></legend>
             <?php $this->renderPartial('//site/serviceForm',array("model"=>$model,"form"=>$form)); ?>
         </div>

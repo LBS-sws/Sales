@@ -12,6 +12,16 @@ class Counter {
         }
     }
 
+//再次回访列表
+    public static function countShiftAgain() {
+        $model = new StopAgainList();
+        if(StopBackList::getEmployee($model)){
+            return $model->countNotify();
+        }else{
+            return 0;
+        }
+    }
+
 //轉移終止客戶回訪
     public static function countShiftOther() {
         $model = new StopOtherList();

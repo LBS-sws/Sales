@@ -6,6 +6,11 @@
 		?>
 	</th>
 	<th>
+		<?php echo TbHtml::link($this->getLabelName('again_type').$this->drawOrderArrow('again_type'),'#',$this->createOrderLink('stopType-list','again_type'))
+			;
+		?>
+	</th>
+	<th>
 		<?php echo TbHtml::link($this->getLabelName('z_index').$this->drawOrderArrow('z_index'),'#',$this->createOrderLink('stopType-list','z_index'))
 			;
 		?>

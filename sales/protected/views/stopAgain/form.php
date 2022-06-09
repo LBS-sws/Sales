@@ -1,17 +1,21 @@
 <?php
-$this->pageTitle=Yii::app()->name . ' - StopSearch Form';
+$this->pageTitle=Yii::app()->name . ' - StopAgain Form';
 ?>
 
 <?php $form=$this->beginWidget('TbActiveForm', array(
-'id'=>'StopSearch-form',
+'id'=>'StopAgain-form',
 'enableClientValidation'=>true,
 'clientOptions'=>array('validateOnSubmit'=>true,),
 'layout'=>TbHtml::FORM_LAYOUT_HORIZONTAL,
 )); ?>
+<style>
+    input.readonly{ pointer-events: none;}
+</style>
+
 
 <section class="content-header">
     <h1>
-        <strong><?php echo Yii::t('customer','Stop Customer Search Form'); ?></strong>
+        <strong><?php echo Yii::t('customer','Stop Customer Again Form'); ?></strong>
     </h1>
 <!--
 	<ol class="breadcrumb">
@@ -26,8 +30,13 @@ $this->pageTitle=Yii::app()->name . ' - StopSearch Form';
 	<div class="box"><div class="box-body">
 	<div class="btn-group" role="group">
 		<?php echo TbHtml::button('<span class="fa fa-reply"></span> '.Yii::t('misc','Back'), array(
-				'submit'=>Yii::app()->createUrl('stopSearch/index')));
+				'submit'=>Yii::app()->createUrl('stopAgain/index')));
 		?>
+        <?php if ($model->scenario!='view'): ?>
+            <?php echo TbHtml::button('<span class="fa fa-upload"></span> '.Yii::t('misc','Save'), array(
+                'submit'=>Yii::app()->createUrl('stopAgain/save')));
+            ?>
+        <?php endif ?>
 	</div>
 	</div></div>
 
@@ -35,7 +44,9 @@ $this->pageTitle=Yii::app()->name . ' - StopSearch Form';
         <div class="box-body">
             <?php echo $form->hiddenField($model, 'scenario'); ?>
             <?php echo $form->hiddenField($model, 'id'); ?>
+            <?php echo $form->hiddenField($model, 'stop_id'); ?>
             <?php echo $form->hiddenField($model, 'service_id'); ?>
+            <?php echo $form->hiddenField($model, 'bold_service'); ?>
 
             <legend><?php echo Yii::t("customer","shift detail");?></legend>
             <div class="form-group">
@@ -76,42 +87,8 @@ $this->pageTitle=Yii::app()->name . ' - StopSearch Form';
                     ); ?>
                 </div>
             </div>
-            <?php if (Yii::app()->user->validFunction('CN13')): ?>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'lcu',array('class'=>"col-lg-2 control-label")); ?>
-                <div class="col-lg-3">
-                    <?php echo $form->textField($model, 'luu',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'lcd',array('class'=>"col-lg-2 control-label")); ?>
-                <div class="col-lg-3">
-                    <?php echo $form->textField($model, 'lcd',
-                        array('readonly'=>($model->scenario=='view'),
-                            'prepend'=>'<span class="fa fa-calendar"></span>',
-                        )
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'luu',array('class'=>"col-lg-2 control-label")); ?>
-                <div class="col-lg-3">
-                    <?php echo $form->textField($model, 'luu',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'lud',array('class'=>"col-lg-2 control-label")); ?>
-                <div class="col-lg-3">
-                    <?php echo $form->textField($model, 'lud',
-                        array('readonly'=>($model->scenario=='view'),
-                            'prepend'=>'<span class="fa fa-calendar"></span>',
-                        )
-                    ); ?>
-                </div>
-            </div>
-            <?php endif ?>
 
-            <?php $this->renderPartial('//site/stopAgain',array("stop_id"=>$model->id)); ?>
+            <?php $this->renderPartial('//site/stopAgain',array("stop_id"=>$model->stop_id)); ?>
             <legend><?php echo Yii::t("customer","service detail");?></legend>
             <?php $this->renderPartial('//site/serviceForm',array("model"=>$model,"form"=>$form)); ?>
         </div>
@@ -121,7 +98,14 @@ $this->pageTitle=Yii::app()->name . ' - StopSearch Form';
 <?php $this->renderPartial('//site/removedialog'); ?>
 
 <?php
-$js = Script::genDeleteData(Yii::app()->createUrl('stopSearch/delete'));
+if ($model->scenario!='view') {
+    $js = Script::genDatePicker(array(
+        'back_date',
+    ));
+    Yii::app()->clientScript->registerScript('datePick',$js,CClientScript::POS_READY);
+}
+
+$js = Script::genDeleteData(Yii::app()->createUrl('stopAgain/delete'));
 Yii::app()->clientScript->registerScript('deleteRecord',$js,CClientScript::POS_READY);
 
 

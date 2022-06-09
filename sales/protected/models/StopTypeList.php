@@ -11,6 +11,7 @@ class StopTypeList extends CListPageModel
 	{
 		return array(
 			'type_name'=>Yii::t('customer','Stop Type Name'),
+            'again_type'=>Yii::t('customer','again type'),
 			'z_index'=>Yii::t('customer','z_index'),
 			'display'=>Yii::t('customer','display'),
 		);
@@ -58,6 +59,7 @@ class StopTypeList extends CListPageModel
 					$this->attr[] = array(
 						'id'=>$record['id'],
 						'type_name'=>$record['type_name'],
+						'again_type'=>empty($record['again_type'])?Yii::t("misc","No"):Yii::t("misc","Yes"),
 						'z_index'=>$record['z_index'],
                         'display'=>$record['display']==1?Yii::t("customer","show"):Yii::t("customer","none"),
 					);

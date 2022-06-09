@@ -50,12 +50,16 @@ class StopNoneForm extends CFormModel
         $expr_sql = StopOtherList::getExprSql();
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()
-            ->select("a.id as service_id,b.id")
+            ->select("a.id as service_id,b.id,f.again_type")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
+            ->leftJoin("sal_stop_type f","f.id=b.back_type ")
             ->where("a.status = 'T' and a.id=:id and a.company_id is not NULL and a.city in ($citylist) {$expr_sql}",array(":id"=>$this->service_id))->queryRow();
         if($row){
             $this->id = $row["id"];
+            if(!empty($row["again_type"])){
+                $this->addError($attribute, "该回访需要再次回访，无法修改");
+            }
         }else{
             $this->addError($attribute, "服务不存在，请刷新重试");
         }
@@ -91,6 +95,7 @@ class StopNoneForm extends CFormModel
 	{
 	    if($this->getScenario()=='delete'&&!empty($this->id)){
             Yii::app()->db->createCommand()->delete("sal_stop_back","id=".$this->id);
+            Yii::app()->db->createCommand()->delete("sal_stop_back_info","stop_id=".$this->id);
         }elseif ($this->getScenario()=='edit'){
             $arr = array();
             $arr['back_remark'] = $this->back_remark;
@@ -105,7 +110,30 @@ class StopNoneForm extends CFormModel
                 $arr['lcu'] = Yii::app()->user->id;
                 $arr['service_id'] = $this->service_id;
                 Yii::app()->db->createCommand()->insert("sal_stop_back",$arr);
+                $this->id = Yii::app()->db->getLastInsertID();
             }
+
+            StopNoneForm::stopAgainInfo($this->id,$this->back_type,$arr);
         }
 	}
+
+	//终止客户的后续跟进
+	public static function stopAgainInfo($stop_id,$back_type,$arr){
+        $row = Yii::app()->db->createCommand()
+            ->select("again_type,again_day")
+            ->from("sal_stop_type")
+            ->where("id=:id",array(":id"=>$back_type))->queryRow();
+        if($row&&!empty($row["again_type"])){ //需要繼續跟進
+            $list=array();
+            $list['stop_id'] = $stop_id;
+            $list['customer_name'] = $arr['customer_name'];
+            $list['back_date'] = $arr['back_date'];
+            $list['back_type'] = $arr['back_type'];
+            $list['back_remark'] = $arr['back_remark'];
+            $list['lcu'] = Yii::app()->user->id;
+            Yii::app()->db->createCommand()->insert("sal_stop_back_info",$list);
+            $sql = "update sal_stop_back set info_num=info_num+1 where id = {$stop_id}";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+    }
 }

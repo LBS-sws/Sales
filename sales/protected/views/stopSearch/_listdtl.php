@@ -3,9 +3,9 @@
     <td>
         <?php
         if(empty($this->record['bold_service'])){
-            echo "<a data-id='{$this->record['service_id']}' href='javascript:void(0);'><span class='fa fa-star-o'></span></a>";
+            echo "<a><span class='fa fa-star-o'></span></a>";
         }else{
-            echo "<a data-id='{$this->record['service_id']}' href='javascript:void(0);'><span class='fa fa-star'></span></a>";
+            echo "<a><span class='fa fa-star'></span></a>";
         }
         ?>
     </td>
