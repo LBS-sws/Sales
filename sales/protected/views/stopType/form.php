@@ -66,7 +66,7 @@ $this->pageTitle=Yii::app()->name . ' - StopType Form';
                 <?php echo $form->labelEx($model,'again_type',array('class'=>"col-lg-2 control-label")); ?>
                 <div class="col-lg-5">
                     <?php
-                    $list = array(Yii::t("Misc","No"),Yii::t("Misc","Yes"));
+                    $list = array(Yii::t("misc","No"),Yii::t("misc","Yes"));
                     echo $form->inlineRadioButtonList($model, 'again_type',$list,
                         array('readonly'=>($model->scenario=='view'),'class'=>'again_type')
                     ); ?>
