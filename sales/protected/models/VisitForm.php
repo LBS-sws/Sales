@@ -883,7 +883,7 @@ class VisitForm extends CFormModel
 		$citylist = Yii::app()->user->city_allow();
 
 		$rtn = array(''=>Yii::t('misc','-- None --'));
-		$sql = "select id, name from sal_cust_district where city in ($citylist) order by name";
+		$sql = "select id, name from sal_cust_district where city in ($citylist) and display=1 order by z_index desc,name";
 		$rows = Yii::app()->db->createCommand($sql)->queryAll();
 		if (count($rows) > 0) {
 			foreach($rows as $row) {

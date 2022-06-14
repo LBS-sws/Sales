@@ -6,6 +6,8 @@ class DistrictForm extends CFormModel
 	public $id;
 	public $name;
 	public $city;
+    public $z_index=0;
+    public $display=1;
 
 	/**
 	 * Declares customized attribute labels.
@@ -17,6 +19,8 @@ class DistrictForm extends CFormModel
 		return array(
 			'name'=>Yii::t('code','Description'),
 			'city'=>Yii::t('sales','City'),
+            'z_index'=>Yii::t('customer','z_index'),
+            'display'=>Yii::t('customer','display'),
 		);
 	}
 
@@ -26,8 +30,9 @@ class DistrictForm extends CFormModel
 	public function rules()
 	{
 		return array(
-			array('name,city','required'),
-			array('id','safe'), 
+            array('id,name,city,z_index,display','safe'),
+            array('name,city','required'),
+            array('z_index,display','numerical','allowEmpty'=>false,'integerOnly'=>true),
 		);
 	}
 
@@ -39,6 +44,8 @@ class DistrictForm extends CFormModel
 			$this->id = $row['id'];
 			$this->name = $row['name'];
 			$this->city = $row['city'];
+            $this->display = $row['display'];
+            $this->z_index = $row['z_index'];
 		}
 		return true;
 	}
@@ -66,13 +73,15 @@ class DistrictForm extends CFormModel
 				break;
 			case 'new':
 				$sql = "insert into sal_cust_district(
-						name, city, lcu, luu) values (
-						:name, :city, :lcu, :luu)";
+						name, city, display, z_index, lcu, luu) values (
+						:name, :city, :display, :z_index, :lcu, :luu)";
 				break;
 			case 'edit':
 				$sql = "update sal_cust_district set 
 					name = :name, 
 					city = :city,
+					display = :display,
+					z_index = :z_index,
 					luu = :luu
 					where id = :id";
 				break;
@@ -85,6 +94,10 @@ class DistrictForm extends CFormModel
 			$command->bindParam(':id',$this->id,PDO::PARAM_INT);
 		if (strpos($sql,':name')!==false)
 			$command->bindParam(':name',$this->name,PDO::PARAM_STR);
+        if (strpos($sql,':z_index')!==false)
+            $command->bindParam(':z_index',$this->z_index,PDO::PARAM_INT);
+        if (strpos($sql,':display')!==false)
+            $command->bindParam(':display',$this->display,PDO::PARAM_INT);
 		if (strpos($sql,':city')!==false)
 			$command->bindParam(':city',$this->city,PDO::PARAM_STR);
 		if (strpos($sql,':luu')!==false)

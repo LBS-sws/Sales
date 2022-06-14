@@ -12,6 +12,8 @@ class DistrictList extends CListPageModel
 		return array(	
 			'name'=>Yii::t('code','Description'),
 			'city'=>Yii::t('sales','City'),
+            'display'=>Yii::t('customer','display'),
+            'z_index'=>Yii::t('customer','z_index'),
 		);
 	}
 	
@@ -66,6 +68,8 @@ class DistrictList extends CListPageModel
 						'id'=>$record['id'],
 						'name'=>$record['name'],
 						'city'=>$record['city_name'],
+                        'z_index'=>$record['z_index'],
+                        'display'=>$record['display']==1?Yii::t("customer","show"):Yii::t("customer","none"),
 					);
 			}
 		}

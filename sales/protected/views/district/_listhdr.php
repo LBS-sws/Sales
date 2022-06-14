@@ -10,4 +10,14 @@
 			;
 		?>
 	</th>
+	<th>
+		<?php echo TbHtml::link($this->getLabelName('z_index').$this->drawOrderArrow('z_index'),'#',$this->createOrderLink('code-list','z_index'))
+			;
+		?>
+	</th>
+	<th>
+		<?php echo TbHtml::link($this->getLabelName('display').$this->drawOrderArrow('display'),'#',$this->createOrderLink('code-list','display'))
+			;
+		?>
+	</th>
 </tr>

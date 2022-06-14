@@ -66,6 +66,30 @@ $this->pageTitle=Yii::app()->name . ' - Customer District Form';
 				</div>
 			</div>
 
+
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'z_index',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-2">
+                    <?php
+                    echo $form->numberField($model, 'z_index',
+                        array('readonly'=>($model->scenario=='view'))
+                    ); ?>
+                </div>
+                <div class="col-lg-8">
+                    <p class="form-control-static"><?php echo Yii::t("customer","z_index_title"); ?></p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'display',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-5">
+                    <?php
+                    $list = array(Yii::t("customer","none"),Yii::t("customer","show"));
+                    echo $form->inlineRadioButtonList($model, 'display',$list,
+                        array('readonly'=>($model->scenario=='view'))
+                    ); ?>
+                </div>
+            </div>
 		</div>
 	</div>
 </section>
