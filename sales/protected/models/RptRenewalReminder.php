@@ -22,11 +22,15 @@ class RptRenewalReminder extends CReport {
 		$sql = "select
 					a.*, d.description as nature, c.description as customer_type
 				from 
-					swoper$suffix.swo_service a
-					left outer join swoper$suffix.swo_service b 
+					(select x1.*, x2.contract_no from swoper$suffix.swo_service x1 left outer join swoper$suffix.swo_service_contract_no x2 
+					on x1.id=x2.service_id) a
+					left outer join 
+					(select y1.*, y2.contract_no from swoper$suffix.swo_service y1 left outer join swoper$suffix.swo_service_contract_no y2 
+					on y1.id=y2.service_id) b 
 						on (a.company_id=b.company_id or a.company_name=b.company_name) and 
 						(a.product_id=b.product_id or a.service=b.service or 
-						a.product_id=b.b4_product_id or a.service=b.b4_service) and
+						a.product_id=b.b4_product_id or a.service=b.b4_service or
+						a.contract_no=b.contract_no) and
 						(a.status_dt < b.status_dt or 
 						(a.status_dt = b.status_dt and a.id < b.id))
 					left outer join swoper$suffix.swo_customer_type c
