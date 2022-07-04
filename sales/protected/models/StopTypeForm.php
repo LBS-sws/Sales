@@ -43,7 +43,7 @@ class StopTypeForm extends CFormModel
     public function validateType($attribute, $params) {
         if(empty($this->again_type)){
             $this->again_type = 0;
-            $this->again_day = null;
+            $this->again_day = 0;//解決數據庫不能保存null的問題，默認為0
         }else{
             $this->again_type = 1;
             if(empty($this->again_day)||!is_numeric($this->again_day)){
