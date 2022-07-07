@@ -39,6 +39,11 @@ $this->pageTitle=Yii::app()->name . ' - commission Report';
         ?>
     </span>
             </div>
+            <div class="btn-group pull-right" role="group">
+                <?php
+                echo TbHtml::link(Yii::t("rank","go back"),Yii::app()->createUrl(''),array("class"=>"btn btn-default"));
+                ?>
+            </div>
         </div></div>
     <input type="hidden" name="city" value="<?php echo $a['city'];?>">
     <input type="hidden" name="season" value="<?php echo $a['season'];?>">

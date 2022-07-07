@@ -6,5 +6,6 @@ return array(
     'All'=>'查看總數據',
     'Sales rank total score list'=>'銷售段位總分榜',
     'RankScore Form'=>'銷售段位總分榜表單',
+    'go back'=>'返回排行榜',
 );
 ?>
