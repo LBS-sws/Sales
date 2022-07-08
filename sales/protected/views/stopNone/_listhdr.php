@@ -43,6 +43,11 @@
         ?>
     </th>
     <th>
+        <?php echo TbHtml::link($this->getLabelName('staff_id').$this->drawOrderArrow('d.staff_id'),'#',$this->createOrderLink('stopNone-list','d.staff_id'))
+        ;
+        ?>
+    </th>
+    <th>
         <?php echo TbHtml::link($this->getLabelName('back_name').$this->drawOrderArrow('d.back_type'),'#',$this->createOrderLink('stopNone-list','d.back_type'))
         ;
         ?>

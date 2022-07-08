@@ -20,6 +20,7 @@ class StopBackList extends CListPageModel
             'status_dt'=>Yii::t('service','Terminate Date'),
             'amt_paid'=>Yii::t('service','Paid Amt'),
             'salesman'=>Yii::t('service','Resp. Sales'),
+            'staff_id'=>Yii::t('service','Resp. Sales(back)'),
             'city_name'=>Yii::t('misc','City'),
             'shiftStatus'=>Yii::t('customer','Shift Status'),
             'bold_service'=>Yii::t('sales','VIP'),
@@ -34,13 +35,13 @@ class StopBackList extends CListPageModel
         $city=Yii::app()->user->city();
         $employee_sql ="";
         if(!empty($this->employee_id)){
-            $employee_sql =" and (a.salesman_id={$this->employee_id} or d.staff_id={$this->employee_id})";
+            $employee_sql =" and ((a.salesman_id={$this->employee_id} and d.staff_id is null) or d.staff_id={$this->employee_id})";
         }
         $expr_sql = StopOtherList::getExprSql();
         $suffix = Yii::app()->params['envSuffix'];
         $sql1 = "select b.code,b.name,f.description,a.id as service_id,a.amt_paid,a.paid_type,
                 a.cont_info,a.status,a.status_dt,h.code as sale_code,h.name as sale_name,a.salesman_id,
-                d.id,d.bold_service,d.back_date,g.type_name
+                d.id,d.bold_service,d.back_date,d.staff_id,g.type_name
 				from swoper{$suffix}.swo_service a 
 				 LEFT JOIN swoper{$suffix}.swo_company b ON a.company_id=b.id 
 				 LEFT JOIN swoper{$suffix}.swo_customer_type f ON a.cust_type=f.id 
@@ -120,6 +121,7 @@ class StopBackList extends CListPageModel
                     'bold_service'=>empty($record['bold_service'])?0:$record['bold_service'],
                     'company_name'=>$record['code'].$record['name'],
                     'salesman'=>$record['sale_name']."({$record['sale_code']})",
+                    'staff_id'=>StopBackList::getEmployeeNameToId($record['staff_id']),
                 );
             }
         }
@@ -147,6 +149,19 @@ class StopBackList extends CListPageModel
         }else{
             $model->employee_id = 0;
             return false;
+        }
+
+    }
+
+    public static function getEmployeeNameToId($id){
+        $suffix = Yii::app()->params['envSuffix'];
+        $row = Yii::app()->db->createCommand()->select("code,name")
+            ->from("hr{$suffix}.hr_employee")
+            ->where("id=:id",array(":id"=>$id))->queryRow();
+        if($row){
+            return $row["name"]."({$row['code']})";
+        }else{
+            return $id;
         }
 
     }
@@ -196,7 +211,7 @@ class StopBackList extends CListPageModel
         $city=Yii::app()->user->city();
         $employee_sql ="";
         if(!empty($this->employee_id)){
-            $employee_sql =" and (a.salesman_id={$this->employee_id} or b.staff_id={$this->employee_id})";
+            $employee_sql =" and ((a.salesman_id={$this->employee_id} and d.staff_id is null) or b.staff_id={$this->employee_id})";
         }
         $suffix = Yii::app()->params['envSuffix'];
         $expr_sql = StopOtherList::getExprSql();

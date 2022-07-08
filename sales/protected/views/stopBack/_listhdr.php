@@ -36,6 +36,11 @@
         ?>
     </th>
     <th>
+        <?php echo TbHtml::link($this->getLabelName('staff_id').$this->drawOrderArrow('d.staff_id'),'#',$this->createOrderLink('stopBack-list','d.staff_id'))
+        ;
+        ?>
+    </th>
+    <th>
         <?php echo TbHtml::link($this->getLabelName('back_name').$this->drawOrderArrow('g.type_name'),'#',$this->createOrderLink('stopBack-list','g.type_name'))
         ;
         ?>

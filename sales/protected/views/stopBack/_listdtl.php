@@ -15,5 +15,6 @@
     <td><?php echo $this->record['description']; ?></td>
     <td><?php echo $this->record['amt_paid']; ?></td>
     <td><?php echo $this->record['salesman']; ?></td>
+    <td><?php echo $this->record['staff_id']; ?></td>
     <td><?php echo $this->record['shiftStatus']; ?></td>
 </tr>
