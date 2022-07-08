@@ -97,7 +97,7 @@ class StopSearchList extends CListPageModel
             $order .= " order by {$this->orderField} ";
             if ($this->orderType=='D') $order .= "desc ";
         }else{
-            $order .= " order by d.back_date desc ";
+            $order .= " order by d.back_date desc,a.id desc";
         }
 
         $sql = $sql2.$clause;

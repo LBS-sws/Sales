@@ -95,7 +95,7 @@ class StopBackList extends CListPageModel
             $order .= " order by {$this->orderField} ";
             if ($this->orderType=='D') $order .= "desc ";
         }else{
-            $order .= " order by d.back_date desc ";
+            $order .= " order by d.back_date desc,a.id desc";
         }
 
         $sql = $sql2.$clause;
@@ -211,7 +211,7 @@ class StopBackList extends CListPageModel
         $city=Yii::app()->user->city();
         $employee_sql ="";
         if(!empty($this->employee_id)){
-            $employee_sql =" and ((a.salesman_id={$this->employee_id} and d.staff_id is null) or b.staff_id={$this->employee_id})";
+            $employee_sql =" and ((a.salesman_id={$this->employee_id} and b.staff_id is null) or b.staff_id={$this->employee_id})";
         }
         $suffix = Yii::app()->params['envSuffix'];
         $expr_sql = StopOtherList::getExprSql();
