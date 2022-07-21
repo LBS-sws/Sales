@@ -17,6 +17,12 @@
             echo TbHtml::textField("contract_no",$serviceList["contract_no"],array('readonly'=>true));
             ?>
 		</div>
+        <?php echo TbHtml::label(Yii::t("service","Contact"),'',array('class'=>"col-lg-1 control-label",'style'=>"white-space:nowrap")); ?>
+		<div class="col-lg-2">
+            <?php
+            echo TbHtml::textField("contract_no",$serviceList["company_cont"],array('readonly'=>true));
+            ?>
+		</div>
 	</div>
 
 	<div class="form-group">

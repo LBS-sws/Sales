@@ -87,7 +87,7 @@ class StopTypeForm extends CFormModel
             ->where("display=1 or id=:id",array(":id"=>$id))->order("z_index desc")->queryAll();
         if($rows){
             foreach ($rows as $row){
-                $day = empty($row["again_type"])?"":" - {$row["again_day"]}天";
+                $day = empty($row["again_type"])?"":" - 系统{$row["again_day"]}天后会再次提醒";
                 $list[$row["id"]] = $row["type_name"].$day;
             }
         }

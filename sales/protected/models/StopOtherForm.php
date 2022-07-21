@@ -121,12 +121,13 @@ class StopOtherForm extends CFormModel
         //$expr_sql = StopOtherList::getExprSql();
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()
-            ->select("a.*,b.contract_no")
+            ->select("a.*,b.contract_no,d.cont_name as a_cont_name,d.cont_phone as a_cont_phone")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("swoper{$suffix}.swo_service_contract_no b","a.id=b.service_id")
             ->leftJoin("swoper{$suffix}.swo_company d","a.company_id=d.id")
             ->where("a.status = 'T' and a.id=:id",array(":id"=>$serviceId))->queryRow();
         if($row){
+            $row["company_cont"]=$row["a_cont_name"]."/".$row["a_cont_phone"];
             $row["status_dt"]=General::toDate($row["status_dt"]);
             $row["sign_dt"]=General::toDate($row["sign_dt"]);
             $row["ctrt_end_dt"]=General::toDate($row["ctrt_end_dt"]);
