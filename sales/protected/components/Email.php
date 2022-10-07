@@ -325,6 +325,31 @@ class Email {
         return $rs;
     }
 
+    //獲取用戶列表(根據權限-唯读）
+    public function getUserListToPrefixAndReady($str){
+        $suffix = Yii::app()->params['envSuffix'];
+        $systemId = Yii::app()->params['systemId'];
+        //$city = Yii::app()->user->city();
+        if(!is_array($str)){
+            $likeSql = " and a.a_read_only like '%$str%'";
+        }else{
+            $likeSql =" and (";
+            foreach ($str as $key =>$item){
+                if($key != 0){
+                    $likeSql.=" or ";
+                }
+                $likeSql .= "a.a_read_only like '%$item%'";
+            }
+            $likeSql .=")";
+        }
+        $rs = Yii::app()->db->createCommand()->select("b.email, b.username, b.city")
+            ->from("security$suffix.sec_user_access a")
+            ->leftJoin("security$suffix.sec_user b","a.username=b.username")
+            ->where("a.system_id='$systemId' $likeSql and b.email != '' and b.status='A'")
+            ->queryAll();
+        return $rs;
+    }
+
     //添加收信人(根據權限和部門）
     public function addEmailToPrefixAndPoi($str,$department,$groupType=0){
         $suffix = Yii::app()->params['envSuffix'];

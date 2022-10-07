@@ -1,6 +1,7 @@
 <?php
 class TimerCommand extends CConsoleCommand {
-	
+
+    //每天的23:25点执行
 	public function run() {
 	    /*报错代码
 		$obj = new FivestepForm();
@@ -168,6 +169,9 @@ class TimerCommand extends CConsoleCommand {
                     }
                 }
             }
+
+            //需要额外发给区域性负责人
+            //$this->emailEprStopNoneAndCharge($email,$shiftList,$messageEpr,$tableHead,$tableEnd,$systemId);
         }
 
     }
@@ -258,8 +262,59 @@ class TimerCommand extends CConsoleCommand {
                     }
                 }
             }
-        }
 
+            //需要额外发给区域性负责人
+            $this->emailEprStopNoneAndCharge($email,$shiftList,$messageEpr,$tableHead,$tableEnd,$systemId,false);
+        }
+    }
+
+    //区域性员工需要收到管辖下的未回访邮件
+    private function emailEprStopNoneAndCharge($email,$shiftList,$messageEpr,$tableHead,$tableEnd,$systemId,$bool=true){
+        $userList = $email->getUserListToPrefixAndReady("SC06");
+        if($userList){
+            foreach ($userList as $user){
+                $userEmailMessage = "";
+                //管辖下的所有城市
+                $cityList = $email->getAllCityToMaxCity($user["city"]);
+                foreach ($cityList as $minCity){
+                    if(key_exists($minCity,$shiftList)){
+                        //$shiftList[city][staffId][];
+                        foreach ($shiftList[$minCity] as $staffRows){
+                            foreach ($staffRows as $staffRow){
+                                if($bool){//未回访
+                                    $userEmailMessage.="<tr>";
+                                    $userEmailMessage.="<td>{$staffRow['company_name']}</td>";
+                                    $userEmailMessage.="<td>{$staffRow['status_dt']}</td>";
+                                    $userEmailMessage.="<td>{$staffRow['cust_type']}</td>";
+                                    $userEmailMessage.="<td>{$staffRow['nature_name']}</td>";
+                                    $userEmailMessage.="<td>{$staffRow['salesman']}</td>";
+                                    $userEmailMessage.="</tr>";
+                                }else{//再次回访
+                                    $userEmailMessage.="<tr>";
+                                    $userEmailMessage.="<td>{$staffRow['company_name']}</td>";
+                                    $userEmailMessage.="<td>{$staffRow['status_dt']}</td>";
+                                    $userEmailMessage.="<td>{$staffRow['back_date']}</td>";
+                                    $userEmailMessage.="<td>{$staffRow['type_name']}</td>";
+                                    $userEmailMessage.="<td>{$staffRow['salesman']}</td>";
+                                    $userEmailMessage.="</tr>";
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if(!empty($userEmailMessage)){
+                    $email->resetToAddr();
+                    $message = $messageEpr.$tableHead.$userEmailMessage.$tableEnd;
+                    $email->setMessage($message);
+                    $email->addToAddrEmail($user["email"]);
+                    $email->addToAddrUser($user["username"]);
+                    if(!empty($email->getToAddr())){
+                        $email->sent("销售系统",$systemId);
+                    }
+                }
+            }
+        }
     }
 
     //获取终止客户的再次回访邮件
