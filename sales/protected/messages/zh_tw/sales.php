@@ -189,5 +189,6 @@ return array(
     'type for'=>'類別歸屬',
     'singular'=>'單數',
     'Score Ari'=>'機器總數量',
+    'Nature'=>'性质',
 );
 ?>

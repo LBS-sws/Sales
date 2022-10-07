@@ -19,6 +19,7 @@ class RptVisitList extends CReport {
 			'visit_dt'=>array('label'=>Yii::t('sales','Visit Date'),'width'=>15,'align'=>'C'),
 			'cust_name'=>array('label'=>Yii::t('sales','Customer Name'),'width'=>25,'align'=>'L'),
 			'cust_alt_name'=>array('label'=>Yii::t('sales','Branch Name (if any)'),'width'=>25,'align'=>'L'),
+			'cust_type_group'=>array('label'=>Yii::t('sales','Nature'),'width'=>20,'align'=>'L'),
 			'cust_type'=>array('label'=>Yii::t('sales','Customer Type'),'width'=>20,'align'=>'L'),
 			'cust_vip'=>array('label'=>Yii::t('sales','VIP'),'width'=>10,'align'=>'C'),
 			'cust_person'=>array('label'=>Yii::t('sales','Resp. Person'),'width'=>20,'align'=>'L'),
@@ -118,6 +119,7 @@ class RptVisitList extends CReport {
 			'visit_dt',
 			'cust_name',
 			'cust_alt_name',
+			'cust_type_group',
 			'cust_type',
 			'cust_vip',
 			'cust_person',
@@ -271,7 +273,7 @@ class RptVisitList extends CReport {
 		$citylist .= (empty($citylist) ? '' : ',')."'$city'";
 
 		$sql = "select a.*, b.name as city_name, concat(f.code,' - ',f.name) as staff,  
-				d.name as visit_type_name, g.name as cust_type_name,
+				d.name as visit_type_name, g.name as cust_type_name, g.type_group as cust_type_group,
 				h.name as district_name, VisitObjDesc(a.visit_obj) as visit_obj_name, i.cust_vip
 				from sal_visit a 
 				inner join hr$suffix.hr_binding c on a.username = c.user_id
@@ -337,6 +339,7 @@ class RptVisitList extends CReport {
 				$temp['visit_type'] = $row['visit_type_name'];
 				$temp['visit_obj'] = $row['visit_obj_name'];
 				$temp['cust_type'] = $row['cust_type_name'];
+				$temp['cust_type_group'] = $row['cust_type_group']==2?Yii::t("sales","Non-catering"):Yii::t("sales","Catering");
 				$temp['remarks'] = $row['remarks'];
 
 				$sqld = "select field_id, field_value from sal_visit_info where visit_id=".$row['id'];

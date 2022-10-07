@@ -194,5 +194,6 @@ return array(
     'type for'=>'类别归属',
     'singular'=>'单数',
     'Score Ari'=>'机器总数量',
+    'Nature'=>'性质',
 );
 ?>
