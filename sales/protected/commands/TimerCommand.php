@@ -126,10 +126,11 @@ class TimerCommand extends CConsoleCommand {
             $messageEpr.="<p>回访内容请在LBS系统-销售系统-终止客户-终止客户回访中完成</p>";
             $messageEpr.="<p>客户服务的基本信息：</p>";
             $tableHead="<table border='1' width='800px'><thead><tr>";
+            $tableHead.="<th width='10%'>城市</th>";
             $tableHead.="<th width='30%'>客户名称</th>";
-            $tableHead.="<th width='13%'>停单日期</th>";
-            $tableHead.="<th width='13%'>客户类别</th>";
-            $tableHead.="<th width='13%'>性质</th>";
+            $tableHead.="<th width='10%'>停单日期</th>";
+            $tableHead.="<th width='10%'>客户类别</th>";
+            $tableHead.="<th width='10%'>性质</th>";
             $tableHead.="<th width='30%'>业务员</th>";
             $tableHead.="</tr></thead><tbody>";
             $tableEnd="</tbody></table>";
@@ -140,6 +141,7 @@ class TimerCommand extends CConsoleCommand {
 	                $staffMessage="";
 	                foreach ($rows as $row){
 	                    $message="<tr>";
+	                    $message.="<td>{$row['city_name']}</td>";
 	                    $message.="<td>{$row['company_name']}</td>";
 	                    $message.="<td>{$row['status_dt']}</td>";
 	                    $message.="<td>{$row['cust_type']}</td>";
@@ -181,9 +183,10 @@ class TimerCommand extends CConsoleCommand {
         $suffix = Yii::app()->params['envSuffix'];
         $expr_sql = StopOtherList::getExprSql();
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id as service_id,a.city,a.status_dt,a.cust_type,a.nature_type,a.company_name,a.salesman,a.salesman_id,b.id,b.staff_id")
+            ->select("a.id as service_id,a.city,a.status_dt,a.cust_type,a.nature_type,a.company_name,a.salesman,a.salesman_id,b.id,b.staff_id,city.name as city_name")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("sal_stop_back b","a.id=b.service_id ")
+            ->leftJoin("security{$suffix}.sec_city city","city.code=a.city ")
             ->where("a.status = 'T' and a.company_id is not NULL and a.salesman_id !=0 and b.back_date is null {$expr_sql}")
             ->order("a.city asc,a.salesman_id asc")
             ->queryAll();
@@ -220,10 +223,11 @@ class TimerCommand extends CConsoleCommand {
             $messageEpr="<p>再次回访列表还有未完成的记录，请及时回访并登记到销售表系统-终止客户-再次回访处，谢谢</p>";
             $messageEpr.="<p>客户服务的上次回访信息：</p>";
             $tableHead="<table border='1' width='1000px'><thead><tr>";
+            $tableHead.="<th width='10%'>城市</th>";
             $tableHead.="<th width='30%'>客户名称</th>";
-            $tableHead.="<th width='13%'>停单日期</th>";
-            $tableHead.="<th width='13%'>回访日期</th>";
-            $tableHead.="<th width='19%'>回访状态</th>";
+            $tableHead.="<th width='10%'>停单日期</th>";
+            $tableHead.="<th width='10%'>回访日期</th>";
+            $tableHead.="<th width='15%'>回访状态</th>";
             $tableHead.="<th width='25%'>业务员</th>";
             $tableHead.="</tr></thead><tbody>";
             $tableEnd="</tbody></table>";
@@ -234,6 +238,7 @@ class TimerCommand extends CConsoleCommand {
 	                $staffMessage="";
 	                foreach ($rows as $row){
 	                    $message="<tr>";
+	                    $message.="<td>{$row['city_name']}</td>";
 	                    $message.="<td>{$row['company_name']}</td>";
 	                    $message.="<td>{$row['status_dt']}</td>";
 	                    $message.="<td>{$row['back_date']}</td>";
@@ -285,6 +290,7 @@ class TimerCommand extends CConsoleCommand {
                             foreach ($staffRows as $staffRow){
                                 if($bool){//未回访
                                     $userEmailMessage.="<tr>";
+                                    $userEmailMessage.="<td>{$staffRow['city_name']}</td>";
                                     $userEmailMessage.="<td>{$staffRow['company_name']}</td>";
                                     $userEmailMessage.="<td>{$staffRow['status_dt']}</td>";
                                     $userEmailMessage.="<td>{$staffRow['cust_type']}</td>";
@@ -293,6 +299,7 @@ class TimerCommand extends CConsoleCommand {
                                     $userEmailMessage.="</tr>";
                                 }else{//再次回访
                                     $userEmailMessage.="<tr>";
+                                    $userEmailMessage.="<td>{$staffRow['city_name']}</td>";
                                     $userEmailMessage.="<td>{$staffRow['company_name']}</td>";
                                     $userEmailMessage.="<td>{$staffRow['status_dt']}</td>";
                                     $userEmailMessage.="<td>{$staffRow['back_date']}</td>";
@@ -324,11 +331,12 @@ class TimerCommand extends CConsoleCommand {
         $suffix = Yii::app()->params['envSuffix'];
         $nowDate = date("Y-m-d");
         $rows = Yii::app()->db->createCommand()
-            ->select("f.type_name,f.again_day,a.company_name,a.salesman,a.status_dt,info.back_date,a.city,b.staff_id,a.salesman_id")
+            ->select("f.type_name,f.again_day,a.company_name,a.salesman,a.status_dt,info.back_date,a.city,b.staff_id,a.salesman_id,city.name as city_name")
             ->from("sal_stop_back_info info")
             ->leftJoin("sal_stop_type f","f.id=info.back_type")
             ->leftJoin("sal_stop_back b","b.id=info.stop_id")
             ->leftJoin("swoper{$suffix}.swo_service a","a.id=b.service_id")
+            ->leftJoin("security{$suffix}.sec_city city","city.code=a.city ")
             ->where("info.end_bool=0 and f.again_type=1 and date_add(info.back_date, interval f.again_day day)='{$nowDate}'")
             ->order("a.city asc,a.salesman_id asc")
             ->queryAll();
