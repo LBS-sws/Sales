@@ -171,7 +171,7 @@ class TimerCommand extends CConsoleCommand {
             }
 
             //需要额外发给区域性负责人
-            //$this->emailEprStopNoneAndCharge($email,$shiftList,$messageEpr,$tableHead,$tableEnd,$systemId);
+            $this->emailEprStopNoneAndCharge($email,$shiftList,$messageEpr,$tableHead,$tableEnd,$systemId);
         }
 
     }
@@ -187,6 +187,7 @@ class TimerCommand extends CConsoleCommand {
             ->where("a.status = 'T' and a.company_id is not NULL and a.salesman_id !=0 and b.back_date is null {$expr_sql}")
             ->order("a.city asc,a.salesman_id asc")
             ->queryAll();
+        echo "count:".($rows?count($rows):0)."\n";;
         if($rows){
             foreach ($rows as $row){
                 $row["status_dt"]=General::toDate($row["status_dt"]);
@@ -273,6 +274,7 @@ class TimerCommand extends CConsoleCommand {
         $userList = $email->getUserListToPrefixAndReady("SC06");
         if($userList){
             foreach ($userList as $user){
+                echo "username:".$user["username"]."\n";
                 $userEmailMessage = "";
                 //管辖下的所有城市
                 $cityList = $email->getAllCityToMaxCity($user["city"]);
