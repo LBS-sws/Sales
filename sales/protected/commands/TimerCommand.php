@@ -110,11 +110,11 @@ class TimerCommand extends CConsoleCommand {
 
     //终止客户邮件提醒
 	private function shiftEmailHint(){
-	    if(date("w")==="5"){ //每週五發郵件提醒
+	    //if(date("w")==="5"){ //每週五發郵件提醒
             $shiftList = array();
             $this->setShiftList($shiftList);
             $this->sendForShiftList($shiftList);
-        }
+        //}
     }
 
     //发送终止客户邮件
