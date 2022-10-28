@@ -24,11 +24,11 @@ class ClubSalesController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','delete','save'),
-				'expression'=>array('ClubSalesController','allowReadWrite'),
+				'actions'=>array('updateDisplay'),
+				'expression'=>array('ClubSalesController','allowDisplay'),
 			),
 			array('allow', 
-				'actions'=>array('index','view'),
+				'actions'=>array('index'),
 				'expression'=>array('ClubSalesController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -37,73 +37,25 @@ class ClubSalesController extends Controller
 		);
 	}
 
-	public function actionIndex($year=0,$month_type=1)
+	public function actionIndex($year=0,$month_type=1,$reset=false)
 	{
 		$model = new ClubSalesList();
-		$model->clubSalesAll($year,$month_type);
+		$model->clubSalesAll($year,$month_type,$reset);
 		$this->render('index',array('model'=>$model));
 	}
 
-
-	public function actionSave()
+	public function actionUpdateDisplay()
 	{
-		if (isset($_POST['ClubSalesForm'])) {
-			$model = new ClubSalesForm($_POST['ClubSalesForm']['scenario']);
-			$model->attributes = $_POST['ClubSalesForm'];
-			if ($model->validate()) {
-				$model->saveData();
-				$model->scenario = 'edit';
-				Dialog::message(Yii::t('dialog','Information'), Yii::t('dialog','Save Done'));
-				$this->redirect(Yii::app()->createUrl('clubSales/edit',array('index'=>$model->id)));
-			} else {
-				$message = CHtml::errorSummary($model);
-				Dialog::message(Yii::t('dialog','Validation Message'), $message);
-				$this->render('form',array('model'=>$model,));
-			}
-		}
-	}
-
-	public function actionView($index)
-	{
-		$model = new ClubSalesForm('view');
-		if (!$model->retrieveData($index)) {
-			throw new CHttpException(404,'The requested page does not exist.');
-		} else {
-			$this->render('form',array('model'=>$model,));
-		}
-	}
-	
-	public function actionNew()
-	{
-		$model = new ClubSalesForm('new');
-		$this->render('form',array('model'=>$model,));
-	}
-	
-	public function actionEdit($index)
-	{
-		$model = new ClubSalesForm('edit');
-		if (!$model->retrieveData($index)) {
-			throw new CHttpException(404,'The requested page does not exist.');
-		} else {
-			$this->render('form',array('model'=>$model,));
-		}
-	}
-	
-	public function actionDelete()
-	{
-		$model = new ClubSalesForm('delete');
-		if (isset($_POST['ClubSalesForm'])) {
-			$model->attributes = $_POST['ClubSalesForm'];
-			if ($model->validate()) {
-                $model->saveData();
-                Dialog::message(Yii::t('dialog','Information'), Yii::t('dialog','Record Deleted'));
-                $this->redirect(Yii::app()->createUrl('clubSales/index'));
-			} else {
-                $message = CHtml::errorSummary($model);
-                Dialog::message(Yii::t('dialog','Validation Message'), $message);
-                $this->render('form',array('model'=>$model));
-			}
-		}
+	    $id = isset($_GET["index"])?$_GET["index"]:0;
+	    $key = isset($_GET["key"])?$_GET["key"]:"";
+        $model = new ClubSalesList('new');
+        if ($model->updateDisplay($id,$key)) {
+            Dialog::message(Yii::t('dialog','Information'), Yii::t('club',$key).Yii::t('club','Update Done'));
+        } else {
+            $message = "数据异常，请刷新重试";
+            Dialog::message(Yii::t('dialog','Validation Message'), $message);
+        }
+        $this->redirect(Yii::app()->createUrl('clubSales/index',array('year'=>$model->year,'month_type'=>$model->month_type)));
 	}
 	
 	public static function allowReadWrite() {
@@ -111,6 +63,10 @@ class ClubSalesController extends Controller
 	}
 	
 	public static function allowReadOnly() {
+		return Yii::app()->user->validFunction('HD04');
+	}
+
+	public static function allowDisplay() {
 		return Yii::app()->user->validFunction('HD04');
 	}
 }

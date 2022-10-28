@@ -2,6 +2,7 @@
 
 class ClubSalesList extends CListPageModel
 {
+    public $id;
     public $year;
     public $month_type;//1:上半年（1-6月） 2：下半年（7-12月）
     private $no_staff=array(0);
@@ -15,6 +16,9 @@ class ClubSalesList extends CListPageModel
     public $clubSetting=array();//俱乐部配置
     public $salesList=array();//所有销售人员(员工表)
     public $userList=array();//所有销售人员(账号表)
+
+    public $user_last_rec=array();//排名的後一位
+    public $clubRow=array();
 
     private $startDate="";
     private $endDate="";
@@ -34,7 +38,43 @@ class ClubSalesList extends CListPageModel
 		);
 	}
 
-	public function clubSalesAll($year,$month_type){
+	public function clubSalesAll($year,$month_type,$reset=false){
+        $year = (empty($year)||!is_numeric($year))?date("Y"):$year;
+        $month_type = in_array($month_type,array(1,2))?$month_type:1;
+        $row = Yii::app()->db->createCommand()->select("*")->from("sal_club")
+            ->where("year={$year} and month_type={$month_type}")->queryRow();
+        if($reset||!$row){//強制刷新或者數據庫沒有數據
+            $this->clubSalesAllSave($year,$month_type);
+        }else{//數據庫保存了記錄且不強制刷新
+            $this->id = $row["id"];
+            $this->year = $year;
+            $this->month_type = $month_type;
+            if($this->month_type==1){
+                $this->startDate=$this->year.'-01-01';
+                $this->endDate=$this->year.'-06-31';
+            }else{
+                $this->startDate=$this->year.'-07-01';
+                $this->endDate=$this->year.'-12-31';
+            }
+            $this->setSalesList();
+            $this->sales_elite = empty($row["sales_elite"])?array():json_decode($row["sales_elite"],true);
+            $this->sales_forward = empty($row["sales_forward"])?array():json_decode($row["sales_forward"],true);
+            $this->sales_out = empty($row["sales_out"])?array():json_decode($row["sales_out"],true);
+            $this->sales_visit = empty($row["sales_visit"])?array():json_decode($row["sales_visit"],true);
+            $this->sales_rec = empty($row["sales_rec"])?array():json_decode($row["sales_rec"],true);
+            $this->clubRow=$row;
+        }
+
+        $salesCount = count($this->salesList);
+        $this->clubSetting = ClubSettingForm::getClubSettingForDate($this->endDate,$salesCount);
+        $this->addUserList("sales_elite");
+        $this->addUserList("sales_forward");
+        $this->addUserList("sales_out");
+        $this->addUserList("sales_visit");
+        $this->addUserList("sales_rec");
+    }
+
+	public function clubSalesAllSave($year,$month_type){
         $year = (empty($year)||!is_numeric($year))?date("Y"):$year;
         $month_type = in_array($month_type,array(1,2))?$month_type:1;
         $this->year = $year;
@@ -48,19 +88,57 @@ class ClubSalesList extends CListPageModel
         }
 
         $this->setSalesList();
-        $salesCount = count($this->salesList);
-        $this->clubSetting = ClubSettingForm::getClubSettingForDate($this->endDate,$salesCount);
         $this->sales_elite = $this->salesElite();
-        $this->addUserList("sales_elite");
         $this->sales_forward = $this->salesForward();
-        $this->addUserList("sales_forward");
         $this->sales_out = $this->salesOut();
-        $this->addUserList("sales_out");
         $this->sales_visit = $this->salesVisit();
-        $this->addUserList("sales_visit");
         $this->sales_rec = $this->salesRec();
-        $this->addUserList("sales_rec");
+        $row = Yii::app()->db->createCommand()->select("id")->from("sal_club")
+            ->where("year={$year} and month_type={$month_type}")->queryRow();
+        if($row){
+            $this->id = $row["id"];
+            Yii::app()->db->createCommand()->update("sal_club",array(
+                "sales_elite"=>json_encode($this->sales_elite),
+                "sales_forward"=>json_encode($this->sales_forward),
+                "sales_out"=>json_encode($this->sales_out),
+                "sales_visit"=>json_encode($this->sales_visit),
+                "sales_rec"=>json_encode($this->sales_rec),
+            ),"id=".$row["id"]);
+        }else{
+            Yii::app()->db->createCommand()->insert("sal_club",array(
+                "year"=>$this->year,
+                "month_type"=>$this->month_type,
+                "sales_elite"=>json_encode($this->sales_elite),
+                "sales_forward"=>json_encode($this->sales_forward),
+                "sales_out"=>json_encode($this->sales_out),
+                "sales_visit"=>json_encode($this->sales_visit),
+                "sales_rec"=>json_encode($this->sales_rec),
+            ));
+            $this->id = Yii::app()->db->getLastInsertID();
+        }
     }
+
+    //保存
+    public function updateDisplay($id,$key){
+        $id = is_numeric($id)?$id:0;
+        $row = Yii::app()->db->createCommand()->select("*")->from("sal_club")
+            ->where("id={$id}")->queryRow();
+        $list = ClubSettingForm::settingList();
+        if(key_exists($key,$list)&&$row){
+            $this->year=$row["year"];
+            $this->month_type=$row["month_type"];
+            $value = $row["{$key}_display"];
+            $value = empty($value)?1:0;
+            $str = empty($value)?Yii::t("club","未确认"):Yii::t("club","已确认");
+            Yii::app()->db->createCommand()->update("sal_club",array(
+                "{$key}_display"=>$value
+            ),"id=".$row["id"]);
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     //銷售俱樂部添加銷售
     private function addUserList($key){
         if(key_exists($key,$this->clubSetting)){
@@ -69,11 +147,16 @@ class ClubSalesList extends CListPageModel
             $fun = $this->clubSetting[$key]["fun"];
             $unifyStr = "判断是否和上一次的成绩一致";//如果一致，并列排名
             if(!empty($lists)&&$people>0){
-                foreach ($lists as $list){
-                    if($people<=0){
-                        return;
-                    }
-                    if($this->$fun($list,$key)){
+                foreach ($lists as $rank=>$list){
+                    if($this->$fun($list,$key)){//驗證數據是否生效
+                        if($people==0){//最後一次加入排名
+                            $continue = $this->addUserLastRec($lists,$rank,$list);
+                            if($continue){
+                                continue;
+                            }else{
+                                return;
+                            }
+                        }
                         $this->clubSetting[$key]["userList"][]=$list;
                         $this->no_staff[] = $list["staffList"]["user_id"];
                         if($unifyStr != $list["unifyStr"]){
@@ -82,6 +165,20 @@ class ClubSalesList extends CListPageModel
                     }
                     $unifyStr = $list["unifyStr"];
                 }
+            }
+        }
+    }
+
+    //有名次的後一名加入推薦選項
+    private function addUserLastRec($lists,$rank,$list){
+        $this->user_last_rec[]=$list["staffList"]["id"];
+        if(!isset($lists[$rank+1])){//沒有後一名
+            return false;
+        }else{
+            if($lists[$rank+1]["unifyStr"] == $list["unifyStr"]){
+                return true;
+            }else{
+                return false;
             }
         }
     }
@@ -144,6 +241,7 @@ class ClubSalesList extends CListPageModel
         $noCity = ClubSettingForm::$noCity;
         $noCitySql = implode("','",$noCity);
         $list = array();
+        $notStaffList = array();//不達標員工（上半年总分门槛不能低于5000）
         if(!empty($this->sales_elite)){
             foreach ($this->sales_elite as $key=>$row){
                 if(!in_array($row["username"],$this->no_staff,true)){//已加入俱乐部的员工不需要重复加入
@@ -155,11 +253,17 @@ class ClubSalesList extends CListPageModel
                     $staff['ratioScore'] = number_format($staff['ratioScore'],3);
                     $staff['ratioScore'] = floatval($staff['ratioScore']);
                     $staff["unifyStr"]=$staff["ratioScore"];//统一排序的字符串名字
-                    $list[]=$staff;
+                    if ($staff["lastScore"]>=5000){
+                        $list[]=$staff;
+                    }else{
+                        $notStaffList[]=$staff;
+                    }
                 }
             }
         }
-        return empty($list)?array():self::arraySort($list,"ratioScore");
+        $list = empty($list)?array():self::arraySort($list,"ratioScore");
+        $notStaffList = empty($notStaffList)?array():self::arraySort($list,"ratioScore");
+        return array_merge($list,$notStaffList);
     }
 
     //新业务杰出表现人员
@@ -227,7 +331,6 @@ class ClubSalesList extends CListPageModel
         $noCity = ClubSettingForm::$noCity;
         $noCitySql = implode("','",$noCity);
         $list = array();
-
         $visitRows = Yii::app()->db->createCommand()->select("username,count(id) as staff_sum")
             ->from("sal_visit")
             ->where("city not in ('$noCitySql') and visit_dt>='{$this->startDate}' and visit_dt<='{$this->endDate}'")
@@ -282,8 +385,19 @@ class ClubSalesList extends CListPageModel
         $html="<div class='tab-pane fade active in'><p>&nbsp;</p>";
         if(!empty($this->clubSetting)){
             foreach ($this->clubSetting as $key=>$list){
+                $display = $key."_display";
+                if(key_exists($display,$this->clubRow)&&!empty($this->clubRow[$display])){
+                    $display = Yii::t("club","confirmed");
+                }else{
+                    $display = "<a id='{$key}_confirm' data-id='{$key}' href='javascript:clickLink(\"{$key}\");'>";
+                    $display.= "<span class='text-danger'>".Yii::t("club","unconfirmed")."</span>";
+                    $display.= "</a>";
+                }
                 $html.= "<div class='col-lg-6'><div class='box box-primary'>";
-                $html.="<div class='box-header with-border'>".Yii::t("club",$list["name"])."</div>";
+                $html.="<div class='box-header with-border'>";
+                $html.="<span>".Yii::t("club",$list["name"])."</span>";
+                $html.="（{$display}）";
+                $html.="</div>";
                 $html.="<div class='box-body'>";
                 $html.="<div class='direct-chat-messages' style='height: 250px'>";
                 $html.=self::tableHtml($key,$list["userList"],true);
@@ -300,6 +414,11 @@ class ClubSalesList extends CListPageModel
     private function htmlMinPage($key){
         $rows = $this->$key;
         $html="<div id='tab_{$key}' class='tab-pane fade'><p>&nbsp;</p>";
+        $display = $key."_display";
+        if(!key_exists($display,$this->clubRow)||empty($this->clubRow[$display])){
+            $link = Yii::app()->createUrl('clubSales/updateDisplay',array('index'=>$this->id,'key'=>$key));
+            $html.=TbHtml::button(Yii::t("club","confirm"),array("class"=>"pull-right","submit"=>$link));
+        }
         $html.=self::tableHtml($key,$rows);
         $html.="</div>";
         return $html;
@@ -424,6 +543,14 @@ class ClubSalesList extends CListPageModel
 
     private function validateTrue($list,$key){
         return true;
+    }
+
+    private function validateLastScore($list,$key){
+        if($list["lastScore"]<5000){ //上半年总分门槛不能低于5000
+            return false;
+        }else{
+            return true;
+        }
     }
 
     private function validateVisit($list,$key){

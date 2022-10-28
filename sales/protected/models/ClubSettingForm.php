@@ -63,7 +63,7 @@ class ClubSettingForm extends CFormModel
             //销售精英
 	        "sales_elite"=>array("name"=>"sales_elite","fun"=>"validateTrue","type"=>1,"number"=>10),
             //最佳进步表现人员
-            "sales_forward"=>array("name"=>"sales_forward","fun"=>"validateTrue","type"=>1,"number"=>4),
+            "sales_forward"=>array("name"=>"sales_forward","fun"=>"validateLastScore","type"=>1,"number"=>4),
             //新业务杰出表现人员
             "sales_out"=>array("name"=>"sales_out","fun"=>"validateOut","type"=>1,"number"=>4),
             //陌生拜访记录最多销售

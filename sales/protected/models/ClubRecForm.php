@@ -62,9 +62,23 @@ class ClubRecForm extends CFormModel
         }
 	}
 
-    public static function getClubRecStaffList($id=0){
-        $id = is_numeric($id)?$id:0;
+    public static function getClubRecStaffList($id=0,$year=2022,$month_type=1){
+        $suffix = Yii::app()->params['envSuffix'];
         $list = array(""=>"");
+        $id = is_numeric($id)?$id:0;
+	    $model = new ClubSalesList();
+	    $model->clubSalesAll($year,$month_type);
+	    $employeeList = $model->user_last_rec;
+	    if(!in_array($id,$employeeList)){
+	        $employeeList[]=$id;
+        }
+        $employeeSql = implode(",",$employeeList);
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.id,a.code,a.name")
+            ->from("hr{$suffix}.hr_employee a")
+            ->where("a.id in ({$employeeSql})")->queryAll();
+        /* 2022-10-28日推薦人改成排行榜的後一名
+        $id = is_numeric($id)?$id:0;
         $noCity = ClubSettingForm::$noCity;
         $noCitySql = implode("','",$noCity);
         $suffix = Yii::app()->params['envSuffix'];
@@ -74,6 +88,7 @@ class ClubRecForm extends CFormModel
             ->leftJoin("hr{$suffix}.hr_dept b","a.position=b.id")
             ->leftJoin("hr{$suffix}.hr_binding f","a.id=f.employee_id")
             ->where("a.id = '{$id}' or (f.user_id is not null and b.dept_class='Sales' and a.city not in ('{$noCitySql}') and b.manager_leave=1 and a.staff_status!=-1)")->queryAll();
+        */
         if($rows){
             foreach ($rows as $row){
                 $list[$row["id"]] = $row["name"]." （".$row["code"]."）";

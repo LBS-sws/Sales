@@ -25,7 +25,7 @@ $this->pageTitle=Yii::app()->name . ' - ClubRec Form';
 <section class="content">
 	<div class="box"><div class="box-body">
 	<div class="btn-group" role="group">
-		<?php 
+		<?php
 			if ($model->scenario!='new' && $model->scenario!='view') {
 				echo TbHtml::button('<span class="fa fa-file-o"></span> '.Yii::t('misc','Add Another'), array(
 					'submit'=>Yii::app()->createUrl('clubRec/new')));
@@ -74,8 +74,8 @@ $this->pageTitle=Yii::app()->name . ' - ClubRec Form';
             <div class="form-group">
                 <?php echo $form->labelEx($model,'employee_id',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-4">
-                    <?php echo $form->dropDownList($model, 'employee_id',ClubRecForm::getClubRecStaffList($model->employee_id),
-                        array('readonly'=>($model->scenario=='view')));
+                    <?php echo $form->dropDownList($model, 'employee_id',ClubRecForm::getClubRecStaffList($model->employee_id,$model->rec_year,$model->month_type),
+                        array('id'=>'employee_id','readonly'=>($model->scenario=='view')));
                     ?>
                 </div>
             </div>
@@ -84,7 +84,7 @@ $this->pageTitle=Yii::app()->name . ' - ClubRec Form';
                 <?php echo $form->labelEx($model,'rec_remark',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-5">
                     <?php echo $form->textArea($model, 'rec_remark',
-                        array('readonly'=>($model->scenario=='view'),'rows'=>4));
+                        array('readonly'=>($model->scenario=='view'),'id'=>'rec_remark','rows'=>4));
                     ?>
                 </div>
             </div>
@@ -94,6 +94,29 @@ $this->pageTitle=Yii::app()->name . ' - ClubRec Form';
 
 <?php $this->renderPartial('//site/removedialog'); ?>
 
+<script type="text/javascript">
+$(function () {
+    $('#year,#month_type').change(function(){
+        var year = $('#year').val();
+        var month_type = $('#month_type').val();
+        $.ajax({
+            type: 'POST',
+            url: '<?php echo Yii::app()->createAbsoluteUrl("clubRec/ajaxEmployee");?>',
+            data: { year:year,month_type:month_type},
+            success: function(data) {
+                if (data.status==1) {
+                    $('#employee_id').html(data.html);
+                }
+            },
+            error: function(xhr, status, error) { // if error occured
+                var err = eval("(" + xhr.responseText + ")");
+                console.log(err.Message);
+            },
+            dataType:'json'
+        });
+    });
+});
+</script>
 <?php
 $js = Script::genDeleteData(Yii::app()->createUrl('clubRec/delete'));
 Yii::app()->clientScript->registerScript('deleteRecord',$js,CClientScript::POS_READY);

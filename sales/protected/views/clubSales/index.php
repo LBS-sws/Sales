@@ -25,6 +25,7 @@ $this->pageTitle=Yii::app()->name . ' - ClubSales';
 <section class="content">
     <div class="box box-info">
         <div class="box-body">
+            <?php echo $form->hiddenField($model, 'id'); ?>
             <div class="form-group">
                 <?php echo $form->labelEx($model,'year',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-3">
@@ -63,7 +64,7 @@ $this->pageTitle=Yii::app()->name . ' - ClubSales';
                         foreach ($model->clubSetting as $item){
                             $label = Yii::t("club",$item["name"])."<span>（{$item['people']}）</span>";
                             echo '<li>';
-                            echo TbHtml::link($label,"#tab_{$item["name"]}",array("data-toggle"=>"tab","tabindex"=>-1));
+                            echo TbHtml::link($label,"#tab_{$item["name"]}",array("data-toggle"=>"tab","tabindex"=>-1,"data-id"=>$item["name"],"class"=>"click_link"));
                             //echo "<span>{$item['people']}</span>";
                             echo '</li>';
                         }
@@ -122,6 +123,11 @@ $this->pageTitle=Yii::app()->name . ' - ClubSales';
         </div>
     </div>
 </div>
+<script type="text/javascript">
+    function clickLink(str){
+        $('.click_link[data-id="'+str+'"]').trigger('click');
+    }
+</script>
 <?php
 $link = Yii::app()->createUrl('clubSales/index');
 $js="
@@ -130,6 +136,7 @@ $('#year,#month_type').on('change',function(){
     var month_type = $('#month_type').val();
     window.location.href='{$link}?year='+year+'&month_type='+month_type;
 });
+
 ";
 Yii::app()->clientScript->registerScript('calcFunction',$js,CClientScript::POS_READY);
 	$js = Script::genTableRowClick();

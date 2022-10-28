@@ -24,7 +24,7 @@ class ClubRecController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','delete','save'),
+				'actions'=>array('new','edit','delete','save','ajaxEmployee'),
 				'expression'=>array('ClubRecController','allowReadWrite'),
 			),
 			array('allow', 
@@ -92,6 +92,19 @@ class ClubRecController extends Controller
 		    $model->month_type = 2;
         }
 		$this->render('form',array('model'=>$model,));
+	}
+
+	public function actionAjaxEmployee()
+	{
+        $model = new ClubRecForm('edit');
+        $year = isset($_POST["year"])?$_POST["year"]:2022;
+        $month_type = isset($_POST["month_type"])?$_POST["month_type"]:1;
+        $rtn = $model->getClubRecStaffList(0,$year,$month_type);
+        $html = "";
+        foreach ($rtn as $id=>$item){
+            $html.= "<option value='{$id}'>{$item}</option>";
+        }
+        echo json_encode(array("status"=>1,"html"=>$html));
 	}
 	
 	public function actionEdit($index)
