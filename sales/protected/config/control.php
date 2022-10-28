@@ -14,4 +14,5 @@ return array(
     'Remove Five Step Right'=>array('access'=>'CN11',),
     'Renaud Air List'=>array('access'=>'CN12',),
     'Stop Customer Search(All)'=>array('access'=>'CN13',),
+    'Club Sales Confirm'=>array('access'=>'CN14',),
 );

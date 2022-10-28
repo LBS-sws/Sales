@@ -67,6 +67,6 @@ class ClubSalesController extends Controller
 	}
 
 	public static function allowDisplay() {
-		return Yii::app()->user->validFunction('HD04');
+		return Yii::app()->user->validFunction('CN14');
 	}
 }

@@ -106,7 +106,22 @@ class TimerCommand extends CConsoleCommand {
         $this->shiftEmailHint();
         //终止客户的再次回访邮件提醒
         $this->shiftAgainEmailHint();
+        //销售俱乐部每天刷新一次
+        $this->resetClubSales();
 	}
+
+    //销售俱乐部每天刷新一次
+	private function resetClubSales(){
+	    $year = date("Y");
+	    $month = date("n");
+        $month_type = $month>6?2:1;
+	    $model = new ClubSalesList();
+	    $model->clubSalesAllSave($year,$month_type);//刷新本年度
+        $year = date("Y",strtotime("-6 months"));
+        $month = date("n",strtotime("-6 months"));
+        $month_type = $month>6?2:1;
+	    $model->clubSalesAllSave($year,$month_type);//刷新上一个年度
+    }
 
     //终止客户邮件提醒
 	private function shiftEmailHint(){

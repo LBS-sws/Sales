@@ -134,5 +134,6 @@ return array(
 	'Stop Customer Back'=>'终止客户回访',
 	'Stop Customer Again'=>'再次回访列表',
 	'Stop Customer'=>'终止客户',
+	'Club Sales Confirm'=>'销售俱乐部确认功能',
 );
 ?>

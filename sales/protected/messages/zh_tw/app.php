@@ -126,5 +126,6 @@ return array(
     'Stop Customer Back'=>'終止客戶回訪',
     'Stop Customer Again'=>'再次回訪列表',
     'Stop Customer'=>'終止客戶',
+    'Club Sales Confirm'=>'銷售俱樂部確認功能',
 );
 ?>
