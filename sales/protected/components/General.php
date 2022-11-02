@@ -480,7 +480,7 @@ class General {
 		return $rtn;
 	}
 
-	public function systemMapping() {
+	public static function systemMapping() {
 		$rtn = require(Yii::app()->basePath.'/config/system.php');
 		return $rtn;
 	}
@@ -492,9 +492,11 @@ class General {
 		$lang = Yii::app()->language;
 		if (Yii::app()->sourceLanguage!=$lang) {
 			$systems = General::systemMapping();
-			$cpathid = end(explode('/',$systems[$sysid]['webroot']));
+			$array = explode('/', $systems[$sysid]['webroot']);
+			$cpathid = end($array);
 			foreach ($systems as $key=>$value) {
-				$pathid = end(explode('/',$systems[$key]['webroot']));
+				$array1 = explode('/', $systems[$key]['webroot']);
+				$pathid = end($array1);
 				$msgFile = ((strpos($basePath, '/'.$pathid.'/')===false) ? str_replace('/'.$cpathid.'/','/'.$pathid.'/',$basePath) : $basePath)
 					.'/messages/'.$lang.'/app.php';
 				$tmp = require($msgFile);
@@ -568,7 +570,7 @@ class General {
 		return $rtn;
 	}
 	
-	public function getUpdateDate() {
+	public static function getUpdateDate() {
 		$file = Yii::app()->basePath.'/config/lud.php';
 		if (file_exists($file)) {
 			$lud = require($file);

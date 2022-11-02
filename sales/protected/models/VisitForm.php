@@ -904,7 +904,7 @@ class VisitForm extends CFormModel
 		}
 	}
 	
-	public function isReadAll() {
+	public static function isReadAll() {
 		return Yii::app()->user->validFunction('CN03');
 	}
 }
