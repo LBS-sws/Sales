@@ -389,6 +389,7 @@ class ClubSalesList extends CListPageModel
                 if(key_exists($display,$this->clubRow)&&!empty($this->clubRow[$display])){
                     $display = Yii::t("club","confirmed");
                 }else{
+                    $list["userList"] = array();//沒有確認時，總頁顯示空列表
                     $display = "<a id='{$key}_confirm' data-id='{$key}' href='javascript:clickLink(\"{$key}\");'>";
                     $display.= "<span class='text-danger'>".Yii::t("club","unconfirmed")."</span>";
                     $display.= "</a>";
