@@ -396,7 +396,9 @@ class ClubSalesList extends CListPageModel
                 $html.= "<div class='col-lg-6'><div class='box box-primary'>";
                 $html.="<div class='box-header with-border'>";
                 $html.="<span>".Yii::t("club",$list["name"])."</span>";
-                $html.="（{$display}）";
+                if(ClubSalesController::allowDisplay()){//擁有確認權限
+                    $html.="（{$display}）";
+                }
                 $html.="</div>";
                 $html.="<div class='box-body'>";
                 $html.="<div class='direct-chat-messages' style='height: 250px'>";
@@ -414,10 +416,12 @@ class ClubSalesList extends CListPageModel
     private function htmlMinPage($key){
         $rows = $this->$key;
         $html="<div id='tab_{$key}' class='tab-pane fade'><p>&nbsp;</p>";
-        $display = $key."_display";
-        if(!key_exists($display,$this->clubRow)||empty($this->clubRow[$display])){
-            $link = Yii::app()->createUrl('clubSales/updateDisplay',array('index'=>$this->id,'key'=>$key));
-            $html.=TbHtml::button(Yii::t("club","confirm"),array("class"=>"pull-right","submit"=>$link));
+        if(ClubSalesController::allowDisplay()){//擁有確認權限
+            $display = $key."_display";
+            if(!key_exists($display,$this->clubRow)||empty($this->clubRow[$display])){
+                $link = Yii::app()->createUrl('clubSales/updateDisplay',array('index'=>$this->id,'key'=>$key));
+                $html.=TbHtml::button(Yii::t("club","confirm"),array("class"=>"pull-right","submit"=>$link));
+            }
         }
         $html.=self::tableHtml($key,$rows);
         $html.="</div>";
