@@ -54,7 +54,7 @@ class IntegralForm extends CFormModel
 
 	public static function getCustTypeList($key=0,$bool=false){
         $list = array(
-            '1'=>'每个',
+            '1'=>'每部',
             '2'=>'每个新客户',
             '3'=>'每个新客户订购一包',
             '4'=>'每个新客户每桶',
@@ -1369,7 +1369,7 @@ class IntegralForm extends CFormModel
 
     public function  getConditionsName($a){
 	   if($a==1){
-           $row='每个';
+           $row='每部';
        }elseif ($a==2){
 	       $row='每个新客户';
        }elseif ($a==3){
@@ -1382,7 +1382,7 @@ class IntegralForm extends CFormModel
            $row='每月';
        }
        if(empty($a)){
-           $row='每个';
+           $row='每部';
        }
         return $row;
     }
