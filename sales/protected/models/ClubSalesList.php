@@ -262,7 +262,7 @@ class ClubSalesList extends CListPageModel
             }
         }
         $list = empty($list)?array():self::arraySort($list,"ratioScore");
-        $notStaffList = empty($notStaffList)?array():self::arraySort($list,"ratioScore");
+        $notStaffList = empty($notStaffList)?array():self::arraySort($notStaffList,"ratioScore");
         return array_merge($list,$notStaffList);
     }
 
