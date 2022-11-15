@@ -51,5 +51,7 @@ return array(
     'unconfirmed'=>'未確認',
     'confirmed'=>'已確認',
     'confirm'=>'確認',
+    'confirm cancellation'=>'取消確認',
+    'reset data'=>'刷新數據',
 );
 ?>

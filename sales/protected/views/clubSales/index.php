@@ -12,6 +12,7 @@ $this->pageTitle=Yii::app()->name . ' - ClubSales';
 <section class="content-header">
 	<h1>
 		<strong><?php echo Yii::t('app','Club sales'); ?></strong>
+        <small>排行榜数据为一天刷新一次</small>
 	</h1>
 <!--
 	<ol class="breadcrumb">
@@ -23,6 +24,19 @@ $this->pageTitle=Yii::app()->name . ' - ClubSales';
 </section>
 
 <section class="content">
+    <?php if (ClubSalesController::allowDisplay()): ?>
+    <div class="box">
+        <div class="box-body">
+            <div class="btn-group" role="group">
+                <?php
+                echo TbHtml::link(Yii::t("club","reset data"),Yii::app()->createUrl('clubSales/index',
+                    array('year'=>$model->year,'month_type'=>$model->month_type,'reset'=>1)
+                ),array("class"=>"btn btn-default"));
+                ?>
+            </div>
+        </div>
+    </div>
+    <?php endif ?>
     <div class="box box-info">
         <div class="box-body">
             <?php echo $form->hiddenField($model, 'id'); ?>

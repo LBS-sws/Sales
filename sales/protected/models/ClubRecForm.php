@@ -170,6 +170,13 @@ class ClubRecForm extends CFormModel
         if ($this->scenario=='new')
             $this->id = Yii::app()->db->getLastInsertID();
 
+        $this->resetClubSales();
 		return true;
 	}
+
+	//強制刷新排行榜
+	private function resetClubSales(){
+        $model = new ClubSalesList();
+        $model->clubSalesAll($this->rec_year,$this->month_type,true);
+    }
 }

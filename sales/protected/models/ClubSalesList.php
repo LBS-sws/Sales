@@ -44,6 +44,9 @@ class ClubSalesList extends CListPageModel
         $row = Yii::app()->db->createCommand()->select("*")->from("sal_club")
             ->where("year={$year} and month_type={$month_type}")->queryRow();
         if($reset||!$row){//強制刷新或者數據庫沒有數據
+            if($row){
+                $this->clubRow=$row;
+            }
             $this->clubSalesAllSave($year,$month_type);
         }else{//數據庫保存了記錄且不強制刷新
             $this->id = $row["id"];
@@ -420,9 +423,12 @@ class ClubSalesList extends CListPageModel
         if(ClubSalesController::allowDisplay()){//擁有確認權限
             $display = $key."_display";
             if(!key_exists($display,$this->clubRow)||empty($this->clubRow[$display])){
-                $link = Yii::app()->createUrl('clubSales/updateDisplay',array('index'=>$this->id,'key'=>$key));
-                $html.=TbHtml::button(Yii::t("club","confirm"),array("class"=>"pull-right","submit"=>$link));
+                $btnStr = Yii::t("club","confirm");
+            }else{
+                $btnStr = Yii::t("club","confirm cancellation");
             }
+            $link = Yii::app()->createUrl('clubSales/updateDisplay',array('index'=>$this->id,'key'=>$key));
+            $html.=TbHtml::button($btnStr,array("class"=>"pull-right","submit"=>$link));
         }
         $html.=self::tableHtml($key,$rows);
         $html.="</div>";
