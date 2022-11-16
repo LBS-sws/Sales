@@ -581,7 +581,7 @@ class ClubSalesList extends CListPageModel
     }
 
     private function validateOut($list,$key){
-        if($list["unifyStr"]<50000){ //新业务金额最低门槛10万
+        if($list["unifyStr"]<100000){ //新业务金额最低门槛10万
             return false;
         }else{
             return true;
