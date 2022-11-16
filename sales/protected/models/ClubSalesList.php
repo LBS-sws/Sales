@@ -61,20 +61,21 @@ class ClubSalesList extends CListPageModel
             }
             $this->setSalesList();
             $this->sales_elite = empty($row["sales_elite"])?array():json_decode($row["sales_elite"],true);
+            $this->addUserList("sales_elite");
             $this->sales_forward = empty($row["sales_forward"])?array():json_decode($row["sales_forward"],true);
+            $this->addUserList("sales_forward");
             $this->sales_out = empty($row["sales_out"])?array():json_decode($row["sales_out"],true);
+            $this->addUserList("sales_out");
             $this->sales_visit = empty($row["sales_visit"])?array():json_decode($row["sales_visit"],true);
+            $this->addUserList("sales_visit");
             $this->sales_rec = empty($row["sales_rec"])?array():json_decode($row["sales_rec"],true);
+            $this->addUserList("sales_rec");
             $this->clubRow=$row;
         }
 
         $salesCount = count($this->salesList);
         $this->clubSetting = ClubSettingForm::getClubSettingForDate($this->endDate,$salesCount);
-        $this->addUserList("sales_elite");
-        $this->addUserList("sales_forward");
-        $this->addUserList("sales_out");
-        $this->addUserList("sales_visit");
-        $this->addUserList("sales_rec");
+
     }
 
 	public function clubSalesAllSave($year,$month_type){
@@ -92,10 +93,15 @@ class ClubSalesList extends CListPageModel
 
         $this->setSalesList();
         $this->sales_elite = $this->salesElite();
+        $this->addUserList("sales_elite");
         $this->sales_forward = $this->salesForward();
+        $this->addUserList("sales_forward");
         $this->sales_out = $this->salesOut();
+        $this->addUserList("sales_out");
         $this->sales_visit = $this->salesVisit();
+        $this->addUserList("sales_visit");
         $this->sales_rec = $this->salesRec();
+        $this->addUserList("sales_rec");
         $row = Yii::app()->db->createCommand()->select("id")->from("sal_club")
             ->where("year={$year} and month_type={$month_type}")->queryRow();
         if($row){
