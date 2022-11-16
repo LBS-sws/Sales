@@ -60,6 +60,9 @@ class ClubSalesList extends CListPageModel
                 $this->endDate=$this->year.'-12-31';
             }
             $this->setSalesList();
+
+            $salesCount = count($this->salesList);
+            $this->clubSetting = ClubSettingForm::getClubSettingForDate($this->endDate,$salesCount);
             $this->sales_elite = empty($row["sales_elite"])?array():json_decode($row["sales_elite"],true);
             $this->addUserList("sales_elite");
             $this->sales_forward = empty($row["sales_forward"])?array():json_decode($row["sales_forward"],true);
@@ -72,9 +75,6 @@ class ClubSalesList extends CListPageModel
             $this->addUserList("sales_rec");
             $this->clubRow=$row;
         }
-
-        $salesCount = count($this->salesList);
-        $this->clubSetting = ClubSettingForm::getClubSettingForDate($this->endDate,$salesCount);
 
     }
 
@@ -92,6 +92,8 @@ class ClubSalesList extends CListPageModel
         }
 
         $this->setSalesList();
+        $salesCount = count($this->salesList);
+        $this->clubSetting = ClubSettingForm::getClubSettingForDate($this->endDate,$salesCount);
         $this->sales_elite = $this->salesElite();
         $this->addUserList("sales_elite");
         $this->sales_forward = $this->salesForward();
