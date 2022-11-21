@@ -135,9 +135,9 @@ $url=Yii::app()->createUrl('report/citys');
 $js = <<<EOF
 $(document).ready(function(){
 
-      $(document).on("change","#ReportVisitForm_city",function () {   
+      $(document).on("change","#ReportVisitForm_city,#ReportVisitForm_end_dt",function () {   
             var endDate=$("#ReportVisitForm_end_dt").val();  
-            var txt=$(this).find("option:selected").val();  
+            var txt=$("#ReportVisitForm_city").val();  
       $.post('$url',{txt:txt,endDate:endDate},function(result){    
             $("label").remove(".a");
             var result=$.parseJSON( result)
