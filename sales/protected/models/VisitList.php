@@ -51,7 +51,7 @@ class VisitList extends CListPageModel
 		$suffix = Yii::app()->params['envSuffix'];
 		$citylist = Yii::app()->user->city_allow();
 		$user = Yii::app()->user->id;
-		$sql1 = "select a.*,f.name as staff_name, b.name as city_name, concat(f.code,' - ',f.name) as staff, f.staff_status, 
+		$sql1 = "select a.*,f.code as staff_code,f.name as staff_name, b.name as city_name, concat(f.code,' - ',f.name) as staff, f.staff_status, 
 				(select d.name from sal_visit_type d where a.visit_type = d.id) as visit_type_name,
 				g.name as cust_type_name,
 				docman$suffix.countdoc('visit',a.id) as visitdoc,
@@ -184,7 +184,7 @@ class VisitList extends CListPageModel
 					'status'=>$record['status'],
 					'city_name'=>$record['city_name'],
 					'city'=>$record['city'],
-					'staff'=>$record['staff_name'].($record['staff_status']==-1?Yii::t("app","(Resign)"):""),
+					'staff'=>$record['staff_code']."-".$record['staff_name'].($record['staff_status']==-1?Yii::t("app","(Resign)"):""),
 					'district'=>$record['district_name'],
 					'quote'=>$quote,
 					'visit_type'=>$record['visit_type_name'],
@@ -209,7 +209,7 @@ class VisitList extends CListPageModel
         $user = Yii::app()->user->id;
         $end=str_replace("/","-",$arr['end']);
         $start=str_replace("/","-",$arr['start']);
-        $sql1 = "select a.*,f.name as staff_name, b.name as city_name, concat(f.code,' - ',f.name) as staff,  
+        $sql1 = "select a.*,f.code as staff_code,f.name as staff_name, b.name as city_name, concat(f.code,' - ',f.name) as staff,  
 				(select d.name from sal_visit_type d where a.visit_type = d.id) as visit_type_name,
 				g.name as cust_type_name,
 				docman$suffix.countdoc('visit',a.id) as visitdoc,
@@ -337,7 +337,7 @@ class VisitList extends CListPageModel
                     'status'=>$record['status'],
                     'city_name'=>$record['city_name'],
                     'city'=>$record['city'],
-                    'staff'=>$record['staff_name'],
+                    'staff'=>$record['staff_code']."-".$record['staff_name'],
                     'district'=>$record['district_name'],
                     'quote'=>$quote,
                     'visit_type'=>$record['visit_type_name'],
