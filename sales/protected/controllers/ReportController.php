@@ -111,7 +111,7 @@ class ReportController extends Controller
             $model->attributes = $_POST['ReportVisitForm'];
         }
         $city=$model->city();
-        $saleman=$model->salepeople();
+        $saleman=$model->salepeople($model->end_dt);
         if(!empty(Yii::app()->session['index'])){
             $model['start_dt']=Yii::app()->session['index']['start_dt'];
             $model['end_dt']=Yii::app()->session['index']['end_dt'];
@@ -121,7 +121,7 @@ class ReportController extends Controller
                 $model['sale']=Yii::app()->session['index']['sale'];
             }
 
-            $saleman=$model->salepeoples($model['city']);
+            $saleman=$model->salepeoples($model['city'],$model->end_dt);
         }
 
 //        print_r('<pre/>');
@@ -207,12 +207,15 @@ class ReportController extends Controller
     {
         if (isset($_POST['txt'])) {
             $city = $_POST['txt'];
+            $endDate = key_exists("endDate",$_POST)?$_POST['endDate']:date("Y-m-d");
+            $endDate = empty($endDate)?date("Y-m-d"):date("Y-m-d",strtotime($endDate));
+            $dateSql = " and (a.staff_status=0 or (a.staff_status=-1 and replace(leave_time,'/', '-')>='{$endDate}'))";
             $suffix = Yii::app()->params['envSuffix'];
             $city_allow = City::model()->getDescendantList($city);
             $city_allow .= (empty($city_allow)) ? "'$city'" : ",'$city'";
 
             $sql = "select a.name,d.username from hr$suffix.hr_employee a, hr$suffix.hr_binding b, security$suffix.sec_user_access c,security$suffix.sec_user d 
-        where a.id=b.employee_id and b.user_id=c.username and c.system_id='sal' and c.a_read_write like '%HK01%' and c.username=d.username and d.status='A' and d.city in ($city_allow)";
+        where a.id=b.employee_id and b.user_id=c.username and c.system_id='sal' and c.a_read_write like '%HK01%' and c.username=d.username {$dateSql} and d.city in ($city_allow)";
 
             $records = Yii::app()->db->createCommand($sql)->queryAll();
         }
