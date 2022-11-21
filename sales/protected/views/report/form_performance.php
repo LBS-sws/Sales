@@ -136,8 +136,9 @@ $js = <<<EOF
 $(document).ready(function(){
 
       $(document).on("change","#ReportVisitForm_city",function () {   
-            txt=$(this).find("option:selected").val();  
-      $.post('$url',{txt:txt},function(result){    
+            var endDate=$("#ReportVisitForm_end_dt").val();  
+            var txt=$(this).find("option:selected").val();  
+      $.post('$url',{txt:txt,endDate:endDate},function(result){    
             $("label").remove(".a");
             var result=$.parseJSON( result)
             var dataLen = result.length ; //返回数组的长度
