@@ -78,26 +78,30 @@ class ReportVisitForm extends CReportForm
         return $records;
     }
 
-    public function salepeople(){
+    public function salepeople($endDate=""){
         $suffix = Yii::app()->params['envSuffix'];
         $city=Yii::app()->user->city();
+        $endDate = empty($endDate)?date("Y-m-d"):date("Y-m-d",strtotime($endDate));
+        $dateSql = " and (a.staff_status=0 or (a.staff_status=-1 and replace(leave_time,'/', '-')>='{$endDate}'))";
         $city_allow = City::model()->getDescendantList($city);
         $city_allow .= (empty($city_allow)) ? "'$city'" : ",'$city'";
 //        $sql="select a.name,b.user_id from hr$suffix.hr_employee a ,hr$suffix.hr_binding b
 //            WHERE  position in (SELECT id FROM hr$suffix.hr_dept where dept_class='sales') AND a.staff_status = 0 AND a.city in ($city_allow) AND a.id=b.employee_id";
         $sql = "select a.name,d.username from hr$suffix.hr_employee a, hr$suffix.hr_binding b, security$suffix.sec_user_access c,security$suffix.sec_user d 
-        where a.id=b.employee_id and b.user_id=c.username and c.system_id='sal' and c.a_read_write like '%HK01%' and c.username=d.username and d.status='A' and d.city in ($city_allow)";
+        where a.id=b.employee_id and b.user_id=c.username and c.system_id='sal' and c.a_read_write like '%HK01%' and c.username=d.username {$dateSql} and d.city in ($city_allow)";
         $records = Yii::app()->db->createCommand($sql)->queryAll();
         return $records;
     }
-    public function salepeoples($city){
+    public function salepeoples($city,$endDate=""){
+        $endDate = empty($endDate)?date("Y-m-d"):date("Y-m-d",strtotime($endDate));
+        $dateSql = " and (a.staff_status=0 or (a.staff_status=-1 and replace(leave_time,'/', '-')>='{$endDate}'))";
         $suffix = Yii::app()->params['envSuffix'];
         $city_allow = City::model()->getDescendantList($city);
         $city_allow .= (empty($city_allow)) ? "'$city'" : ",'$city'";
 //        $sql="select a.name,b.user_id from hr$suffix.hr_employee a ,hr$suffix.hr_binding b
 //            WHERE  position in (SELECT id FROM hr$suffix.hr_dept where dept_class='sales') AND a.staff_status = 0 AND a.city in ($city_allow) AND a.id=b.employee_id";
         $sql = "select a.name,d.username from hr$suffix.hr_employee a, hr$suffix.hr_binding b, security$suffix.sec_user_access c,security$suffix.sec_user d 
-        where a.id=b.employee_id and b.user_id=c.username and c.system_id='sal' and c.a_read_write like '%HK01%' and c.username=d.username and d.status='A' and d.city in ($city_allow)";
+        where a.id=b.employee_id and b.user_id=c.username and c.system_id='sal' and c.a_read_write like '%HK01%' and c.username=d.username {$dateSql} and d.city in ($city_allow)";
         $records = Yii::app()->db->createCommand($sql)->queryAll();
        // print_r('<pre>');
         //print_r($records);
