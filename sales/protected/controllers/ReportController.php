@@ -123,7 +123,7 @@ class ReportController extends Controller
 
             $saleman=$model->salepeoples($model['city'],$model->end_dt);
         }
-
+        $model->city = empty($model->city)?Yii::app()->user->city():$model->city;
 //        print_r('<pre/>');
 //        print_r(   $model['sale']);
         $this->render('form_performance',array('model'=>$model,'city'=>$city,'saleman'=>$saleman));

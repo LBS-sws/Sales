@@ -83,7 +83,7 @@ $this->pageTitle=Yii::app()->name . ' - Report';
                 <div class="col-sm-3">
                     <?php echo $form->dropDownList($model, 'city',
                         $city,
-                        array('disabled'=>($model->scenario=='view'))
+                        array('disabled'=>($model->scenario=='view'),'id'=>'city')
                     ); ?>
                 </div>
             </div>
@@ -135,9 +135,9 @@ $url=Yii::app()->createUrl('report/citys');
 $js = <<<EOF
 $(document).ready(function(){
 
-      $(document).on("change","#ReportVisitForm_city,#ReportVisitForm_end_dt",function () {   
+      $(document).on("change","#city,#ReportVisitForm_end_dt",function () {   
             var endDate=$("#ReportVisitForm_end_dt").val();  
-            var txt=$("#ReportVisitForm_city").val();  
+            var txt=$("#city").val();  
       $.post('$url',{txt:txt,endDate:endDate},function(result){    
             $("label").remove(".a");
             var result=$.parseJSON( result)
