@@ -111,7 +111,6 @@ class ReportController extends Controller
             $model->attributes = $_POST['ReportVisitForm'];
         }
         $city=$model->city();
-        $saleman=$model->salepeople($model->end_dt);
         if(!empty(Yii::app()->session['index'])){
             $model['start_dt']=Yii::app()->session['index']['start_dt'];
             $model['end_dt']=Yii::app()->session['index']['end_dt'];
@@ -120,10 +119,8 @@ class ReportController extends Controller
             if(!empty(Yii::app()->session['index']['sale'])){
                 $model['sale']=Yii::app()->session['index']['sale'];
             }
-
-            $saleman=$model->salepeoples($model['city'],$model->end_dt);
         }
-        $model->city = empty($model->city)?Yii::app()->user->city():$model->city;
+        $saleman=ReportVisitForm::getAllSales($model->city,$model->start_dt,$model->end_dt);
 //        print_r('<pre/>');
 //        print_r(   $model['sale']);
         $this->render('form_performance',array('model'=>$model,'city'=>$city,'saleman'=>$saleman));
@@ -205,19 +202,14 @@ class ReportController extends Controller
 
     public function actionCitys()
     {
+        $records = array();
         if (isset($_POST['txt'])) {
             $city = $_POST['txt'];
+            $startDate = key_exists("startDate",$_POST)?$_POST['startDate']:date("Y-m-01");
+            $startDate = empty($startDate)?date("Y-m-01"):date("Y-m-d",strtotime($startDate));
             $endDate = key_exists("endDate",$_POST)?$_POST['endDate']:date("Y-m-d");
             $endDate = empty($endDate)?date("Y-m-d"):date("Y-m-d",strtotime($endDate));
-            $dateSql = " and (a.staff_status=0 or (a.staff_status=-1 and replace(leave_time,'/', '-')>='{$endDate}'))";
-            $suffix = Yii::app()->params['envSuffix'];
-            $city_allow = City::model()->getDescendantList($city);
-            $city_allow .= (empty($city_allow)) ? "'$city'" : ",'$city'";
-
-            $sql = "select a.name,d.username from hr$suffix.hr_employee a, hr$suffix.hr_binding b, security$suffix.sec_user_access c,security$suffix.sec_user d 
-        where a.id=b.employee_id and b.user_id=c.username and c.system_id='sal' and c.a_read_write like '%HK01%' and c.username=d.username {$dateSql} and d.city in ($city_allow)";
-
-            $records = Yii::app()->db->createCommand($sql)->queryAll();
+            $records = ReportVisitForm::getAllSales($city,$startDate,$endDate);
         }
 //        $records=array_merge($records,$name);
         echo (json_encode($records,JSON_UNESCAPED_UNICODE));

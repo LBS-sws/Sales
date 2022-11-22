@@ -78,6 +78,23 @@ class ReportVisitForm extends CReportForm
         return $records;
     }
 
+    public static function getAllSales($city,$startDate,$endDate){
+        $suffix = Yii::app()->params['envSuffix'];
+        $city = empty($city)?Yii::app()->user->city():$city;
+        $startDate = empty($startDate)?date("Y-m-01"):$startDate;
+        $endDate = empty($endDate)?date("Y-m-31"):$endDate;
+        $city_allow = City::model()->getDescendantList($city);
+        $city_allow .= (empty($city_allow)) ? "'$city'" : ",'$city'";
+        $rows = Yii::app()->db->createCommand()->select("a.username,f.name")
+            ->from("sal_visit a")
+            ->leftJoin("hr$suffix.hr_binding b","a.username = b.user_id")
+            ->leftJoin("hr$suffix.hr_employee f","b.employee_id = f.id")
+            ->where("a.visit_dt between '{$startDate}' and '{$endDate}' and a.city in ($city_allow)")
+            ->group("a.username,f.name")
+            ->queryAll();
+        return $rows;
+    }
+
     public function salepeople($endDate=""){
         $suffix = Yii::app()->params['envSuffix'];
         $city=Yii::app()->user->city();
