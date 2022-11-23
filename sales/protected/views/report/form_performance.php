@@ -135,10 +135,11 @@ $url=Yii::app()->createUrl('report/citys');
 $js = <<<EOF
 $(document).ready(function(){
 
-      $(document).on("change","#city,#ReportVisitForm_end_dt",function () {   
+      $(document).on("change","#city,#ReportVisitForm_end_dt,#ReportVisitForm_start_dt",function () {   
             var endDate=$("#ReportVisitForm_end_dt").val();  
+            var startDate=$("#ReportVisitForm_start_dt").val();  
             var txt=$("#city").val();  
-      $.post('$url',{txt:txt,endDate:endDate},function(result){    
+      $.post('$url',{txt:txt,startDate:startDate,endDate:endDate},function(result){    
             $("label").remove(".a");
             var result=$.parseJSON( result)
             var dataLen = result.length ; //返回数组的长度
