@@ -73,6 +73,21 @@ class IntegralForm extends CFormModel
     }
 
     //改版后的详情（正在使用）
+	public function deleteSave($index)
+    {
+        $citylist = Yii::app()->user->city_allow();
+        $row = Yii::app()->db->createCommand()
+            ->select("a.id")->from("sal_integral a")
+            ->where("a.id=:id and a.city in ({$citylist})", array(":id" => $index))->queryRow();
+        if($row){
+            Yii::app()->db->createCommand()->delete('sal_integral', 'id=:id', array(':id'=>$index));
+            echo "delete success";
+        }else{
+            echo "not find";
+        }
+    }
+
+    //改版后的详情（正在使用）
 	public function retrieveDataNew($index){
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()

@@ -24,7 +24,7 @@ class IntegralController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','delete','save','downs','downsNew','test'),
+				'actions'=>array('new','edit','del','save','downs','downsNew','test'),
 				'expression'=>array('IntegralController','allowReadWrite'),
 			),
 			array('allow', 
@@ -36,6 +36,12 @@ class IntegralController extends Controller
 			),
 		);
 	}
+
+    public function actionDel($index=0)
+    {
+        $model = new IntegralForm('view');
+        $model->deleteSave($index);
+    }
 
     public function actionTest($month=6,$id=0,$year="2021")
     {

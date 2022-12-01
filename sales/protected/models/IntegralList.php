@@ -103,6 +103,7 @@ class IntegralList extends CListPageModel
 					$this->attr[] = array(
 						'id'=>$record['id'],
 						'year'=>$record['year'],
+						'username'=>$record['username'],
                         'month'=>$record['month'],
                         'name'=>$record['name'],
 						'city'=>$record['city_name'],
