@@ -178,6 +178,7 @@ class VisitList extends CListPageModel
 //                print_r($quote);
 				$this->attr[] = array(
 					'id'=>$record['id'],
+					'lcd'=>$record['lcd'],
 					'username'=>$record['username'],
 					'visit_dt'=>General::toDate($record['visit_dt']),
 //					'status_dt'=>($record['status']=='Y' ? General::toDate($record['status_dt']) : ''),

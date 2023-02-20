@@ -17,7 +17,7 @@
 <?php if (!Yii::app()->user->isSingleCity()) : ?>
 	<td <?php echo $cls_str;?>><?php echo $this->record['city_name']; ?></td>
 <?php endif ?>
-	<td width='12.5%' <?php echo $cls_str;?>><?php echo $this->record['visit_dt']; ?></td>
+	<td width='12.5%' data-lcd="<?php echo $this->record['lcd'];?>" <?php echo $cls_str;?>><?php echo $this->record['visit_dt']; ?></td>
 <!--
 	<td width='12.5%'><?php // echo $this->record['status_dt']; ?></td>
 -->
