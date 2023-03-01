@@ -185,7 +185,7 @@ class VisitList extends CListPageModel
 					'status'=>$record['status'],
 					'city_name'=>$record['city_name'],
 					'city'=>$record['city'],
-					'staff'=>$record['staff_code']."-".$record['staff_name'].($record['staff_status']==-1?Yii::t("app","(Resign)"):""),
+					'staff'=>$record['staff_code']."-".$record['staff_name'],
 					'district'=>$record['district_name'],
 					'quote'=>$quote,
 					'visit_type'=>$record['visit_type_name'],
@@ -193,7 +193,7 @@ class VisitList extends CListPageModel
 					'cust_type'=>$record['cust_type_name'],
 					'cust_name'=>$record['cust_name'],
 					'cust_vip'=>$record['cust_vip'],
-                    'shift'=>$record['shift'],
+                    'shift'=>$record['staff_status']==-1?"Y":$record['shift'],
                     'visitdoc'=>$record['visitdoc'],
 				);
 			}
