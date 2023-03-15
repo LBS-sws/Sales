@@ -195,5 +195,7 @@ return array(
     'singular'=>'单数',
     'Score Ari'=>'机器总数量',
     'Nature'=>'性质',
+
+    'min num'=>'当周最小拜访数量',
 );
 ?>

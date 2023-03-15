@@ -225,6 +225,11 @@ return array(
                 'url'=>'/clubSetting/index',
                 'tag'=>'@',
             ),
+            'sales min setting'=>array(
+                'access'=>'HC11',
+                'url'=>'/salesMin/edit',
+                'tag'=>'@',
+            ),
 		),
 	),
 
