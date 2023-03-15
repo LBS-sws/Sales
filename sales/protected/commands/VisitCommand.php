@@ -73,7 +73,8 @@ class VisitCommand extends CConsoleCommand
                         $description = "<br/>".$arr['start_dt'] . "-" . $arr['end_dt'];
                         $url = Yii::app()->params['webroot'];
                         $url .= "/visit/index?start=" . $arr['start_dt'] . "&end=" . $arr['end_dt'] . "&city=" . $city;
-                        $message = <<<EOF
+                        $message="<br/>地区签单明细".$arr['start_dt'] . "至" . $arr['end_dt'];
+                        $message.= <<<EOF
                        
 <table cellpadding="10" cellspacing="1" style="color:#666;font:13px Arial;line-height:1.4em;width:100%;">
 	<tbody>
@@ -210,7 +211,8 @@ EOF;
                         $sumColor=0>=$minVisit?"":"color:red";
                      //   $url = Yii::app()->params['webroot'];
                      //   $url .= "/visit/index?start=" . $arr['start_dt'] . "&end=" . $arr['end_dt'] . "&city=" . $city;
-                        $message = <<<EOF
+                        $message="<br/>地区签单明细".$arr['start_dt'] . "至" . $arr['end_dt'];
+                        $message.= <<<EOF
 <table cellpadding="10" cellspacing="1" style="color:#666;font:13px Arial;line-height:1.4em;width:100%;">
 	<tbody>
 		<tr>
@@ -320,24 +322,16 @@ EOF;
 
     private function getComparisonHtmlData($arr){
         $model = new ComparisonForm();
-        $model->start_date = $arr["start_dt"];
+        $model->start_date = date("Y-m-01",strtotime($arr["end_dt"]));
         $model->end_date = $arr["end_dt"];
+        $model->week_start_date = $arr["start_dt"];
         $model->retrieveData();
         $dataHtml = $model->getDataToHtml();
-        $stopRate = $model->getStopMoneyRateForMonth();
-        return array("dataHtml"=>$dataHtml,"stopRate"=>$stopRate,"defaultTable"=>$model->defaultTable);
+        return array("dataHtml"=>$dataHtml,"defaultTable"=>$model->defaultTable);
     }
 
     private function getHtmlForCity($comparisonHtmlData,$city,$city_name=""){
-        $list = array("table"=>"","two_gross"=>"","stop_sum"=>0);
-        $rate = 0;
-        if(key_exists($city,$comparisonHtmlData["stopRate"])){
-            $list = $comparisonHtmlData["stopRate"][$city];
-            if(!empty($list["newMoney"])){
-                $rate =($list["stopMoney"]/$list["newMoney"])*100;
-                $rate = round($rate,1)."%";
-            }
-        }
+        $list = array("table"=>"","twoGross"=>"","stopWeekSum"=>0,"stopRate"=>0);
         if(key_exists($city,$comparisonHtmlData["dataHtml"])){
             $list = $comparisonHtmlData["dataHtml"][$city];
         }
@@ -345,9 +339,9 @@ EOF;
             $list["table"] = str_replace(':city_name:',$city_name,$comparisonHtmlData["defaultTable"]);
         }
         $html=$list["table"];
-        $html.="<p>每月新生意额要求:{$list["two_gross"]}</p>";
-        $html.="<p style='color: red;'>本周停单金额:{$list["stop_sum"]}</p>";
-        $html.="<p style='color: red;'>本月停单率:{$rate}</p><br/>";
+        $html.="<p>每月新生意额要求:{$list["twoGross"]}</p>";
+        $html.="<p style='color: red;'>本周停单金额:{$list["stopWeekSum"]}</p>";
+        $html.="<p style='color: red;'>本月停单率:{$list["stopRate"]}</p><br/>";
 
         return $html;
     }

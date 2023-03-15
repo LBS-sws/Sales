@@ -3,6 +3,7 @@
 class ComparisonForm extends CFormModel
 {
 	/* User Fields */
+	public $week_start_date;
 	public $start_date;
 	public $end_date;
 	public $day_num=0;
@@ -140,6 +141,7 @@ class ComparisonForm extends CFormModel
                 "city_name"=>$row["city_name"],
                 "u_sum_last"=>0,//U系统金额(上一年)
                 "u_sum"=>0,//U系统金额
+                "stopWeekSum"=>0,//本週停單金額
                 "new_sum_last"=>0,//新增(上一年)
                 "new_sum"=>0,//新增
                 "new_rate"=>0,//新增对比比例
@@ -174,6 +176,9 @@ class ComparisonForm extends CFormModel
                 $data[$city][$newStr] += $money;
                 break;
             case "T"://终止
+                if(strtotime($this->week_start_date)<=strtotime($row["status_dt"])){
+                    $data[$city]["stopWeekSum"] += $money;
+                }
                 $money *= -1;
                 $data[$city][$stopStr] += $money;
                 break;
@@ -240,8 +245,14 @@ class ComparisonForm extends CFormModel
         $table.='<tbody>';
         if(!empty($this->data)){
             foreach ($this->data as $row){
-                $htmlList[$row["city"]]["two_gross"]=$row["two_gross"];
-                $htmlList[$row["city"]]["stop_sum"]=$row["stop_sum"]*-1;
+                $stopSum = $row["stop_sum"]>=0?$row["stop_sum"]:$row["stop_sum"]*-1;//本月終止金額
+                $newSum = $row["new_sum"]-$row["u_sum"];//本月新增金額
+                //本月停單率
+                $htmlList[$row["city"]]["stopRate"]=$this->comparisonRate($stopSum,$newSum);
+                //目標金額
+                $htmlList[$row["city"]]["twoGross"]=$row["two_gross"];
+                //本周停单金额
+                $htmlList[$row["city"]]["stopWeekSum"]=$row["stopWeekSum"];
                 $htmlList[$row["city"]]["table"]=$table;
                 $this->resetTdRow($row);
                 $htmlList[$row["city"]]["table"].='<tr>';
@@ -249,7 +260,7 @@ class ComparisonForm extends CFormModel
                     $text = key_exists($keyStr,$row)?$row[$keyStr]:"0";
                     $tdClass =(strpos($text,'%')!==false&&floatval($text)>=100)?"color:green":"";
                     $text = ComparisonForm::showNum($text);
-                    $htmlList[$row["city"]]["table"].="<td style='{$tdClass}'>{$text}</td>";
+                    $htmlList[$row["city"]]["table"].="<td style='text-align: center;{$tdClass}'>{$text}</td>";
                 }
                 $htmlList[$row["city"]]["table"].='</tr>';
                 $htmlList[$row["city"]]["table"].='</tbody>';
@@ -260,7 +271,7 @@ class ComparisonForm extends CFormModel
         $this->defaultTable = $table."<tr>";
         foreach ($bodyKey as $keyStr){
             $text = $keyStr=="city_name"?":city_name:":"0";
-            $this->defaultTable.= "<td>{$text}</td>";
+            $this->defaultTable.= "<td style='text-align: center;'>{$text}</td>";
         }
         $this->defaultTable.= "</tr></tbody></table></div>";
         return $htmlList;
@@ -370,55 +381,5 @@ class ComparisonForm extends CFormModel
         $bodyKey[]="two_gross_rate";
         $bodyKey[]="two_net_rate";
         return $bodyKey;
-    }
-
-    //獲取本月的停單比率
-    public function getStopMoneyRateForMonth(){
-        $list=array();
-        $endDate = $this->end_date;
-        $startDate = date("Y/m/01",strtotime($endDate));
-        $suffix = Yii::app()->params['envSuffix'];
-        $where="a.status_dt BETWEEN '{$startDate}' and '{$endDate}'";
-        $rows = Yii::app()->db->createCommand()
-            ->select("a.status_dt,a.status,f.rpt_cat,f.single,a.city,g.rpt_cat as nature_rpt_cat,a.nature_type,a.paid_type,a.amt_paid,a.ctrt_period,a.b4_paid_type,a.b4_amt_paid
-            ,b.region,b.name as city_name,c.name as region_name")
-            ->from("swoper{$suffix}.swo_service a")
-            ->leftJoin("swoper{$suffix}.swo_customer_type f","a.cust_type=f.id")
-            ->leftJoin("swoper{$suffix}.swo_nature g","a.nature_type=g.id")
-            ->leftJoin("security{$suffix}.sec_city b","a.city=b.code")
-            ->leftJoin("security{$suffix}.sec_city c","b.region=c.code")
-            ->where("a.status in ('N','T') and ({$where})")
-            ->order("a.city")
-            ->queryAll();
-        if($rows){
-            foreach ($rows as $row){
-                //rpt_cat='INV' and single=1的客户服务是产品，所以需要筛选出去
-                if($row["rpt_cat"]==="INV"&&intval($row["single"])===1){
-                    continue;
-                }
-                $city = $row["city"];
-                $row["amt_paid"] = is_numeric($row["amt_paid"])?floatval($row["amt_paid"]):0;
-                $row["ctrt_period"] = is_numeric($row["ctrt_period"])?floatval($row["ctrt_period"]):0;
-                $row["b4_amt_paid"] = is_numeric($row["b4_amt_paid"])?floatval($row["b4_amt_paid"]):0;
-                if($row["paid_type"]=="M"){//月金额
-                    $money = $row["amt_paid"]*$row["ctrt_period"];
-                }else{
-                    $money = $row["amt_paid"];
-                }
-                if(!key_exists($city,$list)){
-                    $list[$city]=array("newMoney"=>0,"stopMoney"=>0);
-                }
-                switch ($row["status"]) {
-                    case "N"://新增
-                        $list[$city]["newMoney"] += $money;
-                        break;
-                    case "T"://终止
-                        $list[$city]["stopMoney"] += $money;
-                        break;
-                }
-            }
-        }
-
-        return $list;
     }
 }
