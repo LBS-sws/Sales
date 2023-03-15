@@ -330,20 +330,19 @@ EOF;
 
     private function getHtmlForCity($comparisonHtmlData,$city){
         $html = "";
+        $rate = 0;
+        if(!empty($html)&&key_exists($city,$comparisonHtmlData["stopRate"])){
+            $list = $comparisonHtmlData["stopRate"][$city];
+            if(!empty($list["newMoney"])){
+                $rate =($list["stopMoney"]/$list["newMoney"])*100;
+                $rate = round($rate,1)."%";
+            }
+        }
         if(key_exists($city,$comparisonHtmlData["dataHtml"])){
             $list = $comparisonHtmlData["dataHtml"][$city];
             $html.=$list["table"];
             $html.="<p>每月新生意额要求:{$list["two_gross"]}</p>";
             $html.="<p style='color: red;'>本周停单金额:{$list["stop_sum"]}</p>";
-        }
-        if(!empty($html)&&key_exists($city,$comparisonHtmlData["stopRate"])){
-            $list = $comparisonHtmlData["stopRate"][$city];
-            if(empty($list["newMoney"])){
-                $rate = 0;
-            }else{
-                $rate =($list["stopMoney"]/$list["newMoney"])*100;
-                $rate = round($rate,1)."%";
-            }
             $html.="<p style='color: red;'>本月停单率:{$rate}</p><br/>";
         }
 
