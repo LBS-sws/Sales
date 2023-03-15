@@ -187,7 +187,7 @@ EOF;
 EOF;
                         $message = str_replace(':sumIntegral:',$sumIntegral,$message);
                         $lcu = "admin";
-                        $comparisonHtml = $this->getHtmlForCity($comparisonHtmlData,$k);
+                        $comparisonHtml = $this->getHtmlForCity($comparisonHtmlData,$k,$city);
                         echo $subject."<br/>";
                         echo $comparisonHtml.$message;
                         echo "<br/>toAdr:".$to_addr."<br/>";
@@ -283,7 +283,7 @@ EOF;
 </table>
 EOF;
                         $lcu = "admin";
-                        $comparisonHtml = $this->getHtmlForCity($comparisonHtmlData,$k);
+                        $comparisonHtml = $this->getHtmlForCity($comparisonHtmlData,$k,$city);
                         echo $subject."<br/>";
                         echo $comparisonHtml.$message;
                         echo "<br/>toAdr:".$to_addr."<br/>";
@@ -311,13 +311,13 @@ EOF;
         $model->retrieveData();
         $dataHtml = $model->getDataToHtml();
         $stopRate = $model->getStopMoneyRateForMonth();
-        return array("dataHtml"=>$dataHtml,"stopRate"=>$stopRate);
+        return array("dataHtml"=>$dataHtml,"stopRate"=>$stopRate,"defaultTable"=>$model->defaultTable);
     }
 
-    private function getHtmlForCity($comparisonHtmlData,$city){
-        $html = "";
+    private function getHtmlForCity($comparisonHtmlData,$city,$city_name=""){
+        $list = array("table"=>"","two_gross"=>"","stop_sum"=>0);
         $rate = 0;
-        if(!empty($html)&&key_exists($city,$comparisonHtmlData["stopRate"])){
+        if(key_exists($city,$comparisonHtmlData["stopRate"])){
             $list = $comparisonHtmlData["stopRate"][$city];
             if(!empty($list["newMoney"])){
                 $rate =($list["stopMoney"]/$list["newMoney"])*100;
@@ -326,14 +326,18 @@ EOF;
         }
         if(key_exists($city,$comparisonHtmlData["dataHtml"])){
             $list = $comparisonHtmlData["dataHtml"][$city];
-            $html.=$list["table"];
-            $html.="<p>每月新生意额要求:{$list["two_gross"]}</p>";
-            $html.="<p style='color: red;'>本周停单金额:{$list["stop_sum"]}</p>";
-            $html.="<p style='color: red;'>本月停单率:{$rate}</p><br/>";
         }
+        if(empty($list["table"])){//如果該地區沒有數據，調用默認表格
+            $list["table"] = str_replace(':city_name:',$city_name,$comparisonHtmlData["defaultTable"]);
+        }
+        $html=$list["table"];
+        $html.="<p>每月新生意额要求:{$list["two_gross"]}</p>";
+        $html.="<p style='color: red;'>本周停单金额:{$list["stop_sum"]}</p>";
+        $html.="<p style='color: red;'>本月停单率:{$rate}</p><br/>";
 
         return $html;
     }
+
 
     private function getIntegralList($date){
         $year = date("Y", strtotime($date));

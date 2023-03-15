@@ -11,6 +11,7 @@ class ComparisonForm extends CFormModel
     public $month_end_date;
 
 	public $data=array();
+	public $defaultTable="";
 
 	public $th_sum=1;//所有th的个数
 
@@ -227,17 +228,17 @@ class ComparisonForm extends CFormModel
 
     public function getDataToHtml(){
         $htmlList = array();
+        $bodyKey = $this->getDataAllKeyStr();
+        $tableHeader = $this->tableTopHtml();
+        $table = "<p><b>{$this->start_date}至{$this->end_date}新增、终止同比分析</b></p>";
+        $table.= '<div style="min-height:.01%;overflow-x: auto">';
+        $table.= '<table border="1" cellpadding="0" cellspacing="0" style="table-layout:fixed;width: 100%;max-width: 100%;border-collapse:collapse">';
+        $table.='<thead>';
+        $table.=$this->tableHeaderWidth();
+        $table.=$tableHeader;
+        $table.='</thead>';
+        $table.='<tbody>';
         if(!empty($this->data)){
-            $bodyKey = $this->getDataAllKeyStr();
-            $tableHeader = $this->tableTopHtml();
-            $table = "<p><b>{$this->start_date}至{$this->end_date}新增、终止同比分析</b></p>";
-            $table.= '<div style="min-height:.01%;overflow-x: auto">';
-            $table.= '<table border="1" cellpadding="0" cellspacing="0" style="table-layout:fixed;width: 100%;max-width: 100%;border-collapse:collapse">';
-            $table.='<thead>';
-            $table.=$this->tableHeaderWidth();
-            $table.=$tableHeader;
-            $table.='</thead>';
-            $table.='<tbody>';
             foreach ($this->data as $row){
                 $htmlList[$row["city"]]["two_gross"]=$row["two_gross"];
                 $htmlList[$row["city"]]["stop_sum"]=$row["stop_sum"]*-1;
@@ -256,6 +257,12 @@ class ComparisonForm extends CFormModel
                 $htmlList[$row["city"]]["table"].='</div>';
             }
         }
+        $this->defaultTable = $table."<tr>";
+        foreach ($bodyKey as $keyStr){
+            $text = $keyStr=="city_name"?":city_name:":"0";
+            $this->defaultTable.= "<td>{$text}</td>";
+        }
+        $this->defaultTable.= "</tr></tbody></table></div>";
         return $htmlList;
     }
 
