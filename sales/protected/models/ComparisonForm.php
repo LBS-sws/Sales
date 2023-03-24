@@ -141,15 +141,16 @@ class ComparisonForm extends CFormModel
                 "city_name"=>$row["city_name"],
                 "u_sum_last"=>0,//U系统金额(上一年)
                 "u_sum"=>0,//U系统金额
-                "stopWeekSum"=>0,//本週停單金額
+                "stopWeekSum"=>0,//本週停單金額（年金額）
+                "stopMonthSum"=>0,//本週停單金額（月金額）
                 "new_sum_last"=>0,//新增(上一年)
                 "new_sum"=>0,//新增
                 "new_rate"=>0,//新增对比比例
-                "stop_sum_last"=>0,//终止（上一年）
-                "stop_sum"=>0,//终止
+                "stop_sum_last"=>0,//终止（上一年）(年金額)
+                "stop_sum"=>0,//终止(年金額)
                 "stop_rate"=>0,//终止对比比例
                 "net_sum_last"=>0,//总和（上一年）
-                "net_sum"=>0,//总和
+                "net_sum"=>0,//总和(年金額)
                 "net_rate"=>0,//总和对比比例
                 "two_gross"=>$setRow?floatval($setRow["two_gross"]):0,
                 "two_gross_rate"=>0,
@@ -158,9 +159,12 @@ class ComparisonForm extends CFormModel
             );
         }
         if($row["paid_type"]=="M"){//月金额
-            $money = $row["amt_paid"]*$row["ctrt_period"];
+            $money = $row["amt_paid"]*$row["ctrt_period"];//年金額
+            $monthMoney = $row["ctrt_period"];//月金額
         }else{
             $money = $row["amt_paid"];
+            $monthMoney = empty($row["ctrt_period"])?0:$row["amt_paid"]/$row["ctrt_period"];
+            $monthMoney = round($monthMoney,2);
         }
         if($year==$this->comparison_year){
             $newStr = "new_sum";
@@ -178,6 +182,7 @@ class ComparisonForm extends CFormModel
             case "T"://终止
                 if(strtotime($this->week_start_date)<=strtotime($row["status_dt"])){
                     $data[$city]["stopWeekSum"] += $money;
+                    $data[$city]["stopMonthSum"] += $monthMoney;
                 }
                 $money *= -1;
                 $data[$city][$stopStr] += $money;
@@ -251,8 +256,10 @@ class ComparisonForm extends CFormModel
                 $htmlList[$row["city"]]["stopRate"]=$this->comparisonRate($stopSum,$newSum);
                 //目標金額
                 $htmlList[$row["city"]]["twoGross"]=$row["two_gross"];
-                //本周停单金额
+                //本周停单金额(年金額)
                 $htmlList[$row["city"]]["stopWeekSum"]=$row["stopWeekSum"];
+                //本周停单金额(月金額)
+                $htmlList[$row["city"]]["stopMonthSum"]=$row["stopMonthSum"];
                 $htmlList[$row["city"]]["table"]=$table;
                 $this->resetTdRow($row);
                 $htmlList[$row["city"]]["table"].='<tr>';
