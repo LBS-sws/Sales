@@ -28,7 +28,7 @@ class SalesMinController extends Controller
 				'expression'=>array('SalesMinController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view','edit','test'),
+				'actions'=>array('index','view','edit','test','testU'),
 				'expression'=>array('SalesMinController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -40,6 +40,15 @@ class SalesMinController extends Controller
 	public function actionTest(){
 	    $model = new TestForm();
 	    $model->run();
+	    Yii::app()->end();
+    }
+
+	public function actionTestU(){
+        $year = date("Y");
+        $month = date("n");
+        echo "Year:{$year}<br/>Month:{$month}<br/><br/>";
+        $json = Invoice::getActualAmount($year,$month);
+        var_dump($json);
 	    Yii::app()->end();
     }
 

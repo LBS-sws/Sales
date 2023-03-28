@@ -97,8 +97,25 @@ class ComparisonForm extends CFormModel
 
         $this->insertUData($this->start_date,$this->end_date,$data);
         $this->insertUData($lastStartDate,$lastEndDate,$data);
+        $this->insertUServiceData($this->start_date,$data);//同步U系統的服務金額
         $this->data = $data;
         return true;
+    }
+
+    private function insertUServiceData($startDate,&$data){
+        $year = date("Y",strtotime($startDate));
+        $month = date("n",strtotime($startDate));
+        $json = Invoice::getActualAmount($year,$month);
+        if($json["message"]==="Success"){
+            $jsonData = $json["data"];
+            foreach ($jsonData as $row){
+                $city = $row["city"];
+                $money = is_numeric($row["actual_amt"])?floatval($row["actual_amt"]):0;
+                if(key_exists($city,$data)){
+                    $data[$city]["uServiceMoney"]+=$money;
+                }
+            }
+        }
     }
 
     private function insertUData($startDate,$endDate,&$data){
@@ -143,6 +160,7 @@ class ComparisonForm extends CFormModel
                 "u_sum"=>0,//U系统金额
                 "stopWeekSum"=>0,//本週停單金額（年金額）
                 "stopMonthSum"=>0,//本週停單金額（月金額）
+                "uServiceMoney"=>0,//U系統內的實際服務金額（月）
                 "new_sum_last"=>0,//新增(上一年)
                 "new_sum"=>0,//新增
                 "new_rate"=>0,//新增对比比例
@@ -251,15 +269,17 @@ class ComparisonForm extends CFormModel
         if(!empty($this->data)){
             foreach ($this->data as $row){
                 $stopSum = $row["stop_sum"]>=0?$row["stop_sum"]:$row["stop_sum"]*-1;//本月終止金額
-                $newSum = $row["new_sum"]-$row["u_sum"];//本月新增金額
+                $uServiceMoney = $row["uServiceMoney"];//U系統內的實際服務金額
                 //本月停單率
-                $htmlList[$row["city"]]["stopRate"]=$this->comparisonRate($stopSum,$newSum);
+                $htmlList[$row["city"]]["stopRate"]=$this->comparisonRate($stopSum,$uServiceMoney);
                 //目標金額
                 $htmlList[$row["city"]]["twoGross"]=$row["two_gross"];
                 //本周停单金额(年金額)
                 $htmlList[$row["city"]]["stopWeekSum"]=$row["stopWeekSum"];
                 //本周停单金额(月金額)
                 $htmlList[$row["city"]]["stopMonthSum"]=$row["stopMonthSum"];
+                //U系統內的實際服務金額(月)
+                $htmlList[$row["city"]]["uServiceMoney"]=$row["uServiceMoney"];
                 $htmlList[$row["city"]]["table"]=$table;
                 $this->resetTdRow($row);
                 $htmlList[$row["city"]]["table"].='<tr>';

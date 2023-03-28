@@ -318,7 +318,7 @@ EOF;
     }
 
     private function getHtmlForCity($comparisonHtmlData,$city,$city_name=""){
-        $list = array("table"=>"","twoGross"=>"","stopWeekSum"=>0,"stopMonthSum"=>0,"stopRate"=>0);
+        $list = array("table"=>"","twoGross"=>"","stopWeekSum"=>0,"stopMonthSum"=>0,"stopRate"=>0,"uServiceMoney"=>0);
         if(key_exists($city,$comparisonHtmlData["dataHtml"])){
             $list = $comparisonHtmlData["dataHtml"][$city];
         }
@@ -329,7 +329,7 @@ EOF;
         $html.="<p>每月新生意额要求:{$list["twoGross"]}</p>";
         $html.="<p style='color: red;'>本周停单年金额:{$list["stopWeekSum"]}</p>";
         $html.="<p style='color: red;'>本周停单月金额:{$list["stopMonthSum"]}</p>";
-        $html.="<p style='color: red;'>本月停单率:{$list["stopRate"]}</p><br/>";
+        $html.="<p style='color: red;' data-u='{$list["uServiceMoney"]}'>本月停单率:{$list["stopRate"]}</p><br/>";
 
         return $html;
     }
