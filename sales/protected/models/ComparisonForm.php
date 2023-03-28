@@ -111,7 +111,7 @@ class ComparisonForm extends CFormModel
             foreach ($jsonData as $row){
                 $city = $row["city"];
                 $money = is_numeric($row["actual_amt"])?floatval($row["actual_amt"]):0;
-                if(key_exists($city,$data)){
+                if($row["service"]!="销货账单"&&key_exists($city,$data)){
                     $data[$city]["uServiceMoney"]+=$money;
                 }
             }
