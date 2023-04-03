@@ -72,7 +72,7 @@ class ComparisonForm extends CFormModel
         $where="(a.status_dt BETWEEN '{$this->start_date}' and '{$this->end_date}')";
         $where.="or (a.status_dt BETWEEN '{$lastStartDate}' and '{$lastEndDate}')";
         $rows = Yii::app()->db->createCommand()
-            ->select("a.status_dt,a.status,com.code,com.name,f.rpt_cat,f.description as type_name,f.single,a.city,a.service,a.company_name,g.description as nature_name,g.rpt_cat as nature_rpt_cat,a.nature_type,a.paid_type,a.amt_paid,a.ctrt_period,a.b4_paid_type,a.b4_amt_paid
+            ->select("a.status_dt,a.status,a.reason,com.code,com.name,f.rpt_cat,f.description as type_name,f.single,a.city,a.service,a.company_name,g.description as nature_name,g.rpt_cat as nature_rpt_cat,a.nature_type,a.paid_type,a.amt_paid,a.ctrt_period,a.b4_paid_type,a.b4_amt_paid
             ,b.region,b.name as city_name,c.name as region_name")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("swoper{$suffix}.swo_company com","com.id=a.company_id")
@@ -205,12 +205,14 @@ class ComparisonForm extends CFormModel
                     $data[$city]["stopWeekSum"] += $money;
                     $data[$city]["stopMonthSum"] += $monthMoney;
                 }
-                $data[$city]["stopSumOnly"] += $monthMoney;
-                if($monthMoney>=1000){
-                    $stopList = $row;
-                    $stopList["stopMoneyForMonth"] = $monthMoney;
-                    $stopList["stopMoneyForYear"] = $money;
-                    $data[$city]["stopListOnly"][] = $stopList;
+                if($this->comparison_year==$year){
+                    $data[$city]["stopSumOnly"] += $monthMoney;
+                    if($monthMoney>=1000){
+                        $stopList = $row;
+                        $stopList["stopMoneyForMonth"] = $monthMoney;
+                        $stopList["stopMoneyForYear"] = $money;
+                        $data[$city]["stopListOnly"][] = $stopList;
+                    }
                 }
                 $money *= -1;
                 $data[$city][$stopStr] += $money;
