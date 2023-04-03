@@ -37,9 +37,9 @@ class SalesMinController extends Controller
 		);
 	}
 
-	public function actionTest(){
+	public function actionTest($date="",$emailBool=false){
 	    $model = new TestForm();
-	    $model->run();
+	    $model->run($date,$emailBool);
 	    Yii::app()->end();
     }
 

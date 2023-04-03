@@ -1,10 +1,10 @@
 <?php
 class TestForm
 {
-    public function run()
+    public function run($nowDate="",$emailBool=false)
     {
         $suffix = Yii::app()->params['envSuffix'];
-        $firstDay = date("Y-m-d");
+        $firstDay = !empty($nowDate)?date("Y-m-d",strtotime($nowDate)):date("Y-m-d");
         $arr['start_dt'] = date("Y-m-d", strtotime("$firstDay - 6 day"));
         $arr['end_dt'] = $firstDay;
         $month = date("m",strtotime($arr['start_dt']));
@@ -189,9 +189,23 @@ EOF;
                         $message = str_replace(':sumIntegral:',$sumIntegral,$message);
                         $lcu = "admin";
                         $comparisonHtml = $this->getHtmlForCity($comparisonHtmlData,$k,$city);
+
                         echo $subject."<br/>";
                         echo $comparisonHtml.$message;
                         echo "<br/>toAdr:".$to_addr."<br/>";
+                        if($emailBool){
+                            Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
+                                'request_dt' => date('Y-m-d H:i:s'),
+                                'from_addr' => $from_addr,
+                                'to_addr' => $to_addr,
+                                'subject' => $subject,//郵件主題
+                                'description' => $description,//郵件副題
+                                'message' => $comparisonHtml.$message,//郵件內容（html）
+                                'status' => "P",
+                                'lcu' => $lcu,
+                                'lcd' => date('Y-m-d H:i:s'),
+                            ));
+                        }
                         echo "end!<br/>";
                     }else{
                         //发送邮件
@@ -289,6 +303,19 @@ EOF;
                         echo $subject."<br/>";
                         echo $comparisonHtml.$message;
                         echo "<br/>toAdr:".$to_addr."<br/>";
+                        if($emailBool){
+                            Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
+                                'request_dt' => date('Y-m-d H:i:s'),
+                                'from_addr' => $from_addr,
+                                'to_addr' => $to_addr,
+                                'subject' => $subject,//郵件主題
+                                'description' => $description,//郵件副題
+                                'message' => $comparisonHtml.$message,//郵件內容（html）
+                                'status' => "P",
+                                'lcu' => $lcu,
+                                'lcd' => date('Y-m-d H:i:s'),
+                            ));
+                        }
                         echo "end!<br/><br/><br/>";
                         }
                     }
