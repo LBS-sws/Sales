@@ -383,6 +383,7 @@ EOF;
         $table.='<th>服务内容</th>';
         $table.='<th>月金额</th>';
         $table.='<th>年金额</th>';
+        $table.='<th>变动原因</th>';
         $table.='</tr></thead><tbody>';
         if(!empty($stopList)){
             foreach ($stopList as $row){
@@ -394,6 +395,7 @@ EOF;
                 $table.='<td>'.$row["service"].'</td>';
                 $table.='<td>'.$row["stopMoneyForMonth"].'</td>';
                 $table.='<td>'.$row["stopMoneyForYear"].'</td>';
+                $table.='<td>'.$row["reason"].'</td>';
                 $table.='</tr>';
             }
         }
