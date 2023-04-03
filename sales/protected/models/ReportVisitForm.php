@@ -1848,7 +1848,7 @@ class ReportVisitForm extends CReportForm
             $sqls="select a.name as cityname ,d.name as names from security$suffix.sec_city a	,hr$suffix.hr_binding b	 ,security$suffix.sec_user  c ,hr$suffix.hr_employee d 
                 where c.username='$peoples' and b.user_id='".$peoples."' and b.employee_id=d.id and c.city=a.code";
             $cname = Yii::app()->db->createCommand($sqls)->queryRow();
-            $sql1="select id  from sal_visit where username='".$peoples."'  and  visit_dt >= '$start_dt'and visit_dt <= '$end_dt' and visit_obj like '%10%'";
+            $sql1="select id,visit_dt  from sal_visit where username='".$peoples."'  and  visit_dt >= '$start_dt'and visit_dt <= '$end_dt' and visit_obj like '%10%'";
             $arr = Yii::app()->db->createCommand($sql1)->queryAll();
             $start_dt1= date("Y-m-01", strtotime($start_dt));
             $end_dt1=date("Y-m-31", strtotime($end_dt));
@@ -1902,7 +1902,7 @@ class ReportVisitForm extends CReportForm
                 $sql4="select field_value from sal_visit_info where visit_id='".$arrs['id']."' and field_id='svc_C7' ";
                 $money4 = Yii::app()->db->createCommand($sql4)->queryAll();
                 if(!empty($money4[0]['field_value'])){
-                    echo "<div class='hide' data-type='svc_c7' data-id='{$arrs['id']}' data-monty='{$money4[0]['field_value']}'></div>";
+                    echo "<div class='hide' data-type='svc_c7' data-id='{$arrs['id']}' data-date='{$arrs['visit_dt']}' data-monty='{$money4[0]['field_value']}'></div>";
                     $svc_C7=$svc_C7+1;
                     $svc_C7s+=$money4[0]['field_value'];
                 }
