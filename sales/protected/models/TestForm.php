@@ -318,7 +318,15 @@ EOF;
     }
 
     private function getHtmlForCity($comparisonHtmlData,$city,$city_name=""){
-        $list = array("table"=>"","twoGross"=>"","stopWeekSum"=>0,"stopMonthSum"=>0,"stopRate"=>0,"uServiceMoney"=>0);
+        $list = array(
+            "table"=>"",
+            "twoGross"=>"",
+            "stopWeekSum"=>0,
+            "stopMonthSum"=>0,
+            "stopRate"=>0,
+            "uServiceMoney"=>0,
+            "stopListOnly"=>array()
+        );
         if(key_exists($city,$comparisonHtmlData["dataHtml"])){
             $list = $comparisonHtmlData["dataHtml"][$city];
         }
@@ -329,9 +337,41 @@ EOF;
         $html.="<p>每月新生意额要求:{$list["twoGross"]}</p>";
         $html.="<p style='color: red;'>本周停单年金额:{$list["stopWeekSum"]}</p>";
         $html.="<p style='color: red;'>本周停单月金额:{$list["stopMonthSum"]}</p>";
-        $html.="<p style='color: red;' data-u='{$list["uServiceMoney"]}'>本月停单率:{$list["stopRate"]}</p><br/>";
+        $html.="<p style='color: red;' data-u='{$list["uServiceMoney"]}'>本月停单率:{$list["stopRate"]}</p>";
+        $html.="<p>月金额超过1000元/月的停单客户明细如下：</p>";
+        $html.=self::stopTableHtmlForMonth($list["stopListOnly"]);
+        $html.="<br/>";
 
         return $html;
+    }
+
+    public static function stopTableHtmlForMonth($stopList=array()){
+        $table = "";
+        $table.= '<table border="1" cellpadding="0" cellspacing="0" style="width: 100%;">';
+        $table.='<thead><tr>';
+        $table.='<th>终止日期</th>';
+        $table.='<th>客户编号及名称</th>';
+        $table.='<th>客户类别</th>';
+        $table.='<th>性质</th>';
+        $table.='<th>服务内容</th>';
+        $table.='<th>月金额</th>';
+        $table.='<th>年金额</th>';
+        $table.='</tr></thead><tbody>';
+        if(!empty($stopList)){
+            foreach ($stopList as $row){
+                $table.='<tr>';
+                $table.='<td>'.General::toMyDate($row["status_dt"]).'</td>';
+                $table.='<td>'.$row["code"].$row["name"].'</td>';
+                $table.='<td>'.$row["type_name"].'</td>';
+                $table.='<td>'.$row["nature_name"].'</td>';
+                $table.='<td>'.$row["service"].'</td>';
+                $table.='<td>'.$row["stopMoneyForMonth"].'</td>';
+                $table.='<td>'.$row["stopMoneyForYear"].'</td>';
+                $table.='</tr>';
+            }
+        }
+        $table.='</tbody></table>';
+        return $table;
     }
 
     private function getIntegralList($date){

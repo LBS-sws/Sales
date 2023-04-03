@@ -72,9 +72,10 @@ class ComparisonForm extends CFormModel
         $where="(a.status_dt BETWEEN '{$this->start_date}' and '{$this->end_date}')";
         $where.="or (a.status_dt BETWEEN '{$lastStartDate}' and '{$lastEndDate}')";
         $rows = Yii::app()->db->createCommand()
-            ->select("a.status_dt,a.status,f.rpt_cat,f.single,a.city,g.rpt_cat as nature_rpt_cat,a.nature_type,a.paid_type,a.amt_paid,a.ctrt_period,a.b4_paid_type,a.b4_amt_paid
+            ->select("a.status_dt,a.status,com.code,com.name,f.rpt_cat,f.description as type_name,f.single,a.city,a.service,a.company_name,g.description as nature_name,g.rpt_cat as nature_rpt_cat,a.nature_type,a.paid_type,a.amt_paid,a.ctrt_period,a.b4_paid_type,a.b4_amt_paid
             ,b.region,b.name as city_name,c.name as region_name")
             ->from("swoper{$suffix}.swo_service a")
+            ->leftJoin("swoper{$suffix}.swo_company com","com.id=a.company_id")
             ->leftJoin("swoper{$suffix}.swo_customer_type f","a.cust_type=f.id")
             ->leftJoin("swoper{$suffix}.swo_nature g","a.nature_type=g.id")
             ->leftJoin("security{$suffix}.sec_city b","a.city=b.code")
@@ -160,6 +161,8 @@ class ComparisonForm extends CFormModel
                 "u_sum"=>0,//U系统金额
                 "stopWeekSum"=>0,//本週停單金額（年金額）
                 "stopMonthSum"=>0,//本週停單金額（月金額）
+                "stopSumOnly"=>0,//本月停單金額（月）
+                "stopListOnly"=>array(),//本月停單列表（月金額超過1000的數據）
                 "uServiceMoney"=>0,//U系統內的實際服務金額（月）
                 "new_sum_last"=>0,//新增(上一年)
                 "new_sum"=>0,//新增
@@ -178,7 +181,7 @@ class ComparisonForm extends CFormModel
         }
         if($row["paid_type"]=="M"){//月金额
             $money = $row["amt_paid"]*$row["ctrt_period"];//年金額
-            $monthMoney = $row["ctrt_period"];//月金額
+            $monthMoney = $row["amt_paid"];//月金額
         }else{
             $money = $row["amt_paid"];
             $monthMoney = empty($row["ctrt_period"])?0:$row["amt_paid"]/$row["ctrt_period"];
@@ -201,6 +204,13 @@ class ComparisonForm extends CFormModel
                 if(strtotime($this->week_start_date)<=strtotime($row["status_dt"])){
                     $data[$city]["stopWeekSum"] += $money;
                     $data[$city]["stopMonthSum"] += $monthMoney;
+                }
+                $data[$city]["stopSumOnly"] += $monthMoney;
+                if($monthMoney>=1000){
+                    $stopList = $row;
+                    $stopList["stopMoneyForMonth"] = $monthMoney;
+                    $stopList["stopMoneyForYear"] = $money;
+                    $data[$city]["stopListOnly"][] = $stopList;
                 }
                 $money *= -1;
                 $data[$city][$stopStr] += $money;
@@ -268,7 +278,7 @@ class ComparisonForm extends CFormModel
         $table.='<tbody>';
         if(!empty($this->data)){
             foreach ($this->data as $row){
-                $stopSum = $row["stop_sum"]>=0?$row["stop_sum"]:$row["stop_sum"]*-1;//本月終止金額
+                $stopSum = $row["stopSumOnly"]>=0?$row["stopSumOnly"]:$row["stopSumOnly"]*-1;//本月終止金額
                 $uServiceMoney = $row["uServiceMoney"];//U系統內的實際服務金額
                 //本月停單率
                 $htmlList[$row["city"]]["stopRate"]=$this->comparisonRate($stopSum,$uServiceMoney);
@@ -280,12 +290,14 @@ class ComparisonForm extends CFormModel
                 $htmlList[$row["city"]]["stopMonthSum"]=$row["stopMonthSum"];
                 //U系統內的實際服務金額(月)
                 $htmlList[$row["city"]]["uServiceMoney"]=$row["uServiceMoney"];
+                //停單金額超過1000的客戶資料
+                $htmlList[$row["city"]]["stopListOnly"]=$row["stopListOnly"];
                 $htmlList[$row["city"]]["table"]=$table;
                 $this->resetTdRow($row);
                 $htmlList[$row["city"]]["table"].='<tr>';
                 foreach ($bodyKey as $keyStr){
                     $text = key_exists($keyStr,$row)?$row[$keyStr]:"0";
-                    $tdClass =(strpos($text,'%')!==false&&floatval($text)>=100)?"color:green":"";
+                    $tdClass = ComparisonForm::getTextColorForKeyStr($text,$keyStr);
                     $text = ComparisonForm::showNum($text);
                     $htmlList[$row["city"]]["table"].="<td style='text-align: center;{$tdClass}'>{$text}</td>";
                 }
@@ -302,6 +314,19 @@ class ComparisonForm extends CFormModel
         }
         $this->defaultTable.= "</tr></tbody></table></div>";
         return $htmlList;
+    }
+
+    //設置百分比顏色
+    public static function getTextColorForKeyStr($text,$keyStr){
+        $tdClass = "";
+        if(strpos($text,'%')!==false){
+            if(!in_array($keyStr,array("new_rate","stop_rate","net_rate"))){
+                $tdClass =floatval($text)<=60?"color:red":$tdClass;
+            }
+            $tdClass =floatval($text)>=100?"color:green":$tdClass;
+        }
+
+        return $tdClass;
     }
 
     private function getTopArr(){
