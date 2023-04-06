@@ -29,7 +29,8 @@ class FivestepForm extends CFormModel
 	public $dir_score_user;
 	public $remarks;
 	public $five_type;
-	
+	public $staff_status=0;
+
 	protected $dir_score_flag = false;
 	protected $mgr_score_flag = false;
 	protected $sup_score_flag = false;
@@ -124,7 +125,7 @@ class FivestepForm extends CFormModel
 		$suffix = Yii::app()->params['envSuffix'];
 		$citylist = Yii::app()->user->city_allow();
 		$user = Yii::app()->user->id;
-		$sql = "select a.*, b.name as city_name, 
+		$sql = "select a.*, b.name as city_name, employee.staff_status,
 				d.field_value as mgr_score, e.field_value as dir_score, m.field_value as sup_score,
 				f.field_value as mgr_score_dt, g.field_value as dir_score_dt, n.field_value as sup_score_dt,
 				h.field_value as mgr_score_user, i.field_value as dir_score_user, o.field_value as sup_score_user,
@@ -134,6 +135,8 @@ class FivestepForm extends CFormModel
 				p.field_value as sup_remarks
 				from sal_fivestep a 
 				left outer join security$suffix.sec_city b on a.city=b.code
+				left outer join hr$suffix.hr_binding bind on a.username = bind.user_id
+				left outer join hr$suffix.hr_employee employee on bind.employee_id = employee.id
 				left outer join sal_fivestep_info d on a.id=d.five_id and d.field_id='mgr_score'
 				left outer join sal_fivestep_info e on a.id=e.five_id and e.field_id='dir_score'
 				left outer join sal_fivestep_info f on a.id=f.five_id and f.field_id='mgr_score_dt'
@@ -176,6 +179,11 @@ class FivestepForm extends CFormModel
 			$this->filename = $row['filename'];
 			$this->filetype = $row['filetype'];
 			$this->five_type = $row['five_type'];
+			$this->staff_status = $row['staff_status'];
+			if($this->staff_status=-1){//已离职
+                $this->staff_name.= Yii::t("app","(Resign)");
+                $this->filename = null;
+            }
 		}
 		return true;
 	}
@@ -571,4 +579,41 @@ class FivestepForm extends CFormModel
 	public function isRemoveRight() {
 		return Yii::app()->user->validFunction('CN11');
 	}
+
+	//手动添加离职员工的销售五部曲
+	public function AddOutEmployee($step=2,$employee_id=0,$staff_id=""){
+        $step = is_numeric($step)?intval($step):2;
+        $employee_id = is_numeric($employee_id)?intval($employee_id):0;
+        $suffix = Yii::app()->params['envSuffix'];
+        $staffRow=array();
+        if(!empty($employee_id)){
+            $staffRow = Yii::app()->db->createCommand()
+                ->select("a.entry_time,a.city,a.name,a.code,b.user_id")
+                ->from("hr$suffix.hr_employee a")
+                ->leftJoin("hr$suffix.hr_binding b","b.employee_id=a.id")
+                ->where("a.staff_status=-1 and a.id={$employee_id}")->queryRow();
+        }
+        if(!empty($staff_id)){
+            $staffRow = Yii::app()->db->createCommand()
+                ->select("b.entry_time,b.city,b.name,b.code,a.user_id")
+                ->from("hr$suffix.hr_binding a")
+                ->leftJoin("hr$suffix.hr_employee b","a.employee_id=b.id")
+                ->where("b.staff_status=-1 and a.user_id=:user_id",array(":user_id"=>$staff_id))->queryRow();
+        }
+        if(empty($staffRow)){
+            echo "error:not find username!<br/>";
+        }else{
+            Yii::app()->db->createCommand()->insert("sal_fivestep",array(
+                "username"=>$staffRow["user_id"],
+                "rec_dt"=>$staffRow["entry_time"],
+                "city"=>$staffRow["city"],
+                "five_type"=>0,
+                "step"=>$step,
+                "filename"=>"已删除",
+                "status"=>"Y",
+                "lcu"=>Yii::app()->user->id,
+            ));
+            echo "add success :{$staffRow["name"]}<br/>";
+        }
+    }
 }

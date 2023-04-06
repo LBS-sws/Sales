@@ -83,7 +83,7 @@ class FivestepController extends Controller
 //				'expression'=>array('FivestepController','allowGeneralUse'),
 //			),
 			array('allow', 
-				'actions'=>array('new','edit','delete','save','ajaxsave'),
+				'actions'=>array('new','edit','delete','save','ajaxsave','addOutEmployee'),
 				'expression'=>array('FivestepController','allowReadWrite'),
 			),
 			array('allow', 
@@ -111,6 +111,13 @@ class FivestepController extends Controller
 		$model->determinePageNum($pageNum);
 		$model->retrieveDataByPage($model->pageNum);
 		$this->render('index',array('model'=>$model));
+	}
+
+	public function actionAddOutEmployee($step=2,$employee_id=0,$staff_id=0)
+	{//手动添加离职员工数据
+        $model = new FivestepForm();
+        $model->addOutEmployee($step,$employee_id,$staff_id);
+        Yii::app()->end();
 	}
 
 /*

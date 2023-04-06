@@ -48,7 +48,7 @@ class FivestepList extends CListPageModel
 		$suffix = Yii::app()->params['envSuffix'];
 		$citylist = Yii::app()->user->city_allow();
 		$user = Yii::app()->user->id;
-		$sql1 = "select a.*, b.name as city_name, f.name as staff_name, f.code as staff_code, 
+		$sql1 = "select a.*, b.name as city_name, f.name as staff_name, f.code as staff_code,f.staff_status, 
 				d.field_value as mgr_score, e.field_value as dir_score, g.field_value as sup_score
 				from sal_fivestep a 
 				inner join hr$suffix.hr_binding c on a.username = c.user_id
@@ -118,11 +118,12 @@ class FivestepList extends CListPageModel
 		if (count($records) > 0) {
 			$stepname = FivestepForm::getStepList();
 			foreach ($records as $k=>$record) {
+			    $staffName = $record['staff_status']==-1?$record['staff_name'].Yii::t("app","(Resign)"):$record['staff_name'];
 				$this->attr[] = array(
 					'id'=>$record['id'],
 					'username'=>$record['username'],
 					'staff_code'=>$record['staff_code'],
-					'staff_name'=>$record['staff_name'],
+					'staff_name'=>$staffName,
 					'filename'=>$record['filename'],
 					'status'=>$record['status'],
 //					'status'=>$this->getStatusDesc(record['status']),
