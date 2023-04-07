@@ -180,7 +180,7 @@ class FivestepForm extends CFormModel
 			$this->filetype = $row['filetype'];
 			$this->five_type = $row['five_type'];
 			$this->staff_status = $row['staff_status'];
-			if($this->staff_status=-1){//已离职
+			if($this->staff_status==-1){//已离职
                 $this->staff_name.= Yii::t("app","(Resign)");
                 $this->filename = null;
             }
