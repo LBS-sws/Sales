@@ -166,7 +166,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 				<?php echo $form->labelEx($model,Yii::t('sales','客户名称（包括分店名）'),array('class'=>"col-sm-2 control-label")); ?>
 				<div class="col-sm-5">
 					<?php 
-						if ($model->isReadOnly() || $model->status=='Y') {
+						if ($model->isReadOnly()) {
 							echo $form->textField($model, 'cust_name', array('readonly'=>true));
 						} else {
 							$list = empty($model->cust_name) ? array() : array($model->cust_name=>$model->cust_name);
@@ -524,7 +524,7 @@ $('#VisitForm_cust_type_group').on('change',function() {
 EOF;
 Yii::app()->clientScript->registerScript('select2_1',$js,CClientScript::POS_READY);
 
-if (!$model->isReadOnly() && $model->status=='N') {
+if (!$model->isReadOnly()) {
 	$js = <<<EOF
 $('#VisitForm_cust_name').select2({
 	tags: true,
