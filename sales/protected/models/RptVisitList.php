@@ -312,7 +312,7 @@ class RptVisitList extends CReport {
             if($this->shift=='Z'){//转移拜访
                 $clause.= " and a.shift='Z' ";
             }else{//非转移拜访
-                $clause.= " and a.shift!='Z' ";
+                $clause.= " and (a.shift<>'Z' or a.shift is null) ";
             }
         }
 		$order = $this->readAll	? " order by a.visit_dt desc, f.code" : " order by a.visit_dt desc, b.name, f.code";

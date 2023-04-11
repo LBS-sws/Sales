@@ -97,7 +97,7 @@ class VisitList extends CListPageModel
             if($this->shift=='Z'){//转移拜访
                 $x = " and a.shift='Z' ";
             }else{//非转移拜访
-                $x = " and a.shift!='Z' ";
+                $x = " and (a.shift<>'Z' or a.shift is null) ";
             }
             $sql1 .= $x;
             $sql2 .= $x;
@@ -265,7 +265,7 @@ class VisitList extends CListPageModel
             if($this->shift=='Z'){//转移拜访
                 $x = " and a.shift='Z' ";
             }else{//非转移拜访
-                $x = " and a.shift!='Z' ";
+                $x = " and (a.shift<>'Z' or a.shift is null) ";
             }
             $sql1 .= $x;
             $sql2 .= $x;
