@@ -1,6 +1,7 @@
 <?php
 class RptVisitList extends CReport {
 	protected $readAll = false;
+	protected $shift=null;
 	protected $dateRangeValue = '0';
 	
 	protected function fields() {
@@ -258,6 +259,7 @@ class RptVisitList extends CReport {
 		$this->searchColumns = json_decode($this->criteria['SEARCH_COL']);
 		$this->staticSearchColumns = json_decode($this->criteria['STATIC_COL']);
 		$criteria = json_decode($this->criteria['CRITERIA']);
+		$this->shift = isset($criteria->shift)?$criteria->shift:null;
 		$this->searchField = $criteria->searchField;
 		$this->searchValue = $criteria->searchValue;
 		$this->filter = json_decode($criteria->filter);
@@ -306,6 +308,13 @@ class RptVisitList extends CReport {
 			$d = date('Y-m-d', strtotime('-'.$this->dateRangeValue.' months'));
 			$clause .= " and a.visit_dt >= '$d' ";
 		}
+        if(!empty($this->shift)){
+            if($this->shift=='Z'){//转移拜访
+                $clause.= " and a.shift='Z' ";
+            }else{//非转移拜访
+                $clause.= " and a.shift!='Z' ";
+            }
+        }
 		$order = $this->readAll	? " order by a.visit_dt desc, f.code" : " order by a.visit_dt desc, b.name, f.code";
 		$sql = $sql.$clause.$order;
 

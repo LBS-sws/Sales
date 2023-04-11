@@ -39,14 +39,21 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit';
 	</div>
 	</div></div>
 	<?php
-		$this->widget('ext.layout.ListPageWidget', array(
-			'title'=>Yii::t('sales','Visit List'),
-			'model'=>$model,
-				'viewhdr'=>'//visit/_listhdr',
-				'viewdtl'=>'//visit/_listdtl',
-				'advancedSearch'=>true,
-				'hasDateButton'=>true,
-		));
+    $search_add_html="";
+    $modelName = get_class($model);
+    $search_add_html .= TbHtml::dropDownList($modelName.'[shift]',$model->shift,VisitList::getShiftList(),
+        array("class"=>"form-control submit_shift"));
+
+    $this->widget('ext.layout.ListPageWidget', array(
+        'title'=>Yii::t('sales','Visit List'),
+        'model'=>$model,
+        'viewhdr'=>'//visit/_listhdr',
+        'viewdtl'=>'//visit/_listdtl',
+        'advancedSearch'=>true,
+        'hasDateButton'=>true,
+        'hasSearchBar'=>true,
+        'search_add_html'=>$search_add_html,
+    ));
 	?>
 </section>
 
@@ -150,6 +157,12 @@ function showHelp() {
 EOF;
 Yii::app()->clientScript->registerScript('helpClick',$js,CClientScript::POS_HEAD);
 
+$js = "
+    $('.submit_shift').on('change',function(){
+        $('form:first').submit();
+    });
+";
+Yii::app()->clientScript->registerScript('calcFunction',$js,CClientScript::POS_READY);
 $js = Script::genTableRowClick();
 Yii::app()->clientScript->registerScript('rowClick',$js,CClientScript::POS_READY);
 ?>

@@ -2,6 +2,8 @@
 
 class VisitList extends CListPageModel
 {
+    public $shift=null;
+
 	public function attributeLabels()
 	{
 		return array(	
@@ -20,6 +22,13 @@ class VisitList extends CListPageModel
             'quotation'=>Yii::t('sales','Quotation judgment'),
 		);
 	}
+
+    public function rules()
+    {
+        return array(
+            array('shift, attr, pageNum, noOfItem, totalRow, searchField, searchValue, orderField, orderType, filter, dateRangeValue','safe',),
+        );
+    }
 
 	public function searchColumns() {
 		$suffix = Yii::app()->params['envSuffix'];
@@ -84,6 +93,15 @@ class VisitList extends CListPageModel
 			$sql1 .= $x;
 			$sql2 .= $x;
 		}
+		if(!empty($this->shift)){
+            if($this->shift=='Z'){//转移拜访
+                $x = " and a.shift='Z' ";
+            }else{//非转移拜访
+                $x = " and a.shift!='Z' ";
+            }
+            $sql1 .= $x;
+            $sql2 .= $x;
+        }
 		$clause = "";
 		$static = $this->staticSearchColumns();
 		$columns = $this->searchColumns();
@@ -243,6 +261,15 @@ class VisitList extends CListPageModel
             $sql1 .= $x;
             $sql2 .= $x;
         }
+        if(!empty($this->shift)){
+            if($this->shift=='Z'){//转移拜访
+                $x = " and a.shift='Z' ";
+            }else{//非转移拜访
+                $x = " and a.shift!='Z' ";
+            }
+            $sql1 .= $x;
+            $sql2 .= $x;
+        }
         $clause = "";
         $static = $this->staticSearchColumns();
         $columns = $this->searchColumns();
@@ -357,6 +384,20 @@ class VisitList extends CListPageModel
     }
 
 
+    public function getCriteria() {
+        return array(
+            'shift'=>$this->shift,
+            'searchField'=>$this->searchField,
+            'searchValue'=>$this->searchValue,
+            'orderField'=>$this->orderField,
+            'orderType'=>$this->orderType,
+            'noOfItem'=>$this->noOfItem,
+            'pageNum'=>$this->pageNum,
+            'filter'=>$this->filter,
+            'dateRangeValue'=>$this->dateRangeValue,
+        );
+    }
+
 /*
     public function getCriteria() {
         return array(
@@ -433,4 +474,13 @@ class VisitList extends CListPageModel
 			throw new CHttpException(404,'Cannot update.'.$e->getMessage());
 		}
 	}
+
+	public static function getShiftList(){
+	    $list = array(
+            ""=>Yii::t("sales","-- all --"),
+            "Z"=>Yii::t("sales","shift staff"),
+            "A"=>Yii::t("sales","not shift staff")
+        );
+	    return $list;
+    }
 }

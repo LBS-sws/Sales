@@ -197,5 +197,9 @@ return array(
     'Nature'=>'性质',
 
     'min num'=>'当周最小拜访数量',
+
+    '-- all --'=>'--全部--',
+    'shift staff'=>'转移销售拜访',
+    'not shift staff'=>'非转移销售拜访',
 );
 ?>
