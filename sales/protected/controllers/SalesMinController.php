@@ -28,7 +28,7 @@ class SalesMinController extends Controller
 				'expression'=>array('SalesMinController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view','edit','test','testU'),
+				'actions'=>array('index','view','edit','test','testU','emailLast'),
 				'expression'=>array('SalesMinController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -36,6 +36,20 @@ class SalesMinController extends Controller
 			),
 		);
 	}
+
+	public function actionEmailLast($title="地区每周体检报告",$city=''){
+	    $sql = "subject like '%{$title}%'";
+	    if(!empty($city)){
+	        $cityName = General::getCityName($city);
+	        echo $cityName."<br/><br/>";
+	        $sql.=" and subject like '%{$cityName}%'";
+        }
+        $suffix = Yii::app()->params['envSuffix'];
+        $row = Yii::app()->db->createCommand()->select("subject,message,lcd")->from("swoper{$suffix}.swo_email_queue")
+            ->where($sql)->order("lcd desc")->queryRow();
+        var_dump($row);
+	    Yii::app()->end();
+    }
 
 	public function actionTest($date="",$emailBool=false){
 	    $model = new TestForm();
