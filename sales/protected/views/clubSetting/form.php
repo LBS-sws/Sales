@@ -133,7 +133,7 @@ Yii::app()->clientScript->registerScript('calcFunction',$js,CClientScript::POS_R
 $js = Script::genDeleteData(Yii::app()->createUrl('clubSetting/delete'));
 Yii::app()->clientScript->registerScript('deleteRecord',$js,CClientScript::POS_READY);
 
-if ($model->scenario=='new') {
+if ($model->scenario!='view') {
     $js = Script::genDatePicker(array(
         'effect_date',
     ));

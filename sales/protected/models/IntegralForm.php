@@ -518,7 +518,7 @@ class IntegralForm extends CFormModel
             }
         }
         $date = date("Y-m-d",strtotime("{$this->year}-{$this->month}-01"));
-        if($date>="2022-01-01"){
+        if($date>="2022-01-01" && $date<="2023-04-01"){
             $this->oneAndTwo = 1;
             $list["oneAndTwo"] = array(
                 "cust_type_name"=>"当月销售净化机器+隔油池金额小于1500",
