@@ -14,7 +14,7 @@ class ComparisonForm extends CFormModel
 	public $data=array();
 	public $defaultTable="";
 
-	public $th_sum=1;//所有th的个数
+	public $th_sum=2;//所有th的个数
 
 	/**
 	 * Declares customized attribute labels.
@@ -103,6 +103,28 @@ class ComparisonForm extends CFormModel
         return true;
     }
 
+    private function insertUActualMoney($startDay,$endDay,$data){
+        $list = array();
+        $suffix = Yii::app()->params['envSuffix'];
+        $rows = Yii::app()->db->createCommand()->select("b.Text,a.Fee,a.TermCount")
+            ->from("service{$suffix}.joborder a")
+            ->leftJoin("service{$suffix}.officecity f","a.City = f.City")
+            ->leftJoin("service{$suffix}.enums b","f.Office = b.EnumID and b.EnumType=8")
+            ->where("a.Status=3 and a.JobDate BETWEEN '{$startDay}' AND '{$endDay}'")
+            ->order("b.Text")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $city = $row["Text"];
+                $money = empty($row["TermCount"])?0:floatval($row["Fee"])/floatval($row["TermCount"]);
+                if(key_exists($city,$data)){
+                    $data[$city]["u_actual_money"]+=$money;
+                }
+            }
+        }
+        return $list;
+    }
+
     private function insertUServiceData($startDate,&$data){
         $year = date("Y",strtotime($startDate));
         $month = date("n",strtotime($startDate));
@@ -157,6 +179,7 @@ class ComparisonForm extends CFormModel
             $data[$city]=array(
                 "city"=>$city,
                 "city_name"=>$row["city_name"],
+                "u_actual_money"=>0,//服务金额
                 "u_sum_last"=>0,//U系统金额(上一年)
                 "u_sum"=>0,//U系统金额
                 "stopWeekSum"=>0,//本週停單金額（年金額）
@@ -335,6 +358,7 @@ class ComparisonForm extends CFormModel
         $monthStr = "（{$this->month_start_date} ~ {$this->month_end_date}）";
         $topList=array(
             array("name"=>Yii::t("summary","City"),"rowspan"=>2),//城市
+            array("name"=>Yii::t("summary","Actual monthly amount"),"rowspan"=>2),//服务生意额
             array("name"=>Yii::t("summary","YTD New").$monthStr,"background"=>"#f7fd9d",
                 "colspan"=>array(
                     array("name"=>$this->comparison_year-1),//对比年份
@@ -414,10 +438,10 @@ class ComparisonForm extends CFormModel
     private function tableHeaderWidth(){
         $html="<tr>";
         for($i=0;$i<$this->th_sum;$i++){
-            if(in_array($i,array(3,6,9,18,19,20,21))){
-                $width=90;
+            if(in_array($i,array(1,4,7,10,19,20,21,22))){
+                $width=110;
             }else{
-                $width=80;
+                $width=100;
             }
             $html.="<th style='height: 0px;line-height: 0px;border: none;overflow: hidden' data-width='{$width}' width='{$width}px'>{$i}</th>";
         }
@@ -427,7 +451,7 @@ class ComparisonForm extends CFormModel
     //获取td对应的键名
     private function getDataAllKeyStr(){
         $bodyKey = array(
-            "city_name","new_sum_last","new_sum","new_rate","stop_sum_last","stop_sum","stop_rate",
+            "city_name","u_actual_money","new_sum_last","new_sum","new_rate","stop_sum_last","stop_sum","stop_rate",
             "net_sum_last","net_sum","net_rate"
         );
         $bodyKey[]="two_gross";
