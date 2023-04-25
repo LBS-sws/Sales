@@ -75,8 +75,10 @@ class VisitForm extends CFormModel
 					'items'=>array(
 								'B1'=>array('name'=>Yii::t('sales','风扇机'),'type'=>'qty'),
 								'B2'=>array('name'=>Yii::t('sales','TC豪华'),'type'=>'qty'),
-								'B3'=>array('name'=>Yii::t('sales','水性喷机'),'type'=>'qty'),
-								'B4'=>array('name'=>Yii::t('sales','压缩香罐'),'type'=>'qty','eol'=>true),
+								'B3'=>array('name'=>Yii::t('sales','水性喷机'),'type'=>'qty','eol'=>true),
+								'B4'=>array('name'=>Yii::t('sales','压缩香罐'),'type'=>'qty'),
+								'B8'=>array('name'=>Yii::t('sales','饮水机租赁'),'type'=>'qty'),
+								'B9'=>array('name'=>Yii::t('sales','滤芯'),'type'=>'qty','eol'=>true),
 								'B5'=>array('name'=>Yii::t('sales','预估成交率').'(0-100%)','type'=>'pct'),
 								'B6'=>array('name'=>Yii::t('sales','合同年金额'),'type'=>'amount','eol'=>true),
 								'B7'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
