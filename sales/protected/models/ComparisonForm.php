@@ -148,6 +148,7 @@ class ComparisonForm extends CFormModel
                 $money = is_numeric($row["invoice_amt"])?floatval($row["invoice_amt"]):0;
                 if(key_exists($city,$data)){
                     if($year==$this->comparison_year){
+                        $data[$city]["u_actual_money"]+=$money;//服务生意额需要加上产品金额
                         $uStr = "u_sum";
                         $newStr = "new_sum";
                         $netStr = "net_sum";
