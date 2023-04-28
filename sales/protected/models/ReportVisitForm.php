@@ -1854,7 +1854,7 @@ class ReportVisitForm extends CReportForm
             $end_dt1=date("Y-m-31", strtotime($end_dt));
             $sql_rank="select now_score  from sal_rank where username='".$peoples."'  and  month >= '$start_dt1' and month <= '$end_dt1' order by month desc";//add order by desc
             $rank = Yii::app()->db->createCommand($sql_rank)->queryRow();
-            foreach ($arr as $id){
+            foreach ($arr as $id){//svc_H6(蔚諾服務的金額)
                 $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and field_value>'0' and visit_id='".$id['id']."'";
                 $sum = Yii::app()->db->createCommand($sqlid)->queryRow();
                 $sum_arr[]=$sum['sum'];
@@ -1902,7 +1902,7 @@ class ReportVisitForm extends CReportForm
                 $sql4="select field_value from sal_visit_info where visit_id='".$arrs['id']."' and field_id='svc_C7' ";
                 $money4 = Yii::app()->db->createCommand($sql4)->queryAll();
                 if(!empty($money4[0]['field_value'])){
-                    echo "<div class='hide' data-type='svc_c7' data-id='{$arrs['id']}' data-date='{$arrs['visit_dt']}' data-monty='{$money4[0]['field_value']}'></div>";
+                    //echo "<div class='hide' data-type='svc_c7' data-id='{$arrs['id']}' data-date='{$arrs['visit_dt']}' data-monty='{$money4[0]['field_value']}'></div>";
                     $svc_C7=$svc_C7+1;
                     $svc_C7s+=$money4[0]['field_value'];
                 }

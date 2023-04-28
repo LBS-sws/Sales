@@ -6,6 +6,7 @@ class ComparisonForm extends CFormModel
 	public $week_start_date;
 	public $start_date;
 	public $end_date;
+	public $month_type=1;
 	public $day_num=0;
 	public $comparison_year;
     public $month_start_date;
@@ -52,10 +53,18 @@ class ComparisonForm extends CFormModel
         $dayNum = $timer;
     }
 
-    public static function resetNetOrGross($num,$day){
-        $num = ($num*12/365)*$day;
-        $num = round($num,2);
-        return $num;
+    public static function resetNetOrGross($num,$day,$type=3){
+        switch ($type){
+            case 1://季度
+                return $num+$num*2*0.8;
+            case 2://月度
+                return $num;
+            case 3://日期
+                $num = ($num*12/365)*$day;
+                $num = round($num,2);
+                return $num;
+        }
+        return $type;
     }
 
     public function retrieveData() {
@@ -66,6 +75,9 @@ class ComparisonForm extends CFormModel
         $this->comparison_year = date("Y",strtotime($this->start_date));
         $this->month_start_date = date("m/d",strtotime($this->start_date));
         $this->month_end_date = date("m/d",strtotime($this->end_date));
+        $monthNum = date("n",strtotime($this->start_date));
+        $i = ceil($monthNum/3);//向上取整
+        $this->month_type = 3*$i-2;
         ComparisonForm::setDayNum($this->start_date,$this->end_date,$this->day_num);
         $lastStartDate = ($this->comparison_year-1)."/".$this->month_start_date;
         $lastEndDate = ($this->comparison_year-1)."/".$this->month_end_date;
@@ -96,14 +108,14 @@ class ComparisonForm extends CFormModel
             }
         }
 
-        $this->insertUData($this->start_date,$this->end_date,$data);
-        $this->insertUData($lastStartDate,$lastEndDate,$data);
-        $this->insertUServiceData($this->start_date,$data);//同步U系統的服務金額
+        $this->insertUData($this->start_date,$this->end_date,$lastStartDate,$lastEndDate,$data);
+        $this->insertUActualMoney($this->start_date,$this->end_date,$data);//服务生意额
         $this->data = $data;
         return true;
     }
 
-    private function insertUActualMoney($startDay,$endDay,$data){
+    //服务生意额
+    private function insertUActualMoney($startDay,$endDay,&$data){
         $list = array();
         $suffix = Yii::app()->params['envSuffix'];
         $rows = Yii::app()->db->createCommand()->select("b.Text,a.Fee,a.TermCount")
@@ -125,30 +137,22 @@ class ComparisonForm extends CFormModel
         return $list;
     }
 
-    private function insertUServiceData($startDate,&$data){
-        $year = date("Y",strtotime($startDate));
-        $month = date("n",strtotime($startDate));
-        $json = Invoice::getActualAmount($year,$month);
-        if($json["message"]==="Success"){
-            $jsonData = $json["data"];
-            foreach ($jsonData as $row){
-                $city = $row["city"];
-                $money = is_numeric($row["actual_amt"])?floatval($row["actual_amt"]):0;
-                if($row["service"]!="销货账单"&&key_exists($city,$data)){
-                    $data[$city]["uServiceMoney"]+=$money;
-                }
-            }
-        }
-    }
-
-    private function insertUData($startDate,$endDate,&$data){
-        $year = intval($startDate);//服务的年份
-        $json = Invoice::getInvData($startDate,$endDate);
-        if($json["message"]==="Success"){
-            $jsonData = $json["data"];
-            foreach ($jsonData as $row){
-                $city = $row["city"];
-                $money = is_numeric($row["invoice_amt"])?floatval($row["invoice_amt"]):0;
+    private function insertUData($startDate,$endDate,$lastStartDate,$lastEndDate,&$data){
+        $list = array();
+        $suffix = Yii::app()->params['envSuffix'];
+        $rows = Yii::app()->db->createCommand()
+            ->select("x.InvoiceDate,x.InvoiceAmount,b.Text AS City")
+            ->from("service{$suffix}.Invoice x")
+            ->leftJoin("service{$suffix}.OfficeCity a","x.City = a.City")
+            ->leftJoin("service{$suffix}.Enums b","a.Office = b.EnumID AND b.EnumType = 8")
+            ->where("x.status>0 and ((x.InvoiceDate BETWEEN '{$startDate}' AND '{$endDate}') or (x.InvoiceDate BETWEEN '{$lastStartDate}' AND '{$lastEndDate}'))AND SUBSTRING(x.InvoiceNumber, 3, 3) = 'INV'")
+            ->order("x.InvoiceDate,x.CustomerID,x.InvoiceNumber")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $year = intval($row["InvoiceDate"]);//服务的年份
+                $city = $row["City"];
+                $money = is_numeric($row["InvoiceAmount"])?floatval($row["InvoiceAmount"]):0;
                 if(key_exists($city,$data)){
                     if($year==$this->comparison_year){
                         $uStr = "u_sum";
@@ -172,10 +176,14 @@ class ComparisonForm extends CFormModel
 	    $year = intval($row["status_dt"]);//服务的年份
         $city = empty($row["city"])?"none":$row["city"];
         if(!key_exists($city,$data)){
-            $setRow = Yii::app()->db->createCommand()->select("*")->from("swoper{$suffix}.swo_comparison_set")
-                ->where("comparison_year=:year and city=:city",
+            $startRow = Yii::app()->db->createCommand()->select("*")->from("swoper{$suffix}.swo_comparison_set")
+                ->where("comparison_year=:year and month_type=1 and city=:city",
                     array(":year"=>$this->comparison_year,":city"=>$city)
-                )->queryRow();//查询目标金额
+                )->queryRow();//年初目标金额
+            $setRow = Yii::app()->db->createCommand()->select("*")->from("swoper{$suffix}.swo_comparison_set")
+                ->where("comparison_year=:year and month_type=:month_type and city=:city",
+                    array(":year"=>$this->comparison_year,":month_type"=>$this->month_type,":city"=>$city)
+                )->queryRow();//滚动目标金额
             $data[$city]=array(
                 "city"=>$city,
                 "city_name"=>$row["city_name"],
@@ -199,7 +207,11 @@ class ComparisonForm extends CFormModel
                 "two_gross"=>$setRow?floatval($setRow["two_gross"]):0,
                 "two_gross_rate"=>0,
                 "two_net"=>$setRow?floatval($setRow["two_net"]):0,
-                "two_net_rate"=>0
+                "two_net_rate"=>0,
+                "start_two_gross"=>$startRow?floatval($startRow["two_gross"]):0,
+                "start_two_gross_rate"=>0,
+                "start_two_net"=>$startRow?floatval($startRow["two_net"]):0,
+                "start_two_net_rate"=>0
             );
         }
         if($row["paid_type"]=="M"){//月金额
@@ -245,16 +257,20 @@ class ComparisonForm extends CFormModel
     }
 
     protected function resetTdRow(&$list,$bool=false){
+        $list["start_two_gross"] = $bool?$list["start_two_gross"]:ComparisonForm::resetNetOrGross($list["start_two_gross"],$this->day_num);
+        $list["start_two_net"] = $bool?$list["start_two_net"]:ComparisonForm::resetNetOrGross($list["start_two_net"],$this->day_num);
         $list["two_gross"] = $bool?$list["two_gross"]:ComparisonForm::resetNetOrGross($list["two_gross"],$this->day_num);
         $list["two_net"] = $bool?$list["two_net"]:ComparisonForm::resetNetOrGross($list["two_net"],$this->day_num);
-        $list["new_rate"] = $this->nowAndLastRate($list["new_sum"],$list["new_sum_last"]);
-        $list["stop_rate"] = $this->nowAndLastRate($list["stop_sum"],$list["stop_sum_last"]);
-        $list["net_rate"] = $this->nowAndLastRate($list["net_sum"],$list["net_sum_last"]);
+        $list["new_rate"] = $this->nowAndLastRate($list["new_sum"],$list["new_sum_last"],true);
+        $list["stop_rate"] = $this->nowAndLastRate($list["stop_sum"],$list["stop_sum_last"],true);
+        $list["net_rate"] = $this->nowAndLastRate($list["net_sum"],$list["net_sum_last"],true);
+        $list["start_two_gross_rate"] = $this->comparisonRate($list["new_sum"],$list["start_two_gross"]);
+        $list["start_two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["start_two_net"]);
         $list["two_gross_rate"] = $this->comparisonRate($list["new_sum"],$list["two_gross"]);
         $list["two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["two_net"]);
     }
 
-    public static function nowAndLastRate($nowNum,$lastNum){
+    public static function nowAndLastRate($nowNum,$lastNum,$bool=false){
         if(empty($lastNum)){
             return 0;
         }else{
@@ -262,6 +278,9 @@ class ComparisonForm extends CFormModel
             $lastNum = $lastNum<0?$lastNum*-1:$lastNum;
             $rate = $rate/$lastNum;
             $rate = round($rate,3)*100;
+            if($bool&&$rate>0){
+                $rate=" +".$rate;
+            }
             return $rate."%";
         }
     }
@@ -277,6 +296,11 @@ class ComparisonForm extends CFormModel
     }
 
     public static function showNum($num){
+        $pre="";
+        if (strpos($num," +")!==false){
+            $pre=" +";
+            $num = end(explode(" +",$num));
+        }
         if (strpos($num,'%')!==false){
             $number = floatval($num);
             $number=sprintf("%.1f",$number)."%";
@@ -286,7 +310,7 @@ class ComparisonForm extends CFormModel
         }else{
             $number = $num;
         }
-        return $number;
+        return $pre.$number;
     }
 
     public function getDataToHtml(){
@@ -383,12 +407,16 @@ class ComparisonForm extends CFormModel
         );
         $topList[]=array("name"=>Yii::t("summary","Annual target (base case)"),"background"=>"#DCE6F1",
             "colspan"=>array(
+                array("name"=>Yii::t("summary","Start Gross")),//Start Gross
+                array("name"=>Yii::t("summary","Start Net")),//Start Net
                 array("name"=>Yii::t("summary","Gross")),//Gross
                 array("name"=>Yii::t("summary","Net")),//Net
             )
         );//年金额目标 (base case)
         $topList[]=array("name"=>Yii::t("summary","Goal degree (base case)"),"background"=>"#DCE6F1",
             "colspan"=>array(
+                array("name"=>Yii::t("summary","Start Gross")),//Start Gross
+                array("name"=>Yii::t("summary","Start Net")),//Start Net
                 array("name"=>Yii::t("summary","Gross")),//Gross
                 array("name"=>Yii::t("summary","Net")),//Net
             )
@@ -454,8 +482,12 @@ class ComparisonForm extends CFormModel
             "city_name","u_actual_money","new_sum_last","new_sum","new_rate","stop_sum_last","stop_sum","stop_rate",
             "net_sum_last","net_sum","net_rate"
         );
+        $bodyKey[]="start_two_gross";
+        $bodyKey[]="start_two_net";
         $bodyKey[]="two_gross";
         $bodyKey[]="two_net";
+        $bodyKey[]="start_two_gross_rate";
+        $bodyKey[]="start_two_net_rate";
         $bodyKey[]="two_gross_rate";
         $bodyKey[]="two_net_rate";
         return $bodyKey;
