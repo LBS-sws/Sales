@@ -142,31 +142,31 @@ EOF;
                             $visitColor=$sum['visit']>=$minVisit?"":"color:red";
                             $message.= <<<EOF
 					<tr>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><a target="_Blank" href="$url&sales={$value['names']}"><span style="font-size:16px;">{$value['names']}</span></a></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['cityname']}</span></span></td>
-							<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['rank']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><a target="_Blank" href="$url&sales={$value['names']}"><span style="font-size:16px;">{$value['names']}</span></a></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['cityname']}</span></span></td>
+							<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['rank']}</span></span></td>
 
 EOF;
                             $message.="<td height='15px' style='height: 15px; text-align: left;'><strong>{$dateList[0]}：</strong>".$this->getArrToStaffAndStr($staffMonthData,$value['username'],$dateList[0])."</td>";
                             $message.= <<<EOF
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$numIntegral}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;{$visitColor}">{$value['visit']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['singular']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 110pt; text-align: center;" width="132"><span style="color:#000000;"><span style="font-size:16px;">{$value['money']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_A7']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_A7s']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_B6']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_B6s']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_C7']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_C7s']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_D6']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_D6s']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_E7']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_E7s']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_F4']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_F4s']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_G3']}</span></span></td>
-						<td class="et5" rowspan="5" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_G3s']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$numIntegral}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;{$visitColor}">{$value['visit']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['singular']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 110pt; text-align: center;" width="132"><span style="color:#000000;"><span style="font-size:16px;">{$value['money']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_A7']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_A7s']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_B6']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_B6s']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_C7']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_C7s']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_D6']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_D6s']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_E7']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_E7s']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_F4']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_F4s']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_G3']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="72"><span style="color:#000000;"><span style="font-size:16px;">{$value['svc_G3s']}</span></span></td>
 					</tr>
 EOF;
                             foreach ($dateList as $i_num=> $dateStr){
