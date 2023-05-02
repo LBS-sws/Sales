@@ -110,9 +110,26 @@ class ComparisonForm extends CFormModel
 
         $this->insertUData($this->start_date,$this->end_date,$data);
         $this->insertUData($lastStartDate,$lastEndDate,$data);
+        $this->insertUServiceData($this->start_date,$data);//同步U系統的服務金額
         $this->insertUActualMoney($this->start_date,$this->end_date,$data);//服务生意额
         $this->data = $data;
         return true;
+    }
+
+    private function insertUServiceData($startDate,&$data){
+        $year = date("Y",strtotime($startDate));
+        $month = date("n",strtotime($startDate));
+        $json = Invoice::getActualAmount($year,$month);
+        if($json["message"]==="Success"){
+            $jsonData = $json["data"];
+            foreach ($jsonData as $row){
+                $city = $row["city"];
+                $money = is_numeric($row["actual_amt"])?floatval($row["actual_amt"]):0;
+                if($row["service"]!="销货账单"&&key_exists($city,$data)){
+                    $data[$city]["uServiceMoney"]+=$money;
+                }
+            }
+        }
     }
 
     //服务生意额
