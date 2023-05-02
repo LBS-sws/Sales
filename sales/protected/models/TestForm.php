@@ -372,7 +372,7 @@ EOF;
         $rows = Yii::app()->db->createCommand()->select("b.username,DATE_FORMAT(b.visit_dt,'%Y/%m') as yearMonth,sum(convert(a.field_value, decimal(12,2))) as money")
             ->from("sal_visit_info a")
             ->leftJoin("sal_visit b","a.visit_id=b.id")
-            ->where("a.field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and b.visit_dt BETWEEN '{$startDate}' AND '{$endDate}' and b.visit_obj like '%10%'")
+            ->where("(b.shift<>'Z' or b.shift is null) and a.field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and b.visit_dt BETWEEN '{$startDate}' AND '{$endDate}' and b.visit_obj like '%10%'")
             ->group("b.username,yearMonth")->queryAll();
         if($rows){
             foreach ($rows as $row){
