@@ -110,7 +110,7 @@ class ComparisonForm extends CFormModel
 
         $this->insertUData($this->start_date,$this->end_date,$data);
         $this->insertUData($lastStartDate,$lastEndDate,$data);
-        $this->insertUServiceData($this->start_date,$data);//同步U系統的服務金額
+        //$this->insertUServiceData($this->start_date,$data);//同步U系統的服務金額
         $this->insertUActualMoney($this->start_date,$this->end_date,$data);//服务生意额
         $this->data = $data;
         return true;
@@ -339,7 +339,7 @@ class ComparisonForm extends CFormModel
         if(!empty($this->data)){
             foreach ($this->data as $row){
                 $stopSum = $row["stopSumOnly"]>=0?$row["stopSumOnly"]:$row["stopSumOnly"]*-1;//本月終止金額
-                $uServiceMoney = $row["uServiceMoney"];//U系統內的實際服務金額
+                $uServiceMoney = $row["u_actual_money"];//（2023/5/3改成服务金额）
                 //本月停單率
                 $htmlList[$row["city"]]["stopRate"]=$this->comparisonRate($stopSum,$uServiceMoney);
                 //目標金額
@@ -348,8 +348,8 @@ class ComparisonForm extends CFormModel
                 $htmlList[$row["city"]]["stopWeekSum"]=$row["stopWeekSum"];
                 //本周停单金额(月金額)
                 $htmlList[$row["city"]]["stopMonthSum"]=$row["stopMonthSum"];
-                //U系統內的實際服務金額(月)
-                $htmlList[$row["city"]]["uServiceMoney"]=$row["uServiceMoney"];
+                //U系統內的實際服務金額(月)- （2023/5/3改成服务金额）
+                $htmlList[$row["city"]]["uServiceMoney"]=$uServiceMoney;
                 //停單金額超過1000的客戶資料
                 $htmlList[$row["city"]]["stopListOnly"]=$row["stopListOnly"];
                 $htmlList[$row["city"]]["table"]=$table;
