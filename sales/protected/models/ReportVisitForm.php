@@ -143,7 +143,7 @@ class ReportVisitForm extends CReportForm
 				inner join sal_cust_district h on a.district = h.id
 				left outer join security$suffix.sec_city b on a.city=b.code
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
-				where a.city in ($city_allow) and visit_dt<='".$end_dt."' and visit_dt>='".$start_dt."'  
+				where a.city in ($city_allow) and a.shift is NULL and visit_dt<='".$end_dt."' and visit_dt>='".$start_dt."'  
 			";
         $records = Yii::app()->db->createCommand($sql)->queryAll();
 //                print_r('<pre/>');
@@ -222,7 +222,7 @@ class ReportVisitForm extends CReportForm
 				inner join sal_cust_district h on a.district = h.id
 				left outer join security$suffix.sec_city b on a.city=b.code
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
-				where a.city='" . $model['city'] . "' and visit_dt<='" . $end_dt . "' and visit_dt>='" . $start_dt . "' and  f.name='".$v."'";
+				where a.city='" . $model['city'] . "' and a.shift is NULL and visit_dt<='" . $end_dt . "' and visit_dt>='" . $start_dt . "' and  f.name='".$v."'";
                 $records = Yii::app()->db->createCommand($sql)->queryAll();
                 $jiudian=array();
                 $sql2 = "select name
@@ -373,7 +373,7 @@ class ReportVisitForm extends CReportForm
 				inner join sal_cust_district h on a.district = h.id
 				left outer join security$suffix.sec_city b on a.city=b.code
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
-				where a.city in ($city_allow) and visit_dt<='".$end_dt."' and visit_dt>='".$start_dt."'  
+				where a.city in ($city_allow) and a.shift IS NULL and visit_dt<='".$end_dt."' and visit_dt>='".$start_dt."'  
 			";
         $records = Yii::app()->db->createCommand($sql)->queryAll();
         $sql1 = "select name
@@ -452,7 +452,7 @@ class ReportVisitForm extends CReportForm
 				inner join sal_cust_district h on a.district = h.id
 				left outer join security$suffix.sec_city b on a.city=b.code
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
-				where a.city='" . $model['city'] . "' and visit_dt<='" . $end_dt . "' and visit_dt>='" . $start_dt . "' and  f.name='".$v."'";
+				where a.city='" . $model['city'] . "' and a.shift is null and visit_dt<='" . $end_dt . "' and visit_dt>='" . $start_dt . "' and  f.name='".$v."'";
                 $records = Yii::app()->db->createCommand($sql)->queryAll();
                 $jiudian=0;
                 $sql2 = "select name
@@ -600,7 +600,7 @@ class ReportVisitForm extends CReportForm
 				inner join sal_cust_district h on a.district = h.id
 				left outer join security$suffix.sec_city b on a.city=b.code
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
-				where a.city ='".$city."' and visit_dt<='".$end_dt."' and visit_dt>='".$start_dt."'  and  a.username='".$user."'
+				where a.city ='".$city."' and a.shift is null and visit_dt<='".$end_dt."' and visit_dt>='".$start_dt."'  and  a.username='".$user."'
 			";
         $records = Yii::app()->db->createCommand($sql)->queryAll();
 //                print_r('<pre/>');
@@ -679,7 +679,7 @@ class ReportVisitForm extends CReportForm
 				inner join sal_cust_district h on a.district = h.id
 				left outer join security$suffix.sec_city b on a.city=b.code
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
-				where a.city ='".$city."' and visit_dt<='".$end_dt."' and visit_dt>='".$start_dt."'  and  a.username='".$user."'
+				where a.city ='".$city."' and a.shift is null and visit_dt<='".$end_dt."' and visit_dt>='".$start_dt."'  and  a.username='".$user."'
 			";
         $records = Yii::app()->db->createCommand($sql)->queryAll();
         $sql1 = "select name
