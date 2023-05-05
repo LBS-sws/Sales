@@ -83,19 +83,35 @@ class ComparisonForm extends CFormModel
         $lastEndDate = ($this->comparison_year-1)."/".$this->month_end_date;
         $where="(a.status_dt BETWEEN '{$this->start_date}' and '{$this->end_date}')";
         $where.="or (a.status_dt BETWEEN '{$lastStartDate}' and '{$lastEndDate}')";
-        $rows = Yii::app()->db->createCommand()
-            ->select("a.status_dt,a.status,a.reason,com.code,com.name,f.rpt_cat,f.description as type_name,f.single,a.city,a.service,a.company_name,g.description as nature_name,g.rpt_cat as nature_rpt_cat,a.nature_type,a.paid_type,a.amt_paid,a.ctrt_period,a.b4_paid_type,a.b4_amt_paid
-            ,b.region,b.name as city_name,c.name as region_name")
+        $selectSql="a.status_dt,a.status,a.reason,com.code,com.name,f.rpt_cat,f.description as type_name,f.single,a.city,a.service,a.company_name,g.description as nature_name,g.rpt_cat as nature_rpt_cat,a.nature_type,a.amt_paid,a.ctrt_period,a.b4_amt_paid
+            ,b.region,b.name as city_name,c.name as region_name";
+        $serviceRows = Yii::app()->db->createCommand()
+            ->select("{$selectSql},a.paid_type,a.b4_paid_type,CONCAT('A') as sql_type_name")
             ->from("swoper{$suffix}.swo_service a")
             ->leftJoin("swoper{$suffix}.swo_company com","com.id=a.company_id")
             ->leftJoin("swoper{$suffix}.swo_customer_type f","a.cust_type=f.id")
             ->leftJoin("swoper{$suffix}.swo_nature g","a.nature_type=g.id")
             ->leftJoin("security{$suffix}.sec_city b","a.city=b.code")
             ->leftJoin("security{$suffix}.sec_city c","b.region=c.code")
-            ->where("a.status in ('N','T') and ({$where})")
+            ->where("a.status in ('N','T') and a.city not in ('ZY') and ({$where})")
             ->order("a.city")
             ->queryAll();
-        if($rows){
+        //所有需要計算的客戶服務(ID客戶服務)
+        $serviceRowsID = Yii::app()->db->createCommand()
+            ->select("{$selectSql},CONCAT('M') as paid_type,CONCAT('M') as b4_paid_type,CONCAT('D') as sql_type_name")
+            ->from("swoper$suffix.swo_serviceid a")
+            ->leftJoin("swoper{$suffix}.swo_company com","com.id=a.company_id")
+            ->leftJoin("swoper$suffix.swo_customer_type_id f","a.cust_type=f.id")
+            ->leftJoin("swoper{$suffix}.swo_nature g","a.nature_type=g.id")
+            ->leftJoin("security{$suffix}.sec_city b","a.city=b.code")
+            ->leftJoin("security{$suffix}.sec_city c","b.region=c.code")
+            ->where("a.status in ('N','T') and a.city not in ('ZY') and ({$where})")
+            ->order("a.city")
+            ->queryAll();
+        $serviceRows = $serviceRows?$serviceRows:array();
+        $serviceRowsID = $serviceRowsID?$serviceRowsID:array();
+        $rows = array_merge($serviceRows,$serviceRowsID);
+        if(!empty($rows)){
             foreach ($rows as $row){
                 //rpt_cat='INV' and single=1的客户服务是产品，所以需要筛选出去
                 if($row["rpt_cat"]==="INV"&&intval($row["single"])===1){
