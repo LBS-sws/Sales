@@ -201,5 +201,6 @@ return array(
     '-- all --'=>'--全部--',
     'shift staff'=>'转移销售拜访',
     'not shift staff'=>'非转移销售拜访',
+    'Lcd'=>'录入时间',
 );
 ?>

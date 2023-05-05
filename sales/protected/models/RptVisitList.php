@@ -18,6 +18,7 @@ class RptVisitList extends CReport {
 			'district'=>array('label'=>Yii::t('sales','District'),'width'=>20,'align'=>'L'),
 			'street'=>array('label'=>Yii::t('sales','Street'),'width'=>20,'align'=>'L'),
 			'visit_dt'=>array('label'=>Yii::t('sales','Visit Date'),'width'=>15,'align'=>'C'),
+			'lcd'=>array('label'=>Yii::t('sales','Lcd'),'width'=>15,'align'=>'C'),
 			'cust_name'=>array('label'=>Yii::t('sales','Customer Name'),'width'=>25,'align'=>'L'),
 			'cust_alt_name'=>array('label'=>Yii::t('sales','Branch Name (if any)'),'width'=>25,'align'=>'L'),
 			'cust_type_group'=>array('label'=>Yii::t('sales','Nature'),'width'=>20,'align'=>'L'),
@@ -120,6 +121,7 @@ class RptVisitList extends CReport {
 			'district',
 			'street',
 			'visit_dt',
+			'lcd',
 			'cust_name',
 			'cust_alt_name',
 			'cust_type_group',
@@ -334,6 +336,7 @@ class RptVisitList extends CReport {
                 }
 				$temp['id'] = $row['id'];
 				$temp['visit_dt'] = General::toDate($row['visit_dt']);
+				$temp['lcd'] = General::toDate($row['lcd']);
 				$temp['username'] = $row['username'];
 				$stf = $this->getStaffInfo($row['username']);
 				$temp['staff'] = $stf['staff']. $row['shift'];
