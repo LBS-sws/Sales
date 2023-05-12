@@ -34,13 +34,20 @@ class VisitCommand extends CConsoleCommand
                 if (in_array($k, $nocity, true)) {
                 } else {
                     //需要的销售
-                    $sql_people = "select a.name,e.username from hr$suffix.hr_employee a
+/*                    $sql_people = "select a.name,e.username from hr$suffix.hr_employee a
                               inner join  hr$suffix.hr_binding b on a.id=b.employee_id 
                               inner join  security$suffix.sec_user_access c on b.user_id=c.username  
                               inner join  security$suffix.sec_user d on c.username=d.username 
                               inner join  sales$suffix.sal_visit e on b.user_id=e.username
         where  c.system_id='sal' and c.a_read_write like '%HK01%' and  d.status='A' and a.city='$k' and   e.visit_dt >= '" . $arr['start_dt'] . "'and e.visit_dt <= '" . $arr['end_dt'] . "' and  a.staff_status =0";
-                    $people = Yii::app()->db->createCommand($sql_people)->queryAll();
+                    $people = Yii::app()->db->createCommand($sql_people)->queryAll();*/
+                    $people = Yii::app()->db->createCommand()->select("a.name,d.user_name as username")
+                        ->from("hr{$suffix}.hr_binding d")
+                        ->leftJoin("hr{$suffix}.hr_employee a","d.employee_id=a.id")
+                        ->leftJoin("hr{$suffix}.hr_dept b","a.position=b.id")
+                        ->where("a.staff_status=0 AND b.manager_type=1 AND a.city=:city",
+                            array(":city"=>$k)
+                        )->queryAll();
                     //邮件数据
                     if (!empty($people)) {
                         $people = array_unique($people, SORT_REGULAR);

@@ -78,6 +78,29 @@ class ReportVisitForm extends CReportForm
         return $records;
     }
 
+    public static function salemanForHr($city,$startDate="",$endDate=""){
+        $suffix = Yii::app()->params['envSuffix'];
+        $city=empty($city)?Yii::app()->user->city():$city;
+        $startDate = empty($startDate)?date("Y/m/01"):date("Y/m/d",strtotime($startDate));
+        $endDate = empty($endDate)?date("Y/m/d"):date("Y/m/d",strtotime($endDate));
+        $list=array();
+        $rows = Yii::app()->db->createCommand()->select("a.name,d.user_id,a.staff_status")
+            ->from("hr{$suffix}.hr_binding d")
+            ->leftJoin("hr{$suffix}.hr_employee a","d.employee_id=a.id")
+            ->leftJoin("hr{$suffix}.hr_dept b","a.position=b.id")
+            ->where("(a.staff_status=0 or (a.staff_status=-1 AND date_format(a.lud,'%Y/%m/%d') between '{$startDate}' and '{$endDate}')) AND b.manager_type=1 AND a.city=:city",
+                array(":city"=>$city)
+            )->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $name_label = $row["name"];
+                $name_label.= empty($row["staff_status"])?"":"（已离职）";
+                $list[] = array("name"=>$row["name"],"user_id"=>$row["user_id"],"name_label"=>$name_label);
+            }
+        }
+        return $list;
+    }
+
     public static function getAllSales($city,$startDate,$endDate){
         $suffix = Yii::app()->params['envSuffix'];
         $city = empty($city)?Yii::app()->user->city():$city;

@@ -94,7 +94,7 @@ $this->pageTitle=Yii::app()->name . ' - Report';
                 <div class="col-sm-3" style="width: 800px;" id="show" style="display: block">
                     <label  style="width: 75px" ><input name="Fruit" type="checkbox" value="" id="all" /><?php echo Yii::t('report','All');?> </label><br id="label"/>
                     <?php foreach ($saleman as $v) {?>
-                        <label style="width: 75px" class="a" style="display: none"><input name="ReportVisitForm[sale][]" type="checkbox" value="<?php echo $v['username'];?>" <?php if(!empty($model['sale'])&&in_array($v['username'], $model['sale'])){echo "checked='checked'";}?>/><?php echo $v['name'];?> </label>
+                        <label style="min-width: 75px" class="a" style="display: none"><input name="ReportVisitForm[sale][]" type="checkbox" value="<?php echo $v['user_id'];?>" <?php if(!empty($model['sale'])&&in_array($v['user_id'], $model['sale'])){echo "checked='checked'";}?>/><?php echo $v['name_label'];?> </label>
                     <?php }?>
                 </div>
             </div>
@@ -131,7 +131,7 @@ $this->pageTitle=Yii::app()->name . ' - Report';
 <?php $this->renderPartial('//site/lookup'); ?>
 
 <?php
-$url=Yii::app()->createUrl('report/citys');
+$url=Yii::app()->createUrl('report/city');
 $js = <<<EOF
 $(document).ready(function(){
 
@@ -139,16 +139,17 @@ $(document).ready(function(){
             var endDate=$("#ReportVisitForm_end_dt").val();  
             var startDate=$("#ReportVisitForm_start_dt").val();  
             var txt=$("#city").val();  
-      $.post('$url',{txt:txt,startDate:startDate,endDate:endDate},function(result){    
+      $.post('$url',{txt:txt,start_dt:startDate,end_dt:endDate},function(result){    
             $("label").remove(".a");
             var result=$.parseJSON( result)
             var dataLen = result.length ; //返回数组的长度
             var i = 0 ; //声明数据从0开始循环   
             for (i;i<dataLen;i++){
             //循环一次 i加1                    
-            var uId = result[i].username ;           
-            var uName = result[i].name;         
-            var txt1="<label style='width: 75px' class='a'><input name='ReportVisitForm[sale][]' type='checkbox' value='"+uId+"' /> "+uName+"</label>";         
+            var uId = result[i].user_id ;           
+            var uName = result[i].user_id;         
+            var name_label = result[i].name_label;         
+            var txt1="<label style='min-width: 75px' class='a'><input name='ReportVisitForm[sale][]' type='checkbox' value='"+uId+"' /> "+name_label+"</label>";         
             $("#label").after(txt1);       
         }         
       });

@@ -97,7 +97,7 @@ $this->pageTitle=Yii::app()->name . ' - Report';
                 <div class="col-sm-3" style="width: 800px;">
                     <label  style="width: 75px" ><input name="Fruit" type="checkbox" value="" id="all"/><?php echo Yii::t('report','All');?> </label><br id="label"/>
                     <?php foreach ($saleman as $v) {?>
-                        <label style="width: 75px" class="a"><input name="ReportVisitForm[sale][]" type="checkbox" value="<?php echo $v['name'];?>" /><?php echo $v['name'];?> </label>
+                        <label style="min-width: 75px" class="a"><input name="ReportVisitForm[sale][]" type="checkbox" value="<?php echo $v['name'];?>" /><?php echo $v['name_label'];?> </label>
                     <?php }?>
                 </div>
             </div>
@@ -123,11 +123,12 @@ $this->pageTitle=Yii::app()->name . ' - Report';
 <?php
 $url=Yii::app()->createUrl('report/city');
 $js = <<<EOF
-$(document).ready(function(){
    
-      $(document).on("change","#ReportVisitForm_city",function () {   
-            txt=$(this).find("option:selected").val();
-      $.post('$url',{txt:txt},function(result){     
+      $(document).on("change","#ReportVisitForm_city,#ReportVisitForm_start_dt,#ReportVisitForm_end_dt",function () {   
+            var city=$("#ReportVisitForm_city").val();
+            var start_dt=$("#ReportVisitForm_start_dt").val();
+            var end_dt=$("#ReportVisitForm_end_dt").val();
+      $.post('$url',{txt:city,start_dt:start_dt,end_dt:end_dt},function(result){     
             $("label").remove(".a");
             var result=$.parseJSON( result)
             var dataLen = result.length ; //返回数组的长度
@@ -136,7 +137,8 @@ $(document).ready(function(){
             //循环一次 i加1                    
             var uId = result[i].name ;           
             var uName = result[i].name;         
-            var txt1="<label style='width: 75px' class='a'><input name='ReportVisitForm[sale][]' type='checkbox' value='"+uName+"' /> "+uName+"</label>";         
+            var name_label = result[i].name_label;         
+            var txt1="<label style='min-width: 75px' class='a'><input name='ReportVisitForm[sale][]' type='checkbox' value='"+uName+"' /> "+name_label+"</label>";         
             $("#label").after(txt1);       
         }         
       });
@@ -151,8 +153,6 @@ $(document).ready(function(){
               var subs = $("input[name='ReportVisitForm[sale][]']");  
               $("#all").prop("checked" ,subs.length == subs.filter(":checked").length ? true :false);  
         });
-
-});
 
 EOF;
 ?>
