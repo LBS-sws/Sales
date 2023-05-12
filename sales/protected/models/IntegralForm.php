@@ -111,7 +111,7 @@ class IntegralForm extends CFormModel
             //产品（INV）只统计新增，服务（非INV）统计新增、续约、更改
             $exprSql = " and ((a.status in('A','C') and f.rpt_cat<>'INV') or (a.status='N'))";
             $IDExprSql = " and (((a.status='A' or (a.status = 'C' and a.ctrt_period>=12)) and f.rpt_cat<>'INV') or (a.status='N'))";
-            $selectSql = "a.*,
+            $selectSql = "a.*,g.score_bool,
             f.rpt_cat,f.description,b.cust_type_name as cust_type_name_name,b.conditions,b.fraction,b.toplimit";
             //所有需要計算的客戶服務(客戶服務)
             $serviceRows = Yii::app()->db->createCommand()
@@ -119,6 +119,7 @@ class IntegralForm extends CFormModel
                 ->from("swoper$suffix.swo_service a")
                 ->leftJoin("swoper$suffix.swo_customer_type_twoname b","a.cust_type_name=b.id")
                 ->leftJoin("swoper$suffix.swo_customer_type f","a.cust_type=f.id")
+                ->leftJoin("swoper$suffix.swo_nature_type g","a.nature_type_two=g.id")
                 ->where("a.status_dt BETWEEN '$startDate' and '$endDate' and a.salesman_id='$this->employee_id' $exprSql")->queryAll();
             $serviceRows=$serviceRows?$serviceRows:array();
             //所有需要計算的客戶服務(ID客戶服務)
@@ -127,6 +128,7 @@ class IntegralForm extends CFormModel
                 ->from("swoper$suffix.swo_serviceid a")
                 ->leftJoin("swoper$suffix.swo_customer_type_info b","a.cust_type_name=b.id")
                 ->leftJoin("swoper$suffix.swo_customer_type_id f","a.cust_type=f.id")
+                ->leftJoin("swoper$suffix.swo_nature_type g","a.nature_type_two=g.id")
                 ->where("a.status_dt BETWEEN '$startDate' and '$endDate' and a.salesman_id='$this->employee_id' $IDExprSql")->queryAll();
             $serviceRowsID=$serviceRowsID?$serviceRowsID:array();
             $serviceRows = array_merge($serviceRows,$serviceRowsID);
@@ -169,6 +171,8 @@ class IntegralForm extends CFormModel
                         $this->computePayMonthForSwo($serviceRow);
                         //当月销售净化机器+隔油池金额 >= 1500
                         $this->computeOneAndTwo($serviceRow);
+                        //商业组重点开发客户
+                        $this->commercialGroup($serviceRow);
                     }
                 }
             }
@@ -268,6 +272,18 @@ class IntegralForm extends CFormModel
                 //小计
                 $this->cust_type_name["OTHER"]["count"]+=$num*$fraction;
             }
+        }
+    }
+
+    //商业组重点开发客户(仅适用IA、IB)
+    protected function commercialGroup($serviceRow){
+        //IA、IB客户
+        $bool = strpos($serviceRow["description"],'IA')!==false||strpos($serviceRow["description"],'IB')!==false;
+        if ($bool&&$serviceRow["score_bool"]==1){//工厂、酒店、物业、学校、医院
+            $this->cust_type_name["OTHER"]["groupService"][]=$serviceRow;//下载需要
+
+            $this->cust_type_name["OTHER"]["list"]["commercialGroup"]["num"]+=1;
+            $this->cust_type_name["OTHER"]["list"]["commercialGroup"]["sum"]+=2;
         }
     }
 
@@ -532,6 +548,21 @@ class IntegralForm extends CFormModel
                 "sum"=>-5,
                 "money"=>0,
                 "remark"=>"当月数量显示1时扣5分，显示0时分数为0分",
+            );
+        }elseif($date>="2023-05-01"){
+            $this->oneAndTwo = 2;
+            $list["commercialGroup"] = array(
+                "cust_type_name"=>"商业组重点开发客户",
+                "con_name"=>"每个新客户",
+                "description"=>"其它",
+                "fraction"=>2,
+                "toplimit"=>0,
+                "rpt_cat"=>"commercialGroup",
+                "num"=>0,
+                "historySum"=>0,
+                "sum"=>0,
+                "money"=>0,
+                "remark"=>"工厂、酒店、物业、学校、医院，适用于IA/IB",
             );
         }else{
             $this->oneAndTwo = 0;//防止重复调用
@@ -1274,6 +1305,11 @@ class IntegralForm extends CFormModel
                     $o++;
                     $objActSheetTwo->setCellValue('A'.$o,"预收");
                     $this->setExcelRowForTwo($o,$rows['payMonthService'],$objActSheetTwo);
+                    if(strtotime($this->year."/".$this->month."/01")>=strtotime('2023/05/01')){
+                        $o++;
+                        $objActSheetTwo->setCellValue('A'.$o,"商业组重点开发客户");
+                        $this->setExcelRowForTwo($o,$rows['groupService'],$objActSheetTwo);
+                    }
                 }
                 $o++;
             }
