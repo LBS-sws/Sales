@@ -24,7 +24,7 @@ class ShiftController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','zhuan','save','zhuanone'),
+				'actions'=>array('new','edit','zhuan','save','zhuanone','shiftBool'),
 				'expression'=>array('ShiftController','allowReadWrite'),
 			),
 			array('allow', 
@@ -67,6 +67,22 @@ class ShiftController extends Controller
 			} else {
                 $saleman=$model->groupShift($arr);
 				Dialog::message(Yii::t('dialog','Information'), Yii::t('dialog','Data transfer successful'));
+				$this->redirect(Yii::app()->createUrl('shift/index'));
+			}
+		}
+	}
+
+	public function actionShiftBool()
+	{//取消轉移
+		$model = new ShiftForm('zhuan');
+		$arr=$_POST['ShiftList'];
+		if (isset($arr)) {
+			if (empty($arr['id'])){
+				Dialog::message(Yii::t('dialog','Warning'), Yii::t('dialog','Please check the assigned person and information'));
+				$this->redirect(Yii::app()->createUrl('shift/index'));
+			} else {
+                $model->updateShiftBool($arr);
+				Dialog::message(Yii::t('dialog','Information'), Yii::t('dialog','Cancel Done'));
 				$this->redirect(Yii::app()->createUrl('shift/index'));
 			}
 		}

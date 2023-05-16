@@ -394,7 +394,7 @@ class VisitForm extends CFormModel
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
 				where a.id = $index
 			";
-		$sql .= ($this->isReadAll()) ? " and a.city in ($citylist)" : " and a.username='$user' ";
+		$sql .= ($this->isReadAll()) ? " and a.city in ($citylist)" : " and (a.username='$user' or a.shift_user='$user') ";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
 //        print_r('<pre/>');
 //        print_r($row);
@@ -527,6 +527,7 @@ class VisitForm extends CFormModel
 					remarks = :remarks, 
 					status = :status,
 					status_dt = :status_dt,
+					shift_bool = 1,
 					luu = :luu
 					where id = :id and city=:city";
 				break;

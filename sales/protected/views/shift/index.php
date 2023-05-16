@@ -36,6 +36,15 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit';
             <?php }?>
         </div>
 	</div>
+            <?php  if (Yii::app()->user->validRWFunction('HA03')){?>
+                <div class="btn-group pull-right" role="group">
+                    <span style="padding: 10px">取消后，选择的拜访数据将不在转移列表显示</span>
+                    <?php
+                    echo TbHtml::button(Yii::t('dialog','Cancel'), array(
+                        'data-toggle'=>'modal','data-target'=>'#canceldialog','class'=>'pull-right'));
+                    ?>
+                </div>
+            <?php }?>
 	</div></div>
 	<?php
 		$this->widget('ext.layout.ListPageWidget', array(
@@ -47,6 +56,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit';
 		));
 	?>
 </section>
+<?php $this->renderPartial('//site/canceldialog'); ?>
 <?php
 	echo $form->hiddenField($model,'pageNum');
 	echo $form->hiddenField($model,'totalRow');
@@ -57,6 +67,14 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit';
 <?php $this->endWidget(); ?>
 <?php //$this->renderPartial('//site/removedialog'); ?>
 <?php
+$link = Yii::app()->createAbsoluteUrl("shift/shiftBool");
+$js = "
+$('#btnCancelData').on('click',function() {
+	$('#canceldialog').modal('hide');
+	jQuery.yii.submitForm(this,'{$link}',{});
+});
+";
+Yii::app()->clientScript->registerScript('cancelRecord',$js,CClientScript::POS_READY);
 $link = Yii::app()->createAbsoluteUrl("visit/updatevip");
 $js = <<<EOF
 function star(id) {

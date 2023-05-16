@@ -782,7 +782,7 @@ class ShiftForm extends CFormModel
         if(is_array($sale)){
             for ($i=0;count($sale)>$i;$i++){
                 $sql1="UPDATE sales$suffix.sal_visit
-                  set  shift='Z' , shift_user='".$username[0]['user_id']."'
+                  set  shift='Z', shift_user='".$username[0]['user_id']."'
                   where id=$sale[$i]";
                 $command=Yii::app()->db->createCommand($sql1)->execute();
                 //           print_r('<pre/>');
@@ -806,4 +806,13 @@ class ShiftForm extends CFormModel
         return $records;
     }
 
+    public function updateShiftBool($arr){
+        $suffix = Yii::app()->params['envSuffix'];
+        if(!empty($arr['id'])&&is_array($arr['id'])){
+            $idList = implode(",",$arr['id']);
+            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_visit",array(
+                "shift_bool"=>0,
+            ),"id in ({$idList})");
+        }
+    }
 }
