@@ -782,7 +782,7 @@ class ShiftForm extends CFormModel
         if(is_array($sale)){
             for ($i=0;count($sale)>$i;$i++){
                 $sql1="UPDATE sales$suffix.sal_visit
-                  set  shift='Z' , username='".$username[0]['user_id']."'
+                  set  shift='Z' , shift_user='".$username[0]['user_id']."'
                   where id=$sale[$i]";
                 $command=Yii::app()->db->createCommand($sql1)->execute();
                 //           print_r('<pre/>');
@@ -790,7 +790,7 @@ class ShiftForm extends CFormModel
             }
         }else{
             $sql2="UPDATE sales$suffix.sal_visit
-                  set  shift='Z' , username='".$username[0]['user_id']."'
+                  set  shift='Z' , shift_user='".$username[0]['user_id']."'
                   where id=$sale";
            $commands=Yii::app()->db->createCommand($sql2)->execute();
         }

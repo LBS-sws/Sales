@@ -85,7 +85,7 @@ class VisitList extends CListPageModel
 				where a.city in ($citylist)
 			";
 		if (!(VisitForm::isReadAll())) {
-			$x = " and a.username='$user' ";
+			$x = " and (a.username='$user' or a.shift_user='$user') ";
 			$sql1 .= $x;
 			$sql2 .= $x;
 		} else {
@@ -122,7 +122,7 @@ class VisitList extends CListPageModel
 			switch ($this->orderField) {
 				case 'city_name': $orderf = 'b.name'; break;
 				case 'cust_name': $orderf = 'a.cust_name'; break;
-				case 'staff': $orderf = 'staff'; break;
+				case 'staff': $orderf = '(case a.shift when "Z" then a.shift_user else a.username end)'; break;
 				case 'visit_dt': $orderf = 'a.visit_dt'; break;
 //				case 'status_dt': $orderf = 'a.status_dt'; break;
 				case 'district': $orderf = 'h.name'; break;
@@ -211,7 +211,8 @@ class VisitList extends CListPageModel
 					'cust_type'=>$record['cust_type_name'],
 					'cust_name'=>$record['cust_name'],
 					'cust_vip'=>$record['cust_vip'],
-                    'shift'=>$record['staff_status']==-1?"Y":$record['shift'],
+                    'shift'=>$record['staff_status']==-1&&$record['shift']!="Z"?"Y":$record['shift'],
+                    'shift_user'=>$record['shift_user'],
                     'visitdoc'=>$record['visitdoc'],
 				);
 			}
@@ -290,7 +291,7 @@ class VisitList extends CListPageModel
             switch ($this->orderField) {
                 case 'city_name': $orderf = 'b.name'; break;
                 case 'cust_name': $orderf = 'a.cust_name'; break;
-                case 'staff': $orderf = 'staff'; break;
+                case 'staff': $orderf = '(case a.shift when "Z" then a.shift_user else a.username end)'; break;
                 case 'visit_dt': $orderf = 'a.visit_dt'; break;
 //				case 'status_dt': $orderf = 'a.status_dt'; break;
                 case 'district': $orderf = 'h.name'; break;

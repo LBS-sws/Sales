@@ -19,6 +19,8 @@ class VisitForm extends CFormModel
 	public $street;
 	public $quote;
 	public $remarks;
+	public $shift;
+	public $shift_user;
 	public $status;
 	public $status_dt;
 	public $latitude;
@@ -401,7 +403,8 @@ class VisitForm extends CFormModel
 			$this->visit_dt = General::toDate($row['visit_dt']);
 			$this->username = $row['username'];
 			$this->getStaffInfo();
-			$this->staff = $this->staff;
+			$this->shift = $row['shift'];
+			$this->shift_user = $row['shift_user'];
 			$this->district = $row['district'];
 			$this->street = $row['street'];
 			$this->city = $row['city'];
