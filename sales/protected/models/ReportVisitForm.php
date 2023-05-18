@@ -85,12 +85,12 @@ class ReportVisitForm extends CReportForm
         $endDate = empty($endDate)?date("Y/m/d"):date("Y/m/d",strtotime($endDate));
         $list=array();
         $rows = Yii::app()->db->createCommand()->select("a.name,d.user_id,a.staff_status")
-            ->from("hr{$suffix}.hr_binding d")
+            ->from("security{$suffix}.sec_user_access f")
+            ->leftJoin("hr{$suffix}.hr_binding d","d.user_id=f.username")
             ->leftJoin("hr{$suffix}.hr_employee a","d.employee_id=a.id")
-            ->leftJoin("hr{$suffix}.hr_dept b","a.position=b.id")
-            ->where("(a.staff_status=0 or (a.staff_status=-1 AND date_format(a.lud,'%Y/%m/%d') between '{$startDate}' and '{$endDate}')) AND b.manager_type=1 AND a.city=:city",
+            ->where("f.system_id='sal' and f.a_read_write like '%HK01%' and (a.staff_status=0 or (a.staff_status=-1 AND date_format(a.lud,'%Y/%m/%d') between '{$startDate}' and '{$endDate}')) AND a.city=:city",
                 array(":city"=>$city)
-            )->queryAll();
+            )->order("a.id desc")->queryAll();
         if($rows){
             foreach ($rows as $row){
                 $name_label = $row["name"];
@@ -1868,7 +1868,7 @@ class ReportVisitForm extends CReportForm
             }
 //            print_r('<pre/>');
 //            print_r($records);
-            $sqls="select a.name as cityname ,d.name as names from security$suffix.sec_city a	,hr$suffix.hr_binding b	 ,security$suffix.sec_user  c ,hr$suffix.hr_employee d 
+            $sqls="select a.name as cityname ,d.name as names,d.staff_status from security$suffix.sec_city a	,hr$suffix.hr_binding b	 ,security$suffix.sec_user  c ,hr$suffix.hr_employee d 
                 where c.username='$peoples' and b.user_id='".$peoples."' and b.employee_id=d.id and c.city=a.code";
             $cname = Yii::app()->db->createCommand($sqls)->queryRow();
             $sql1="select id,visit_dt  from sal_visit where username='".$peoples."'  and  visit_dt >= '$start_dt'and visit_dt <= '$end_dt' and visit_obj like '%10%'";
@@ -1892,7 +1892,7 @@ class ReportVisitForm extends CReportForm
             $people['visit']=$baifang;
             $people['singular']=$sums;
             $people['cityname']=$cname['cityname'];
-            $people['names']=$cname['names'];//员工名字
+            $people['names']=$cname['names'].(intval($cname['staff_status'])=="-1"?"（离职）":"");//员工名字
             $people['username']=$peoples;//账号名字
             //其他金额
             $svc_A7=0;

@@ -41,13 +41,13 @@ class TestForm
                               inner join  sales$suffix.sal_visit e on b.user_id=e.username
         where  c.system_id='sal' and c.a_read_write like '%HK01%' and  d.status='A' and a.city='$k' and   e.visit_dt >= '" . $arr['start_dt'] . "'and e.visit_dt <= '" . $arr['end_dt'] . "' and  a.staff_status =0";
                     $people = Yii::app()->db->createCommand($sql_people)->queryAll();*/
-                    $people = Yii::app()->db->createCommand()->select("a.name,d.user_id as username")
-                        ->from("hr{$suffix}.hr_binding d")
+                    $people = Yii::app()->db->createCommand()->select("a.name,f.username")
+                        ->from("security{$suffix}.sec_user_access f")
+                        ->leftJoin("hr{$suffix}.hr_binding d","d.user_id=f.username")
                         ->leftJoin("hr{$suffix}.hr_employee a","d.employee_id=a.id")
-                        ->leftJoin("hr{$suffix}.hr_dept b","a.position=b.id")
-                        ->where("a.staff_status=0 AND b.manager_type=1 AND a.city=:city",
+                        ->where("f.system_id='sal' and f.a_read_write like '%HK01%' and (a.staff_status=0 or (a.staff_status=-1 AND date_format(a.lud,'%Y-%m-%d') between '{$arr['start_dt']}' and '{$arr['end_dt']}')) AND a.city=:city",
                             array(":city"=>$k)
-                        )->queryAll();
+                        )->order("a.id desc")->queryAll();
                     //邮件数据
                     if (!empty($people)) {
                         $people = array_unique($people, SORT_REGULAR);
