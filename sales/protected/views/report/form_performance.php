@@ -38,19 +38,6 @@ $this->pageTitle=Yii::app()->name . ' - Report';
             <?php echo $form->hiddenField($model, 'fields'); ?>
             <?php echo $form->hiddenField($model, 'staffs'); ?>
 
-            <?php if ($model->showField('city') && !Yii::app()->user->isSingleCity()): ?>
-                <div class="form-group">
-                    <?php echo $form->labelEx($model,'city',array('class'=>"col-sm-2 control-label")); ?>
-                    <div class="col-sm-3">
-                        <?php echo $form->dropDownList($model, 'city', General::getCityListWithNoDescendant(Yii::app()->user->city_allow()),
-                            array('disabled'=>($model->scenario=='view'))
-                        ); ?>
-                    </div>
-                </div>
-            <?php else: ?>
-                <?php echo $form->hiddenField($model, 'city'); ?>
-            <?php endif ?>
-
             <div class="form-group">
                 <?php echo $form->labelEx($model,'start date',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-3">

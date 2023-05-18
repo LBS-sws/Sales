@@ -83,13 +83,14 @@ class ReportVisitForm extends CReportForm
         $city=empty($city)?Yii::app()->user->city():$city;
         $startDate = empty($startDate)?date("Y/m/01"):date("Y/m/d",strtotime($startDate));
         $endDate = empty($endDate)?date("Y/m/d"):date("Y/m/d",strtotime($endDate));
+        $city_allow = City::model()->getDescendantList($city);
+        $city_allow .= (empty($city_allow)) ? "'$city'" : ",'$city'";
         $list=array();
         $rows = Yii::app()->db->createCommand()->select("a.name,d.user_id,a.staff_status")
             ->from("security{$suffix}.sec_user_access f")
             ->leftJoin("hr{$suffix}.hr_binding d","d.user_id=f.username")
             ->leftJoin("hr{$suffix}.hr_employee a","d.employee_id=a.id")
-            ->where("f.system_id='sal' and f.a_read_write like '%HK01%' and (a.staff_status=0 or (a.staff_status=-1 AND date_format(a.lud,'%Y/%m/%d') between '{$startDate}' and '{$endDate}')) AND a.city=:city",
-                array(":city"=>$city)
+            ->where("f.system_id='sal' and f.a_read_write like '%HK01%' and (a.staff_status=0 or (a.staff_status=-1 AND date_format(a.lud,'%Y/%m/%d') between '{$startDate}' and '{$endDate}')) AND a.city in ({$city_allow})"
             )->order("a.id desc")->queryAll();
         if($rows){
             foreach ($rows as $row){
