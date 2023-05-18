@@ -49,13 +49,11 @@
 			;
 		?>
 	</th>
-<?php if (VisitForm::isReadAll()) : ?>
-	<th>
-		<?php echo TbHtml::link($this->getLabelName('staff').$this->drawOrderArrow('staff'),'#',$this->createOrderLink('visit-list','staff'))
-			;
-		?>
-	</th>
-<?php endif ?>
+    <th>
+        <?php echo TbHtml::link($this->getLabelName('staff').$this->drawOrderArrow('staff'),'#',$this->createOrderLink('visit-list','staff'))
+        ;
+        ?>
+    </th>
     <th>
         <?php echo TbHtml::link($this->getLabelName('visitdoc'),'#',$this->createOrderLink('request-list','visitdoc'))
         ;
