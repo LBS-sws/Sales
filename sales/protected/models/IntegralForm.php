@@ -153,6 +153,7 @@ class IntegralForm extends CFormModel
                     "list"=>$otherList,//統計（頁面顯示）
                     "insertService"=>array(),//安装维护包含的服務（下載需要）
                     "payMonthService"=>array(),//预收月数包含的服務（下載需要）
+                    "groupService"=>array(),//商业组重点开发客户（下載需要）
                     "count"=>0//小計（頁面顯示）
                 ),
                 "all_sum"=>0,//總計
