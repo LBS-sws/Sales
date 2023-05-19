@@ -119,9 +119,16 @@ class StopOtherList extends CListPageModel
     public static function saleman(){
         $suffix = Yii::app()->params['envSuffix'];
         $city=Yii::app()->user->city();
-        $sql="select code,name,id from hr$suffix.hr_employee WHERE  position in (SELECT id FROM hr$suffix.hr_dept where dept_class='sales') AND staff_status = 0 and city ='{$city}'";
-        $records = Yii::app()->db->createCommand($sql)->queryAll();
-        return $records;
+        $rows = Yii::app()->db->createCommand()
+            ->select("b.id,b.name,b.code")
+            ->from("security{$suffix}.sec_user_access a")
+            ->leftJoin("hr{$suffix}.hr_binding h","a.username=h.user_id")
+            ->leftJoin("hr{$suffix}.hr_employee b","h.employee_id=b.id")
+            ->where("a.system_id='sal' and a.a_read_write like '%SC01%' and b.city='{$city}'and b.staff_status=0")->queryAll();
+        return $rows?$rows:array();
+        //$sql="select code,name,id from hr$suffix.hr_employee WHERE  position in (SELECT id FROM hr$suffix.hr_dept where dept_class='sales') AND staff_status = 0 and city ='{$city}'";
+        //$records = Yii::app()->db->createCommand($sql)->queryAll();
+        //return $records;
     }
 
     public function countNotify(){
