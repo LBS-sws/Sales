@@ -15,4 +15,5 @@ return array(
     'Renaud Air List'=>array('access'=>'CN12',),
     'Stop Customer Search(All)'=>array('access'=>'CN13',),
     'Club Sales Confirm'=>array('access'=>'CN14',),
+    'KA Bot(All)'=>array('access'=>'CN15',),
 );

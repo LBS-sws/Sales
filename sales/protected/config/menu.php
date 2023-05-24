@@ -170,7 +170,50 @@ return array(
             ),
         ),
     ),
-	
+
+    'KA Manager'=>array( //KA业务管理
+        'access'=>'KA',
+        'icon'=>'fa-trophy',
+        'items'=>array(
+            'KA Bot'=>array(//KA項目
+                'access'=>'KA01',
+                'url'=>'KABot/index',
+            ),
+            'KA Statistic'=>array(//KA項目統計
+                'access'=>'KA02',
+                'url'=>'KAStatistic/index',
+            ),
+            'KA Link'=>array(//当前沟通阶段
+                'access'=>'KA04',
+                'url'=>'KALink/index',
+            ),
+            'KA Area'=>array(//客户地区
+                'access'=>'KA05',
+                'url'=>'KAArea/index',
+            ),
+            'KA Source'=>array(//客户来源
+                'access'=>'KA03',
+                'url'=>'KASource/index',
+            ),
+            'KA Level'=>array(//客户分级
+                'access'=>'KA09',
+                'url'=>'KALevel/index',
+            ),
+            /*
+            'KA Reject'=>array(//拒绝、暂停理由
+                'access'=>'KA06',
+                'url'=>'KAType/index',
+            ),*/
+            'KA Busine'=>array(//业务模式
+                'access'=>'KA07',
+                'url'=>'KABusine/index',
+            ),
+            'KA Sales'=>array(//销售模式
+                'access'=>'KA08',
+                'url'=>'KASales/index',
+            ),
+        ),
+    ),
 	'System Setting'=>array(
 		'access'=>'HC',
 		'icon'=>'fa-gear',
