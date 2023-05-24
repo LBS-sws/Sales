@@ -91,9 +91,9 @@ class ReportVisitForm extends CReportForm
             ->leftJoin("hr{$suffix}.hr_binding d","d.user_id=f.username")
             ->leftJoin("hr{$suffix}.hr_employee a","d.employee_id=a.id")
             ->where("f.system_id='sal' and f.a_read_write like '%HK01%' and (
-                (a.staff_status!=1 and date_format(a.entry_time,'%Y/%m/%d')<='{$endDate}')
+                (a.staff_status = 0 and date_format(a.entry_time,'%Y/%m/%d')<='{$endDate}')
                 or
-                (a.staff_status=-1 AND date_format(a.leave_time,'%Y/%m/%d') between '{$startDate}' and '{$endDate}')
+                (a.staff_status=-1 and date_format(a.leave_time,'%Y/%m/%d')>='{$startDate}' and date_format(a.entry_time,'%Y/%m/%d')<='{$endDate}')
              ) AND a.city in ({$city_allow})"
             )->order("a.id desc")->queryAll();
         if($rows){
