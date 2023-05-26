@@ -270,7 +270,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 </section>
 
 <?php $this->renderPartial('//site/removedialog'); ?>
-<?php $this->renderPartial('//kABot/historyList',array("model"=>$model)); ?>
+<?php $this->renderPartial('//kABot/historylist',array("model"=>$model)); ?>
 
 <?php
 $js = "
