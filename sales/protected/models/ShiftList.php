@@ -59,7 +59,7 @@ class ShiftList extends CListPageModel
 				inner join sal_cust_district h on a.district = h.id
 				left outer join security$suffix.sec_city b on a.city=b.code
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
-				where a.city in ($citylist) and a.shift_bool=1 and a.shift!='Z' and f.staff_status=-1 and a.shift_user is NULL 
+				where a.city in ($citylist) and a.shift_bool=1 and (a.shift!='Z' or a.shift is NULL ) and f.staff_status=-1 and a.shift_user is NULL 
 			";
 		$sql2 = "select count(a.id)
 				from sal_visit a 
@@ -70,7 +70,7 @@ class ShiftList extends CListPageModel
 				inner join sal_cust_district h on a.district = h.id
 				left outer join security$suffix.sec_city b on a.city=b.code
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
-				where a.city in ($citylist) and a.shift_bool=1 and a.shift!='Z' and f.staff_status=-1 and a.shift_user is NULL 
+				where a.city in ($citylist) and a.shift_bool=1 and (a.shift!='Z' or a.shift is NULL ) and f.staff_status=-1 and a.shift_user is NULL 
 			";
 		if (!(VisitForm::isReadAll())) {
 			$x = " and a.username='$user' ";
