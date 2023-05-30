@@ -346,8 +346,7 @@ class IntegralForm extends CFormModel
         $sum = Yii::app()->db->createCommand()->select("count(id)")
             ->from("sal_visit")
             ->where("username='{$this->username}' 
-            and visit_dt BETWEEN '$startDate' and '$endDate'
-            and shift is null")
+            and visit_dt BETWEEN '$startDate' and '$endDate'")
             ->queryScalar();
         $sum = $sum?$sum:0;
         $this->sum = $sum;
@@ -986,7 +985,7 @@ class IntegralForm extends CFormModel
         $o=0;
         foreach ($this->cust_type_name['baifang'] as &$value){
             $sql_bf="select * from sal_visit       
-               where username='".$row['username']."'  and visit_dt>='$startime' and visit_dt<='$endtime' and  shift is null ";
+               where username='".$row['username']."'  and visit_dt>='$startime' and visit_dt<='$endtime'";
             $bf = Yii::app()->db->createCommand($sql_bf)->queryAll();
             if(!empty($bf)&&(count($bf)/$row['sale_day'])>=$value['toplimit']){
                 $value['sum']=$value['fraction'];
