@@ -28,7 +28,7 @@ class ShiftController extends Controller
 				'expression'=>array('ShiftController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view'),
+				'actions'=>array('index','view','oldShift'),
 				'expression'=>array('ShiftController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -36,6 +36,16 @@ class ShiftController extends Controller
 			),
 		);
 	}
+
+	public function actionOldShift(){
+        $sql="UPDATE sal_visit SET
+        shift_user=username,
+        username=lcu
+        WHERE shift_user IS NULL AND shift='Z' AND username!=lcu";
+        $sum = Yii::app()->db->createCommand($sql)->execute();
+        var_dump($sum);
+        Yii::app()->end();
+    }
 
 	public function actionIndex($pageNum=0) 
 	{
