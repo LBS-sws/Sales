@@ -71,18 +71,20 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                         array('readonly'=>($model->scenario!='new'),'prepend'=>'<span class="fa fa-calendar"></span>','id'=>'apply_date')
                     ); ?>
                 </div>
-                <?php echo $form->labelEx($model,'customer_no',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'customer_no',
-                        array('readonly'=>($model->scenario!='new'))
-                    ); ?>
-                </div>
                 <?php echo $form->labelEx($model,'kam_id',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->textField($model, 'kam_id',
                         array('readonly'=>(true))
                     ); ?>
                 </div>
+                <?php if ($model->scenario!='new'): ?>
+                <?php echo $form->labelEx($model,'customer_no',array('class'=>"col-sm-1 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->textField($model, 'customer_no',
+                        array('readonly'=>(true))
+                    ); ?>
+                </div>
+                <?php endif ?>
             </div>
             <div class="form-group">
                 <?php echo $form->labelEx($model,'customer_name',array('class'=>"col-sm-2 control-label")); ?>
@@ -189,19 +191,19 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'month_amt',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->numberField($model, 'month_amt',
-                        array('readonly'=>($model->scenario=='view'),'prepend'=>'<span class="fa fa-money"></span>')
+                        array('readonly'=>($model->scenario=='view'),'id'=>'month_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
                 <?php echo $form->labelEx($model,'quarter_amt',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->numberField($model, 'quarter_amt',
-                        array('readonly'=>($model->scenario=='view'),'prepend'=>'<span class="fa fa-money"></span>')
+                        array('readonly'=>($model->scenario=='view'),'id'=>'quarter_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
                 <?php echo $form->labelEx($model,'year_amt',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->numberField($model, 'year_amt',
-                        array('readonly'=>($model->scenario=='view'),'prepend'=>'<span class="fa fa-money"></span>')
+                        array('readonly'=>($model->scenario=='view'),'id'=>'year_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
             </div>
@@ -221,7 +223,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'sign_amt',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->numberField($model, 'sign_amt',
-                        array('readonly'=>($model->scenario=='view'),'prepend'=>'<span class="fa fa-money"></span>')
+                        array('readonly'=>($model->scenario=='view'),'id'=>'sign_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
             </div>
@@ -233,9 +235,15 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                     ); ?>
                 </div>
                 <?php echo $form->labelEx($model,'sign_odds',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-3">
+                <div class="col-sm-2">
                     <?php echo $form->dropDownList($model, 'sign_odds',KABotForm::getSignOddsListForId(),
                         array('readonly'=>($model->scenario=='view'))
+                    ); ?>
+                </div>
+                <?php echo $form->labelEx($model,'sum_amt',array('class'=>"col-sm-1 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->numberField($model, 'sum_amt',
+                        array('readonly'=>(true),'id'=>'sum_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
             </div>
@@ -271,7 +279,6 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 
 <?php $this->renderPartial('//site/removedialog'); ?>
 <?php $this->renderPartial('//kABot/historylist',array("model"=>$model)); ?>
-
 <?php
 $js = "
 $('table').on('change','[id^=\"KABotForm\"]',function() {
@@ -282,6 +289,24 @@ $('table').on('change','[id^=\"KABotForm\"]',function() {
 Yii::app()->clientScript->registerScript('setFlag',$js,CClientScript::POS_READY);
 $ajaxUrl=Yii::app()->createUrl('kABot/ajaxSupportUser');
 $js ="
+    $('#month_amt,#quarter_amt,#year_amt,#sign_amt').change(function(){
+        var sign_amt=$('#sign_amt').val();
+        var year_amt=$('#year_amt').val();
+        var quarter_amt=$('#quarter_amt').val();
+        var month_amt=$('#month_amt').val();
+        var sum_amt=0;
+        if(sign_amt!=''){
+            sum_amt = sign_amt;
+        }else if(year_amt==''&&quarter_amt==''&&month_amt==''){
+            sum_amt='';
+        }else{
+            sum_amt+=year_amt==''?0:parseFloat(year_amt);
+            sum_amt+=quarter_amt==''?0:parseFloat(quarter_amt);
+            sum_amt+=month_amt==''?0:parseFloat(month_amt);
+        }
+        $('#sum_amt').val(sum_amt);
+    });
+
     $('.changeCity').change(function(){
         var city = $(this).val();
         $('.changeCity').each(function(){

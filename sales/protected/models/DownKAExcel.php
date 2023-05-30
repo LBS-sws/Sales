@@ -14,6 +14,7 @@ class DownKAExcel{
     protected $header_title;
     protected $header_string;
     public $colTwo=2;
+    public $th_num=0;
 
     public function SetHeaderTitle($invalue) {
         $this->header_title = $invalue;
@@ -40,22 +41,6 @@ class DownKAExcel{
                 $startStr = $this->getColumn($i);
                 $this->objPHPExcel->getActiveSheet()->mergeCells($startStr.$this->current_row.':'.$startStr.($this->current_row+2));
             }
-            $this->objPHPExcel->getActiveSheet()->getStyle("A{$this->current_row}:Y".($this->current_row+2))->applyFromArray(
-                array(
-                    'font'=>array(
-                        'bold'=>true,
-                    ),
-                    'alignment'=>array(
-                        'horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-                        'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,
-                    ),
-                    'borders'=>array(
-                        'allborders'=>array(
-                            'style'=>PHPExcel_Style_Border::BORDER_THIN,
-                        ),
-                    )
-                )
-            );
             $colOne = 0;
             foreach ($headerArr as $list){
                 $background="FFFFFF";
@@ -82,6 +67,7 @@ class DownKAExcel{
                             $this->objPHPExcel->getActiveSheet()
                                 ->setCellValueByColumnAndRow($colOne, $this->current_row+2, $three["name"]);
                             $colOne++;
+                            $this->th_num++;
                         }
                         $endStr = $this->getColumn($colOne-1);
                         $this->objPHPExcel->getActiveSheet()
@@ -92,10 +78,27 @@ class DownKAExcel{
                         ->mergeCells($twoStr.$this->current_row.':'.$endStr.$this->current_row);
                 }else{
                     $colOne++;
+                    $this->th_num++;
                 }
                 $endStr = $this->getColumn($colOne-1);
                 $this->setHeaderStyleTwo("{$oneStr}{$this->current_row}:{$endStr}".($this->current_row+2),$background,$textColor);
                 //$colOne++;
+                $this->objPHPExcel->getActiveSheet()->getStyle("A{$this->current_row}:{$endStr}".($this->current_row+2))->applyFromArray(
+                    array(
+                        'font'=>array(
+                            'bold'=>true,
+                        ),
+                        'alignment'=>array(
+                            'horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                            'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,
+                        ),
+                        'borders'=>array(
+                            'allborders'=>array(
+                                'style'=>PHPExcel_Style_Border::BORDER_THIN,
+                            ),
+                        )
+                    )
+                );
             }
 
             $this->current_row+=3;
@@ -115,6 +118,7 @@ class DownKAExcel{
 
     public function setKAData($data){
         if(!empty($data)){
+            $endStr = $this->getColumn($this->th_num-1);
             foreach ($data as $city=>$staffList){
                 foreach ($staffList as $staff_id =>$list){
                     $col = 0;
@@ -124,7 +128,7 @@ class DownKAExcel{
                     }
                     if($staff_id==="count"){
                         $this->objPHPExcel->getActiveSheet()
-                            ->getStyle("A{$this->current_row}:Y{$this->current_row}")
+                            ->getStyle("A{$this->current_row}:{$endStr}{$this->current_row}")
                             ->applyFromArray(
                                 array(
                                     'font'=>array(

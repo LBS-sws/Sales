@@ -100,7 +100,7 @@ class KABotForm extends CFormModel
                 contact_user,contact_phone,contact_email,contact_dept,source_text,source_id,
                 area_id,level_id,class_id,busine_id,link_id,year_amt,support_user,sign_odds,city,
                 quarter_amt,month_amt,sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
-            array('apply_date,customer_no,customer_name,kam_id,link_id','required'),
+            array('apply_date,customer_name,kam_id,link_id','required'),
             array('sign_amt','computeSignAmt'),
 		);
 	}
@@ -253,12 +253,29 @@ class KABotForm extends CFormModel
                         $list["update_html"][]="<span>".$this->getAttributeLabel($key)."：".self::getNameForValue($key,$model->$key)." 修改为 ".self::getNameForValue($key,$this->$key)."</span>";
                     }
                 }
+                $this->getHistoryDetail($list["update_html"]);
                 if(!empty($list["update_html"])){
                     $list["update_html"] = implode("<br/>",$list["update_html"]);
                     $connection->createCommand()->insert("sal_ka_bot_history", $list);
                 }
                 break;
         }
+    }
+
+    private function getHistoryDetail(&$list){
+        foreach ($_POST['KABotForm']['detail'] as $row) {
+            switch ($row['uflag']){
+                case "Y"://修改
+                    if(!empty($row['id'])){
+                        $list[]="<span>修改了跟进事项：".$row['info_date']."</span>";
+                    }
+                    break;
+                case "D"://刪除
+                    $list[]="<span>删除了跟进事项：".$row['info_date']."</span>";
+                    break;
+            }
+        }
+        return $list;
     }
 
     protected function saveDetail(&$connection)
@@ -334,7 +351,7 @@ class KABotForm extends CFormModel
         $city = Yii::app()->user->city();
 	    $list=array();
         $arr = array(
-            "apply_date"=>2,"customer_no"=>1,"customer_name"=>1,
+            "apply_date"=>2,"customer_name"=>1,
             "head_city_id"=>3,"talk_city_id"=>3,"contact_user"=>1,"contact_phone"=>1,
             "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>3,
             "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>3,"link_id"=>3,"year_amt"=>3,
@@ -368,7 +385,6 @@ class KABotForm extends CFormModel
                 break;
             case 'edit':
                 unset($list["apply_date"]);
-                unset($list["customer_no"]);
                 unset($list["customer_name"]);
                 unset($list["kam_id"]);
                 $list["luu"] = $uid;
@@ -376,10 +392,24 @@ class KABotForm extends CFormModel
                 break;
         }
 
-		if ($this->scenario=='new')
-			$this->id = Yii::app()->db->getLastInsertID();
+		if ($this->scenario=='new'){
+            $this->id = Yii::app()->db->getLastInsertID();
+            $this->lenStr();
+            Yii::app()->db->createCommand()->update('sal_ka_bot', array(
+                'customer_no'=>$this->customer_no
+            ), 'id=:id', array(':id'=>$this->id));
+        }
 		return true;
 	}
+
+    private function lenStr(){
+        $code = strval($this->id);
+        $this->customer_no = "LBSKA";
+        for($i = 0;$i < 5-strlen($code);$i++){
+            $this->customer_no.="0";
+        }
+        $this->customer_no .= $code;
+    }
 
 	public function isOccupied(){
 	    return false;
