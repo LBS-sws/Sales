@@ -60,5 +60,7 @@ return array(
     'search quarter'=>'季度',
     'search month'=>'月份',
     'search day'=>'日期',
+    'completed'=>'已完成',
+    'incomplete'=>'未完成',
 );
 ?>

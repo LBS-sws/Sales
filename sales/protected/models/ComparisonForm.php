@@ -292,9 +292,9 @@ class ComparisonForm extends CFormModel
         $list["stop_rate"] = $this->nowAndLastRate($list["stop_sum"],$list["stop_sum_last"],true);
         $list["net_rate"] = $this->nowAndLastRate($list["net_sum"],$list["net_sum_last"],true);
         $list["start_two_gross_rate"] = $this->comparisonRate($list["new_sum"],$list["start_two_gross"]);
-        $list["start_two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["start_two_net"]);
+        $list["start_two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["start_two_net"],"net");
         $list["two_gross_rate"] = $this->comparisonRate($list["new_sum"],$list["two_gross"]);
-        $list["two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["two_net"]);
+        $list["two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["two_net"],"net");
     }
 
     public static function nowAndLastRate($nowNum,$lastNum,$bool=false){
@@ -312,9 +312,17 @@ class ComparisonForm extends CFormModel
         }
     }
 
-    public static function comparisonRate($num,$numLast){
+    public static function comparisonRate($num,$numLast,$str=""){
         if(empty($numLast)){
-            return 0;
+            if($str=="net"){
+                if($num>0){
+                    return Yii::t("summary","completed");
+                }else{
+                    return Yii::t("summary","incomplete");
+                }
+            }else{
+                return 0;
+            }
         }else{
             $rate = ($num/$numLast);
             $rate = round($rate,3)*100;
@@ -397,9 +405,15 @@ class ComparisonForm extends CFormModel
         $tdClass = "";
         if(strpos($text,'%')!==false){
             if(!in_array($keyStr,array("new_rate","stop_rate","net_rate"))){
-                $tdClass =floatval($text)<=60?"color:red":$tdClass;
+                $tdClass =floatval($text)<=60?";color:#a94442;":$tdClass;
             }
-            $tdClass =floatval($text)>=100?"color:green":$tdClass;
+            $tdClass =floatval($text)>=100?";color:#00a65a;":$tdClass;
+        }elseif (strpos($keyStr,'net')!==false){ //所有淨增長為0時特殊處理
+            if(Yii::t("summary","completed")==$text){
+                $tdClass=";color:#00a65a;";
+            }elseif (Yii::t("summary","incomplete")==$text){
+                $tdClass=";color:#a94442;";
+            }
         }
 
         return $tdClass;
