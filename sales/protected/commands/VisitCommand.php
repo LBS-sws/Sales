@@ -14,6 +14,7 @@ class VisitCommand extends CConsoleCommand
         $dateList = $this->getDateList($firstDay);
         $minVisit = $this->getSalesMin();//最小拜访数量
         $comparisonHtmlData = $this->getComparisonHtmlData($arr);
+        $pauseList = $this->getPauseList($firstDay);
         $staffMonthData = $this->getStaffOldMonthData($arr);
         //收件人
         $sql = "select a.username,a.email,a.city,c.name from  security$suffix.sec_user a 
@@ -213,6 +214,7 @@ EOF;
                         $message = str_replace(':sumIntegral:',$sumIntegral,$message);
                         $lcu = "admin";
                         $comparisonHtml = $this->getHtmlForCity($comparisonHtmlData,$k,$city);
+                        $comparisonHtml.=self::pauseTableHtml($pauseList,$k);
                         $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
                             'request_dt' => date('Y-m-d H:i:s'),
                             'from_addr' => $from_addr,
@@ -320,6 +322,7 @@ EOF;
 EOF;
                         $lcu = "admin";
                         $comparisonHtml = $this->getHtmlForCity($comparisonHtmlData,$k,$city);
+                        $comparisonHtml.=self::pauseTableHtml($pauseList,$k);
                         $aaa = Yii::app()->db->createCommand()->insert("swoper$suffix.swo_email_queue", array(
                             'request_dt' => date('Y-m-d H:i:s'),
                             'from_addr' => $from_addr,
@@ -435,6 +438,81 @@ EOF;
             }
         }
         $table.='</tbody></table>';
+        return $table;
+    }
+
+    private function getPauseList($date){
+        $list = array();
+        $firstDate = date("Y/m/d",strtotime($date." - 2 month"));
+        $suffix = Yii::app()->params['envSuffix'];
+        $sqlText= Yii::app()->db->createCommand()
+            ->select("company_id,salesman_id,cust_type,cust_type_name,MAX(id) AS id,MAX(status_dt) AS status_dt")
+            ->from("swoper{$suffix}.swo_service")
+            ->group("company_id,salesman_id,cust_type,cust_type_name")->getText();
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.city,a.status_dt,a.service,a.reason,a.amt_paid,a.ctrt_period,a.paid_type,
+            com.code,com.name,f.description as type_name,g.description as nature_name")
+            ->from("swoper{$suffix}.swo_service a")
+            ->leftJoin("swoper{$suffix}.swo_company com","com.id=a.company_id")
+            ->leftJoin("swoper{$suffix}.swo_customer_type f","a.cust_type=f.id")
+            ->leftJoin("swoper{$suffix}.swo_nature g","a.nature_type=g.id")
+            ->leftJoin("({$sqlText}) b","a.company_id = b.company_id AND a.salesman_id = b.salesman_id
+                    AND a.cust_type = b.cust_type AND a.cust_type_name = b.cust_type_name")
+            ->where("a.status = 'S' and a.status_dt<='{$firstDate}' AND (a.status_dt>b.status_dt or (a.status_dt=b.status_dt and a.id=b.id))")
+            ->order("a.city")->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $row["amt_paid"] = is_numeric($row["amt_paid"])?floatval($row["amt_paid"]):0;
+                $row["ctrt_period"] = is_numeric($row["ctrt_period"])?floatval($row["ctrt_period"]):0;
+                if($row["paid_type"]=="M"){//月金额
+                    $money = $row["amt_paid"]*$row["ctrt_period"];//年金額
+                    $monthMoney = $row["amt_paid"];//月金額
+                }else{
+                    $money = $row["amt_paid"];
+                    $monthMoney = empty($row["ctrt_period"])?0:$row["amt_paid"]/$row["ctrt_period"];
+                    $monthMoney = round($monthMoney,2);
+                }
+                $row["moneyForMonth"]=$monthMoney;
+                $row["moneyForYear"]=$money;
+                $city = $row["city"];
+                if(!key_exists($city,$list)){
+                    $list[$city]=array();
+                }
+                $list[$city][]=$row;
+            }
+        }
+
+        return $list;
+    }
+    public static function pauseTableHtml($data,$city){
+        $pauseList = key_exists($city,$data)?$data[$city]:array();
+        $table = "<p>以下客户的服务暂停已超过两个月，请及时跟进</p>";
+        $table.= '<table border="1" cellpadding="0" cellspacing="0" style="width: 100%;">';
+        $table.='<thead><tr>';
+        $table.='<th>暂停日期</th>';
+        $table.='<th>客户编号及名称</th>';
+        $table.='<th>客户类别</th>';
+        $table.='<th>性质</th>';
+        $table.='<th>服务内容</th>';
+        $table.='<th>月金额</th>';
+        $table.='<th>年金额</th>';
+        $table.='<th>变动原因</th>';
+        $table.='</tr></thead><tbody>';
+        if(!empty($pauseList)){
+            foreach ($pauseList as $row){
+                $table.='<tr>';
+                $table.='<td>'.General::toMyDate($row["status_dt"]).'</td>';
+                $table.='<td>'.$row["code"].$row["name"].'</td>';
+                $table.='<td>'.$row["type_name"].'</td>';
+                $table.='<td>'.$row["nature_name"].'</td>';
+                $table.='<td>'.$row["service"].'</td>';
+                $table.='<td>'.$row["moneyForMonth"].'</td>';
+                $table.='<td>'.$row["moneyForYear"].'</td>';
+                $table.='<td>'.$row["reason"].'</td>';
+                $table.='</tr>';
+            }
+        }
+        $table.='</tbody></table><br/>';
         return $table;
     }
 
