@@ -446,9 +446,9 @@ EOF;
         $firstDate = date("Y/m/d",strtotime($date." - 2 month"));
         $suffix = Yii::app()->params['envSuffix'];
         $sqlText= Yii::app()->db->createCommand()
-            ->select("company_id,salesman_id,cust_type,cust_type_name,MAX(id) AS id,MAX(status_dt) AS status_dt")
+            ->select("company_id,cust_type,cust_type_name,MAX(id) AS id,MAX(status_dt) AS status_dt")
             ->from("swoper{$suffix}.swo_service")
-            ->group("company_id,salesman_id,cust_type,cust_type_name")->getText();
+            ->group("company_id,cust_type,cust_type_name")->getText();
         $rows = Yii::app()->db->createCommand()
             ->select("a.city,a.status_dt,a.service,a.reason,a.amt_paid,a.ctrt_period,a.paid_type,
             com.code,com.name,f.description as type_name,g.description as nature_name")
@@ -456,9 +456,8 @@ EOF;
             ->leftJoin("swoper{$suffix}.swo_company com","com.id=a.company_id")
             ->leftJoin("swoper{$suffix}.swo_customer_type f","a.cust_type=f.id")
             ->leftJoin("swoper{$suffix}.swo_nature g","a.nature_type=g.id")
-            ->leftJoin("({$sqlText}) b","a.company_id = b.company_id AND a.salesman_id = b.salesman_id
-                    AND a.cust_type = b.cust_type AND a.cust_type_name = b.cust_type_name")
-            ->where("a.status = 'S' and a.status_dt<='{$firstDate}' AND (a.status_dt>b.status_dt or (a.status_dt=b.status_dt and a.id=b.id))")
+            ->leftJoin("({$sqlText}) b","a.company_id = b.company_id AND a.cust_type = b.cust_type AND a.cust_type_name = b.cust_type_name")
+            ->where("a.status = 'S' and a.status_dt BETWEEN '2023/01/01' and '{$firstDate}' AND (a.status_dt>b.status_dt or (a.status_dt=b.status_dt and a.id=b.id))")
             ->order("a.city")->queryAll();
         if($rows){
             foreach ($rows as $row){
