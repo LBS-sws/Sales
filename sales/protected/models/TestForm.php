@@ -459,17 +459,20 @@ EOF;
         $firstDate = date("Y/m/d",strtotime($date." - 2 month"));
         $suffix = Yii::app()->params['envSuffix'];
         $sqlText= Yii::app()->db->createCommand()
-            ->select("company_id,cust_type,contract_no,MAX(id) AS id,MAX(status_dt) AS status_dt")
-            ->from("swoper{$suffix}.swo_service")
-            ->group("company_id,cust_type,contract_no")->getText();
+            ->select("ser.company_id,ser.cust_type,ser_no.contract_no,MAX(ser.id) AS id,MAX(ser.status_dt) AS status_dt")
+            ->from("swoper{$suffix}.swo_service ser")
+            ->leftJoin("swoper{$suffix}.swo_service_contract_no ser_no","ser.id=ser_no.service_id")
+            ->where("ser.status_dt>='2023/01/01'")
+            ->group("ser.company_id,ser.cust_type,ser_no.contract_no")->getText();
         $rows = Yii::app()->db->createCommand()
             ->select("a.city,a.status_dt,a.service,a.reason,a.amt_paid,a.ctrt_period,a.paid_type,
             com.code,com.name,f.description as type_name,g.description as nature_name")
             ->from("swoper{$suffix}.swo_service a")
+            ->leftJoin("swoper{$suffix}.swo_service_contract_no n","a.id=n.service_id")
             ->leftJoin("swoper{$suffix}.swo_company com","com.id=a.company_id")
             ->leftJoin("swoper{$suffix}.swo_customer_type f","a.cust_type=f.id")
             ->leftJoin("swoper{$suffix}.swo_nature g","a.nature_type=g.id")
-            ->leftJoin("({$sqlText}) b","a.company_id = b.company_id AND a.cust_type = b.cust_type AND a.contract_no = b.contract_no")
+            ->leftJoin("({$sqlText}) b","a.company_id = b.company_id AND a.cust_type = b.cust_type AND IFNULL(b.contract_no,'sb')=IFNULL(n.contract_no,'sb')")
             ->where("a.status = 'S' and a.status_dt BETWEEN '2023/01/01' and '{$firstDate}' AND (a.status_dt>b.status_dt or (a.status_dt=b.status_dt and a.id=b.id))")
             ->order("a.city")->queryAll();
         if($rows){
