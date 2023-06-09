@@ -25,6 +25,13 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type';
 				)); 
 		?>
 	</div>
+	<div class="btn-group pull-right" role="group">
+		<?php
+        echo TbHtml::button('<span class="fa fa-down"></span> '.Yii::t('ka','Download'), array(
+            'data-toggle'=>'modal','data-target'=>'#downDialog'
+        ));
+		?>
+	</div>
 	</div></div>
 	<?php $this->widget('ext.layout.ListPageWidget', array(
 			'title'=>Yii::t('ka','Setting Type List'),
@@ -49,8 +56,34 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type';
 	echo $form->hiddenField($model,'orderField');
 	echo $form->hiddenField($model,'orderType');
 ?>
-<?php $this->endWidget(); ?>
+<?php
+$ftrbtn = array();
+$ftrbtn[] = TbHtml::button(Yii::t('dialog','Close'), array('data-dismiss'=>'modal','color'=>TbHtml::BUTTON_COLOR_DEFAULT,'class'=>'pull-left'));
+$ftrbtn[] = TbHtml::button(Yii::t('ka','Download'), array(
+    'color'=>TbHtml::BUTTON_COLOR_PRIMARY,
+    'submit'=>Yii::app()->createUrl('kABot/downExcel')
+));
+$this->beginWidget('bootstrap.widgets.TbModal', array(
+    'id'=>'downDialog',
+    'header'=>Yii::t('ka','Download'),
+    'footer'=>$ftrbtn,
+    'show'=>false,
+));
+?>
+<div class="row">
+    <div class="col-lg-12">
+        <?php echo TbHtml::label(Yii::t("ka",'search year'),"",array('class'=>"col-lg-4 control-label text-right"));?>
+        <div class="col-lg-4">
+            <?php echo TbHtml::numberField("year",date("Y"));?>
+        </div>
+    </div>
+</div>
 
+<?php
+$this->endWidget();
+?>
+
+<?php $this->endWidget(); ?>
 <?php
 	$js = Script::genTableRowClick();
 	Yii::app()->clientScript->registerScript('rowClick',$js,CClientScript::POS_READY);

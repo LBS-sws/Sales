@@ -116,4 +116,20 @@ class KABotList extends CListPageModel
 		return true;
 	}
 
+	public function downExcel($year){
+        $rptModel = new RptKABot();
+        $criteria=array(
+            "city"=>Yii::app()->user->city(),
+            "city_allow"=>Yii::app()->user->city_allow(),
+            "year"=>$year,
+            "employee_id"=>$this->employee_id,
+            "auto_all"=>Yii::app()->user->validFunction('CN15'),
+        );
+        $param['RPT_NAME'] = "KA Bot";
+        $param['CITY'] = $criteria["city"];
+        $param['YEAR'] = $criteria["year"];
+        $param['CRITERIA'] = json_encode($criteria);
+        $rptModel->criteria = $param;
+        $rptModel->downExcel("KA项目({$year})");
+    }
 }

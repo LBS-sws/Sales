@@ -28,7 +28,7 @@ class KABotController extends Controller
 				'expression'=>array('KABotController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view'),
+				'actions'=>array('index','view','downExcel'),
 				'expression'=>array('KABotController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -95,6 +95,14 @@ class KABotController extends Controller
 		} else {
 			$this->render('form',array('model'=>$model,));
 		}
+	}
+
+	public function actionDownExcel()
+	{
+		$model = new KABotList();
+        KABotForm::validateEmployee($model);
+		$year=isset($_POST["year"])?$_POST["year"]:date("Y");
+		$model->downExcel($year);
 	}
 	
 	public function actionNew()

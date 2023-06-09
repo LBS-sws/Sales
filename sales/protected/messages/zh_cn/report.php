@@ -138,5 +138,6 @@ return array(
     'Sales ranking'=>'销售个人段位排行榜',
     'Sales Rank'=>'销售个人段位明细查询',
     'Sales Rank man'=>'销售个人段位明细查询人员',
+    'KA Bot'=>'KA项目',
 );
 ?>

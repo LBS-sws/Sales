@@ -83,7 +83,7 @@ class MyExcel {
 		$this->outDetail($data);
 	}
 	
-	public function generate($data) {
+	public function generate($data,$filename="01simple") {
 		$phpExcelPath = Yii::getPathOfAlias('ext.phpexcel');
 		spl_autoload_unregister(array('YiiBase','autoload'));
 		include($phpExcelPath . DIRECTORY_SEPARATOR . 'PHPExcel.php');
@@ -99,9 +99,9 @@ class MyExcel {
 		$this->outHeader();
 
 		$this->outDetail($data);
-		
+		$filename= iconv('utf-8','gb2312',$filename);
 		header('Content-Type: application/vnd.ms-excel');
-		header('Content-Disposition: inline;filename="01simple.xlsx"');
+		header('Content-Disposition: inline;filename="'.$filename.'.xlsx"');
 		header('Cache-Control: max-age=0');
 
 		$objWriter = PHPExcel_IOFactory::createWriter($this->objPHPExcel, 'Excel2007');

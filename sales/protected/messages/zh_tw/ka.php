@@ -68,5 +68,6 @@ return array(
     ' year'=>'年',
     ' month'=>'月',
     'all total'=>'所有統計',
+    'Download'=>'下載',
 );
 ?>

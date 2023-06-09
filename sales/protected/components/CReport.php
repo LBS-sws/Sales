@@ -340,8 +340,9 @@ class CReport {
 		$crow = $this->current_row;
 		foreach ($this->rpt_detail as $item) {
 			if (is_array($item)) {
+                $ccol=0;
 				foreach ($data['detail'] as $idx=>$row) {
-					$ccol = $col;
+                    $ccol = $col;
 					foreach ($item as $key) {
 						$text = $row[$key];
 						$this->excel->writeCell($ccol, $crow, $text, array('align'=>$this->rpt_fields[$key]['align'],'valign'=>'T'));
@@ -356,6 +357,14 @@ class CReport {
 				$col++;
 			}
 		}
+		if($crow-$this->current_row>1){
+            foreach ($this->rpt_detail as $i=>$item) {
+                if (!is_array($item)) {
+                    $this->excel->mergeCells($this->current_row, $i, $crow-1, $i);
+                }
+            }
+
+        }
 		$this->current_row = $crow;
 	}
 	
@@ -371,7 +380,7 @@ class CReport {
 			if ($change || !array_key_exists($idx,$this->buffer_g) || !empty($diff)) {
 				$change = true;
 				$this->buffer_g[$idx] = $current;
-				$this->outGroupHeader($rows, $group, $idx);
+				$this->outGroupHeader($data, $group, $idx);
 				
 				$col = 0;
 				$totalcol = count($this->rpt_fields);
