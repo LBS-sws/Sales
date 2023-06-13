@@ -99,7 +99,7 @@ class MyExcel {
 		$this->outHeader();
 
 		$this->outDetail($data);
-		$filename= iconv('utf-8','gb2312',$filename);
+        $filename= iconv('utf-8','gbk//ignore',$filename);
 		header('Content-Type: application/vnd.ms-excel');
 		header('Content-Disposition: inline;filename="'.$filename.'.xlsx"');
 		header('Cache-Control: max-age=0');
