@@ -125,8 +125,19 @@ class ExcelTool {
 		if ($width > 0)
 			$this->objPHPExcel->getActiveSheet()->getColumnDimensionByColumn($col)->setWidth($width);
 	}
+
+	public function setRowHeight($row, $height) {
+		if ($height > 0){
+            $this->objPHPExcel->getActiveSheet()->getRowDimension($row)->setRowHeight($height);
+        }
+	}
+
+    // 固定第一行
+	public function setFreezePane($str="A2") {
+        $this->objPHPExcel->getActiveSheet()->freezePane($str);
+	}
 	
-	public function setRangeStyle($cells,$bold,$italic,$halign,$valign,$border,$fill) {
+	public function setRangeStyle($cells,$bold,$italic,$halign,$valign,$border,$fill,$fillColor="AFECFF") {
 		$styleArray = array(
 			'font'=>array(
 				'bold'=>$bold,
@@ -168,7 +179,7 @@ class ExcelTool {
 			$styleArray['fill'] = array(
 						'type'=>PHPExcel_Style_Fill::FILL_SOLID,
 						'startcolor'=>array(
-							'argb'=>'AFECFF',
+							'argb'=>empty($fillColor)?'AFECFF':$fillColor,
 						),
 					);
 

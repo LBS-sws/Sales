@@ -251,12 +251,15 @@ class CReport {
 				foreach ($this->rpt_fields as $id=>$items) {
 					$this->excel->writeCell($j, $this->current_row, $items['label']);
 					$this->excel->setColWidth($j, $items['width']);
-					$j++;
-				}
+					if(key_exists("height",$items)){
+                        $this->excel->setRowHeight($this->current_row, $items['height']);
+                    }
 
-				$itemcnt = count($this->rpt_fields);
-				$range = $this->excel->getColumn(0).$this->current_row.':'.$this->excel->getColumn($itemcnt-1).$this->current_row;
-				$this->excel->setRangeStyle($range,true,false,'C','C','allborders',true);
+                    $fillColor = key_exists("fillColor",$items)?$items["fillColor"]:"";
+                    $range=$this->excel->getColumn($j).$this->current_row;
+                    $this->excel->setRangeStyle($range,true,false,'C','C','allborders',true,$fillColor);
+                    $j++;
+				}
 			}
 		}
 		$this->current_row++;
