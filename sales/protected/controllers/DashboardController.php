@@ -150,9 +150,10 @@ class DashboardController extends Controller
         $models = array();
         $cities = General::getCityListWithNoDescendant();
         $time= date('Y-m-d', strtotime(date('Y-m-01') ));
+        $notCityList = self::notCityList();
         foreach ($cities as $code=>$name) {
             $sum_arr = array();
-            if (strpos("/'CS'/'H-N'/'HK'/'TC'/'ZS1'/'TP'/'TY'/'KS'/'TN'/'XM'/'KH'/'ZY'/'MO'/'RN'/'MY'/'WL'/'HN1'/","'".$code."'")===false) {
+            if (!key_exists($code,$notCityList)) {
                 $sql = "select a.name as city_name, b.name as region_name 
 						from security$suffix.sec_city a
 						left outer join security$suffix.sec_city b on a.region=b.code
@@ -196,13 +197,23 @@ foreach ($models as $key=>$item) {
         echo json_encode($result);
     }
 
+    public static function notCityList(){
+        $notCityList = General::getKAAndAreaCityList();//KA城市及區域不參與排行榜
+	    $list = array(
+            "CS","H-N","HK","TC","ZS1","TP","TY","KS","TN",
+            "XM","KH","ZY","MO","RN","MY","WL","HN1",
+        );//排行榜需要特別排除的城市
+	    return array_merge($notCityList,$list);
+    }
+
     public function actionSalelists() {
         $suffix = Yii::app()->params['envSuffix'];
         $models = array();
         $cities = General::getCityListWithNoDescendant();
         $time= date('Y-m-d', strtotime(date('Y-m-01') ));
+        $notCityList = self::notCityList();
         foreach ($cities as $code=>$name) {
-            if (strpos("/'CS'/'H-N'/'HK'/'TC'/'ZS1'/'TP'/'TY'/'KS'/'TN'/'XM'/'KH'/'ZY'/'MO'/'RN'/'MY'/'WL'/'HN1'/","'".$code."'")===false) {
+            if (!key_exists($code,$notCityList)) {
                 $sql = "select a.name as city_name, b.name as region_name 
 						from security$suffix.sec_city a
 						left outer join security$suffix.sec_city b on a.region=b.code

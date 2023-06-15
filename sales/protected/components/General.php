@@ -236,6 +236,34 @@ class General {
 		}
 		return $list;
 	}
+
+	public static function getKACityList() {
+		$list = array();
+		$suffix = Yii::app()->params['envSuffix'];
+		$rows = Yii::app()->db->createCommand()->select("a.code,a.name")
+			->from("security{$suffix}.sec_city a")
+			->where("a.ka_bool=1")->queryAll();
+		if ($rows) {
+			foreach ($rows as $row) {
+				$list[$row['code']] = $row['name'];
+			}
+		}
+		return $list;
+	}
+
+	public static function getKAAndAreaCityList() {
+		$list = array();
+		$suffix = Yii::app()->params['envSuffix'];
+		$rows = Yii::app()->db->createCommand()->select("a.code,a.name")
+			->from("security{$suffix}.sec_city a")
+			->where("a.ka_bool in (1,2)")->queryAll();
+		if ($rows) {
+			foreach ($rows as $row) {
+				$list[$row['code']] = $row['name'];
+			}
+		}
+		return $list;
+	}
 	
 	public static function getEmailListboxData()
 	{
