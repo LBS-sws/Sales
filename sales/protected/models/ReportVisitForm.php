@@ -1873,7 +1873,7 @@ class ReportVisitForm extends CReportForm
             }
 //            print_r('<pre/>');
 //            print_r($records);
-            $sqls="select a.name as cityname ,d.name as names,d.staff_status from security$suffix.sec_city a	,hr$suffix.hr_binding b	 ,security$suffix.sec_user  c ,hr$suffix.hr_employee d 
+            $sqls="select a.name as cityname ,d.name as names,d.staff_status,d.entry_time from security$suffix.sec_city a	,hr$suffix.hr_binding b	 ,security$suffix.sec_user  c ,hr$suffix.hr_employee d 
                 where c.username='$peoples' and b.user_id='".$peoples."' and b.employee_id=d.id and c.city=a.code";
             $cname = Yii::app()->db->createCommand($sqls)->queryRow();
             $sql1="select id,visit_dt  from sal_visit where username='".$peoples."'  and  visit_dt >= '$start_dt'and visit_dt <= '$end_dt' and visit_obj like '%10%'";
@@ -1896,6 +1896,7 @@ class ReportVisitForm extends CReportForm
             $baifang = Yii::app()->db->createCommand($sqlbf)->queryScalar();
             $people['visit']=$baifang;
             $people['singular']=$sums;
+            $people['entry_time']=$cname['entry_time'];
             $people['cityname']=$cname['cityname'];
             $people['names']=$cname['names'].(intval($cname['staff_status'])=="-1"?"（离职）":"");//员工名字
             $people['username']=$peoples;//账号名字
