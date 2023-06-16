@@ -74,7 +74,8 @@ class KAStatisticForm extends CFormModel
         $city_allow = Yii::app()->user->city_allow();
         $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}'";
         if(Yii::app()->user->validFunction('CN15')){
-            $whereSql.= " and (a.kam_id='{$this->employee_id}' or h.city in ({$city_allow}))";
+            //$whereSql.= " and (a.kam_id='{$this->employee_id}' or h.city in ({$city_allow}))";
+            $whereSql = "";//2023/06/16 改為可以看的所有記錄
         }else{
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
         }
