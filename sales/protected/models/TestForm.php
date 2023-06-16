@@ -147,6 +147,7 @@ class TestForm
 					</tr>
 EOF;
                         foreach ($arr_email as $value) {
+                            $value["entry_time"] = key_exists("entry_time",$value)?$value["entry_time"]:"null";
                             $numIntegral = key_exists($value["username"],$integralList)?$integralList[$value["username"]]:0;
                             $sumIntegral+=$numIntegral;
                             $visitColor=$sum['visit']>=$minVisit?"":"color:red";
