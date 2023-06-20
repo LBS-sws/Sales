@@ -153,7 +153,7 @@ class DashboardController extends Controller
         $notCityList = self::notCityList();
         foreach ($cities as $code=>$name) {
             $sum_arr = array();
-            if (!key_exists($code,$notCityList)) {
+            if (!in_array($code,$notCityList)) {
                 $sql = "select a.name as city_name, b.name as region_name 
 						from security$suffix.sec_city a
 						left outer join security$suffix.sec_city b on a.region=b.code
@@ -213,7 +213,7 @@ foreach ($models as $key=>$item) {
         $time= date('Y-m-d', strtotime(date('Y-m-01') ));
         $notCityList = self::notCityList();
         foreach ($cities as $code=>$name) {
-            if (!key_exists($code,$notCityList)) {
+            if (!in_array($code,$notCityList)) {
                 $sql = "select a.name as city_name, b.name as region_name 
 						from security$suffix.sec_city a
 						left outer join security$suffix.sec_city b on a.region=b.code
