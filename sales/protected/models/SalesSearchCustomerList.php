@@ -48,9 +48,9 @@ class SalesSearchCustomerList extends CListPageModel
                     array(':employee_id'=>$this->employee_id,':search_date'=>$date)
                 )->queryRow();
             $this->search_list=$row;
-            if($row&&$row["search_num"]>=10){
+            if($row&&$row["search_num"]>=20){//2023/06/20  改为20次
                 //查询次数不允许超过10次
-                $this->addError("company_name", "查询次数不允许超过10次");
+                $this->addError("company_name", "查询次数不允许超过20次");
                 return false;
             }
         }
