@@ -199,6 +199,7 @@ foreach ($models as $key=>$item) {
 
     public static function notCityList(){
         $notCityList = General::getKAAndAreaCityList();//KA城市及區域不參與排行榜
+        $notCityList = array_keys($notCityList);
 	    $list = array(
             "CS","H-N","HK","TC","ZS1","TP","TY","KS","TN",
             "XM","KH","ZY","MO","RN","MY","WL","HN1",
