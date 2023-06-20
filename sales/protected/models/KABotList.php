@@ -99,17 +99,20 @@ class KABotList extends CListPageModel
 		$this->attr = array();
 		if (count($records) > 0) {
 			foreach ($records as $k=>$record) {
-					$this->attr[] = array(
-						'id'=>$record['id'],
-						'apply_date'=>General::toDate($record['apply_date']),
-						'customer_no'=>$record['customer_no'],
-						'customer_name'=>$record['customer_name'],
-						'contact_user'=>$record['contact_user'],
-						'class_id'=>$record['class_name'],
-						'source_id'=>$record['source_name'],
-						'link_id'=>$record['link_name'],
-						'kam_id'=>$record['kam_name'],
-					);
+                $sql = "select info_date,info_text from sal_ka_bot_info where bot_id=".$record['id']." ";
+                $infoRows = Yii::app()->db->createCommand($sql)->queryAll();
+                $this->attr[] = array(
+                    'id'=>$record['id'],
+                    'apply_date'=>General::toDate($record['apply_date']),
+                    'customer_no'=>$record['customer_no'],
+                    'customer_name'=>$record['customer_name'],
+                    'contact_user'=>$record['contact_user'],
+                    'class_id'=>$record['class_name'],
+                    'source_id'=>$record['source_name'],
+                    'link_id'=>$record['link_name'],
+                    'kam_id'=>$record['kam_name'],
+                    'detail'=>$infoRows?$infoRows:array(),
+                );
 			}
 		}
 		$session = Yii::app()->session;

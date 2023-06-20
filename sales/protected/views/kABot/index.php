@@ -85,6 +85,27 @@ $this->endWidget();
 
 <?php $this->endWidget(); ?>
 <?php
-	$js = Script::genTableRowClick();
-	Yii::app()->clientScript->registerScript('rowClick',$js,CClientScript::POS_READY);
+$js = <<<EOF
+function showdetail(id) {
+	var icon = $('#btn_'+id).attr('class');
+	if (icon.indexOf('plus') >= 0) {
+		$('.detail_'+id).show();
+		$('#btn_'+id).attr('class', 'fa fa-minus-square');
+	} else {
+		$('.detail_'+id).hide();
+		$('#btn_'+id).attr('class', 'fa fa-plus-square');
+	}
+}
+
+$('.click-td').on('click',function(e){
+    var id = $(this).data('id');
+    if($('#btn_'+id).length>=1){
+        showdetail(id);
+    }
+    e.stopPropagation();
+});
+EOF;
+$js.= Script::genTableRowClick();
+Yii::app()->clientScript->registerScript('rowClick',$js,CClientScript::POS_READY);
+	//Yii::app()->clientScript->registerScript('rowClick',$js,CClientScript::POS_READY);
 ?>
