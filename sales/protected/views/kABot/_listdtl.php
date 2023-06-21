@@ -5,6 +5,7 @@ $idX = $this->record['id'];
 ?>
 <tr class='clickable-row' data-href='<?php echo $this->getLink('KA01', 'kABot/edit', 'kABot/view', array('index'=>$this->record['id']));?>'>
 	<td><?php echo $this->drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$this->record['id'])); ?></td>
+	<td><?php echo $this->record['info_date']; ?></td>
 	<td><?php echo $this->record['apply_date']; ?></td>
 	<td><?php echo $this->record['customer_no']; ?></td>
 	<td><?php echo $this->record['customer_name']; ?></td>
@@ -27,7 +28,7 @@ $idX = $this->record['id'];
 if (count($this->record['detail'])>0) {
     foreach ($this->record['detail'] as $row) {
         $html = "<tr class='detail_$idX' style='display:none;'>";
-        $html.= "<td colspan='3' class='text-right'><strong>".Yii::t("ka","info date")."：</strong>".General::toDate($row["info_date"])."</td>";
+        $html.= "<td colspan='4' class='text-right'><strong>".Yii::t("ka","info date")."：</strong>".General::toDate($row["info_date"])."</td>";
         $html.= "<td colspan='7' class='text-left'><strong>".Yii::t("ka","info text")."：</strong>".$row["info_text"]."</td>";
         $html.= "</tr>";
         echo $html;
