@@ -99,7 +99,7 @@ class KABotList extends CListPageModel
 		$this->attr = array();
 		if (count($records) > 0) {
 			foreach ($records as $k=>$record) {
-                $sql = "select info_date,info_text from sal_ka_bot_info where bot_id=".$record['id']." ";
+                $sql = "select info_date,info_text from sal_ka_bot_info where bot_id=".$record['id']." order by info_date desc";
                 $infoRows = Yii::app()->db->createCommand($sql)->queryAll();
                 $this->attr[] = array(
                     'id'=>$record['id'],
