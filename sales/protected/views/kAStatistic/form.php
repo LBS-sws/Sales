@@ -96,6 +96,9 @@ $this->pageTitle=Yii::app()->name . ' - KA Statistic Form';
 
 </section>
 
+<!--功能說明-->
+<?php $this->renderPartial('//kAStatistic/rankingNote',array("model"=>$model)); ?>
+
 
 <?php
 $js="

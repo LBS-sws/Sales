@@ -165,8 +165,8 @@ class KAStatisticForm extends CFormModel
                     "sign_this_amt"=>$signList["sign_this_amt"],//本月金额
                     "ytd_num"=>$row["ytd_num"],
                     "ytd_amt"=>$row["ytd_amt"],
-                    "mtd_num"=>$mtdRow["mtd_num"],
-                    "mtd_amt"=>$mtdRow["mtd_amt"],
+                    "mtd_num"=>empty($mtdRow["mtd_num"])?0:$mtdRow["mtd_num"],
+                    "mtd_amt"=>empty($mtdRow["mtd_amt"])?0:$mtdRow["mtd_amt"],
                 );
                 $this->data[$row["city"]][$row["id"]] = $list;
             }
