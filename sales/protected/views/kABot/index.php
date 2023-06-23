@@ -45,6 +45,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type';
 							'class_id',
 							'source_id',
 							'link_id',
+							'sign_odds',
 							'kam_id',
 						),
 		));

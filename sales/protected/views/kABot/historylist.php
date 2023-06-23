@@ -24,7 +24,7 @@
         $list = KABotForm::getBotHistoryRows($model->id);
         if($list){
             foreach ($list as $row){
-                echo "<tr><td>".$row['lcu']."</td><td>".$row['lcd']."</td><td>".$row['update_html']."</td></tr>";
+                echo "<tr data-id='{$row['id']}'><td>".$row['lcu']."</td><td>".$row['lcd']."</td><td>".$row['update_html']."</td></tr>";
 
             }
         }

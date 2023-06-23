@@ -28,7 +28,7 @@ class KABotController extends Controller
 				'expression'=>array('KABotController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view','downExcel'),
+				'actions'=>array('index','view','downExcel','resetOldData','updateHistory'),
 				'expression'=>array('KABotController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -36,6 +36,18 @@ class KABotController extends Controller
 			),
 		);
 	}
+
+    //修改ka項目的操作記錄日期 id：歷史記錄的id
+    public function actionUpdateHistory($id,$date){
+	    if(!empty($date)){
+            $bool = Yii::app()->db->createCommand()->update("sal_ka_bot_history",array(
+                "lcd"=>$date
+            ),"id=:id",array(":id"=>$id));
+            echo $bool;
+        }else{
+	        echo "date error:".$date;
+        }
+    }
 
     //区域支持者的異步請求
     public function actionAjaxSupportUser(){
@@ -110,7 +122,7 @@ class KABotController extends Controller
 		$model = new KABotForm('new');
         if(KABotForm::validateEmployee($model)){
             $model->kam_id = $model->employee_name." (".$model->employee_code.")";
-            $model->apply_date=date("Y-m-d");
+            $model->apply_date=date("Y/m/d");
             $this->render('form',array('model'=>$model,));
         }else{
             $message = "该账号没有绑定员工无法新增KA项目";
@@ -153,4 +165,43 @@ class KABotController extends Controller
 	public static function allowReadOnly() {
 		return Yii::app()->user->validFunction('KA01');
 	}
+
+    //由於2023/06/23日修改，所以之前的舊數據需要清空
+    public function actionResetOldData(){
+        $model = new KABotForm();
+        $rows = Yii::app()->db->createCommand()->select("id,apply_date")
+            ->from("sal_ka_bot")->where("follow_date is null")->queryAll();
+        echo "start:<br/>";
+        if($rows){
+            foreach ($rows as $row){
+                $model->setModelData($row["id"]);
+                //刷新跟進日期
+                $historyRow = Yii::app()->db->createCommand()->select("info_date")->from("sal_ka_bot_info")
+                    ->where("bot_id=:id",array(":id"=>$row["id"]))->order("info_date desc")->queryRow();
+                if($historyRow){
+                    $row["apply_date"] = $row["apply_date"]>=$historyRow["info_date"]?$row["apply_date"]:$historyRow["info_date"];
+                }
+                Yii::app()->db->createCommand()->update("sal_ka_bot",array(
+                    "follow_date"=>$row["apply_date"]
+                ),"id=:id",array(":id"=>$row["id"]));
+                //刷新ka項目的歷史記錄
+                Yii::app()->db->createCommand()->delete("sal_ka_bot_history","bot_id=:id",
+                    array(":id"=>$row["id"])
+                );
+                Yii::app()->db->createCommand()->insert("sal_ka_bot_history",array(
+                    "bot_id"=>$row["id"],
+                    "update_type"=>2,
+                    "update_html"=>"<span>系統修改旧数据</span>",
+                    "update_json"=>$model->getUpdateJson(),
+                    "espe_type"=>1,
+                    "sum_amt"=>empty($model->sum_amt)?0:$model->sum_amt,
+                    "sign_odds"=>empty($model->sign_odds)?null:$model->sign_odds,
+                    "lcd"=>$model->apply_date,
+                    "lcu"=>"系统",
+                ));
+            }
+        }
+        echo "update:".count($rows)."<br/>";
+        echo "end<br/>";
+    }
 }

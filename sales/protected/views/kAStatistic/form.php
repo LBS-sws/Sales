@@ -83,6 +83,7 @@ $this->pageTitle=Yii::app()->name . ' - KA Statistic Form';
                             <!-- Table -->
                             <div class="table-responsive">
                                 <?php echo $model->kAStatisticHtml();?>
+                                <?php echo $form->hiddenField($model,"downJsonText",array("name"=>"excel"));?>
                             </div>
                         </div>
                     </div>

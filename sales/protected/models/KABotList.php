@@ -21,7 +21,8 @@ class KABotList extends CListPageModel
 			'class_id'=>Yii::t('ka','class name'),
 			'kam_id'=>Yii::t('ka','KAM'),
 			'link_id'=>Yii::t('ka','link name'),
-            'info_date'=>Yii::t('ka','info date'),
+            'follow_date'=>Yii::t('ka','info date'),
+            'sign_odds'=>Yii::t('ka','sign odds'),
 		);
 	}
 	
@@ -35,10 +36,7 @@ class KABotList extends CListPageModel
         }else{
             $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}')";
         }
-        $infoSQL = Yii::app()->db->createCommand()->select("bot_id,max(info_date) as info_date")
-            ->from("sal_ka_bot_info")
-            ->group("bot_id")->getText();
-		$sql1 = "select a.id,j.info_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,
+		$sql1 = "select a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,
                 b.pro_name as class_name,
                 f.pro_name as source_name,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name, 
@@ -48,7 +46,6 @@ class KABotList extends CListPageModel
 				LEFT JOIN sal_ka_source f ON a.source_id=f.id
 				LEFT JOIN sal_ka_link g ON a.link_id=g.id
 				LEFT JOIN hr{$suffix}.hr_employee h ON a.kam_id=h.id
-				LEFT JOIN ({$infoSQL}) j ON j.bot_id=a.id
 				where a.id>0 {$whereSql}";
 		$sql2 = "select count(a.id)
 				from sal_ka_bot a
@@ -82,6 +79,10 @@ class KABotList extends CListPageModel
 				case 'kam_id':
 					$clause .= General::getSqlConditionClause("CONCAT(h.name,' (',h.code,')')",$svalue);
 					break;
+				case 'sign_odds':
+                    $svalue = is_numeric($svalue)?$svalue:0;
+                    $clause .= "and IFNULL(a.sign_odds,0)>={$svalue} ";
+					break;
 			}
 		}
 		
@@ -90,7 +91,7 @@ class KABotList extends CListPageModel
 			$order .= " order by ".$this->orderField." ";
 			if ($this->orderType=='D') $order .= "desc ";
 		}else{
-            $order .= " order by j.info_date desc ";
+            $order .= " order by a.follow_date desc ";
         }
 
 		$sql = $sql2.$clause;
@@ -116,7 +117,8 @@ class KABotList extends CListPageModel
                     'source_id'=>$record['source_name'],
                     'link_id'=>$record['link_name'],
                     'kam_id'=>$record['kam_name'],
-                    'info_date'=>empty($record['info_date'])?"":General::toDate($record['info_date']),
+                    'sign_odds'=>KABotForm::getSignOddsListForId($record['sign_odds'],true),
+                    'follow_date'=>empty($record['follow_date'])?"":General::toDate($record['follow_date']),
                     'detail'=>$infoRows?$infoRows:array(),
                 );
 			}

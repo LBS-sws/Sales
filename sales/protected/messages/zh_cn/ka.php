@@ -69,5 +69,8 @@ return array(
     ' month'=>'月',
     'all total'=>'所有统计',
     'Download'=>'下载',
+
+    'amount for next 90 days'=>'未来90天加权报价金额',
+    'amount for this month'=>'本月可实现销售金额',
 );
 ?>

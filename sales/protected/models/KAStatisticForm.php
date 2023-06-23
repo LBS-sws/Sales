@@ -17,6 +17,8 @@ class KAStatisticForm extends CFormModel
     public $employee_id;
     public $employee_code;
     public $employee_name;
+
+    public $downJsonText='';
 	/**
 	 * Declares customized attribute labels.
 	 * If not declared here, an attribute would have a label that is
@@ -68,6 +70,52 @@ class KAStatisticForm extends CFormModel
         );
     }
 
+    private function getSignList(){
+	    $list = array();
+        $startDate = $this->search_year."/01/01";
+        $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$this->end_date}'";
+        if(Yii::app()->user->validFunction('CN15')){
+            $whereSql = "";//2023/06/16 改為可以看的所有記錄
+        }else{
+            $whereSql.= " and b.kam_id='{$this->employee_id}'";
+        }
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
+            ->from("sal_ka_bot_history a")
+            ->leftJoin("sal_ka_bot b","a.bot_id=b.id")
+            ->where("a.espe_type=1 and a.sign_odds>=51 {$whereSql}")
+            ->group("a.bot_id,b.kam_id")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $employee_id = $row["kam_id"];
+                if(!key_exists($employee_id,$list)){
+                    $list[$employee_id]=array(
+                        "sign_90_num"=>0,//未来90天数量
+                        "sign_90_amt"=>0,//未来90天金额
+                        "sign_this_num"=>0,//本月数量
+                        "sign_this_amt"=>0,//本月金额
+                    );
+                }
+                $historyRow = Yii::app()->db->createCommand()->select("sum_amt,sign_odds")
+                    ->from("sal_ka_bot_history")
+                    ->where("lcd='{$row['lcd']}' and bot_id='{$row['bot_id']}'")
+                    ->queryRow();
+                if($historyRow["sign_odds"]>=81){
+                    $list[$employee_id]["sign_this_num"]++;
+                    $list[$employee_id]["sign_this_amt"]+=$historyRow["sum_amt"];
+
+                    $list[$employee_id]["sign_90_num"]++;
+                    $list[$employee_id]["sign_90_amt"]+=$historyRow["sum_amt"]*0.8;
+                }elseif ($historyRow["sign_odds"]>=51){
+                    $list[$employee_id]["sign_90_num"]++;
+                    $list[$employee_id]["sign_90_amt"]+=$historyRow["sum_amt"]*0.5;
+                }
+            }
+        }
+        return $list;
+    }
+
     public function retrieveData() {
         $this->data=array();
         $suffix = Yii::app()->params['envSuffix'];
@@ -90,8 +138,19 @@ class KAStatisticForm extends CFormModel
             ->where($whereSql)
             ->group("apply_year,h.id,h.code,h.name,h.city")
             ->queryAll();
+        $signAllList = $this->getSignList();
         if($rows){
             foreach ($rows as $row){
+                if(key_exists($row["id"],$signAllList)){
+                    $signList = $signAllList[$row["id"]];
+                }else{
+                    $signList = array(
+                        "sign_90_num"=>0,//未来90天数量
+                        "sign_90_amt"=>0,//未来90天金额
+                        "sign_this_num"=>0,//本月数量
+                        "sign_this_amt"=>0,//本月金额
+                    );
+                }
                 $mtdRow = $this->getMtdRow($row);
                 $list = array(
                     "employee_id"=>$row["id"],
@@ -100,6 +159,10 @@ class KAStatisticForm extends CFormModel
                     "visit_amt"=>$row["visit_amt"],
                     "quota_num"=>$row["quota_num"],
                     "quota_amt"=>$row["quota_amt"],
+                    "sign_90_num"=>$signList["sign_90_num"],//未来90天数量
+                    "sign_90_amt"=>$signList["sign_90_amt"],//未来90天金额
+                    "sign_this_num"=>$signList["sign_this_num"],//本月数量
+                    "sign_this_amt"=>$signList["sign_this_amt"],//本月金额
                     "ytd_num"=>$row["ytd_num"],
                     "ytd_amt"=>$row["ytd_amt"],
                     "mtd_num"=>$mtdRow["mtd_num"],
@@ -163,6 +226,28 @@ class KAStatisticForm extends CFormModel
                     ),
                 )
             ),//全部数据
+            array("name"=>Yii::t("ka","amount for next 90 days"),"background"=>"#2A6BA4","color"=>"#ffffff",//未来90天加权报价金额
+                "colspan"=>array(
+                    array(
+                        "name"=>$this->search_month.Yii::t("ka"," month"),//月份
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","quantity")),//数量
+                            array("name"=>Yii::t("ka","Contract amt")),//合同金额
+                        )
+                    )
+                )
+            ),//未来90天加权报价金额
+            array("name"=>Yii::t("ka","amount for this month"),"background"=>"#2A6BA4","color"=>"#ffffff",//本月可实现销售金额
+                "colspan"=>array(
+                    array(
+                        "name"=>$this->search_month.Yii::t("ka"," month"),//月份
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","quantity")),//数量
+                            array("name"=>Yii::t("ka","Contract amt")),//合同金额
+                        )
+                    )
+                )
+            ),//本月可实现销售金额
             array("name"=>Yii::t("ka","Sales performance"),"background"=>"#4472C4","color"=>"#ffffff",//每月KA销售业绩
                 "colspan"=>array(
                     array(
@@ -239,7 +324,11 @@ class KAStatisticForm extends CFormModel
     private function tableHeaderWidth(){
         $html="<tr>";
         for($i=0;$i<=$this->th_sum;$i++){
-            $width=90;
+            if($i==0){
+                $width = 120;
+            }else{
+                $width=90;
+            }
             $html.="<th class='header-width' data-width='{$width}' width='{$width}px'>{$i}</th>";
         }
         return $html."</tr>";
@@ -248,9 +337,11 @@ class KAStatisticForm extends CFormModel
     public function tableBodyHtml(){
         $html="";
         if(!empty($this->data)){
+            $this->downJsonText=array();
             $html.="<tbody>";
             $html.=$this->showServiceHtml($this->data);
             $html.="</tbody>";
+            $this->downJsonText=json_encode($this->downJsonText);
         }
         return $html;
     }
@@ -258,6 +349,7 @@ class KAStatisticForm extends CFormModel
     private function getDataAllKeyStr(){
         $bodyKey = array(
             "kam_name","visit_num","visit_amt","quota_num","quota_amt",
+            "sign_90_num","sign_90_amt","sign_this_num","sign_this_amt",
             "ytd_num","ytd_amt","mtd_num","mtd_amt"
         );
         return $bodyKey;
@@ -304,8 +396,8 @@ class KAStatisticForm extends CFormModel
                         $regionRow[$keyStr]+=is_numeric($text)?floatval($text):0;
                         $allRow[$keyStr]+=is_numeric($text)?floatval($text):0;
                         $text = self::showNum($text);
-                        $inputHide = TbHtml::hiddenField("excel[{$city}][{$id}][]",$text);
-                        $html.="<td><span>{$text}</span>{$inputHide}</td>";
+                        $this->downJsonText["excel"][$city][$id][]=$text;
+                        $html.="<td><span>{$text}</span></td>";
                     }
                     $html.="</tr>";
                 }
@@ -330,8 +422,8 @@ class KAStatisticForm extends CFormModel
             $text = key_exists($keyStr,$data)?$data[$keyStr]:"0";
             $tdClass = ComparisonForm::getTextColorForKeyStr($text,$keyStr);
             $text = self::showNum($text);
-            $inputHide = TbHtml::hiddenField("excel[{$data['city']}][count][]",$text);
-            $html.="<td class='{$tdClass}' style='font-weight: bold'><span>{$text}</span>{$inputHide}</td>";
+            $this->downJsonText["excel"][$data['city']]["count"][]=$text;
+            $html.="<td class='{$tdClass}' style='font-weight: bold'><span>{$text}</span></td>";
         }
         $html.="</tr>";
         return $html;
@@ -346,6 +438,11 @@ class KAStatisticForm extends CFormModel
 
     //下載
     public function downExcel($excelData){
+        if(!is_array($excelData)){
+            $excelData = json_decode($excelData,true);
+            $excelData = empty($excelData)?array():$excelData;
+            $excelData = key_exists("excel",$excelData)?$excelData["excel"]:array();
+        }
         $this->validateDate("","");
         $headList = $this->getTopArr();
         $excel = new DownKAExcel();
@@ -355,7 +452,7 @@ class KAStatisticForm extends CFormModel
         $excel->init();
         $excel->setKAHeader($headList);
         $excel->setKAData($excelData);
-        $excel->outExcel("KAStatistic");
+        $excel->outExcel(Yii::t("app","KA Statistic"));
     }
 
     //获取年份

@@ -69,5 +69,8 @@ return array(
     ' month'=>'月',
     'all total'=>'所有統計',
     'Download'=>'下載',
+
+    'amount for next 90 days'=>'未來90天加權報價金額',
+    'amount for this month'=>'本月可實現銷售金額',
 );
 ?>

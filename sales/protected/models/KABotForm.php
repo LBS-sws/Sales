@@ -5,6 +5,7 @@ class KABotForm extends CFormModel
 	/* User Fields */
 	public $id;
 	public $apply_date;
+	public $follow_date;
 	public $customer_no;
 	public $customer_name;
 	public $kam_id;
@@ -39,6 +40,7 @@ class KABotForm extends CFormModel
     public $employee_id;
     public $employee_code;
     public $employee_name;
+    public $espe_type=0;//修改重要数据时，改成1
 
     public $detail = array(
         array('id'=>0,
@@ -114,6 +116,7 @@ class KABotForm extends CFormModel
             $this->sum_amt+=empty($this->quarter_amt)?0:$this->quarter_amt;
             $this->sum_amt+=empty($this->year_amt)?0:$this->year_amt;
         }
+        $this->follow_date = $this->apply_date;
     }
 
 	public function retrieveData($index){
@@ -172,8 +175,48 @@ class KABotForm extends CFormModel
         }
 	}
 
+	public function setModelData($index){
+		$sql = "select a.* from sal_ka_bot a where a.id=".$index."";
+		$row = Yii::app()->db->createCommand($sql)->queryRow();
+        $arr = array(
+            "id"=>1,"apply_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
+            "head_city_id"=>1,"talk_city_id"=>1,"contact_user"=>1,"contact_phone"=>1,
+            "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>1,
+            "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>1,"link_id"=>1,"year_amt"=>3,
+            "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"quarter_amt"=>3,
+            "month_amt"=>3,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
+        );
+		if ($row!==false) {
+			foreach ($arr as $key => $type){
+			    switch ($type){
+                    case 1://原值
+                        $this->$key = $row[$key];
+                        break;
+                    case 2://日期
+                        $this->$key = empty($row[$key])?null:General::toDate($row[$key]);
+                        break;
+                    case 3://数字
+                        $this->$key = $row[$key]===null?null:floatval($row[$key]);
+                        break;
+                    default:
+                }
+            }
+            return true;
+		}else{
+		    return false;
+        }
+	}
+
+	public function getUpdateJson(){
+        $list = array();
+        foreach (self::historyUpdateList() as $key){
+            $list[$key] = $this->$key;
+        }
+        return json_encode($list);
+    }
+
 	public static function getBotHistoryRows($bot_id){
-        $rows = Yii::app()->db->createCommand()->select("update_html,lcu,lcd")
+        $rows = Yii::app()->db->createCommand()->select("id,update_html,lcu,lcd")
             ->from("sal_ka_bot_history")
             ->where("bot_id=:bot_id",array(":bot_id"=>$bot_id))->order("lcd desc")->queryAll();
         return $rows;
@@ -200,7 +243,7 @@ class KABotForm extends CFormModel
         return array("apply_date","head_city_id","talk_city_id","contact_user",
             "contact_phone","contact_email","contact_dept","source_text","source_id","area_id",
             "level_id","class_id","busine_id","link_id","year_amt","support_user","sign_odds",
-            "quarter_amt","month_amt","sign_date","sign_month","sign_amt"
+            "quarter_amt","month_amt","sign_date","sign_month","sign_amt","sum_amt"
         );
     }
 
@@ -251,12 +294,19 @@ class KABotForm extends CFormModel
                 $list=array("bot_id"=>$this->id,"lcu"=>$uid,"update_type"=>1,"update_html"=>array());
                 foreach ($keyArr as $key){
                     if($model->$key!=$this->$key){
+                        if(in_array($key,array("sum_amt","sign_odds"))){
+                            $this->espe_type = 1;
+                        }
                         $list["update_html"][]="<span>".$this->getAttributeLabel($key)."：".self::getNameForValue($key,$model->$key)." 修改为 ".self::getNameForValue($key,$this->$key)."</span>";
                     }
                 }
                 $this->getHistoryDetail($list["update_html"]);
                 if(!empty($list["update_html"])){
                     $list["update_html"] = implode("<br/>",$list["update_html"]);
+                    $list["espe_type"] = $this->espe_type;
+                    $list["sum_amt"] = empty($this->sum_amt)?0:$this->sum_amt;
+                    $list["sign_odds"] = empty($this->sign_odds)?0:$this->sign_odds;
+                    $list["update_json"] = $this->getUpdateJson();
                     $connection->createCommand()->insert("sal_ka_bot_history", $list);
                 }
                 break;
@@ -264,16 +314,22 @@ class KABotForm extends CFormModel
     }
 
     private function getHistoryDetail(&$list){
-        foreach ($_POST['KABotForm']['detail'] as $row) {
-            switch ($row['uflag']){
-                case "Y"://修改
-                    if(!empty($row['id'])){
-                        $list[]="<span>修改了跟进事项：".$row['info_date']."</span>";
-                    }
-                    break;
-                case "D"://刪除
-                    $list[]="<span>删除了跟进事项：".$row['info_date']."</span>";
-                    break;
+        $followDate = empty($this->follow_date)?0:strtotime($this->follow_date);
+        if(isset($_POST['KABotForm']['detail'])){
+            foreach ($_POST['KABotForm']['detail'] as $row) {
+                if(in_array($row['uflag'],array("N","Y"))&&strtotime($row['info_date'])>=$followDate){
+                    $this->follow_date = $row["info_date"];
+                }
+                switch ($row['uflag']){
+                    case "Y"://修改
+                        if(!empty($row['id'])){
+                            $list[]="<span>修改了跟进事项：".$row['info_date']."</span>";
+                        }
+                        break;
+                    case "D"://刪除
+                        $list[]="<span>删除了跟进事项：".$row['info_date']."</span>";
+                        break;
+                }
             }
         }
         return $list;
@@ -282,65 +338,67 @@ class KABotForm extends CFormModel
     protected function saveDetail(&$connection)
     {
         $uid = Yii::app()->user->id;
-        foreach ($_POST['KABotForm']['detail'] as $row) {
-            $sql = '';
-            switch ($this->scenario) {
-                case 'delete':
-                    $sql = "delete from sal_ka_bot_info where bot_id = :bot_id";
-                    break;
-                case 'new':
-                    if ($row['uflag']=='Y') {
-                        $sql = "insert into sal_ka_bot_info(
+        if(isset($_POST['KABotForm']['detail'])){
+            foreach ($_POST['KABotForm']['detail'] as $row) {
+                $sql = '';
+                switch ($this->scenario) {
+                    case 'delete':
+                        $sql = "delete from sal_ka_bot_info where bot_id = :bot_id";
+                        break;
+                    case 'new':
+                        if ($row['uflag']=='Y') {
+                            $sql = "insert into sal_ka_bot_info(
 									bot_id, info_date, info_text,lcu
 								) values (
 									:bot_id,:info_date,:info_text,:lcu
 								)";
-                    }
-                    break;
-                case 'edit':
-                    switch ($row['uflag']) {
-                        case 'D':
-                            $sql = "delete from sal_ka_bot_info where id = :id";
-                            break;
-                        case 'Y':
-                            $sql = ($row['id']==0)
-                                ?
-                                "insert into sal_ka_bot_info(
+                        }
+                        break;
+                    case 'edit':
+                        switch ($row['uflag']) {
+                            case 'D':
+                                $sql = "delete from sal_ka_bot_info where id = :id";
+                                break;
+                            case 'Y':
+                                $sql = ($row['id']==0)
+                                    ?
+                                    "insert into sal_ka_bot_info(
 									  bot_id, info_date, info_text,lcu
 									) values (
 									  :bot_id,:info_date,:info_text,:lcu
 									)"
-                                :
-                                "update sal_ka_bot_info set
+                                    :
+                                    "update sal_ka_bot_info set
 										info_date = :info_date, 
 										info_text = :info_text,
 										luu = :luu 
 									where id = :id
 									";
-                            break;
-                    }
-                    break;
-            }
+                                break;
+                        }
+                        break;
+                }
 
-            if ($sql != '') {
+                if ($sql != '') {
 //                print_r('<pre>');
 //                print_r($sql);exit();
-                $command=$connection->createCommand($sql);
-                if (strpos($sql,':id')!==false)
-                    $command->bindParam(':id',$row['id'],PDO::PARAM_INT);
-                if (strpos($sql,':bot_id')!==false)
-                    $command->bindParam(':bot_id',$this->id,PDO::PARAM_INT);
-                if (strpos($sql,':info_date')!==false){
-                    $row['info_date']=empty($row['info_date'])?null:$row['info_date'];
-                    $command->bindParam(':info_date',$row['info_date'],PDO::PARAM_STR);
+                    $command=$connection->createCommand($sql);
+                    if (strpos($sql,':id')!==false)
+                        $command->bindParam(':id',$row['id'],PDO::PARAM_INT);
+                    if (strpos($sql,':bot_id')!==false)
+                        $command->bindParam(':bot_id',$this->id,PDO::PARAM_INT);
+                    if (strpos($sql,':info_date')!==false){
+                        $row['info_date']=empty($row['info_date'])?null:$row['info_date'];
+                        $command->bindParam(':info_date',$row['info_date'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':info_text')!==false)
+                        $command->bindParam(':info_text',$row['info_text'],PDO::PARAM_STR);
+                    if (strpos($sql,':luu')!==false)
+                        $command->bindParam(':luu',$uid,PDO::PARAM_STR);
+                    if (strpos($sql,':lcu')!==false)
+                        $command->bindParam(':lcu',$uid,PDO::PARAM_STR);
+                    $command->execute();
                 }
-                if (strpos($sql,':info_text')!==false)
-                    $command->bindParam(':info_text',$row['info_text'],PDO::PARAM_STR);
-                if (strpos($sql,':luu')!==false)
-                    $command->bindParam(':luu',$uid,PDO::PARAM_STR);
-                if (strpos($sql,':lcu')!==false)
-                    $command->bindParam(':lcu',$uid,PDO::PARAM_STR);
-                $command->execute();
             }
         }
         return true;
@@ -352,7 +410,7 @@ class KABotForm extends CFormModel
         $city = Yii::app()->user->city();
 	    $list=array();
         $arr = array(
-            "apply_date"=>2,"customer_name"=>1,
+            "apply_date"=>2,"follow_date"=>2,"customer_name"=>1,
             "head_city_id"=>3,"talk_city_id"=>3,"contact_user"=>1,"contact_phone"=>1,
             "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>3,
             "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>3,"link_id"=>3,"year_amt"=>3,
@@ -399,6 +457,23 @@ class KABotForm extends CFormModel
             Yii::app()->db->createCommand()->update('sal_ka_bot', array(
                 'customer_no'=>$this->customer_no
             ), 'id=:id', array(':id'=>$this->id));
+
+            //新增也需要记录历史
+            $list=array(
+                "bot_id"=>$this->id,
+                "lcu"=>$uid,
+                "update_type"=>2,
+                "update_html"=>"<span>新增</span>",
+                "update_json"=>$this->getUpdateJson(),
+                "espe_type"=>1,
+                "sum_amt"=>empty($this->sum_amt)?0:$this->sum_amt,
+                "sign_odds"=>empty($this->sign_odds)?null:$this->sign_odds,
+                "lcd"=>$this->apply_date,
+            );
+            if(strtotime($this->apply_date)!=strtotime(date("Y/m/d"))){
+                $list["update_html"].="<br/><span>保存日期:".date("Y/m/d H:i:s")."</span>";
+            }
+            $connection->createCommand()->insert("sal_ka_bot_history", $list);
         }
 		return true;
 	}
