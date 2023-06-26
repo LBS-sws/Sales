@@ -671,9 +671,9 @@ class KAStatisticForm extends CFormModel
         $html.="<th rowspan='2' width='1px'>&nbsp;</th>";
         $html.="</tr>";
         $html.="<tr>";
-        $html.="<th style=\"background:#4472C4;color:#ffffff;\">沟通阶段</th>";
+        $html.="<th width='80px' style=\"background:#4472C4;color:#ffffff;\">签约概率</th>";
         $html.="<th width='95px' style=\"background:#4472C4;color:#ffffff;\">总销售机会</th>";
-        $html.="<th style=\"background:#2A6BA4;color:#ffffff;\">沟通阶段</th>";
+        $html.="<th width='80px' style=\"background:#2A6BA4;color:#ffffff;\">签约概率</th>";
         $html.="<th width='95px' style=\"background:#2A6BA4;color:#ffffff;\">总销售机会</th>";
         $html.="<th width='80px' style=\"background:#2A6BA4;color:#ffffff;\">计算金额</th>";
         $html.="</tr>";
@@ -719,9 +719,9 @@ class KAStatisticForm extends CFormModel
         $html.="<th rowspan='2' width='1px'>&nbsp;</th>";
         $html.="</tr>";
         $html.="<tr>";
-        $html.="<th style=\"background:#4472C4;color:#ffffff;\">沟通阶段</th>";
+        $html.="<th width='80px' style=\"background:#4472C4;color:#ffffff;\">签约概率</th>";
         $html.="<th width='95px' style=\"background:#4472C4;color:#ffffff;\">总销售机会</th>";
-        $html.="<th style=\"background:#2A6BA4;color:#ffffff;\">沟通阶段</th>";
+        $html.="<th width='80px' style=\"background:#2A6BA4;color:#ffffff;\">签约概率</th>";
         $html.="<th width='95px' style=\"background:#2A6BA4;color:#ffffff;\">总销售机会</th>";
         $html.="</tr>";
         $html.= "</thead><tbody>";
