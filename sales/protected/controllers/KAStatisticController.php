@@ -28,7 +28,7 @@ class KAStatisticController extends Controller
 				'expression'=>array('KAStatisticController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view','downExcel'),
+				'actions'=>array('index','view','downExcel','ajaxDetail'),
 				'expression'=>array('KAStatisticController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -36,6 +36,17 @@ class KAStatisticController extends Controller
 			),
 		);
 	}
+
+    //详情列表的異步請求
+    public function actionAjaxDetail(){
+        if(Yii::app()->request->isAjaxRequest) {//是否ajax请求
+            $model = new KAStatisticForm();
+            $html =$model->ajaxDetailForHtml();
+            echo CJSON::encode(array('status'=>1,'html'=>$html));//Yii 的方法将数组处理成json数据
+        }else{
+            $this->redirect(Yii::app()->createUrl('RankingMonth/index'));
+        }
+    }
 
 	public function actionIndex()
 	{
