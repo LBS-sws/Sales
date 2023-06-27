@@ -33,20 +33,30 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type';
 		?>
 	</div>
 	</div></div>
+	<div class="box">
+        <div class="box-body">
+            <div class="form-group">
+                <label><?php echo Yii::t("ka","sign odds")."：";?></label>
+                <div class="btn-group" role="group">
+                    <?php
+                    $modelName = get_class($model);
+                    $signList=KABotForm::getSignOddsListForId();
+                    unset($signList[""]);
+                    foreach ($signList as $key=>$value){
+                        $class = $key==$model->sign_odds?" btn-primary active":"";
+                        echo TbHtml::button($value,array("class"=>"btn_submit".$class,"data-key"=>$key));
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
 	<?php
-    $search_add_html="";
-    $modelName = get_class($model);
-    $signList=KABotForm::getSignOddsListForId();
-    $signList[""]=Yii::t("ka","sign odds");
-    $search_add_html .= TbHtml::dropDownList($modelName.'[sign_odds]',$model->sign_odds,$signList,
-        array("class"=>"form-control btn_submit"));
-
     $this->widget('ext.layout.ListPageWidget', array(
         'title'=>Yii::t('ka','Setting Type List'),
         'model'=>$model,
         'viewhdr'=>'//kABot/_listhdr',
         'viewdtl'=>'//kABot/_listdtl',
-        'search_add_html'=>$search_add_html,
         'search'=>array(
             'customer_no',
             'customer_name',
@@ -61,6 +71,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type';
 	?>
 </section>
 <?php
+	echo $form->hiddenField($model,'sign_odds');
 	echo $form->hiddenField($model,'pageNum');
 	echo $form->hiddenField($model,'totalRow');
 	echo $form->hiddenField($model,'orderField');
@@ -115,8 +126,10 @@ $('.click-td').on('click',function(e){
     e.stopPropagation();
 });
 
-    $('.btn_submit').on('change',function(){
+    $('.btn_submit').on('click',function(){
+        var key=$(this).data('key');
         $("#KABotList_orderField").val("");
+        $("#KABotList_sign_odds").val(key);
         $('form:first').submit();
     });
 EOF;
