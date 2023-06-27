@@ -83,7 +83,7 @@ class KABotList extends CListPageModel
 				LEFT JOIN sal_ka_source f ON a.source_id=f.id
 				LEFT JOIN sal_ka_link g ON a.link_id=g.id
 				LEFT JOIN hr{$suffix}.hr_employee h ON a.kam_id=h.id
-				where a.id>0 ";
+				where a.id>0 {$whereSql}";
 		$clause = "";
 		if (!empty($this->searchField) && !empty($this->searchValue)) {
 			$svalue = str_replace("'","\'",$this->searchValue);
