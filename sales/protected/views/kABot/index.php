@@ -116,6 +116,7 @@ $('.click-td').on('click',function(e){
 });
 
     $('.btn_submit').on('change',function(){
+        $("#KABotList_orderField").val("");
         $('form:first').submit();
     });
 EOF;
