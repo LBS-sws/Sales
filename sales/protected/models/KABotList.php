@@ -5,6 +5,29 @@ class KABotList extends CListPageModel
     public $employee_id;
     public $employee_code;
     public $employee_name;
+    public $sign_odds;
+
+    public function rules()
+    {
+        return array(
+            array('sign_odds,attr, pageNum, noOfItem, totalRow, searchField, searchValue, orderField, orderType, filter, dateRangeValue','safe',),
+        );
+    }
+
+    public function getCriteria() {
+        return array(
+            'sign_odds'=>$this->sign_odds,
+            'searchField'=>$this->searchField,
+            'searchValue'=>$this->searchValue,
+            'orderField'=>$this->orderField,
+            'orderType'=>$this->orderType,
+            'noOfItem'=>$this->noOfItem,
+            'pageNum'=>$this->pageNum,
+            'filter'=>$this->filter,
+            'dateRangeValue'=>$this->dateRangeValue,
+        );
+    }
+
 	/**
 	 * Declares customized attribute labels.
 	 * If not declared here, an attribute would have a label that is
@@ -35,6 +58,13 @@ class KABotList extends CListPageModel
             $whereSql = "";//2023/06/16 改為可以看的所有記錄
         }else{
             $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}')";
+        }
+        if(!empty($this->sign_odds)){
+            if(empty($this->orderField)){
+                $this->orderField = "expr";
+            }
+            $this->sign_odds = is_numeric($this->sign_odds)?$this->sign_odds:0;
+            $whereSql.=" and a.sign_odds={$this->sign_odds} ";
         }
 		$sql1 = "select a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,
                 b.pro_name as class_name,
@@ -88,8 +118,13 @@ class KABotList extends CListPageModel
 		
 		$order = "";
 		if (!empty($this->orderField)) {
-			$order .= " order by ".$this->orderField." ";
-			if ($this->orderType=='D') $order .= "desc ";
+		    if($this->orderField==="expr"){ //特殊排序
+                $beforeDate = date("Y-m-d",strtotime("-90 days"));
+                $order .= " order by if(a.follow_date>='$beforeDate','$beforeDate',a.follow_date) asc,a.follow_date desc ";
+            }else{
+                $order .= " order by ".$this->orderField." ";
+                if ($this->orderType=='D') $order .= "desc ";
+            }
 		}else{
             $order .= " order by a.follow_date desc ";
         }

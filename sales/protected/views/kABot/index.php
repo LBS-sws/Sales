@@ -33,22 +33,31 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type';
 		?>
 	</div>
 	</div></div>
-	<?php $this->widget('ext.layout.ListPageWidget', array(
-			'title'=>Yii::t('ka','Setting Type List'),
-			'model'=>$model,
-				'viewhdr'=>'//kABot/_listhdr',
-				'viewdtl'=>'//kABot/_listdtl',
-				'search'=>array(
-							'customer_no',
-							'customer_name',
-							'contact_user',
-							'class_id',
-							'source_id',
-							'link_id',
-							'sign_odds',
-							'kam_id',
-						),
-		));
+	<?php
+    $search_add_html="";
+    $modelName = get_class($model);
+    $signList=KABotForm::getSignOddsListForId();
+    $signList[""]=Yii::t("ka","sign odds");
+    $search_add_html .= TbHtml::dropDownList($modelName.'[sign_odds]',$model->sign_odds,$signList,
+        array("class"=>"form-control btn_submit"));
+
+    $this->widget('ext.layout.ListPageWidget', array(
+        'title'=>Yii::t('ka','Setting Type List'),
+        'model'=>$model,
+        'viewhdr'=>'//kABot/_listhdr',
+        'viewdtl'=>'//kABot/_listdtl',
+        'search_add_html'=>$search_add_html,
+        'search'=>array(
+            'customer_no',
+            'customer_name',
+            'contact_user',
+            'class_id',
+            'source_id',
+            'link_id',
+            'sign_odds',
+            'kam_id',
+        ),
+    ));
 	?>
 </section>
 <?php
@@ -105,6 +114,10 @@ $('.click-td').on('click',function(e){
     }
     e.stopPropagation();
 });
+
+    $('.btn_submit').on('change',function(){
+        $('form:first').submit();
+    });
 EOF;
 $js.= Script::genTableRowClick();
 Yii::app()->clientScript->registerScript('rowClick',$js,CClientScript::POS_READY);
