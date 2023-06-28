@@ -90,9 +90,9 @@ class VisitCommand extends CConsoleCommand
 	<tbody>
 		<tr>
 			<td>&nbsp;
-			<table border="1" cellpadding="0" cellspacing="0" height="345" style="border-collapse:collapse;width:1300.28pt;" width="1559">
+			<table border="1" cellpadding="0" cellspacing="0" height="345" style="border-collapse:collapse;width:1244.28pt;" width="1660">
 				<colgroup>
-					<col span="3" style="width:75.75pt;" width="101" />
+					<col span="5" style="width:150pt;" width="202" />
 					<col style="width:163.00pt;" width="148" />
 					<col style="width:108.00pt;" width="132" />
 					<col span="4" style="width:75.75pt;" width="101" />
@@ -101,7 +101,9 @@ class VisitCommand extends CConsoleCommand
 				<tbody>
 					<tr height="28" style="height:5px;">
 						<td class="et3" height="56" rowspan="2" style="height: 20px; width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;"><strong><span style="font-size:18px;">姓名</span></strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>职位</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>地区</strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>办事处</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>段位</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>过去4个月签单情况</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>入职日期</strong></span></span></td>
@@ -121,6 +123,8 @@ class VisitCommand extends CConsoleCommand
 					</tr>
 					<tr height="28" style="height:5px;">
 						<td class="et3" colspan="2" height="56" rowspan="2" style="height: 20px; width: 151.5pt; text-align: center;" width="202"><span style="color:#000000;"><span style="font-size:16px;"><span style="font-size:18px;"><strong>总金额/总数量</strong></span></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
@@ -154,7 +158,9 @@ EOF;
                             $message.= <<<EOF
 					<tr>
 						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><a target="_Blank" href="$url&sales={$value['names']}"><span style="font-size:16px;">{$value['names']}</span></a></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['dept_name']}</span></span></td>
 						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['cityname']}</span></span></td>
+						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['office_name']}</span></span></td>
 							<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['rank']}</span></span></td>
 
 EOF;
@@ -198,9 +204,9 @@ EOF;
 <style>
 </style>
 <![endif]--></span>
-			<table border="1" cellpadding="1" cellspacing="1" style="height:345px;border-collapse:collapse;width:1169.28pt;" width="1559">
+			<table border="1" cellpadding="1" cellspacing="1" style="height:345px;border-collapse:collapse;width:1244.28pt;" width="1660">
 				<colgroup>
-					<col span="3" style="width:75.75pt;text-align:center;" width="101" />
+					<col span="5" style="width:150pt;text-align:center;" width="202" />
 					<col style="width:99pt;text-align:center;" width="132" />
 					<col span="4" style="width:75.75pt;text-align:center;" width="101" />
 					<col span="10" style="width:54pt;text-align:center;" width="72" />
@@ -247,9 +253,9 @@ EOF;
 	<tbody>
 		<tr>
 			<td>&nbsp;
-			<table border="1" cellpadding="0" cellspacing="0" height="220" style="border-collapse:collapse;width:1300.28pt;" width="1559">
+			<table border="1" cellpadding="0" cellspacing="0" height="220" style="border-collapse:collapse;width:1244.28pt;" width="1660">
 				<colgroup>
-					<col span="3" style="width:75.75pt;" width="101" />
+					<col span="5" style="width:150pt;" width="202" />
 					<col style="width:163.00pt;" width="148" />
 					<col style="width:108.00pt;" width="132" />
 					<col span="4" style="width:75.75pt;" width="101" />
@@ -258,7 +264,9 @@ EOF;
 				<tbody>
 					<tr height="28" style="height:5px;">
 						<td class="et3" height="56" rowspan="2" style="height: 20px; width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;"><strong><span style="font-size:18px;">姓名</span></strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>职位</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>地区</strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>办事处</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>段位</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>过去4个月签单情况</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>入职日期</strong></span></span></td>
@@ -278,6 +286,8 @@ EOF;
 					</tr>
 					<tr height="28" style="height:5px;">			
 						<td class="et3" colspan="2" height="56" rowspan="2" style="height: 20px; width: 151.5pt; text-align: center;" width="202"><span style="color:#000000;"><span style="font-size:16px;"><span style="font-size:18px;"><strong>总金额/总数量</strong></span></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
@@ -310,9 +320,9 @@ EOF;
 <style>
 </style>
 <![endif]--></span>
-			<table border="1" cellpadding="1" cellspacing="1" style="height:345px;border-collapse:collapse;width:1169.28pt;" width="1559">
+			<table border="1" cellpadding="1" cellspacing="1" style="height:345px;border-collapse:collapse;width:1244.28pt;" width="1660">
 				<colgroup>
-					<col span="3" style="width:75.75pt;text-align:center;" width="101" />
+					<col span="5" style="width:150pt;text-align:center;" width="202" />
 					<col style="width:99pt;text-align:center;" width="132" />
 					<col span="4" style="width:75.75pt;text-align:center;" width="101" />
 					<col span="10" style="width:54pt;text-align:center;" width="72" />
