@@ -42,6 +42,9 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type';
                     $modelName = get_class($model);
                     $signList=KABotForm::getSignOddsListForId();
                     $signList[""]="全部";
+                    $signZero = $signList[0];
+                    unset($signList[0]);
+                    $signList[0]=$signZero;
                     foreach ($signList as $key=>$value){
                         $class = $key===$model->sign_odds?" btn-primary active":"";
                         echo TbHtml::button($value,array("class"=>"btn_submit".$class,"data-key"=>$key));
