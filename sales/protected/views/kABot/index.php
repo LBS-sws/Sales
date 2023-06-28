@@ -43,7 +43,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type';
                     $signList=KABotForm::getSignOddsListForId();
                     $signList[""]="全部";
                     foreach ($signList as $key=>$value){
-                        $class = $key==$model->sign_odds?" btn-primary active":"";
+                        $class = $key===$model->sign_odds?" btn-primary active":"";
                         echo TbHtml::button($value,array("class"=>"btn_submit".$class,"data-key"=>$key));
                     }
                     ?>

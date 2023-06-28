@@ -5,7 +5,7 @@ class KABotList extends CListPageModel
     public $employee_id;
     public $employee_code;
     public $employee_name;
-    public $sign_odds;
+    public $sign_odds="";
 
     public function rules()
     {
@@ -59,11 +59,11 @@ class KABotList extends CListPageModel
         }else{
             $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}')";
         }
-        if(!empty($this->sign_odds)){
+        if($this->sign_odds!==""){
             if(empty($this->orderField)){
                 $this->orderField = "expr";
             }
-            $this->sign_odds = is_numeric($this->sign_odds)?$this->sign_odds:0;
+            $this->sign_odds = is_numeric($this->sign_odds)?intval($this->sign_odds):0;
             $whereSql.=" and a.sign_odds={$this->sign_odds} ";
         }
 		$sql1 = "select a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,
