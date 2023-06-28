@@ -494,7 +494,7 @@ class KABotForm extends CFormModel
 	public static function getSignOddsListForId($id="",$bool=false){
 	    $list = array(
 	        ""=>"",
-            0=>"0%",
+            0=>"0%"."（".Yii::t("ka","reject")."）",
             40=>"<50%",
             50=>"50%",
             60=>"51~80%",
