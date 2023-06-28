@@ -170,6 +170,7 @@ class KABotList extends CListPageModel
             "city_allow"=>Yii::app()->user->city_allow(),
             "year"=>$year,
             "employee_id"=>$this->employee_id,
+            "sign_odds"=>$this->sign_odds,
             "auto_all"=>Yii::app()->user->validFunction('CN15'),
         );
         $param['RPT_NAME'] = "KA Bot";

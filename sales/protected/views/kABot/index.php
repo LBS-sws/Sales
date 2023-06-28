@@ -109,6 +109,7 @@ $this->endWidget();
 
 <?php $this->endWidget(); ?>
 <?php
+$url = Yii::app()->createUrl('kABot/index',array("pageNum"=>1));
 $js = <<<EOF
 function showdetail(id) {
 	var icon = $('#btn_'+id).attr('class');
@@ -133,7 +134,7 @@ $('.click-td').on('click',function(e){
         var key=$(this).data('key');
         $("#KABotList_orderField").val("");
         $("#KABotList_sign_odds").val(key);
-        $('form:first').submit();
+        jQuery.yii.submitForm(this,'{$url}',{});
     });
 EOF;
 $js.= Script::genTableRowClick();
