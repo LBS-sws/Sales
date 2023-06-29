@@ -139,5 +139,9 @@ return array(
     'Sales Rank'=>'销售个人段位明细查询',
     'Sales Rank man'=>'销售个人段位明细查询人员',
     'KA Bot'=>'KA项目',
+
+    'dept name'=>'职位',
+    'office name'=>'办事处',
+    'local office'=>'本部',
 );
 ?>

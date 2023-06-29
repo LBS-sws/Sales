@@ -139,5 +139,9 @@ return array(
     'Sales Rank'=>'銷售個人段位明細查詢',
     'Sales Rank man'=>'銷售個人段位明細查詢人員',
     'KA Bot'=>'KA項目',
+
+    'dept name'=>'職位',
+    'office name'=>'辦事處',
+    'local office'=>'本部',
 );
 ?>

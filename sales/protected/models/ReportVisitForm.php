@@ -1873,8 +1873,9 @@ class ReportVisitForm extends CReportForm
             }
 //            print_r('<pre/>');
 //            print_r($records);
+            $localOffice = Yii::t("report","local office");
             $sqls="select a.name as cityname,d.name as names,d.staff_status,d.entry_time,
-                dept.name as dept_name,if(d.office_id=0,'本部',office.name) as office_name
+                dept.name as dept_name,if(d.office_id=0,'{$localOffice}',office.name) as office_name
                 from hr$suffix.hr_binding b 
                 LEFT JOIN hr$suffix.hr_employee d on d.id=b.employee_id
                 LEFT JOIN hr$suffix.hr_dept dept on dept.id=d.position
