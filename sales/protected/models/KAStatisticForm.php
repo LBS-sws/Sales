@@ -72,48 +72,36 @@ class KAStatisticForm extends CFormModel
 
     private function getSignList(){
 	    $list = array();
-        $startDate = date("Y/m/d",strtotime($this->search_year."/{$this->search_month}/01"));
-        $endDate = date("Y/m/d",strtotime("{$startDate} + 3 months - 1 day"));
-        $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
-        if(Yii::app()->user->validFunction('CN15')){
-            $whereSql = "";//2023/06/16 改為可以看的所有記錄
-        }else{
-            $whereSql.= " and b.kam_id='{$this->employee_id}'";
-        }
-        $rows = Yii::app()->db->createCommand()
-            ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
-            ->from("sal_ka_bot_history a")
-            ->leftJoin("sal_ka_bot b","a.bot_id=b.id")
-            ->where("a.espe_type=1 and a.sign_odds>=51 {$whereSql}")
-            ->group("a.bot_id,b.kam_id")
-            ->queryAll();
-        if($rows){
-            foreach ($rows as $row){
-                $employee_id = $row["kam_id"];
-                if(!key_exists($employee_id,$list)){
-                    $list[$employee_id]=array(
-                        "sign_90_num"=>0,//未来90天数量
-                        "sign_90_amt"=>0,//未来90天金额
-                        "sign_this_num"=>0,//本月数量
-                        "sign_this_amt"=>0,//本月金额
-                    );
-                }
-                $historyRow = Yii::app()->db->createCommand()->select("sum_amt,sign_odds")
-                    ->from("sal_ka_bot_history")
-                    ->where("lcd='{$row['lcd']}' and bot_id='{$row['bot_id']}'")
-                    ->queryRow();
-                if($historyRow["sign_odds"]>=81){
-                    if(date("Y/m/01",strtotime($row["lcd"]))==$startDate){
-                        $list[$employee_id]["sign_this_num"]++;
-                        $list[$employee_id]["sign_this_amt"]+=$historyRow["sum_amt"];
-                    }
+	    $sign_90_Rows = $this->sign_90_num_list();
+	    $sign_this_Rows = $this->sign_this_num_list();
+	    $conList = array(
+            "sign_90_num"=>0,//未来90天数量
+            "sign_90_amt"=>0,//未来90天金额
+            "sign_this_num"=>0,//本月数量
+            "sign_this_amt"=>0,//本月金额
+        );
 
-                    $list[$employee_id]["sign_90_num"]++;
-                    $list[$employee_id]["sign_90_amt"]+=$historyRow["sum_amt"]*0.8;
-                }elseif ($historyRow["sign_odds"]>=51){
-                    $list[$employee_id]["sign_90_num"]++;
-                    $list[$employee_id]["sign_90_amt"]+=$historyRow["sum_amt"]*0.5;
-                }
+	    foreach ($sign_90_Rows as $row){
+            $employee_id = $row["kam_id"];
+            if(!key_exists($employee_id,$list)){
+                $list[$employee_id]=$conList;
+            }
+            if($row["old_sign_odds"]>=81){
+                $list[$employee_id]["sign_90_num"]++;
+                $list[$employee_id]["sign_90_amt"]+=$row["old_sum_amt"]*0.8;
+            }elseif ($row["old_sign_odds"]>=51){
+                $list[$employee_id]["sign_90_num"]++;
+                $list[$employee_id]["sign_90_amt"]+=$row["old_sum_amt"]*0.5;
+            }
+        }
+	    foreach ($sign_this_Rows as $row){
+            $employee_id = $row["kam_id"];
+            if(!key_exists($employee_id,$list)){
+                $list[$employee_id]=$conList;
+            }
+            if($row["old_sign_odds"]>=81){
+                $list[$employee_id]["sign_this_num"]++;
+                $list[$employee_id]["sign_this_amt"]+=$row["old_sum_amt"];
             }
         }
         return $list;
@@ -523,7 +511,7 @@ class KAStatisticForm extends CFormModel
     }
 
     //未来90天加权报价金额(签约概率>=51)
-    private function sign_90_num_table(){
+    private function sign_90_num_list(){
         $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
         $endDate = date("Y/m/d",strtotime("{$startDate} + 3 months - 1 day"));
         $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
@@ -532,22 +520,36 @@ class KAStatisticForm extends CFormModel
             ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
             ->from("sal_ka_bot_history a")
             ->leftJoin("sal_ka_bot b","a.bot_id=b.id")
-            ->where("a.espe_type=1 and a.sign_odds>=51 {$whereSql}")
+            ->where("a.espe_type=1 {$whereSql}")
             ->group("a.bot_id,b.kam_id")
             ->getText();
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.sum_amt,
+            ->select("a.id,a.kam_id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.sum_amt,
                 g.sign_odds as old_sign_odds,g.sum_amt as old_sum_amt
                 ")
             ->from("($historySql) f")
             ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_bot_history g","g.bot_id=f.bot_id and g.lcd=f.lcd")
             ->queryAll();
-        return $this->staticTableBodyTwo($rows);
+        $list = array();
+        if($rows){
+            foreach ($rows as $row){
+                if($row["old_sign_odds"]>=51){
+                    $list[]=$row;
+                }
+            }
+        }
+        return $list;
+    }
+
+    //未来90天加权报价金额(签约概率>=51)
+    private function sign_90_num_table(){
+        $list = $this->sign_90_num_list();
+        return $this->staticTableBodyTwo($list);
     }
 
     //本月可实现销售金额(签约概率>=81)
-    private function sign_this_num_table(){
+    private function sign_this_num_list(){
         $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
         $endDate = date("Y/m/d",strtotime("{$startDate} + 1 months - 1 day"));
         $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
@@ -556,18 +558,32 @@ class KAStatisticForm extends CFormModel
             ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
             ->from("sal_ka_bot_history a")
             ->leftJoin("sal_ka_bot b","a.bot_id=b.id")
-            ->where("a.espe_type=1 and a.sign_odds>=81 {$whereSql}")
+            ->where("a.espe_type=1 {$whereSql}")
             ->group("a.bot_id,b.kam_id")
             ->getText();
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.sum_amt,
+            ->select("a.id,a.kam_id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.sum_amt,
                 g.sign_odds as old_sign_odds,g.sum_amt as old_sum_amt
                 ")
             ->from("($historySql) f")
             ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_bot_history g","g.bot_id=f.bot_id and g.lcd=f.lcd")
             ->queryAll();
-        return $this->staticTableBodyThree($rows);
+        $list = array();
+        if($rows){
+            foreach ($rows as $row){
+                if($row["old_sign_odds"]>=81){
+                    $list[]=$row;
+                }
+            }
+        }
+        return $list;
+    }
+
+    //本月可实现销售金额(签约概率>=81)
+    private function sign_this_num_table(){
+        $list = $this->sign_this_num_list();
+        return $this->staticTableBodyThree($list);
     }
 
     //拜访阶段詳情
