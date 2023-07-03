@@ -511,11 +511,13 @@ class KAStatisticForm extends CFormModel
     }
 
     //未来90天加权报价金额(签约概率>=51)
-    private function sign_90_num_list(){
+    private function sign_90_num_list($employee_id=""){
         $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
         $endDate = date("Y/m/d",strtotime("{$startDate} + 3 months - 1 day"));
         $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
-        $whereSql.= " and b.kam_id='{$this->employee_id}'";
+        if(!empty($employee_id)){
+            $whereSql.= " and b.kam_id='{$employee_id}'";
+        }
         $historySql = Yii::app()->db->createCommand()
             ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
             ->from("sal_ka_bot_history a")
@@ -544,16 +546,18 @@ class KAStatisticForm extends CFormModel
 
     //未来90天加权报价金额(签约概率>=51)
     private function sign_90_num_table(){
-        $list = $this->sign_90_num_list();
+        $list = $this->sign_90_num_list($this->employee_id);
         return $this->staticTableBodyTwo($list);
     }
 
     //本月可实现销售金额(签约概率>=81)
-    private function sign_this_num_list(){
+    private function sign_this_num_list($employee_id=""){
         $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
         $endDate = date("Y/m/d",strtotime("{$startDate} + 1 months - 1 day"));
         $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
-        $whereSql.= " and b.kam_id='{$this->employee_id}'";
+        if(!empty($employee_id)){
+            $whereSql.= " and b.kam_id='{$employee_id}'";
+        }
         $historySql = Yii::app()->db->createCommand()
             ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
             ->from("sal_ka_bot_history a")
@@ -582,7 +586,7 @@ class KAStatisticForm extends CFormModel
 
     //本月可实现销售金额(签约概率>=81)
     private function sign_this_num_table(){
-        $list = $this->sign_this_num_list();
+        $list = $this->sign_this_num_list($this->employee_id);
         return $this->staticTableBodyThree($list);
     }
 
