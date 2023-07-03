@@ -345,30 +345,29 @@ class CReport {
 			if (is_array($item)) {
                 $ccol=0;
 				foreach ($data['detail'] as $idx=>$row) {
+                    $crow+=$ccol===0?0:1;
                     $ccol = $col;
 					foreach ($item as $key) {
 						$text = $row[$key];
 						$this->excel->writeCell($ccol, $crow, $text, array('align'=>$this->rpt_fields[$key]['align'],'valign'=>'T'));
 						$ccol++;
 					}
-					$crow++;
 				}
 				$col = $ccol;
 			} else {
 				$text = $data[$item];
-				$this->excel->writeCell($col, $this->current_row, $text, array('align'=>$this->rpt_fields[$item]['align'],'valign'=>'T'));
+				$this->excel->writeCell($col, $crow, $text, array('align'=>$this->rpt_fields[$item]['align'],'valign'=>'T'));
 				$col++;
 			}
 		}
-		if($crow-$this->current_row>1){
+		if($crow-$this->current_row>=1){
             foreach ($this->rpt_detail as $i=>$item) {
                 if (!is_array($item)) {
-                    $this->excel->mergeCells($this->current_row, $i, $crow-1, $i);
+                    $this->excel->mergeCells($this->current_row, $i, $crow, $i);
                 }
             }
-
         }
-		$this->current_row = $crow;
+		$this->current_row = $crow+1;
 	}
 	
 	// Print Group Header (Using groups to define structure)
