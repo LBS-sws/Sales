@@ -72,8 +72,9 @@ class KAStatisticForm extends CFormModel
 
     private function getSignList(){
 	    $list = array();
-        $startDate = $this->search_year."/01/01";
-        $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$this->end_date}'";
+        $startDate = date("Y/m/d",strtotime($this->search_year."/{$this->search_month}/01"));
+        $endDate = date("Y/m/d",strtotime("{$startDate} + 3 months - 1 day"));
+        $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
         if(Yii::app()->user->validFunction('CN15')){
             $whereSql = "";//2023/06/16 改為可以看的所有記錄
         }else{
@@ -102,8 +103,10 @@ class KAStatisticForm extends CFormModel
                     ->where("lcd='{$row['lcd']}' and bot_id='{$row['bot_id']}'")
                     ->queryRow();
                 if($historyRow["sign_odds"]>=81){
-                    $list[$employee_id]["sign_this_num"]++;
-                    $list[$employee_id]["sign_this_amt"]+=$historyRow["sum_amt"];
+                    if(date("Y/m/01",strtotime($row["lcd"]))==$startDate){
+                        $list[$employee_id]["sign_this_num"]++;
+                        $list[$employee_id]["sign_this_amt"]+=$historyRow["sum_amt"];
+                    }
 
                     $list[$employee_id]["sign_90_num"]++;
                     $list[$employee_id]["sign_90_amt"]+=$historyRow["sum_amt"]*0.8;
@@ -521,8 +524,9 @@ class KAStatisticForm extends CFormModel
 
     //未来90天加权报价金额(签约概率>=51)
     private function sign_90_num_table(){
-        $startDate = $this->search_year."/01/01";
-        $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$this->end_date}'";
+        $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
+        $endDate = date("Y/m/d",strtotime("{$startDate} + 3 months - 1 day"));
+        $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
         $whereSql.= " and b.kam_id='{$this->employee_id}'";
         $historySql = Yii::app()->db->createCommand()
             ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
@@ -544,8 +548,9 @@ class KAStatisticForm extends CFormModel
 
     //本月可实现销售金额(签约概率>=81)
     private function sign_this_num_table(){
-        $startDate = $this->search_year."/01/01";
-        $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$this->end_date}'";
+        $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
+        $endDate = date("Y/m/d",strtotime("{$startDate} + 1 months - 1 day"));
+        $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
         $whereSql.= " and b.kam_id='{$this->employee_id}'";
         $historySql = Yii::app()->db->createCommand()
             ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")

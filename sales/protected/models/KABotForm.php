@@ -29,6 +29,8 @@ class KABotForm extends CFormModel
 	public $sign_month;
 	public $sign_amt;
 	public $sum_amt;
+	public $available_date;
+	public $available_amt;
 	public $remark;
 	public $support_user;
 	public $sign_odds;
@@ -67,6 +69,8 @@ class KABotForm extends CFormModel
             'class_id'=>Yii::t('ka','class name'),
             'kam_id'=>Yii::t('ka','KAM'),
             'link_id'=>Yii::t('ka','link name'),
+            'available_date'=>Yii::t('ka','available date'),
+            'available_amt'=>Yii::t('ka','available amt'),
 
             'head_city_id'=>Yii::t('ka','head city'),
             'talk_city_id'=>Yii::t('ka','talk city'),
@@ -101,6 +105,7 @@ class KABotForm extends CFormModel
             array('id,apply_date,customer_no,customer_name,kam_id,head_city_id,talk_city_id,
                 contact_user,contact_phone,contact_email,contact_dept,source_text,source_id,
                 area_id,level_id,class_id,busine_id,link_id,year_amt,support_user,sign_odds,city,
+                available_date,available_amt,
                 quarter_amt,month_amt,sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
             array('apply_date,customer_name,kam_id,link_id','required'),
             array('sign_amt','computeSignAmt'),
@@ -115,6 +120,7 @@ class KABotForm extends CFormModel
             $this->sum_amt+=empty($this->month_amt)?0:$this->month_amt;
             $this->sum_amt+=empty($this->quarter_amt)?0:$this->quarter_amt;
             $this->sum_amt+=empty($this->year_amt)?0:$this->year_amt;
+            $this->sum_amt+=empty($this->available_amt)?0:$this->available_amt;
         }
         $this->follow_date = $this->apply_date;
     }
@@ -132,11 +138,11 @@ class KABotForm extends CFormModel
 		$sql = "select a.* from sal_ka_bot a left join hr{$suffix}.hr_employee h ON a.kam_id=h.id where a.id=".$index." {$whereSql}";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
         $arr = array(
-            "id"=>1,"apply_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
+            "id"=>1,"apply_date"=>2,"available_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
             "head_city_id"=>1,"talk_city_id"=>1,"contact_user"=>1,"contact_phone"=>1,
             "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>1,
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>1,"link_id"=>1,"year_amt"=>3,
-            "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"quarter_amt"=>3,
+            "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"quarter_amt"=>3,"available_amt"=>3,
             "month_amt"=>3,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
         );
 		if ($row!==false) {
@@ -184,7 +190,7 @@ class KABotForm extends CFormModel
             "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>1,
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>1,"link_id"=>1,"year_amt"=>3,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"quarter_amt"=>3,
-            "month_amt"=>3,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
+            "available_amt"=>3,"available_date"=>2,"month_amt"=>3,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
         );
 		if ($row!==false) {
 			foreach ($arr as $key => $type){
@@ -242,7 +248,7 @@ class KABotForm extends CFormModel
     private static function historyUpdateList(){
         return array("apply_date","head_city_id","talk_city_id","contact_user",
             "contact_phone","contact_email","contact_dept","source_text","source_id","area_id",
-            "level_id","class_id","busine_id","link_id","year_amt","support_user","sign_odds",
+            "level_id","class_id","busine_id","link_id","year_amt","available_amt","available_date","support_user","sign_odds",
             "quarter_amt","month_amt","sign_date","sign_month","sign_amt","sum_amt"
         );
     }
@@ -415,7 +421,7 @@ class KABotForm extends CFormModel
             "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>3,
             "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>3,"link_id"=>3,"year_amt"=>3,
             "support_user"=>3,"sign_odds"=>3,"remark"=>1,"quarter_amt"=>3,
-            "month_amt"=>3,"sign_date"=>2,"sign_month"=>3,"sign_amt"=>3,"sum_amt"=>3,
+            "available_amt"=>3,"available_date"=>2,"month_amt"=>3,"sign_date"=>2,"sign_month"=>3,"sign_amt"=>3,"sum_amt"=>3,
         );
         foreach ($arr as $key=>$type){
             $value=$this->$key;

@@ -46,6 +46,7 @@ class KABotList extends CListPageModel
 			'link_id'=>Yii::t('ka','link name'),
             'follow_date'=>Yii::t('ka','info date'),
             'sign_odds'=>Yii::t('ka','sign odds'),
+            'available_date'=>Yii::t('ka','available date'),
 		);
 	}
 	
@@ -66,7 +67,7 @@ class KABotList extends CListPageModel
             $this->sign_odds = is_numeric($this->sign_odds)?intval($this->sign_odds):0;
             $whereSql.=" and a.sign_odds={$this->sign_odds} ";
         }
-		$sql1 = "select a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,
+		$sql1 = "select a.id,a.available_date,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,
                 b.pro_name as class_name,
                 f.pro_name as source_name,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name, 
@@ -96,6 +97,9 @@ class KABotList extends CListPageModel
 					break;
 				case 'contact_user':
 					$clause .= General::getSqlConditionClause('a.contact_user',$svalue);
+					break;
+				case 'available_date':
+					$clause .= General::getSqlConditionClause('a.available_date',$svalue);
 					break;
 				case 'class_id':
 					$clause .= General::getSqlConditionClause('b.pro_name',$svalue);
@@ -140,11 +144,13 @@ class KABotList extends CListPageModel
 		$this->attr = array();
 		if (count($records) > 0) {
 			foreach ($records as $k=>$record) {
+			    $color = $this->getTdColor($record);
                 $sql = "select info_date,info_text from sal_ka_bot_info where bot_id=".$record['id']." order by info_date desc";
                 $infoRows = Yii::app()->db->createCommand($sql)->queryAll();
                 $this->attr[] = array(
                     'id'=>$record['id'],
                     'apply_date'=>General::toDate($record['apply_date']),
+                    'available_date'=>General::toDate($record['available_date']),
                     'customer_no'=>$record['customer_no'],
                     'customer_name'=>$record['customer_name'],
                     'contact_user'=>$record['contact_user'],
@@ -152,6 +158,7 @@ class KABotList extends CListPageModel
                     'source_id'=>$record['source_name'],
                     'link_id'=>$record['link_name'],
                     'kam_id'=>$record['kam_name'],
+                    'color'=>$color,
                     'sign_odds'=>KABotForm::getSignOddsListForId($record['sign_odds'],true),
                     'follow_date'=>empty($record['follow_date'])?"":General::toDate($record['follow_date']),
                     'detail'=>$infoRows?$infoRows:array(),
@@ -162,6 +169,15 @@ class KABotList extends CListPageModel
 		$session['kABot_c01'] = $this->getCriteria();
 		return true;
 	}
+
+	private function getTdColor($row){
+        $sign_odds = empty($row["sign_odds"])?0:floatval($row["sign_odds"]);
+	    if($sign_odds>80&&$sign_odds<100&&strtotime($row["available_date"])<=strtotime(date("Y/m/d"))){
+	        return "text-red";
+        }else{
+	        return "";
+        }
+    }
 
 	public function downExcel($year){
         $rptModel = new RptKABot();

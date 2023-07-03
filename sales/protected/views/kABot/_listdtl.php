@@ -3,13 +3,13 @@ $labels = $this->model->attributeLabels();
 $withrow = count($this->record['detail'])>0;
 $idX = $this->record['id'];
 ?>
-<tr class='clickable-row' data-href='<?php echo $this->getLink('KA01', 'kABot/edit', 'kABot/view', array('index'=>$this->record['id']));?>'>
+<tr class='clickable-row <?php echo $this->record['color']; ?>' data-href='<?php echo $this->getLink('KA01', 'kABot/edit', 'kABot/view', array('index'=>$this->record['id']));?>'>
 	<td><?php echo $this->drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$this->record['id'])); ?></td>
 	<td><?php echo $this->record['follow_date']; ?></td>
 	<td><?php echo $this->record['apply_date']; ?></td>
 	<td><?php echo $this->record['customer_no']; ?></td>
 	<td><?php echo $this->record['customer_name']; ?></td>
-	<td><?php echo $this->record['contact_user']; ?></td>
+	<td><?php echo $this->record['available_date']; ?></td>
 	<td><?php echo $this->record['source_id']; ?></td>
 	<td><?php echo $this->record['class_id']; ?></td>
     <td><?php echo $this->record['sign_odds']; ?></td>

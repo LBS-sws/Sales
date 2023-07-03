@@ -63,7 +63,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type';
         'search'=>array(
             'customer_no',
             'customer_name',
-            'contact_user',
+            'available_date',
             'class_id',
             'source_id',
             'link_id',

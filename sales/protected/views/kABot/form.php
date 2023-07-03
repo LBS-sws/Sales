@@ -208,6 +208,20 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 </div>
             </div>
             <div class="form-group">
+                <?php echo $form->labelEx($model,'available_date',array('class'=>"col-sm-2 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->textField($model, 'available_date',
+                        array('readonly'=>($model->scenario=='view'),'id'=>'available_date','prepend'=>'<span class="fa fa-calendar"></span>')
+                    ); ?>
+                </div>
+                <?php echo $form->labelEx($model,'available_amt',array('class'=>"col-sm-1 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->numberField($model, 'available_amt',
+                        array('readonly'=>($model->scenario=='view'),'id'=>'available_amt','prepend'=>'<span class="fa fa-money"></span>')
+                    ); ?>
+                </div>
+            </div>
+            <div class="form-group">
                 <?php echo $form->labelEx($model,'sign_date',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->textField($model, 'sign_date',
@@ -289,20 +303,22 @@ $('table').on('change','[id^=\"KABotForm\"]',function() {
 Yii::app()->clientScript->registerScript('setFlag',$js,CClientScript::POS_READY);
 $ajaxUrl=Yii::app()->createUrl('kABot/ajaxSupportUser');
 $js ="
-    $('#month_amt,#quarter_amt,#year_amt,#sign_amt').change(function(){
+    $('#month_amt,#quarter_amt,#year_amt,#sign_amt,#available_amt').change(function(){
         var sign_amt=$('#sign_amt').val();
         var year_amt=$('#year_amt').val();
         var quarter_amt=$('#quarter_amt').val();
         var month_amt=$('#month_amt').val();
+        var available_amt=$('#available_amt').val();
         var sum_amt=0;
         if(sign_amt!=''){
             sum_amt = sign_amt;
-        }else if(year_amt==''&&quarter_amt==''&&month_amt==''){
+        }else if(year_amt==''&&quarter_amt==''&&month_amt==''&&available_amt==''){
             sum_amt='';
         }else{
             sum_amt+=year_amt==''?0:parseFloat(year_amt);
             sum_amt+=quarter_amt==''?0:parseFloat(quarter_amt);
             sum_amt+=month_amt==''?0:parseFloat(month_amt);
+            sum_amt+=available_amt==''?0:parseFloat(available_amt);
         }
         $('#sum_amt').val(sum_amt);
     });
@@ -415,7 +431,7 @@ EOF;
     Yii::app()->clientScript->registerScript('addRow',$js,CClientScript::POS_READY);
 
     $dateList = array(
-        'sign_date,.info_date',
+        'sign_date,.info_date,#available_date',
     );
     if($model->scenario=='new'){
         $dateList[]="apply_date";
