@@ -171,6 +171,9 @@ class KABotList extends CListPageModel
 	}
 
 	private function getTdColor($row){
+	    if(empty($row["available_date"])){
+	        return "";
+        }
         $sign_odds = empty($row["sign_odds"])?0:floatval($row["sign_odds"]);
 	    if($sign_odds>80&&$sign_odds<100&&strtotime($row["available_date"])<=strtotime(date("Y/m/d"))){
 	        return "text-red";
