@@ -120,6 +120,8 @@ class TimerCommand extends CConsoleCommand {
         $year = date("Y",strtotime("-6 months"));
         $month = date("n",strtotime("-6 months"));
         $month_type = $month>6?2:1;
+        unset($model);
+        $model = new ClubSalesList();
 	    $model->clubSalesAllSave($year,$month_type);//刷新上一个年度
     }
 
