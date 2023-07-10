@@ -120,7 +120,7 @@ class KAStatisticForm extends CFormModel
         }
         $rows = Yii::app()->db->createCommand()
             ->select("DATE_FORMAT(a.apply_date,'%Y') as apply_year,h.id,h.code,h.name,h.city,
-                count(a.id) as visit_num,sum(a.sum_amt) as visit_amt,
+                count(a.id) as visit_num,sum(if(b.rate_num>0,a.sum_amt,0)) as visit_amt,
                 sum(if(b.rate_num>=30,1,0)) as quota_num,sum(if(b.rate_num>=30,a.sum_amt,0)) as quota_amt,
                 sum(if(b.rate_num>=100,1,0)) as ytd_num,sum(if(b.rate_num>=100,a.sum_amt,0)) as ytd_amt
             ")->from("sal_ka_bot a")
@@ -596,10 +596,11 @@ class KAStatisticForm extends CFormModel
         $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}'";
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
-                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name
+                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
                 ")->from("sal_ka_bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where("{$whereSql} and a.kam_id='{$this->employee_id}'")
+            ->order("if(g.rate_num>0,a.follow_date,-1) desc,a.follow_date desc")
             ->queryAll();
         return $this->staticTableBody($rows);
     }
@@ -610,10 +611,11 @@ class KAStatisticForm extends CFormModel
         $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}'";
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
-                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name
+                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
                 ")->from("sal_ka_bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where("{$whereSql} and a.kam_id='{$this->employee_id}' and g.rate_num>=30")
+            ->order("if(g.rate_num>0,a.follow_date,-1) desc,a.follow_date desc")
             ->queryAll();
         return $this->staticTableBody($rows);
     }
@@ -624,10 +626,11 @@ class KAStatisticForm extends CFormModel
         $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}'";
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
-                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name
+                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
                 ")->from("sal_ka_bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where("{$whereSql} and a.kam_id='{$this->employee_id}' and g.rate_num>=100")
+            ->order("if(g.rate_num>0,a.follow_date,-1) desc,a.follow_date desc")
             ->queryAll();
         return $this->staticTableBody($rows);
     }
@@ -637,10 +640,11 @@ class KAStatisticForm extends CFormModel
         $suffix = Yii::app()->params['envSuffix'];
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
-                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name
+                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
                 ")->from("sal_ka_bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where("a.kam_id='{$this->employee_id}' and g.rate_num>=100 and a.sign_date between '{$this->start_date}' and '{$this->end_date}'")
+            ->order("if(g.rate_num>0,a.follow_date,-1) desc,a.follow_date desc")
             ->queryAll();
         return $this->staticTableBody($rows);
     }
@@ -660,9 +664,12 @@ class KAStatisticForm extends CFormModel
         $html.= "</thead><tbody>";
         if($rows){
             $sumAmt = 0;
+            $sumNum = 0;
             foreach ($rows as $row){
                 $row['sum_amt'] = floatval($row['sum_amt']);
-                $sumAmt+= $row['sum_amt'];
+                $row['rate_num'] = floatval($row['rate_num']);
+                $sumAmt+= $row['rate_num']>0?$row['sum_amt']:0;
+                $sumNum++;
                 $link = self::drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$row['id']));
                 $html.="<tr data-id='{$row["id"]}'>";
                 $html.="<td>".General::toDate($row['follow_date'])."</td>";
@@ -675,7 +682,11 @@ class KAStatisticForm extends CFormModel
                 $html.="<td>".$link."</td>";
                 $html.="</tr>";
             }
-            $html.="<tr><td colspan='6' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td></tr>";
+            $html.="<tr>";
+            $html.="<td colspan='2' class='text-right'>总数量:</td><td colspan='2'>{$sumNum}</td>";
+            $html.="<td colspan='2' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td>";
+            $html.="</tr>";
+            $html.="<tr><td colspan='8' class='text-right text-danger'>数量统计所有录入的记录，总金额不统计沟通阶段为0%的客户</td></tr>";
         }else{
             $html.="<tr><td colspan='8'>无</td></tr>";
         }
@@ -705,10 +716,12 @@ class KAStatisticForm extends CFormModel
         $html.= "</thead><tbody>";
         if($rows){
             $sumAmt = 0;
+            $sumNum = 0;
             foreach ($rows as $row){
                 $row['old_sum_amt'] = floatval($row['old_sum_amt']);
                 $com_amt = $row['sign_odds']>=81?$row['old_sum_amt']*1:$row['old_sum_amt']*0.5;
                 $sumAmt+= $com_amt;
+                $sumNum++;
                 $link = self::drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$row['id']));
                 $html.="<tr data-id='{$row["id"]}'>";
                 $html.="<td>".General::toDate($row['follow_date'])."</td>";
@@ -723,7 +736,10 @@ class KAStatisticForm extends CFormModel
                 $html.="<td>".$link."</td>";
                 $html.="</tr>";
             }
-            $html.="<tr><td colspan='8' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td></tr>";
+            $html.="<tr>";
+            $html.="<td colspan='2' class='text-right'>总数量:</td><td colspan='4'>{$sumNum}</td>";
+            $html.="<td colspan='2' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td>";
+            $html.="</tr>";
         }else{
             $html.="<tr><td colspan='10'>无</td></tr>";
         }
@@ -752,9 +768,11 @@ class KAStatisticForm extends CFormModel
         $html.= "</thead><tbody>";
         if($rows){
             $sumAmt = 0;
+            $sumNum = 0;
             foreach ($rows as $row){
                 $row['old_sum_amt'] = floatval($row['old_sum_amt']);
                 $sumAmt+= $row['old_sum_amt'];
+                $sumNum++;
                 $link = self::drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$row['id']));
                 $html.="<tr data-id='{$row["id"]}'>";
                 $html.="<td>".General::toDate($row['follow_date'])."</td>";
@@ -768,7 +786,10 @@ class KAStatisticForm extends CFormModel
                 $html.="<td>".$link."</td>";
                 $html.="</tr>";
             }
-            $html.="<tr><td colspan='7' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td></tr>";
+            $html.="<tr>";
+            $html.="<td colspan='2' class='text-right'>总数量:</td><td colspan='3'>{$sumNum}</td>";
+            $html.="<td colspan='2' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td>";
+            $html.="</tr>";
         }else{
             $html.="<tr><td colspan='9'>无</td></tr>";
         }
