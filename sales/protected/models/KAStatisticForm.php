@@ -88,7 +88,7 @@ class KAStatisticForm extends CFormModel
             }
             if($row["old_sign_odds"]>=81){
                 $list[$employee_id]["sign_90_num"]++;
-                $list[$employee_id]["sign_90_amt"]+=$row["old_sum_amt"]*0.8;
+                $list[$employee_id]["sign_90_amt"]+=$row["old_sum_amt"]*1;//2023-07-10由0.8改成1
             }elseif ($row["old_sign_odds"]>=51){
                 $list[$employee_id]["sign_90_num"]++;
                 $list[$employee_id]["sign_90_amt"]+=$row["old_sum_amt"]*0.5;
@@ -707,7 +707,7 @@ class KAStatisticForm extends CFormModel
             $sumAmt = 0;
             foreach ($rows as $row){
                 $row['old_sum_amt'] = floatval($row['old_sum_amt']);
-                $com_amt = $row['sign_odds']>=81?$row['old_sum_amt']*0.8:$row['old_sum_amt']*0.5;
+                $com_amt = $row['sign_odds']>=81?$row['old_sum_amt']*1:$row['old_sum_amt']*0.5;
                 $sumAmt+= $com_amt;
                 $link = self::drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$row['id']));
                 $html.="<tr data-id='{$row["id"]}'>";
