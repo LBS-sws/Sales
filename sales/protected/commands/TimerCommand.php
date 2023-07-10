@@ -117,12 +117,14 @@ class TimerCommand extends CConsoleCommand {
         $month_type = $month>6?2:1;
 	    $model = new ClubSalesList();
 	    $model->clubSalesAllSave($year,$month_type);//刷新本年度
+        /* 2023/07/10月修改，不需要刷新上一个年度的数据
         $year = date("Y",strtotime("-6 months"));
         $month = date("n",strtotime("-6 months"));
         $month_type = $month>6?2:1;
         unset($model);
         $model = new ClubSalesList();
 	    $model->clubSalesAllSave($year,$month_type);//刷新上一个年度
+        */
     }
 
     //终止客户邮件提醒
