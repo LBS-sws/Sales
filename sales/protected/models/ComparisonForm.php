@@ -345,15 +345,15 @@ class ComparisonForm extends CFormModel
     protected function resetTdRow(&$list,$bool=false){
         $list["start_two_gross"] = $bool?$list["start_two_gross"]:ComparisonForm::resetNetOrGross($list["start_two_gross"],$this->day_num);
         $list["start_two_net"] = $bool?$list["start_two_net"]:ComparisonForm::resetNetOrGross($list["start_two_net"],$this->day_num);
-        $list["two_gross"] = $bool?$list["two_gross"]:ComparisonForm::resetNetOrGross($list["two_gross"],$this->day_num);
-        $list["two_net"] = $bool?$list["two_net"]:ComparisonForm::resetNetOrGross($list["two_net"],$this->day_num);
+        //$list["two_gross"] = $bool?$list["two_gross"]:ComparisonForm::resetNetOrGross($list["two_gross"],$this->day_num);
+        //$list["two_net"] = $bool?$list["two_net"]:ComparisonForm::resetNetOrGross($list["two_net"],$this->day_num);
         $list["new_rate"] = $this->nowAndLastRate($list["new_sum"],$list["new_sum_last"],true);
         $list["stop_rate"] = $this->nowAndLastRate($list["stop_sum"],$list["stop_sum_last"],true);
         $list["net_rate"] = $this->nowAndLastRate($list["net_sum"],$list["net_sum_last"],true);
         $list["start_two_gross_rate"] = $this->comparisonRate($list["new_sum"],$list["start_two_gross"]);
         $list["start_two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["start_two_net"],"net");
-        $list["two_gross_rate"] = $this->comparisonRate($list["new_sum"],$list["two_gross"]);
-        $list["two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["two_net"],"net");
+        //$list["two_gross_rate"] = $this->comparisonRate($list["new_sum"],$list["two_gross"]);
+        //$list["two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["two_net"],"net");
     }
 
     public static function nowAndLastRate($nowNum,$lastNum,$bool=false){
@@ -509,16 +509,16 @@ class ComparisonForm extends CFormModel
             "colspan"=>array(
                 array("name"=>Yii::t("summary","Start Gross")),//Start Gross
                 array("name"=>Yii::t("summary","Start Net")),//Start Net
-                array("name"=>Yii::t("summary","Gross")),//Gross
-                array("name"=>Yii::t("summary","Net")),//Net
+                //array("name"=>Yii::t("summary","Gross")),//Gross
+                //array("name"=>Yii::t("summary","Net")),//Net
             )
         );//年金额目标 (base case)
         $topList[]=array("name"=>Yii::t("summary","Goal degree (base case)"),"background"=>"#DCE6F1",
             "colspan"=>array(
                 array("name"=>Yii::t("summary","Start Gross")),//Start Gross
                 array("name"=>Yii::t("summary","Start Net")),//Start Net
-                array("name"=>Yii::t("summary","Gross")),//Gross
-                array("name"=>Yii::t("summary","Net")),//Net
+                //array("name"=>Yii::t("summary","Gross")),//Gross
+                //array("name"=>Yii::t("summary","Net")),//Net
             )
         );//目标完成度 (base case)
 
@@ -584,12 +584,12 @@ class ComparisonForm extends CFormModel
         );
         $bodyKey[]="start_two_gross";
         $bodyKey[]="start_two_net";
-        $bodyKey[]="two_gross";
-        $bodyKey[]="two_net";
+        //$bodyKey[]="two_gross";
+        //$bodyKey[]="two_net";
         $bodyKey[]="start_two_gross_rate";
         $bodyKey[]="start_two_net_rate";
-        $bodyKey[]="two_gross_rate";
-        $bodyKey[]="two_net_rate";
+        //$bodyKey[]="two_gross_rate";
+        //$bodyKey[]="two_net_rate";
         return $bodyKey;
     }
 }
