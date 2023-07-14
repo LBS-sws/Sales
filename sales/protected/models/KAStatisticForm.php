@@ -465,7 +465,9 @@ class KAStatisticForm extends CFormModel
         $year = date("Y");
         $list = array();
         for ($i=$year-4;$i<=$year+1;$i++){
-            $list[$i] = $i.Yii::t("ka"," year");
+            if($i>2022){
+                $list[$i] = $i.Yii::t("ka"," year");
+            }
         }
         return $list;
     }
