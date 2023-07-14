@@ -52,6 +52,11 @@ class KAStatisticForm extends CFormModel
 	    $timer = strtotime($this->search_year."/".$this->search_month."/01");
 	    $this->start_date = date("Y/m/d",$timer);
 	    $this->end_date = date("Y/m/t",$timer);
+	    if($this->start_date<'2023/06/01'){
+            $this->addError($attribute, "查询时间不能小于2023年6月");
+        }elseif($this->start_date>date("Y/m/d")){
+            $this->addError($attribute, "查询时间不能大于".date("Y年n月"));
+        }
     }
 
     public function setCriteria($criteria)
@@ -120,7 +125,7 @@ class KAStatisticForm extends CFormModel
         }
         $rows = Yii::app()->db->createCommand()
             ->select("DATE_FORMAT(a.apply_date,'%Y') as apply_year,h.id,h.code,h.name,h.city,
-                count(a.id) as visit_num,sum(if(b.rate_num>0,a.sum_amt,0)) as visit_amt,
+                sum(if(DATE_FORMAT(a.apply_date,'%Y/%m/%d')<='{$this->end_date}',1,0)) as visit_num,sum(if(DATE_FORMAT(a.apply_date,'%Y/%m/%d')<='{$this->end_date}' and b.rate_num>0,a.sum_amt,0)) as visit_amt,
                 sum(if(b.rate_num>=30,1,0)) as quota_num,sum(if(b.rate_num>=30,a.sum_amt,0)) as quota_amt,
                 sum(if(b.rate_num>=100,1,0)) as ytd_num,sum(if(b.rate_num>=100,a.sum_amt,0)) as ytd_amt
             ")->from("sal_ka_bot a")
@@ -513,7 +518,7 @@ class KAStatisticForm extends CFormModel
     //未来90天加权报价金额(签约概率>=51)
     private function sign_90_num_list($employee_id=""){
         $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
-        $endDate = date("Y/m/d",strtotime("{$startDate} + 3 months - 1 day"));
+        $endDate = date("Y/m/d",strtotime("{$startDate} + 1 months - 1 day"));
         $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
         if(!empty($employee_id)){
             $whereSql.= " and b.kam_id='{$employee_id}'";
@@ -593,7 +598,7 @@ class KAStatisticForm extends CFormModel
     //拜访阶段詳情
     private function visit_num_table(){
         $suffix = Yii::app()->params['envSuffix'];
-        $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}'";
+        $whereSql = "DATE_FORMAT(a.apply_date,'%Y/%m/%d')<='{$this->end_date}'";
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
