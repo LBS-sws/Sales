@@ -107,10 +107,21 @@ class KABotForm extends CFormModel
                 area_id,level_id,class_id,busine_id,link_id,year_amt,support_user,sign_odds,city,
                 available_date,available_amt,
                 quarter_amt,month_amt,sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
-            array('apply_date,customer_name,kam_id,link_id','required'),
+            array('apply_date,available_date,customer_name,kam_id,link_id','required'),
+            array('apply_date','validateDate'),
             array('sign_amt','computeSignAmt'),
 		);
 	}
+
+    public function validateDate($attribute, $params) {
+	    if(!empty($this->apply_date)&&!empty($this->available_date)){
+	        $minDate = strtotime($this->apply_date);
+	        $maxDate = strtotime($this->available_date);
+	        if($maxDate<$minDate){
+                $this->addError($attribute, "可成交日期不能小于录入日期");
+            }
+        }
+    }
 
 	public function computeSignAmt($attribute, $params){
         $this->sum_amt = 0;

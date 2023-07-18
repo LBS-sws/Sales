@@ -123,11 +123,17 @@ class KAStatisticForm extends CFormModel
         }else{
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
         }
+        $dateIFSql = "a.apply_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
         $rows = Yii::app()->db->createCommand()
             ->select("DATE_FORMAT(a.apply_date,'%Y') as apply_year,h.id,h.code,h.name,h.city,
-                sum(if(DATE_FORMAT(a.apply_date,'%Y/%m/%d')<='{$this->end_date}',1,0)) as visit_num,sum(if(DATE_FORMAT(a.apply_date,'%Y/%m/%d')<='{$this->end_date}' and b.rate_num>0,a.sum_amt,0)) as visit_amt,
-                sum(if(b.rate_num>=30,1,0)) as quota_num,sum(if(b.rate_num>=30,a.sum_amt,0)) as quota_amt,
-                sum(if(b.rate_num>=100,1,0)) as ytd_num,sum(if(b.rate_num>=100,a.sum_amt,0)) as ytd_amt
+                sum(if({$dateIFSql},1,0)) as visit_num,
+                sum(if({$dateIFSql} and b.rate_num>0,a.sum_amt,0)) as visit_amt,
+                
+                sum(if({$dateIFSql} and b.rate_num>=30,1,0)) as quota_num,
+                sum(if({$dateIFSql} and b.rate_num>=30,a.sum_amt,0)) as quota_amt,
+                
+                sum(if(b.rate_num>=100,1,0)) as ytd_num,
+                sum(if(b.rate_num>=100,a.sum_amt,0)) as ytd_amt
             ")->from("sal_ka_bot a")
             ->leftJoin("sal_ka_link b","a.link_id=b.id")
             ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
@@ -521,6 +527,7 @@ class KAStatisticForm extends CFormModel
     private function sign_90_num_list($employee_id=""){
         $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
         $endDate = date("Y/m/d",strtotime("{$startDate} + 1 months - 1 day"));
+        $dateIFSql = " and b.apply_date<='{$endDate}' and IFNULL(b.available_date,b.apply_date)>='{$startDate}'";
         $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
         if(!empty($employee_id)){
             $whereSql.= " and b.kam_id='{$employee_id}'";
@@ -529,7 +536,7 @@ class KAStatisticForm extends CFormModel
             ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
             ->from("sal_ka_bot_history a")
             ->leftJoin("sal_ka_bot b","a.bot_id=b.id")
-            ->where("a.espe_type=1 {$whereSql}")
+            ->where("a.espe_type=1 {$whereSql} {$dateIFSql}")
             ->group("a.bot_id,b.kam_id")
             ->getText();
         $rows = Yii::app()->db->createCommand()
@@ -561,6 +568,7 @@ class KAStatisticForm extends CFormModel
     private function sign_this_num_list($employee_id=""){
         $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
         $endDate = date("Y/m/d",strtotime("{$startDate} + 1 months - 1 day"));
+        $dateIFSql = " and b.apply_date<='{$endDate}' and IFNULL(b.available_date,b.apply_date)>='{$startDate}'";
         $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
         if(!empty($employee_id)){
             $whereSql.= " and b.kam_id='{$employee_id}'";
@@ -569,7 +577,7 @@ class KAStatisticForm extends CFormModel
             ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
             ->from("sal_ka_bot_history a")
             ->leftJoin("sal_ka_bot b","a.bot_id=b.id")
-            ->where("a.espe_type=1 {$whereSql}")
+            ->where("a.espe_type=1 {$whereSql} {$dateIFSql}")
             ->group("a.bot_id,b.kam_id")
             ->getText();
         $rows = Yii::app()->db->createCommand()
@@ -600,7 +608,8 @@ class KAStatisticForm extends CFormModel
     //拜访阶段詳情
     private function visit_num_table(){
         $suffix = Yii::app()->params['envSuffix'];
-        $whereSql = "DATE_FORMAT(a.apply_date,'%Y/%m/%d')<='{$this->end_date}'";
+        //$whereSql = "DATE_FORMAT(a.apply_date,'%Y/%m/%d')<='{$this->end_date}'";
+        $whereSql = "a.apply_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
@@ -615,7 +624,8 @@ class KAStatisticForm extends CFormModel
     //报价阶段詳情
     private function quota_num_table(){
         $suffix = Yii::app()->params['envSuffix'];
-        $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}'";
+        //$whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}'";
+        $whereSql = "a.apply_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
