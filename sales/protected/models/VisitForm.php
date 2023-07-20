@@ -268,7 +268,7 @@ class VisitForm extends CFormModel
 	public function rules() {
 		return array(
 			array('visit_dt, username, district, visit_type, visit_obj,service_type, cust_type, cust_type_group, cust_name','required'),
-			array('visit_dt','validateVisitDt','on'=>array('new')),
+			array('visit_dt','validateVisitDt'),
 			array('service','validateServiceAmount'),
 			array('service','validateServices'),
 			array('id, city, city_name, remarks, staff, dept_name, post_name, street, cust_person, cust_person_role, cust_vip,quotation,
@@ -279,12 +279,31 @@ class VisitForm extends CFormModel
 	}
 
     public function validateVisitDt($attribute, $params) {
-        $visit_dt = date("Y-m-d",strtotime($this->visit_dt));
-        $nowDate = date("Y-m-d");
-        $firstDate = date("Y-m-01",strtotime($nowDate));
-        $firstDate = date("Y-m-01",strtotime("$firstDate - 2 month"));
-        if($visit_dt<$firstDate){
-            $this->addError($attribute, "拜访日期必须大于".$firstDate);
+        $visit_dt = date("Y/m/d",strtotime($this->visit_dt));
+        $nowDate = date("Y/m/d");
+        $minDate = date("Y/m/d",strtotime($nowDate." - 1 day"));
+        if($this->getScenario()=="new"){
+            if($visit_dt<$minDate){
+                $this->addError($attribute, "拜访日期必须大于".$minDate);
+            }else{
+                $monthDate = date("Y/m",strtotime($visit_dt));
+                $countRow = Yii::app()->db->createCommand()
+                    ->select("count(id)")
+                    ->from("sal_visit")
+                    ->where("username='{$this->username}' and DATE_FORMAT(visit_dt,'%Y/%m')='{$monthDate}'")->queryScalar();
+                if($countRow>=50){//每天录入上线为50条
+                    $this->addError($attribute, "每天录入上限为50条（{$visit_dt}）");
+                }
+            }
+        }else{
+            $visitRow = Yii::app()->db->createCommand()->select("visit_dt")->from("sal_visit")
+                ->where("id=:id",array(":id"=>$this->id))->queryRow();
+            if($visitRow){
+                $old_dt = date("Y/m/d",$visitRow["visit_dt"]);
+                if($old_dt>$visit_dt){
+                    $this->visit_dt = $old_dt;
+                }
+            }
         }
     }
 
