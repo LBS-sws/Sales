@@ -11,6 +11,10 @@ class ComparisonForm extends CFormModel
 	public $comparison_year;
     public $month_start_date;
     public $month_end_date;
+    public $last_month_start_date;
+    public $last_month_end_date;
+
+    public static $con_list=array("one_gross","one_net","two_gross","two_net","three_gross","three_net");
 
 	public $data=array();
 	public $defaultTable="";
@@ -70,6 +74,7 @@ class ComparisonForm extends CFormModel
     public function retrieveData() {
         $data = array();
         $suffix = Yii::app()->params['envSuffix'];
+        $city_allow="";
         $this->start_date = empty($this->start_date)?date("Y/01/01"):$this->start_date;
         $this->end_date = empty($this->end_date)?date("Y/m/t"):$this->end_date;
         $this->comparison_year = date("Y",strtotime($this->start_date));
@@ -81,56 +86,168 @@ class ComparisonForm extends CFormModel
         ComparisonForm::setDayNum($this->start_date,$this->end_date,$this->day_num);
         $lastStartDate = ($this->comparison_year-1)."/".$this->month_start_date;
         $lastEndDate = ($this->comparison_year-1)."/".$this->month_end_date;
-        $where="(a.status_dt BETWEEN '{$this->start_date}' and '{$this->end_date}')";
-        $where.="or (a.status_dt BETWEEN '{$lastStartDate}' and '{$lastEndDate}')";
-        $selectSql="a.status_dt,a.status,a.reason,com.code,com.name,f.rpt_cat,f.description as type_name,f.single,a.city,a.service,a.company_name,g.description as nature_name,g.rpt_cat as nature_rpt_cat,a.nature_type,a.amt_paid,a.ctrt_period,a.b4_amt_paid
-            ,b.region,b.name as city_name,c.name as region_name";
-        $serviceRows = Yii::app()->db->createCommand()
-            ->select("{$selectSql},a.paid_type,a.b4_paid_type,CONCAT('A') as sql_type_name")
-            ->from("swoper{$suffix}.swo_service a")
-            ->leftJoin("swoper{$suffix}.swo_company com","com.id=a.company_id")
-            ->leftJoin("swoper{$suffix}.swo_customer_type f","a.cust_type=f.id")
-            ->leftJoin("swoper{$suffix}.swo_nature g","a.nature_type=g.id")
-            ->leftJoin("security{$suffix}.sec_city b","a.city=b.code")
-            ->leftJoin("security{$suffix}.sec_city c","b.region=c.code")
-            ->where("a.status in ('N','T') and a.city not in ('ZY') and ({$where})")
-            ->order("a.city")
-            ->queryAll();
-        //所有需要計算的客戶服務(ID客戶服務)
-        $serviceRowsID = Yii::app()->db->createCommand()
-            ->select("{$selectSql},CONCAT('M') as paid_type,CONCAT('M') as b4_paid_type,CONCAT('D') as sql_type_name")
-            ->from("swoper$suffix.swo_serviceid a")
-            ->leftJoin("swoper{$suffix}.swo_company com","com.id=a.company_id")
-            ->leftJoin("swoper$suffix.swo_customer_type_id f","a.cust_type=f.id")
-            ->leftJoin("swoper{$suffix}.swo_nature g","a.nature_type=g.id")
-            ->leftJoin("security{$suffix}.sec_city b","a.city=b.code")
-            ->leftJoin("security{$suffix}.sec_city c","b.region=c.code")
-            ->where("a.status in ('N','T') and a.city not in ('ZY') and ({$where})")
-            ->order("a.city")
-            ->queryAll();
-        $serviceRows = $serviceRows?$serviceRows:array();
-        $serviceRowsID = $serviceRowsID?$serviceRowsID:array();
-        $rows = array_merge($serviceRows,$serviceRowsID);
+
+        $this->last_month_start_date = CountSearch::computeLastMonth($this->start_date);
+        $this->last_month_end_date = CountSearch::computeLastMonth($this->end_date);
+
         $citySetList = self::getCitySetList();
-        if(!empty($rows)){
-            foreach ($rows as $row){
-                //rpt_cat='INV' and single=1的客户服务是产品，所以需要筛选出去
-                if($row["rpt_cat"]==="INV"&&intval($row["single"])===1){
-                    continue;
+        $startDate = $this->start_date;
+        $endDate = $this->end_date;
+        $monthStartDate = $this->last_month_start_date;
+        $monthEndDate = $this->last_month_end_date;
+        $lastMonthStartDate = ($this->comparison_year-1)."/".date("m/d",strtotime($monthStartDate));
+        $lastMonthEndDate = ($this->comparison_year-1)."/".date("m/d",strtotime($monthEndDate));
+        //获取U系统的服务单数据
+        $uServiceMoney = CountSearch::getUServiceMoney($startDate,$endDate,$city_allow);
+        //获取U系统的產品数据
+        $uInvMoney = CountSearch::getUInvMoney($startDate,$endDate,$city_allow);
+        //获取U系统的產品数据(上一年)
+        $lastUInvMoney = CountSearch::getUInvMoney($lastStartDate,$lastEndDate,$city_allow);
+        //服务新增（非一次性 和 一次性)
+        $serviceAddForNY = CountSearch::getServiceAddForNY($startDate,$endDate,$city_allow);
+        //服务新增（非一次性 和 一次性)(上一年)
+        $lastServiceAddForNY = CountSearch::getServiceAddForNY($lastStartDate,$lastEndDate,$city_allow);
+        //终止服务、暂停服务
+        $serviceForST = CountSearch::getServiceForST($startDate,$endDate,$city_allow);
+        //终止服务、暂停服务(上一年)
+        $lastServiceForST = CountSearch::getServiceForST($lastStartDate,$lastEndDate,$city_allow);
+        //恢復服务
+        $serviceForR = CountSearch::getServiceForType($startDate,$endDate,$city_allow,"R");
+        //恢復服务(上一年)
+        $lastServiceForR = CountSearch::getServiceForType($lastStartDate,$lastEndDate,$city_allow,"R");
+        //更改服务
+        $serviceForA = CountSearch::getServiceForA($startDate,$endDate,$city_allow);
+        //更改服务(上一年)
+        $lastServiceForA = CountSearch::getServiceForA($lastStartDate,$lastStartDate,$city_allow);
+        //服务新增（一次性)(上月)
+        $monthServiceAddForY = CountSearch::getServiceAddForY($monthStartDate,$monthEndDate,$city_allow);
+        //服务新增（一次性)(上月)(上一年)
+        $lastMonthServiceAddForY = CountSearch::getServiceAddForY($lastMonthStartDate,$lastMonthEndDate,$city_allow);
+        //获取U系统的產品数据(上月)
+        $monthUInvMoney = CountSearch::getUInvMoney($monthStartDate,$monthEndDate,$city_allow);
+        //获取U系统的產品数据(上月)(上一年)
+        $lastMonthUInvMoney = CountSearch::getUInvMoney($lastMonthStartDate,$lastMonthEndDate,$city_allow);
+        //本周停单年金额、本周停单月金额
+        $serviceForT = CountSearch::getServiceForT($this->week_start_date,$endDate,$city_allow);
+        //月金额超过1000元/月的停单客户
+        $serviceRowsForT = CountSearch::getServiceRowsForT($startDate,$endDate,$city_allow);
+
+        //"stopListOnly"=>array(),//月金额超过1000元/月的停单客户
+        //"stopWeekSum"=>0,//本周停单年金额
+        //"stopMonthSum"=>0,//本周停单月金额
+        foreach ($citySetList as $cityRow){
+            $city = $cityRow["code"];
+            $defMoreList=$this->defMoreCity($city,$cityRow["city_name"]);
+            $defMoreList["add_type"] = $cityRow["add_type"];
+            self::setComparisonConfig($defMoreList,$this->comparison_year,$this->month_type,$city);
+            $defMoreList["u_actual_money"]+=key_exists($city,$uServiceMoney)?$uServiceMoney[$city]:0;
+            $defMoreList["u_sum"]+=key_exists($city,$uInvMoney)?$uInvMoney[$city]["sum_money"]:0;
+            $defMoreList["u_actual_money"]+=$defMoreList["u_sum"];//生意额需要加上U系统产品金额
+            $defMoreList["u_sum_last"]+=key_exists($city,$lastUInvMoney)?$lastUInvMoney[$city]["sum_money"]:0;
+            $defMoreList["stopListOnly"]+=key_exists($city,$serviceRowsForT)?$serviceRowsForT[$city]:array();
+            if(key_exists($city,$serviceForT)){
+                $defMoreList["stopWeekSum"]+=$serviceForT[$city]["sum_amount"];
+                $defMoreList["stopMonthSum"]+=$serviceForT[$city]["sum_month"];
+            }
+            if(key_exists($city,$serviceAddForNY)){
+                $defMoreList["new_sum"]+=$serviceAddForNY[$city]["num_new"];
+                $defMoreList["new_sum_n"]+=$serviceAddForNY[$city]["num_new_n"];
+            }
+            $defMoreList["new_sum_n"]+=$defMoreList["u_sum"];//一次性新增需要加上U系统产品金额
+            if(key_exists($city,$lastServiceAddForNY)){
+                $defMoreList["new_sum_last"]+=$lastServiceAddForNY[$city]["num_new"];
+                $defMoreList["new_sum_n_last"]+=$lastServiceAddForNY[$city]["num_new_n"];
+            }
+            $defMoreList["new_sum_n_last"]+=$defMoreList["u_sum_last"];//一次性新增需要加上U系统产品金额
+            //上月一次性服务+新增（产品）
+            $defMoreList["new_month_n_last"]+=key_exists($city,$lastMonthServiceAddForY)?-1*$lastMonthServiceAddForY[$city]:0;
+            $defMoreList["new_month_n_last"]+=key_exists($city,$lastMonthUInvMoney)?-1*$lastMonthUInvMoney[$city]["sum_money"]:0;
+            $defMoreList["new_month_n"]+=key_exists($city,$monthServiceAddForY)?-1*$monthServiceAddForY[$city]:0;
+            $defMoreList["new_month_n"]+=key_exists($city,$monthUInvMoney)?-1*$monthUInvMoney[$city]["sum_money"]:0;
+            //暂停、停止
+            if(key_exists($city,$serviceForST)){
+                $defMoreList["stop_sum"]+=key_exists($city,$serviceForST)?-1*$serviceForST[$city]["num_stop"]:0;
+                $defMoreList["pause_sum"]+=key_exists($city,$serviceForST)?-1*$serviceForST[$city]["num_pause"]:0;
+                $defMoreList["stopSumOnly"]+=key_exists($city,$serviceForST)?$serviceForST[$city]["num_month"]:0;
+            }
+            if(key_exists($city,$lastServiceForST)){
+                $defMoreList["stop_sum_last"]+=key_exists($city,$lastServiceForST)?-1*$lastServiceForST[$city]["num_stop"]:0;
+                $defMoreList["pause_sum_last"]+=key_exists($city,$lastServiceForST)?-1*$lastServiceForST[$city]["num_pause"]:0;
+            }
+            //恢复
+            $defMoreList["resume_sum_last"]+=key_exists($city,$lastServiceForR)?$lastServiceForR[$city]:0;
+            $defMoreList["resume_sum"]+=key_exists($city,$serviceForR)?$serviceForR[$city]:0;
+            //更改
+            $defMoreList["amend_sum_last"]+=key_exists($city,$lastServiceForA)?$lastServiceForA[$city]:0;
+            $defMoreList["amend_sum"]+=key_exists($city,$serviceForA)?$serviceForA[$city]:0;
+
+            self::resetData($data,$cityRow,$citySetList,$defMoreList);
+        }
+
+        $this->data = $data;
+        return true;
+    }
+
+    //設置滾動生意額及年初生意額
+    public static function setComparisonConfig(&$arr,$year,$month_type,$city){
+        $suffix = Yii::app()->params['envSuffix'];
+        foreach (self::$con_list as $itemStr){//初始化
+            $arr[$itemStr]=0;
+            $arr[$itemStr."_rate"]=0;
+            $arr["start_".$itemStr]=0;
+            $arr["start_".$itemStr."_rate"]=0;
+        }
+        $rowStart = Yii::app()->db->createCommand()->select("*")->from("swoper$suffix.swo_comparison_set")
+            ->where("comparison_year=:year and month_type=1 and city=:city",
+                array(":year"=>$year,":city"=>$city)
+            )->queryRow();//查询目标金额
+        if($rowStart){
+            foreach (self::$con_list as $itemStr){//写入年初生意额
+                $arr["start_".$itemStr]=empty($rowStart[$itemStr])?0:floatval($rowStart[$itemStr]);
+            }
+        }
+        $setRow = Yii::app()->db->createCommand()->select("*")->from("swoper$suffix.swo_comparison_set")
+            ->where("comparison_year=:year and month_type=:month_type and city=:city",
+                array(":year"=>$year,":month_type"=>$month_type,":city"=>$city)
+            )->queryRow();//查询目标金额
+        if($setRow){
+            foreach (self::$con_list as $itemStr){//写入滚动生意额
+                $arr[$itemStr]=empty($setRow[$itemStr])?0:floatval($setRow[$itemStr]);
+            }
+        }
+    }
+
+    public static function resetData(&$data,$cityRow,$citySet,$defMoreList){
+        $notAddList=array("add_type");
+        foreach (self::$con_list as $itemStr){
+            $notAddList[]=$itemStr;
+            $notAddList[]="start_".$itemStr;
+        }
+        $city = $cityRow["code"];
+        $region = $cityRow["region_code"];
+        $defMoreList["city"]=$city;
+        $defMoreList["city_name"]= $cityRow["city_name"];
+        $defMoreList["add_type"]= $cityRow["add_type"];
+        if(!key_exists($city,$data)){
+            $data[$city]=$defMoreList;
+        }else{
+            foreach ($defMoreList as $key=>$value){
+                if(in_array($key,$notAddList)){
+                    $data[$city][$key]=$value;
+                }elseif (is_numeric($value)){
+                    $data[$city][$key]+=$value;
+                }elseif(is_array($value)){
+                    $data[$city][$key]=array_merge($value,$data[$city][$key]);
+                }else{
+                    $data[$city][$key]=$value;
                 }
-                $row["amt_paid"] = is_numeric($row["amt_paid"])?floatval($row["amt_paid"]):0;
-                $row["ctrt_period"] = is_numeric($row["ctrt_period"])?floatval($row["ctrt_period"]):0;
-                $row["b4_amt_paid"] = is_numeric($row["b4_amt_paid"])?floatval($row["b4_amt_paid"]):0;
-                $this->insertDataForRow($row,$data,$citySetList);
             }
         }
 
-        $this->insertUData($this->start_date,$this->end_date,$data);
-        $this->insertUData($lastStartDate,$lastEndDate,$data);
-        //$this->insertUServiceData($this->start_date,$data);//同步U系統的服務金額
-        $this->insertUActualMoney($this->start_date,$this->end_date,$data);//服务生意额
-        $this->data = $data;
-        return true;
+        if($cityRow["add_type"]==1&&key_exists($region,$citySet)){//叠加(城市配置的叠加)
+            $regionTwo = $citySet[$region];
+            self::resetData($data,$regionTwo,$citySet,$defMoreList);
+        }
     }
 
     public static function getCitySetList(){
@@ -152,206 +269,73 @@ class ComparisonForm extends CFormModel
         return $list;
     }
 
-    public static function getListForCityCode($city_code,$list){
-        if(key_exists($city_code,$list)){
-            return $list[$city_code];
-        }else{
-            return array("code"=>$city_code,"city_name"=>"","show_type"=>0,"add_type"=>0,"region_code"=>"null","region_name"=>"null");
-        }
-    }
-
-    private function insertUServiceData($startDate,&$data){
-        $year = date("Y",strtotime($startDate));
-        $month = date("n",strtotime($startDate));
-        $json = Invoice::getActualAmount($year,$month);
-        if($json["message"]==="Success"){
-            $jsonData = $json["data"];
-            foreach ($jsonData as $row){
-                $city = $row["city"];
-                $money = is_numeric($row["actual_amt"])?floatval($row["actual_amt"]):0;
-                if($row["service"]!="销货账单"&&key_exists($city,$data)){
-                    $data[$city]["uServiceMoney"]+=$money;
-                }
-            }
-        }
-    }
-
-    //服务生意额
-    private function insertUActualMoney($startDay,$endDay,&$data){
-        $list = array();
-        $suffix = Yii::app()->params['envSuffix'];
-        $rows = Yii::app()->db->createCommand()->select("b.Text,a.Fee,a.TermCount")
-            ->from("service{$suffix}.joborder a")
-            ->leftJoin("service{$suffix}.officecity f","a.City = f.City")
-            ->leftJoin("service{$suffix}.enums b","f.Office = b.EnumID and b.EnumType=8")
-            ->where("a.Status=3 and a.JobDate BETWEEN '{$startDay}' AND '{$endDay}'")
-            ->order("b.Text")
-            ->queryAll();
-        if($rows){
-            foreach ($rows as $row){
-                $city = $row["Text"];
-                $money = empty($row["TermCount"])?0:floatval($row["Fee"])/floatval($row["TermCount"]);
-                if(key_exists($city,$data)){
-                    $data[$city]["u_actual_money"]+=$money;
-                }
-            }
-        }
-        return $list;
-    }
-
-    private function insertUData($startDate,$endDate,&$data){
-        $year = intval($startDate);//服务的年份
-        $json = Invoice::getInvData($startDate,$endDate);
-        if($json["message"]==="Success"){
-            $jsonData = $json["data"];
-            foreach ($jsonData as $row){
-                $city = $row["city"];
-                $money = is_numeric($row["invoice_amt"])?floatval($row["invoice_amt"]):0;
-                if(key_exists($city,$data)){
-                    if($year==$this->comparison_year){
-                        $data[$city]["u_actual_money"]+=$money;//服务生意额需要加上产品金额
-                        $uStr = "u_sum";
-                        $newStr = "new_sum";
-                        $netStr = "net_sum";
-                    }else{
-                        $uStr = "u_sum_last";
-                        $newStr = "new_sum_last";
-                        $netStr = "net_sum_last";
-                    }
-                    $data[$city][$uStr]+=$money;
-                    $data[$city][$newStr]+=$money;
-                    $data[$city][$netStr]+=$money;
-                }
-            }
-        }
-    }
-
     private function defMoreCity($city,$city_name){
-        $suffix = Yii::app()->params['envSuffix'];
-        $startRow = Yii::app()->db->createCommand()->select("*")->from("swoper{$suffix}.swo_comparison_set")
-            ->where("comparison_year=:year and month_type=1 and city=:city",
-                array(":year"=>$this->comparison_year,":city"=>$city)
-            )->queryRow();//年初目标金额
-        $setRow = Yii::app()->db->createCommand()->select("*")->from("swoper{$suffix}.swo_comparison_set")
-            ->where("comparison_year=:year and month_type=:month_type and city=:city",
-                array(":year"=>$this->comparison_year,":month_type"=>$this->month_type,":city"=>$city)
-            )->queryRow();//滚动目标金额
-        $contractArr = array(
+        $arr=array(
             "city"=>$city,
             "city_name"=>$city_name,
-            "u_actual_money"=>0,//服务金额
+            "u_actual_money"=>0,//服务生意额
             "u_sum_last"=>0,//U系统金额(上一年)
             "u_sum"=>0,//U系统金额
-            "stopWeekSum"=>0,//本週停單金額（年金額）
-            "stopMonthSum"=>0,//本週停單金額（月金額）
             "stopSumOnly"=>0,//本月停單金額（月）
-            "stopListOnly"=>array(),//本月停單列表（月金額超過1000的數據）
-            "uServiceMoney"=>0,//U系統內的實際服務金額（月）
+            "monthStopRate"=>0,//月停單率
             "new_sum_last"=>0,//新增(上一年)
             "new_sum"=>0,//新增
             "new_rate"=>0,//新增对比比例
-            "stop_sum_last"=>0,//终止（上一年）(年金額)
-            "stop_sum"=>0,//终止(年金額)
+            "stopListOnly"=>array(),//月金额超过1000元/月的停单客户
+            "stopWeekSum"=>0,//本周停单年金额
+            "stopMonthSum"=>0,//本周停单月金额
+
+            "new_sum_n_last"=>0,//一次性服务+新增（产品） (上一年)
+            "new_sum_n"=>0,//一次性服务+新增（产品）
+            "new_n_rate"=>0,//一次性服务+新增（产品）对比比例
+
+            "new_month_n_last"=>0,//上月一次性服务+新增（产品） (上一年)
+            "new_month_n"=>0,//上月一次性服务+新增（产品）
+            "new_month_rate"=>0,//上月一次性服务+新增（产品）对比比例
+
+            "stop_sum_last"=>0,//终止（上一年）
+            "stop_sum"=>0,//终止
             "stop_rate"=>0,//终止对比比例
+
+            "resume_sum_last"=>0,//恢复（上一年）
+            "resume_sum"=>0,//恢复
+            "resume_rate"=>0,//恢复对比比例
+
+            "pause_sum_last"=>0,//暂停（上一年）
+            "pause_sum"=>0,//暂停
+            "pause_rate"=>0,//暂停对比比例
+
+            "amend_sum_last"=>0,//更改（上一年）
+            "amend_sum"=>0,//更改
+            "amend_rate"=>0,//更改对比比例
+
             "net_sum_last"=>0,//总和（上一年）
-            "net_sum"=>0,//总和(年金額)
+            "net_sum"=>0,//总和
             "net_rate"=>0,//总和对比比例
-            "two_gross"=>$setRow?floatval($setRow["two_gross"]):0,
-            "two_gross_rate"=>0,
-            "two_net"=>$setRow?floatval($setRow["two_net"]):0,
-            "two_net_rate"=>0,
-            "start_two_gross"=>$startRow?floatval($startRow["two_gross"]):0,
-            "start_two_gross_rate"=>0,
-            "start_two_net"=>$startRow?floatval($startRow["two_net"]):0,
-            "start_two_net_rate"=>0,
-
-            "one_gross"=>$setRow?floatval($setRow["one_gross"]):0,
-            "one_gross_rate"=>0,
-            "one_net"=>$setRow?floatval($setRow["one_net"]):0,
-            "one_net_rate"=>0,
-            "start_one_gross"=>$startRow?floatval($startRow["one_gross"]):0,
-            "start_one_gross_rate"=>0,
-            "start_one_net"=>$startRow?floatval($startRow["one_net"]):0,
-            "start_one_net_rate"=>0
         );
-        return $contractArr;
-    }
-
-    private function insertDataForRow($row,&$data,$citySetList){
-        $suffix = Yii::app()->params['envSuffix'];
-	    $year = intval($row["status_dt"]);//服务的年份
-        $city = empty($row["city"])?"none":$row["city"];
-        $citySet = self::getListForCityCode($city,$citySetList);
-        if(!key_exists($city,$data)){
-            $data[$city]=$this->defMoreCity($city,$row["city_name"]);
-        }
-        if($citySet["add_type"]==1){//叠加(城市配置的叠加)
-            if(!key_exists($citySet["region_code"],$data)){
-                $data[$citySet["region_code"]]=$this->defMoreCity($citySet["region_code"],$citySet["region_name"]);
-            }
-        }
-        if($row["paid_type"]=="M"){//月金额
-            $money = $row["amt_paid"]*$row["ctrt_period"];//年金額
-            $monthMoney = $row["amt_paid"];//月金額
-        }else{
-            $money = $row["amt_paid"];
-            $monthMoney = empty($row["ctrt_period"])?0:$row["amt_paid"]/$row["ctrt_period"];
-            $monthMoney = round($monthMoney,2);
-        }
-        if($year==$this->comparison_year){
-            $newStr = "new_sum";
-            $stopStr = "stop_sum";
-            $netStr = "net_sum";
-        }else{
-            $newStr = "new_sum_last";
-            $stopStr = "stop_sum_last";
-            $netStr = "net_sum_last";
-        }
-        switch ($row["status"]) {
-            case "N"://新增
-                $data[$city][$newStr] += $money;
-                $data[$city][$netStr] += $money;
-                if($citySet["add_type"]==1){//叠加(城市配置的叠加)
-                    $data[$citySet["region_code"]][$newStr] += $money;
-                    $data[$citySet["region_code"]][$netStr] += $money;
-                }
-                break;
-            case "T"://终止
-                if(strtotime($this->week_start_date)<=strtotime($row["status_dt"])){
-                    $data[$city]["stopWeekSum"] += $money;
-                    $data[$city]["stopMonthSum"] += $monthMoney;
-                    if($citySet["add_type"]==1){//叠加(城市配置的叠加)
-                        $data[$citySet["region_code"]]["stopWeekSum"] += $money;
-                        $data[$citySet["region_code"]]["stopMonthSum"] += $monthMoney;
-                    }
-                }
-                if($this->comparison_year==$year){
-                    $data[$city]["stopSumOnly"] += $monthMoney;
-                    if($citySet["add_type"]==1){//叠加(城市配置的叠加)
-                        $data[$citySet["region_code"]]["stopSumOnly"] += $monthMoney;
-                    }
-                    if($monthMoney>=1000){
-                        $stopList = $row;
-                        $stopList["stopMoneyForMonth"] = $monthMoney;
-                        $stopList["stopMoneyForYear"] = $money;
-                        $data[$city]["stopListOnly"][] = $stopList;
-                        if($citySet["add_type"]==1){//叠加(城市配置的叠加)
-                            $data[$citySet["region_code"]]["stopListOnly"][] = $stopList;
-                        }
-                    }
-                }
-                $money *= -1;
-                $data[$city][$stopStr] += $money;
-                $data[$city][$netStr] += $money;
-                if($citySet["add_type"]==1){//叠加(城市配置的叠加)
-                    $data[$citySet["region_code"]][$stopStr] += $money;
-                    $data[$citySet["region_code"]][$netStr] += $money;
-                }
-                break;
-        }
+        return $arr;
     }
 
     protected function resetTdRow(&$list,$bool=false){
+        $newSum = $list["new_sum"]+$list["new_sum_n"];//所有新增总金额
+        $list["monthStopRate"] = $this->comparisonRate($list["stopSumOnly"],$list["u_actual_money"]);
+        $list["net_sum"]=0;
+        $list["net_sum"]+=$list["new_sum"]+$list["new_sum_n"]+$list["new_month_n"];
+        $list["net_sum"]+=$list["stop_sum"]+$list["resume_sum"]+$list["pause_sum"];
+        $list["net_sum"]+=$list["amend_sum"];
+        $list["net_sum_last"]=0;
+        $list["net_sum_last"]+=$list["new_sum_last"]+$list["new_sum_n_last"]+$list["new_month_n_last"];
+        $list["net_sum_last"]+=$list["stop_sum_last"]+$list["resume_sum_last"]+$list["pause_sum_last"];
+        $list["net_sum_last"]+=$list["amend_sum_last"];
+        $list["new_rate"] = $this->nowAndLastRate($list["new_sum"],$list["new_sum_last"],true);
+        $list["new_n_rate"] = $this->nowAndLastRate($list["new_sum_n"],$list["new_sum_n_last"],true);
+        $list["new_month_rate"] = $this->nowAndLastRate($list["new_month_n"],$list["new_month_n_last"],true);
+        $list["stop_rate"] = $this->nowAndLastRate($list["stop_sum"],$list["stop_sum_last"],true);
+        $list["resume_rate"] = $this->nowAndLastRate($list["resume_sum"],$list["resume_sum_last"],true);
+        $list["pause_rate"] = $this->nowAndLastRate($list["pause_sum"],$list["pause_sum_last"],true);
+        $list["amend_rate"] = $this->nowAndLastRate($list["amend_sum"],$list["amend_sum_last"],true);
+        $list["net_rate"] = $this->nowAndLastRate($list["net_sum"],$list["net_sum_last"],true);
+
         $list["start_one_gross"] = $bool?$list["start_one_gross"]:ComparisonForm::resetNetOrGross($list["start_one_gross"],$this->day_num);
         $list["start_one_net"] = $bool?$list["start_one_net"]:ComparisonForm::resetNetOrGross($list["start_one_net"],$this->day_num);
         $list["start_two_gross"] = $bool?$list["start_two_gross"]:ComparisonForm::resetNetOrGross($list["start_two_gross"],$this->day_num);
@@ -361,12 +345,12 @@ class ComparisonForm extends CFormModel
         $list["new_rate"] = $this->nowAndLastRate($list["new_sum"],$list["new_sum_last"],true);
         $list["stop_rate"] = $this->nowAndLastRate($list["stop_sum"],$list["stop_sum_last"],true);
         $list["net_rate"] = $this->nowAndLastRate($list["net_sum"],$list["net_sum_last"],true);
-        $list["start_two_gross_rate"] = $this->comparisonRate($list["new_sum"],$list["start_two_gross"]);
+        $list["start_two_gross_rate"] = $this->comparisonRate($newSum,$list["start_two_gross"]);
         $list["start_two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["start_two_net"],"net");
-        $list["start_one_gross_rate"] = $this->comparisonRate($list["new_sum"],$list["start_one_gross"]);
+        $list["start_one_gross_rate"] = $this->comparisonRate($newSum,$list["start_one_gross"]);
         $list["start_one_net_rate"] = $this->comparisonRate($list["net_sum"],$list["start_one_net"],"net");
-        //$list["two_gross_rate"] = $this->comparisonRate($list["new_sum"],$list["two_gross"]);
-        //$list["two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["two_net"],"net");
+        //$list["two_gross_rate"] = $this->comparisonRate($newSum,$list["two_gross"]);
+        //$list["two_net_rate"] = $this->comparisonRate($newSum,$list["two_net"],"net");
     }
 
     public static function nowAndLastRate($nowNum,$lastNum,$bool=false){
@@ -434,10 +418,10 @@ class ComparisonForm extends CFormModel
         $table.='<tbody>';
         if(!empty($this->data)){
             foreach ($this->data as $row){
-                $stopSum = $row["stopSumOnly"]>=0?$row["stopSumOnly"]:$row["stopSumOnly"]*-1;//本月終止金額
+                $this->resetTdRow($row);
                 $uServiceMoney = $row["u_actual_money"];//（2023/5/3改成服务金额）
                 //本月停單率
-                $htmlList[$row["city"]]["stopRate"]=$this->comparisonRate($stopSum,$uServiceMoney);
+                $htmlList[$row["city"]]["stopRate"]=$row["monthStopRate"];
                 //目標金額
                 $htmlList[$row["city"]]["twoGross"]=$row["two_gross"];
                 //本周停单金额(年金額)
@@ -449,7 +433,6 @@ class ComparisonForm extends CFormModel
                 //停單金額超過1000的客戶資料
                 $htmlList[$row["city"]]["stopListOnly"]=$row["stopListOnly"];
                 $htmlList[$row["city"]]["table"]=$table;
-                $this->resetTdRow($row);
                 $htmlList[$row["city"]]["table"].='<tr>';
                 foreach ($bodyKey as $keyStr){
                     $text = key_exists($keyStr,$row)?$row[$keyStr]:"0";
@@ -493,6 +476,7 @@ class ComparisonForm extends CFormModel
 
     private function getTopArr(){
         $monthStr = "（{$this->month_start_date} ~ {$this->month_end_date}）";
+        $lastMonthStr = "（".date("m/d",strtotime($this->last_month_start_date))." ~ ".date("m/d",strtotime($this->last_month_end_date))."）";
         $topList=array(
             array("name"=>Yii::t("summary","City"),"rowspan"=>2),//城市
             array("name"=>Yii::t("summary","Actual monthly amount"),"rowspan"=>2),//服务生意额
@@ -503,13 +487,49 @@ class ComparisonForm extends CFormModel
                     array("name"=>Yii::t("summary","YoY change")),//YoY change
                 )
             ),//YTD新增
-            array("name"=>Yii::t("summary","YTD Stop").$monthStr,"exprName"=>$monthStr,"background"=>"#fcd5b4",
+            array("name"=>Yii::t("summary","New(single) + New(INV)").$monthStr,"background"=>"#F7FD9D",
                 "colspan"=>array(
                     array("name"=>$this->comparison_year-1),//对比年份
                     array("name"=>$this->comparison_year),//查询年份
                     array("name"=>Yii::t("summary","YoY change")),//YoY change
                 )
+            ),//一次性服务+新增（产品）
+            array("name"=>Yii::t("summary","Last Month Single + New(INV)").$lastMonthStr,"background"=>"#F7FD9D",
+                "colspan"=>array(
+                    array("name"=>$this->comparison_year-1),//对比年份
+                    array("name"=>$this->comparison_year),//查询年份
+                    array("name"=>Yii::t("summary","YoY change")),//YoY change
+                )
+            ),//上月一次性服务+新增产品
+            array("name"=>Yii::t("summary","YTD Stop").$monthStr,"exprName"=>$monthStr,"background"=>"#fcd5b4",
+                "colspan"=>array(
+                    array("name"=>$this->comparison_year-1),//对比年份
+                    array("name"=>$this->comparison_year),//查询年份
+                    array("name"=>Yii::t("summary","YoY change")),//YoY change
+                    array("name"=>Yii::t("summary","Month Stop Rate")),//月停单率
+                )
             ),//YTD终止
+            array("name"=>Yii::t("summary","YTD Resume").$monthStr,"exprName"=>$monthStr,"background"=>"#C5D9F1",
+                "colspan"=>array(
+                    array("name"=>$this->comparison_year-1),//对比年份
+                    array("name"=>$this->comparison_year),//查询年份
+                    array("name"=>Yii::t("summary","YoY change")),//YoY change
+                )
+            ),//YTD恢复
+            array("name"=>Yii::t("summary","YTD Pause").$monthStr,"exprName"=>$monthStr,"background"=>"#D9D9D9",
+                "colspan"=>array(
+                    array("name"=>$this->comparison_year-1),//对比年份
+                    array("name"=>$this->comparison_year),//查询年份
+                    array("name"=>Yii::t("summary","YoY change")),//YoY change
+                )
+            ),//YTD暂停
+            array("name"=>Yii::t("summary","YTD Amend").$monthStr,"exprName"=>$monthStr,"background"=>"#EBF1DE",
+                "colspan"=>array(
+                    array("name"=>$this->comparison_year-1),//对比年份
+                    array("name"=>$this->comparison_year),//查询年份
+                    array("name"=>Yii::t("summary","YoY change")),//YoY change
+                )
+            ),//YTD更改
             array("name"=>Yii::t("summary","YTD Net").$monthStr,"background"=>"#f2dcdb",
                 "colspan"=>array(
                     array("name"=>$this->comparison_year-1),//对比年份
@@ -581,7 +601,7 @@ class ComparisonForm extends CFormModel
     private function tableHeaderWidth(){
         $html="<tr>";
         for($i=0;$i<$this->th_sum;$i++){
-            if(in_array($i,array(1,4,7,10,19,20,21,22))){
+            if($i>=10||in_array($i,array(1,4,7))){
                 $width=110;
             }else{
                 $width=100;
@@ -594,7 +614,13 @@ class ComparisonForm extends CFormModel
     //获取td对应的键名
     private function getDataAllKeyStr(){
         $bodyKey = array(
-            "city_name","u_actual_money","new_sum_last","new_sum","new_rate","stop_sum_last","stop_sum","stop_rate",
+            "city_name","u_actual_money","new_sum_last","new_sum","new_rate",
+            "new_sum_n_last","new_sum_n","new_n_rate",
+            "new_month_n_last","new_month_n","new_month_rate",
+            "stop_sum_last","stop_sum","stop_rate","monthStopRate",
+            "resume_sum_last","resume_sum","resume_rate",
+            "pause_sum_last","pause_sum","pause_rate",
+            "amend_sum_last","amend_sum","amend_rate",
             "net_sum_last","net_sum","net_rate"
         );
         $bodyKey[]="start_one_gross";
