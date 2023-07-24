@@ -279,6 +279,7 @@ class VisitForm extends CFormModel
 	}
 
     public function validateVisitDt($attribute, $params) {
+        $this->username = Yii::app()->user->id;
         $visit_dt = date("Y/m/d",strtotime($this->visit_dt));
         $nowDate = date("Y/m/d");
         $minDate = date("Y/m/d",strtotime($nowDate." - 1 day"));
@@ -292,7 +293,7 @@ class VisitForm extends CFormModel
                     ->from("sal_visit")
                     ->where("username='{$this->username}' and DATE_FORMAT(visit_dt,'%Y/%m')='{$monthDate}'")->queryScalar();
                 if($countRow>=50){//每天录入上线为50条
-                    $this->addError($attribute, "每天录入上限为50条（{$visit_dt}）");
+                    $this->addError($attribute, "每天录入上限为{$countRow}/50条（{$visit_dt}） - {$this->username}");
                 }
             }
         }else{
