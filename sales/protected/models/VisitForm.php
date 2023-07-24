@@ -287,11 +287,10 @@ class VisitForm extends CFormModel
             if($visit_dt<$minDate){
                 $this->addError($attribute, "拜访日期必须大于".$minDate);
             }else{
-                $monthDate = date("Y/m",strtotime($visit_dt));
                 $countRow = Yii::app()->db->createCommand()
                     ->select("count(id)")
                     ->from("sal_visit")
-                    ->where("username='{$this->username}' and DATE_FORMAT(visit_dt,'%Y/%m')='{$monthDate}'")->queryScalar();
+                    ->where("username='{$this->username}' and DATE_FORMAT(visit_dt,'%Y/%m/%d')='{$visit_dt}'")->queryScalar();
                 if($countRow>=50){//每天录入上线为50条
                     $this->addError($attribute, "每天录入上限为{$countRow}/50条（{$visit_dt}） - {$this->username}");
                 }
