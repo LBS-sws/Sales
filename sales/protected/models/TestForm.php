@@ -15,7 +15,8 @@ class TestForm
         $minVisit = $this->getSalesMin();//最小拜访数量
         $comparisonHtmlData = $this->getComparisonHtmlData($arr);
         $pauseList = $this->getPauseList($firstDay);
-        $staffMonthData = $this->getStaffOldMonthData($arr);
+        $staffMonthData = CountSearch::getStaffOldMonthData($arr);
+        $thisMonthKey = date("Y/m",strtotime($firstDay));//本月的key
         //收件人
         $sql = "select a.username,a.email,a.city,c.name from  security$suffix.sec_user a 
               inner join security$suffix.sec_user_access b on a.username = b.username 
@@ -94,6 +95,7 @@ class TestForm
 				<colgroup>
 					<col span="5" style="width:150pt;" width="202" />
 					<col style="width:163.00pt;" width="148" />
+					<col style="width:163.00pt;" width="148" />
 					<col style="width:108.00pt;" width="132" />
 					<col span="4" style="width:75.75pt;" width="101" />
 					<col span="10" style="width:54.00pt;" width="72" />
@@ -105,6 +107,7 @@ class TestForm
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>地区</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>办事处</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>段位</strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>今月累积新生意额</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>过去4个月签单情况</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>入职日期</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><strong><span style="font-size:18px;">{$month}月积分</span></strong></span></td>
@@ -123,6 +126,7 @@ class TestForm
 					</tr>
 					<tr height="28" style="height:5px;">
 						<td class="et3" colspan="2" height="56" rowspan="2" style="height: 20px; width: 151.5pt; text-align: center;" width="202"><span style="color:#000000;"><span style="font-size:16px;"><span style="font-size:18px;"><strong>总金额/总数量</strong></span></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
@@ -164,6 +168,7 @@ EOF;
 							<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['rank']}</span></span></td>
 
 EOF;
+                            $message.='<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">'.$this->getArrToStaffAndStr($staffMonthData,$value['username'],$thisMonthKey).'</span></span></td>';
                             $message.="<td height='15px' style='height: 15px; text-align: left;'><strong>{$dateList[0]}：</strong>".$this->getArrToStaffAndStr($staffMonthData,$value['username'],$dateList[0])."</td>";
                             $message.= <<<EOF
 						<td class="et5" rowspan="4" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:16px;">{$value['entry_time']}</span></span></td>
@@ -264,6 +269,7 @@ EOF;
 				<colgroup>
 					<col span="5" style="width:150pt;" width="202" />
 					<col style="width:163.00pt;" width="148" />
+					<col style="width:163.00pt;" width="148" />
 					<col style="width:108.00pt;" width="132" />
 					<col span="4" style="width:75.75pt;" width="101" />
 					<col span="10" style="width:54.00pt;" width="72" />
@@ -275,6 +281,7 @@ EOF;
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>地区</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>办事处</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>段位</strong></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>今月累积新生意额</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>过去4个月签单情况</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>入职日期</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><strong><span style="font-size:18px;">{$month}月积分</span></strong></span></td>
@@ -293,6 +300,7 @@ EOF;
 					</tr>
 					<tr height="28" style="height:5px;">			
 						<td class="et3" colspan="2" height="56" rowspan="2" style="height: 20px; width: 151.5pt; text-align: center;" width="202"><span style="color:#000000;"><span style="font-size:16px;"><span style="font-size:18px;"><strong>总金额/总数量</strong></span></span></span></td>
+						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
 						<td class="et3" rowspan="2" style="width: 75.75pt; text-align: center;" width="101"><span style="color:#000000;"><span style="font-size:18px;"><strong>/</strong></span></span></td>
@@ -388,27 +396,6 @@ EOF;
         $model->retrieveData();
         $dataHtml = $model->getDataToHtml();
         return array("dataHtml"=>$dataHtml,"defaultTable"=>$model->defaultTable);
-    }
-
-    private function getStaffOldMonthData($arr){
-        $date = date("Y/m/01",strtotime($arr["end_dt"]));
-        $startDate = date("Y/m/01",strtotime($date." -4 month"));
-        $endDate = date("Y/m/t",strtotime($date." -1 month"));
-        $list = array();
-        $rows = Yii::app()->db->createCommand()->select("b.username,DATE_FORMAT(b.visit_dt,'%Y/%m') as yearMonth,sum(convert(a.field_value, decimal(12,2))) as money")
-            ->from("sal_visit_info a")
-            ->leftJoin("sal_visit b","a.visit_id=b.id")
-            ->where("a.field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and b.visit_dt BETWEEN '{$startDate}' AND '{$endDate}' and b.visit_obj like '%10%'")
-            ->group("b.username,yearMonth")->queryAll();
-        if($rows){
-            foreach ($rows as $row){
-                if(!key_exists($row['username'],$list)){
-                    $list[$row['username']]=array();
-                }
-                $list[$row['username']][$row['yearMonth']]=floatval($row['money']);
-            }
-        }
-        return $list;
     }
 
     private function getHtmlForCity($comparisonHtmlData,$city,$city_name=""){

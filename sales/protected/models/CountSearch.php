@@ -678,4 +678,43 @@ class CountSearch{
         }
         return $city;
     }
+
+    //獲取簽單類型的拜訪類型
+    public static function getDealString($field) {
+        $rtn = '';
+        $sql = "select id from sal_visit_obj where rpt_type='DEAL'";
+        $rows = Yii::app()->db->createCommand($sql)->queryAll();
+        foreach ($rows as $row) {
+            $rtn .= ($rtn=='' ? '' : ' or ').$field." like '%\"".$row['id']."\"%'";
+        }
+        return ($rtn=='' ? "$field='0'" : $rtn);
+    }
+
+    //獲取5個月以內簽單類型的拜訪總金額（根據賬號、月份分類）
+    public static function getStaffOldMonthData($arr){
+        $date = date("Y/m/01",strtotime($arr["end_dt"]));
+        $startDate = date("Y/m/01",strtotime($date." -4 month"));
+        $endDate = date("Y/m/t",strtotime($date));
+        $dateTemp = array();
+        for($i=0;$i<=4;$i++){
+            $dateKey = $i===0?date("Y/m",strtotime($date)):date("Y/m",strtotime($date." -{$i} month"));
+            $dateTemp[$dateKey]=0;
+        }
+        $list = array();
+        $obj_where = self::getDealString("b.visit_obj");
+        $rows = Yii::app()->db->createCommand()->select("b.username,DATE_FORMAT(b.visit_dt,'%Y/%m') as yearMonth,sum(convert(a.field_value, decimal(12,2))) as money")
+            ->from("sal_visit_info a")
+            ->leftJoin("sal_visit b","a.visit_id=b.id")
+            ->where("a.field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and b.visit_dt BETWEEN '{$startDate}' AND '{$endDate}' and ({$obj_where})")
+            ->group("b.username,yearMonth")->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                if(!key_exists($row['username'],$list)){
+                    $list[$row['username']]=$dateTemp;
+                }
+                $list[$row['username']][$row['yearMonth']]=floatval($row['money']);
+            }
+        }
+        return $list;
+    }
 }
