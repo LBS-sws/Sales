@@ -299,7 +299,7 @@ class VisitForm extends CFormModel
             $visitRow = Yii::app()->db->createCommand()->select("visit_dt")->from("sal_visit")
                 ->where("id=:id",array(":id"=>$this->id))->queryRow();
             if($visitRow){
-                $old_dt = date("Y/m/d",$visitRow["visit_dt"]);
+                $old_dt = date("Y/m/d",strtotime($visitRow["visit_dt"]));
                 if($old_dt>$visit_dt){
                     $this->visit_dt = $old_dt;
                 }
