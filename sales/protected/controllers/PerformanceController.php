@@ -24,7 +24,7 @@ class PerformanceController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','delete','save'),
+				'actions'=>array('new','edit','delete','save','add'),
 				'expression'=>array('PerformanceController','allowReadWrite'),
 			),
 			array('allow', 
@@ -37,7 +37,27 @@ class PerformanceController extends Controller
 		);
 	}
 
-	public function actionIndex($pageNum=0) 
+	public function actionAdd($month=8,$year=2023,$city='ZH')
+	{
+        $row = Yii::app()->db->createCommand()->select('id')->from("sal_performance")
+            ->where("year=:year and month=:month and city=:city",array(
+                ":year"=>$year,
+                ":month"=>$month,
+                ":city"=>$city,
+            ))->queryRow();
+        if($row){
+            echo "error: have now id ({$row['id']})";
+        }else{
+            Yii::app()->db->createCommand()->insert("sal_performance",array(
+                "year"=>$year,
+                "month"=>$month,
+                "city"=>$city,
+            ));
+            echo "success !";
+        }
+	}
+
+	public function actionIndex($pageNum=0)
 	{
 		$model = new PerformanceList;
 		if (isset($_POST['PerformanceList'])) {
