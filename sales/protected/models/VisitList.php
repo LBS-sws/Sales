@@ -63,7 +63,7 @@ class VisitList extends CListPageModel
 		$sql1 = "select a.*,f.code as staff_code,f.name as staff_name, b.name as city_name, concat(f.code,' - ',f.name) as staff, f.staff_status, 
 				(select d.name from sal_visit_type d where a.visit_type = d.id) as visit_type_name,
 				g.name as cust_type_name,
-				docman$suffix.countdoc('visit',a.id) as visitdoc,
+				a.doc_count as visitdoc,
 				h.name as district_name, VisitObjDesc(a.visit_obj) as visit_obj_name, i.cust_vip
 				from sal_visit a
 				inner join hr$suffix.hr_binding c on a.username = c.user_id 

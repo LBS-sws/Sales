@@ -933,4 +933,17 @@ class VisitForm extends CFormModel
 	public static function isReadAll() {
 		return Yii::app()->user->validFunction('CN03');
 	}
+
+	//由於列表需要顯示附件數量，導致列表打開太慢，所以保存附件數量
+	public function resetFileSum($id=0){
+        $id = empty($id)||!is_numeric($id)?0:$id;
+        if(!empty($id)){
+            $suffix = Yii::app()->params['envSuffix'];
+            $sql = "update sal_visit set
+              doc_count=docman{$suffix}.countdoc('visit',{$id})
+              WHERE id={$id}
+            ";
+            Yii::app()->db->createCommand($sql)->execute();
+        }
+    }
 }
