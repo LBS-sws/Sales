@@ -318,7 +318,10 @@ class ComparisonForm extends CFormModel
 
     protected function resetTdRow(&$list,$bool=false){
         $newSum = $list["new_sum"]+$list["new_sum_n"];//所有新增总金额
-        $list["monthStopRate"] = $this->comparisonRate($list["stopSumOnly"],$list["u_actual_money"]);
+        //$list["monthStopRate"] = $this->comparisonRate($list["stopSumOnly"],$list["u_actual_money"]);
+        //2023年9月改版：月停单率 = (new_sum_n+new_month_n+stop_sum)/12/u_actual_money
+        $list["monthStopRate"] = ($list["new_sum_n"]+$list["new_month_n"]+$list["stop_sum"])/12;
+        $list["monthStopRate"] = $this->comparisonRate($list["monthStopRate"],$list["u_actual_money"]);
         $list["net_sum"]=0;
         $list["net_sum"]+=$list["new_sum"]+$list["new_sum_n"]+$list["new_month_n"];
         $list["net_sum"]+=$list["stop_sum"]+$list["resume_sum"]+$list["pause_sum"];
