@@ -99,6 +99,8 @@ class ComparisonForm extends CFormModel
         $lastMonthEndDate = ($this->comparison_year-1)."/".date("m/d",strtotime($monthEndDate));
         //获取U系统的服务单数据
         $uServiceMoney = CountSearch::getUServiceMoney($startDate,$endDate,$city_allow);
+        //获取U系统的服务单数据(上月)
+        $uServiceMoneyLast = CountSearch::getUServiceMoney($monthStartDate,$monthEndDate,$city_allow);
         //获取U系统的產品数据
         $uInvMoney = CountSearch::getUInvMoney($startDate,$endDate,$city_allow);
         //获取U系统的產品数据(上一年)
@@ -164,6 +166,9 @@ class ComparisonForm extends CFormModel
             $defMoreList["new_month_n_last"]+=key_exists($city,$lastMonthUInvMoney)?-1*$lastMonthUInvMoney[$city]["sum_money"]:0;
             $defMoreList["new_month_n"]+=key_exists($city,$monthServiceAddForY)?-1*$monthServiceAddForY[$city]:0;
             $defMoreList["new_month_n"]+=key_exists($city,$monthUInvMoney)?-1*$monthUInvMoney[$city]["sum_money"]:0;
+            //上月生意额
+            $defMoreList["last_u_actual"]+=key_exists($city,$uServiceMoneyLast)?$uServiceMoneyLast[$city]:0;
+            $defMoreList["last_u_actual"]+=key_exists($city,$monthUInvMoney)?$monthUInvMoney[$city]["sum_money"]:0;
             //暂停、停止
             if(key_exists($city,$serviceForST)){
                 $defMoreList["stop_sum"]+=key_exists($city,$serviceForST)?-1*$serviceForST[$city]["num_stop"]:0;
@@ -273,6 +278,7 @@ class ComparisonForm extends CFormModel
         $arr=array(
             "city"=>$city,
             "city_name"=>$city_name,
+            "last_u_actual"=>0,//服务生意额(上月)
             "u_actual_money"=>0,//服务生意额
             "u_sum_last"=>0,//U系统金额(上一年)
             "u_sum"=>0,//U系统金额
@@ -319,9 +325,13 @@ class ComparisonForm extends CFormModel
     protected function resetTdRow(&$list,$bool=false){
         $newSum = $list["new_sum"]+$list["new_sum_n"];//所有新增总金额
         //$list["monthStopRate"] = $this->comparisonRate($list["stopSumOnly"],$list["u_actual_money"]);
-        //2023年9月改版：月停单率 = (new_sum_n+new_month_n+stop_sum)/12/u_actual_money
-        $list["monthStopRate"] = ($list["new_sum_n"]+$list["new_month_n"]+$list["stop_sum"])/12;
-        $list["monthStopRate"] = $this->comparisonRate($list["monthStopRate"],$list["u_actual_money"]);
+        //2023年9月改版：月停单率 = (new_sum_n+new_month_n+stop_sum/12)/last_u_actual
+        if($bool){
+            $list["monthStopRate"] = "-";
+        }else{
+            $list["monthStopRate"] = $list["new_sum_n"]+$list["new_month_n"]+round($list["stop_sum"]/12,2);
+            $list["monthStopRate"] = $this->comparisonRate($list["monthStopRate"],$list["last_u_actual"]);
+        }
         $list["net_sum"]=0;
         $list["net_sum"]+=$list["new_sum"]+$list["new_sum_n"]+$list["new_month_n"];
         $list["net_sum"]+=$list["stop_sum"]+$list["resume_sum"]+$list["pause_sum"];
