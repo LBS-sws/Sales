@@ -992,9 +992,9 @@ class ReportVisitForm extends CReportForm
         $optionList = array(
             array("name"=>"拜访类型",'value'=>"visit"),
             array("name"=>"拜访目的",'value'=>"obj"),
+            array("name"=>"区域",'value'=>"address"),
             array("name"=>"客服类别（餐饮）",'value'=>"food"),
             array("name"=>"客服类别（非餐饮）",'value'=>"nofood"),
-            array("name"=>"区域",'value'=>"address"),
         );
         $i=3;
         $ex=$i;
@@ -1014,14 +1014,12 @@ class ReportVisitForm extends CReportForm
                 if(count($model['all'][$itemName])>0){
                     $for_i=0;
                     foreach ($model['all'][$itemName] as $numKey=>$row){
-                        if(!empty($for_i)&&$for_i%7==0){//换行
-                            $for_i = -1;
-                            $i13++;
-                            $num = 0;
-                        }else{
-                            $num = $for_i*4;
-                        }
                         $for_i++;
+                        if($for_i!==1&&$for_i%7==1){//换行
+                            $for_i = 1;
+                            $i13++;
+                        }
+                        $num = ($for_i-1)*4;
                         $dataList = explode("/",$model['all'][$itemName][$numKey][0]);
                         $dataList = count($dataList)==3?$dataList:array(0,0,0);
                         $objPHPExcel->getActiveSheet()
@@ -1068,14 +1066,12 @@ class ReportVisitForm extends CReportForm
                     if(count($arr[$itemName])>0){
                         $for_i=0;
                         foreach ($arr[$itemName] as $numKey=>$row){
-                            if(!empty($for_i)&&$for_i%7==0){//换行
-                                $for_i = -1;
-                                $i13++;
-                                $num = 0;
-                            }else{
-                                $num = $for_i*4;
-                            }
                             $for_i++;
+                            if($for_i!==1&&$for_i%7==1){//换行
+                                $for_i = 1;
+                                $i13++;
+                            }
+                            $num = ($for_i-1)*4;
                             $dataList = explode("/",$arr[$itemName][$numKey][0]);
                             $dataList = count($dataList)==3?$dataList:array(0,0,0);
                             $objPHPExcel->getActiveSheet()
@@ -1137,9 +1133,9 @@ class ReportVisitForm extends CReportForm
         $optionList = array(
             array("name"=>"拜访类型",'value'=>"visit"),
             array("name"=>"拜访目的",'value'=>"obj"),
+            array("name"=>"区域",'value'=>"address"),
             array("name"=>"客服类别（餐饮）",'value'=>"food"),
             array("name"=>"客服类别（非餐饮）",'value'=>"nofood"),
-            array("name"=>"区域",'value'=>"address"),
         );
         if(!empty($model['all'])){
             $i=3;
@@ -1161,14 +1157,12 @@ class ReportVisitForm extends CReportForm
                 if(count($model['all'][$itemName])>0){
                     $for_i=0;
                     foreach ($model['all'][$itemName] as $numKey=>$row){
-                        if(!empty($for_i)&&$for_i%7==0){//换行
-                            $for_i = -1;
-                            $i13++;
-                            $num = 0;
-                        }else{
-                            $num = $for_i*4;
-                        }
                         $for_i++;
+                        if($for_i!==1&&$for_i%7==1){//换行
+                            $for_i = 1;
+                            $i13++;
+                        }
+                        $num = ($for_i-1)*4;
                         $dataList = explode("/",$model['all'][$itemName][$numKey][0]);
                         $dataList = count($dataList)==3?$dataList:array(0,0,0);
                         $objPHPExcel->getActiveSheet()
