@@ -244,19 +244,17 @@ class ReportController extends Controller
         if(isset($_POST['RptFive'])){
             $arr = $_POST['RptFive'];
             if($arr['bumen']=='yes'){
-                $model['all']=$model->fenxis($arr);
+                $model['all']=$model->fenxi($arr);
             }else{
                 $model['all']=array();
             }
-
             $city_allow = City::model()->getDescendantList($arr['city']);
             if(!empty($city_allow)||!empty($arr['sale'])){
-                $model['one']=$model->fenxiones($arr);
+                $model['one']=$model->fenxione($arr);
             }else{
                 $model['one']=array();
             }
         }
-
        $model->retrieveDatas($model);
 //        print_r('<pre/>');
 //        print_r($model);
@@ -268,7 +266,7 @@ class ReportController extends Controller
         $model = new ReportVisitForm;
         if(isset($_POST['RptFive'])){
             $arr = $_POST['RptFive'];
-            $model['all']=$model->sales($arr);
+            $model['all']=$model->sale($arr);
             $model->retrieveData($model);
         }
 //        print_r('<pre/>');

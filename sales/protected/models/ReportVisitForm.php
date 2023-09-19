@@ -1022,14 +1022,16 @@ class ReportVisitForm extends CReportForm
                             $num = $for_i*4;
                         }
                         $for_i++;
+                        $dataList = explode("/",$model['all'][$itemName][$numKey][0]);
+                        $dataList = count($dataList)==3?$dataList:array(0,0,0);
                         $objPHPExcel->getActiveSheet()
                             ->setCellValueByColumnAndRow($num+1, $i13, $model['all'][$itemName][$numKey]['name']);
                         $objPHPExcel->getActiveSheet()
-                            ->setCellValueByColumnAndRow($num+2, $i13, $model['all'][$itemName][$numKey][0]['all']);
+                            ->setCellValueByColumnAndRow($num+2, $i13, $dataList[0]);
                         $objPHPExcel->getActiveSheet()
-                            ->setCellValueByColumnAndRow($num+3, $i13, $model['all'][$itemName][$numKey][0]['sum']);
+                            ->setCellValueByColumnAndRow($num+3, $i13, $dataList[1]);
                         $objPHPExcel->getActiveSheet()
-                            ->setCellValueByColumnAndRow($num+4, $i13, $model['all'][$itemName][$numKey][0]['money']);
+                            ->setCellValueByColumnAndRow($num+4, $i13, $dataList[2]);
                     }
                 }
                 $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
@@ -1074,14 +1076,16 @@ class ReportVisitForm extends CReportForm
                                 $num = $for_i*4;
                             }
                             $for_i++;
+                            $dataList = explode("/",$arr[$itemName][$numKey][0]);
+                            $dataList = count($dataList)==3?$dataList:array(0,0,0);
                             $objPHPExcel->getActiveSheet()
                                 ->setCellValueByColumnAndRow($num+1, $i13, $arr[$itemName][$numKey]['name']);
                             $objPHPExcel->getActiveSheet()
-                                ->setCellValueByColumnAndRow($num+2, $i13, $arr[$itemName][$numKey][0]['all']);
+                                ->setCellValueByColumnAndRow($num+2, $i13, $dataList[0]);
                             $objPHPExcel->getActiveSheet()
-                                ->setCellValueByColumnAndRow($num+3, $i13, $arr[$itemName][$numKey][0]['sum']);
+                                ->setCellValueByColumnAndRow($num+3, $i13, $dataList[1]);
                             $objPHPExcel->getActiveSheet()
-                                ->setCellValueByColumnAndRow($num+4, $i13, $arr[$itemName][$numKey][0]['money']);
+                                ->setCellValueByColumnAndRow($num+4, $i13, $dataList[2]);
                         }
                     }
                     $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
@@ -1165,14 +1169,16 @@ class ReportVisitForm extends CReportForm
                             $num = $for_i*4;
                         }
                         $for_i++;
+                        $dataList = explode("/",$model['all'][$itemName][$numKey][0]);
+                        $dataList = count($dataList)==3?$dataList:array(0,0,0);
                         $objPHPExcel->getActiveSheet()
                             ->setCellValueByColumnAndRow($num+1, $i13, $model['all'][$itemName][$numKey]['name']);
                         $objPHPExcel->getActiveSheet()
-                            ->setCellValueByColumnAndRow($num+2, $i13, $model['all'][$itemName][$numKey][0]['all']);
+                            ->setCellValueByColumnAndRow($num+2, $i13, $dataList[0]);
                         $objPHPExcel->getActiveSheet()
-                            ->setCellValueByColumnAndRow($num+3, $i13, $model['all'][$itemName][$numKey][0]['sum']);
+                            ->setCellValueByColumnAndRow($num+3, $i13, $dataList[1]);
                         $objPHPExcel->getActiveSheet()
-                            ->setCellValueByColumnAndRow($num+4, $i13, $model['all'][$itemName][$numKey][0]['money']);
+                            ->setCellValueByColumnAndRow($num+4, $i13, $dataList[2]);
                     }
                 }
                 $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
