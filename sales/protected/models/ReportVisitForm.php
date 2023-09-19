@@ -989,263 +989,52 @@ class ReportVisitForm extends CReportForm
         $objPHPExcel = $objReader->load($path);
 //        print_r("<pre>");
 //        print_r($model);
+        $optionList = array(
+            array("name"=>"拜访类型",'value'=>"visit"),
+            array("name"=>"拜访目的",'value'=>"obj"),
+            array("name"=>"客服类别（餐饮）",'value'=>"food"),
+            array("name"=>"客服类别（非餐饮）",'value'=>"nofood"),
+            array("name"=>"区域",'value'=>"address"),
+        );
+        $i=3;
+        $ex=$i;
+        $i1=$i+1;
+        $i13=$i+2;
         if(!empty($model['all'])){
-            $i=3;
-            $ex=$i;
-            $i1=$i+1;
-            $i2=$i+2;
-            $i13=$i+2;
             $objPHPExcel->getActiveSheet()->setCellValue('A'.$i,'部门总数据') ;
             $objPHPExcel->getActiveSheet()->setCellValue('A'.$i1,'总拜访量'.$model['all']['money']['all'].'签单量：'.$model['all']['money']['sum'].'签单金额'.$model['all']['money']['money']) ;
             $objPHPExcel->getActiveSheet()->mergeCells('A'.$i.':AC'.$i);
             $objPHPExcel->getActiveSheet()->mergeCells('A'.$i1.':AC'.$i1);
             $objPHPExcel->getActiveSheet()->getRowDimension($i)->setRowHeight(25);
             $objPHPExcel->getActiveSheet()->getRowDimension($i1)->setRowHeight(25);
-            $objPHPExcel->getActiveSheet()->setCellValue('A'.$i2,'拜访类型') ;
-            $a=$i13;
-            for($o=1;$o<count($model['all']['visit']);$o++){
-                if($o%7==1){
-                    $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$model['all']['visit'][$o][0]['money']) ;
+            foreach ($optionList as $item){
+                $a=$i13;
+                $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,$item["name"]) ;
+                $itemName = $item["value"];
+                if(count($model['all'][$itemName])>0){
+                    $for_i=0;
+                    foreach ($model['all'][$itemName] as $numKey=>$row){
+                        if(!empty($for_i)&&$for_i%7==0){//换行
+                            $for_i = -1;
+                            $i13++;
+                            $num = 0;
+                        }else{
+                            $num = $for_i*4;
+                        }
+                        $for_i++;
+                        $objPHPExcel->getActiveSheet()
+                            ->setCellValueByColumnAndRow($num+1, $i13, $model['all'][$itemName][$numKey]['name']);
+                        $objPHPExcel->getActiveSheet()
+                            ->setCellValueByColumnAndRow($num+2, $i13, $model['all'][$itemName][$numKey][0]['all']);
+                        $objPHPExcel->getActiveSheet()
+                            ->setCellValueByColumnAndRow($num+3, $i13, $model['all'][$itemName][$numKey][0]['sum']);
+                        $objPHPExcel->getActiveSheet()
+                            ->setCellValueByColumnAndRow($num+4, $i13, $model['all'][$itemName][$numKey][0]['money']);
+                    }
                 }
-                if($o%7==2){
-                    $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                }
-                if($o%7==3){
-                    $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                }
-                if($o%7==4){
-                    $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                }
-                if($o%7==5){
-                    $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                }
-                if($o%7==6){
-                    $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                }
-                if($o%7==0){
-                    $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                    $i13=$i13+1;
-                }
+                $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
+                $i13++;
             }
-            $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-            $i13=$i13+1;
-            $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'拜访目的') ;
-            $a=$i13;
-            for($o=1;$o<count($model['all']['obj']);$o++){
-                if($o%7==1){
-                    $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==2){
-                    $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==3){
-                    $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==4){
-                    $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==5){
-                    $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==6){
-                    $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==0){
-                    $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                    $i13=$i13+1;
-                }
-            }
-            $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-            $i13=$i13+1;
-            $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'客服类别（餐饮）') ;
-            $a=$i13;
-            for($o=1;$o<count($model['all']['food']);$o++){
-                if($o%7==1){
-                    $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==2){
-                    $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==3){
-                    $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==4){
-                    $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==5){
-                    $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==6){
-                    $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==0){
-                    $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$model['all']['food'][$o][0]['money']) ;
-                    $i13=$i13+1;
-                }
-            }
-            $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-            $i13=$i13+1;
-            $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'客服类别（非餐饮）') ;
-            $a=$i13;
-            for($o=1;$o<count($model['all']['nofood']);$o++){
-                if($o%7==1){
-                    $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==2){
-                    $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==3){
-                    $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==4){
-                    $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==5){
-                    $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==6){
-                    $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==0){
-                    $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                    $i13=$i13+1;
-                }
-            }
-            $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-            $i13=$i13+1;
-//            区域的
-            $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'区域') ;
-            $a=$i13;
-            for($o=1;$o<count($model['all']['address']);$o++){
-                if($o%7==1){
-                    $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==2){
-                    $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==3){
-                    $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==4){
-                    $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==5){
-                    $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==6){
-                    $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==0){
-                    $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$model['all']['address'][$o][0]['money']) ;
-                    $i13=$i13+1;
-                }
-            }
-            $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
             $styleArray = array(
                 'borders' => array(
                     'allborders' => array(
@@ -1255,19 +1044,14 @@ class ReportVisitForm extends CReportForm
                     ),
                 ),
             );
-            $objPHPExcel->getActiveSheet()->getStyle('A'.$ex.':AC'.$i13)->applyFromArray($styleArray);
+            $objPHPExcel->getActiveSheet()->getStyle('A'.$ex.':AC'.($i13-1))->applyFromArray($styleArray);
         }
         if(!empty($model['one'])){
-            if(!empty($model['all'])){
-                $i=21;
-            }else{
-                $i=3;
-            }
+            $i=$i13+3;
 
             foreach ($model['one'] as $arr){
                 $ex=$i;
                 $i1=$i+1;
-                $i2=$i+2;
                 $i13=$i+2;
                 $objPHPExcel->getActiveSheet()->setCellValue('A'.$i,$arr['name']) ;
                 $objPHPExcel->getActiveSheet()->setCellValue('A'.$i1,'总拜访量'.$arr['money']['all'].'签单量：'.$arr['money']['sum'].'签单金额'.$arr['money']['money']) ;
@@ -1275,251 +1059,34 @@ class ReportVisitForm extends CReportForm
                 $objPHPExcel->getActiveSheet()->mergeCells('A'.$i1.':AC'.$i1);
                 $objPHPExcel->getActiveSheet()->getRowDimension($i)->setRowHeight(25);
                 $objPHPExcel->getActiveSheet()->getRowDimension($i1)->setRowHeight(25);
-                $objPHPExcel->getActiveSheet()->setCellValue('A'.$i2,'拜访类型') ;
-                $a=$i13;
-                for($o=1;$o<count($arr['visit']);$o++){
-                    if($o%7==1){
-                        $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$arr['visit'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$arr['visit'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$arr['visit'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$arr['visit'][$o][0]['money']) ;
+                foreach ($optionList as $item){
+                    $a=$i13;
+                    $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,$item["name"]) ;
+                    $itemName = $item["value"];
+                    if(count($arr[$itemName])>0){
+                        $for_i=0;
+                        foreach ($arr[$itemName] as $numKey=>$row){
+                            if(!empty($for_i)&&$for_i%7==0){//换行
+                                $for_i = -1;
+                                $i13++;
+                                $num = 0;
+                            }else{
+                                $num = $for_i*4;
+                            }
+                            $for_i++;
+                            $objPHPExcel->getActiveSheet()
+                                ->setCellValueByColumnAndRow($num+1, $i13, $arr[$itemName][$numKey]['name']);
+                            $objPHPExcel->getActiveSheet()
+                                ->setCellValueByColumnAndRow($num+2, $i13, $arr[$itemName][$numKey][0]['all']);
+                            $objPHPExcel->getActiveSheet()
+                                ->setCellValueByColumnAndRow($num+3, $i13, $arr[$itemName][$numKey][0]['sum']);
+                            $objPHPExcel->getActiveSheet()
+                                ->setCellValueByColumnAndRow($num+4, $i13, $arr[$itemName][$numKey][0]['money']);
+                        }
                     }
-                    if($o%7==2){
-                        $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$arr['visit'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$arr['visit'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$arr['visit'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$arr['visit'][$o][0]['money']) ;
-                    }
-                    if($o%7==3){
-                        $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$arr['visit'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$arr['visit'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$arr['visit'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$arr['visit'][$o][0]['money']) ;
-                    }
-                    if($o%7==4){
-                        $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$arr['visit'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$arr['visit'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$arr['visit'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$arr['visit'][$o][0]['money']) ;
-                    }
-                    if($o%7==5){
-                        $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$arr['visit'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$arr['visit'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$arr['visit'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$arr['visit'][$o][0]['money']) ;
-                    }
-                    if($o%7==6){
-                        $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$arr['visit'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$arr['visit'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$arr['visit'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$arr['visit'][$o][0]['money']) ;
-                    }
-                    if($o%7==0){
-                        $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$arr['visit'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$arr['visit'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$arr['visit'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$arr['visit'][$o][0]['money']) ;
-                        $i13=$i13+1;
-                    }
+                    $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
+                    $i13++;
                 }
-                $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-                $i13=$i13+1;
-                $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'拜访目的') ;
-                $a=$i13;
-                for($o=1;$o<count($arr['obj']);$o++){
-                    if($o%7==1){
-                        $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$arr['obj'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$arr['obj'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$arr['obj'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$arr['obj'][$o][0]['money']) ;
-                    }
-                    if($o%7==2){
-                        $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$arr['obj'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$arr['obj'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$arr['obj'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$arr['obj'][$o][0]['money']) ;
-                    }
-                    if($o%7==3){
-                        $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$arr['obj'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$arr['obj'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$arr['obj'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$arr['obj'][$o][0]['money']) ;
-                    }
-                    if($o%7==4){
-                        $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$arr['obj'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$arr['obj'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$arr['obj'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$arr['obj'][$o][0]['money']) ;
-                    }
-                    if($o%7==5){
-                        $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$arr['obj'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$arr['obj'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$arr['obj'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$arr['obj'][$o][0]['money']) ;
-                    }
-                    if($o%7==6){
-                        $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$arr['obj'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$arr['obj'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$arr['obj'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$arr['obj'][$o][0]['money']) ;
-                    }
-                    if($o%7==0){
-                        $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$arr['obj'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$arr['obj'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$arr['obj'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$arr['obj'][$o][0]['money']) ;
-                        $i13=$i13+1;
-                    }
-                }
-                $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-                $i13=$i13+1;
-                $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'客服类别（餐饮）') ;
-                $a=$i13;
-                for($o=1;$o<count($arr['food']);$o++){
-                    if($o%7==1){
-                        $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$arr['food'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$arr['food'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$arr['food'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$arr['food'][$o][0]['money']) ;
-                    }
-                    if($o%7==2){
-                        $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$arr['food'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$arr['food'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$arr['food'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$arr['food'][$o][0]['money']) ;
-                    }
-                    if($o%7==3){
-                        $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$arr['food'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$arr['food'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$arr['food'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$arr['food'][$o][0]['money']) ;
-                    }
-                    if($o%7==4){
-                        $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$arr['food'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$arr['food'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$arr['food'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$arr['food'][$o][0]['money']) ;
-                    }
-                    if($o%7==5){
-                        $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$arr['food'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$arr['food'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$arr['food'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$arr['food'][$o][0]['money']) ;
-                    }
-                    if($o%7==6){
-                        $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$arr['food'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$arr['food'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$arr['food'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$arr['food'][$o][0]['money']) ;
-                    }
-                    if($o%7==0){
-                        $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$arr['food'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$arr['food'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$arr['food'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$arr['food'][$o][0]['money']) ;
-                        $i13=$i13+1;
-                    }
-                }
-                $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-                $i13=$i13+1;
-                $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'客服类别（非餐饮）') ;
-                $a=$i13;
-                for($o=1;$o<count($arr['nofood']);$o++){
-                    if($o%7==1){
-                        $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$arr['nofood'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$arr['nofood'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$arr['nofood'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$arr['nofood'][$o][0]['money']) ;
-                    }
-                    if($o%7==2){
-                        $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$arr['nofood'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$arr['nofood'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$arr['nofood'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$arr['nofood'][$o][0]['money']) ;
-                    }
-                    if($o%7==3){
-                        $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$arr['nofood'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$arr['nofood'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$arr['nofood'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$arr['nofood'][$o][0]['money']) ;
-                    }
-                    if($o%7==4){
-                        $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$arr['nofood'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$arr['nofood'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$arr['nofood'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$arr['nofood'][$o][0]['money']) ;
-                    }
-                    if($o%7==5){
-                        $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$arr['nofood'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$arr['nofood'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$arr['nofood'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$arr['nofood'][$o][0]['money']) ;
-                    }
-                    if($o%7==6){
-                        $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$arr['nofood'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$arr['nofood'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$arr['nofood'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$arr['nofood'][$o][0]['money']) ;
-                    }
-                    if($o%7==0){
-                        $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$arr['nofood'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$arr['nofood'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$arr['nofood'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$arr['nofood'][$o][0]['money']) ;
-                        $i13=$i13+1;
-                    }
-                }
-                $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-                $i13=$i13+1;
-//            区域的
-                $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'区域');
-                $a=$i13;
-                for($o=1;$o<count($arr['address']);$o++){
-                    if($o%7==1){
-                        $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$arr['address'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$arr['address'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$arr['address'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$arr['address'][$o][0]['money']) ;
-                    }
-                    if($o%7==2){
-                        $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$arr['address'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$arr['address'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$arr['address'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$arr['address'][$o][0]['money']) ;
-                    }
-                    if($o%7==3){
-                        $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$arr['address'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$arr['address'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$arr['address'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$arr['address'][$o][0]['money']) ;
-                    }
-                    if($o%7==4){
-                        $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$arr['address'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$arr['address'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$arr['address'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$arr['address'][$o][0]['money']) ;
-                    }
-                    if($o%7==5){
-                        $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$arr['address'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$arr['address'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$arr['address'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$arr['address'][$o][0]['money']) ;
-                    }
-                    if($o%7==6){
-                        $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$arr['address'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$arr['address'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$arr['address'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$arr['address'][$o][0]['money']) ;
-                    }
-                    if($o%7==0){
-                        $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$arr['address'][$o]['name']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$arr['address'][$o][0]['all']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$arr['address'][$o][0]['sum']) ;
-                        $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$arr['address'][$o][0]['money']) ;
-                        $i13=$i13+1;
-                    }
-                }
-                $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
                 $styleArray = array(
                     'borders' => array(
                         'allborders' => array(
@@ -1529,8 +1096,8 @@ class ReportVisitForm extends CReportForm
                         ),
                     ),
                 );
-                $objPHPExcel->getActiveSheet()->getStyle('A'.$ex.':AC'.$i13)->applyFromArray($styleArray);
-                $i=$i+18;
+                $objPHPExcel->getActiveSheet()->getStyle('A'.$ex.':AC'.($i13-1))->applyFromArray($styleArray);
+                $i=$i13+2;
             }
         }
 
@@ -1563,6 +1130,13 @@ class ReportVisitForm extends CReportForm
         $path = Yii::app()->basePath.'/commands/template/sale.xlsx';
         $objPHPExcel = $objReader->load($path);
 
+        $optionList = array(
+            array("name"=>"拜访类型",'value'=>"visit"),
+            array("name"=>"拜访目的",'value'=>"obj"),
+            array("name"=>"客服类别（餐饮）",'value'=>"food"),
+            array("name"=>"客服类别（非餐饮）",'value'=>"nofood"),
+            array("name"=>"区域",'value'=>"address"),
+        );
         if(!empty($model['all'])){
             $i=3;
             $ex=$i;
@@ -1576,250 +1150,34 @@ class ReportVisitForm extends CReportForm
             $objPHPExcel->getActiveSheet()->getRowDimension($i)->setRowHeight(25);
             $objPHPExcel->getActiveSheet()->getRowDimension($i1)->setRowHeight(25);
             $objPHPExcel->getActiveSheet()->setCellValue('A'.$i2,'拜访类型') ;
-            $a=$i13;
-            for($o=1;$o<count($model['all']['visit']);$o++){
-                if($o%7==1){
-                    $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$model['all']['visit'][$o][0]['money']) ;
+            foreach ($optionList as $item){
+                $a=$i13;
+                $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,$item["name"]) ;
+                $itemName = $item["value"];
+                if(count($model['all'][$itemName])>0){
+                    $for_i=0;
+                    foreach ($model['all'][$itemName] as $numKey=>$row){
+                        if(!empty($for_i)&&$for_i%7==0){//换行
+                            $for_i = -1;
+                            $i13++;
+                            $num = 0;
+                        }else{
+                            $num = $for_i*4;
+                        }
+                        $for_i++;
+                        $objPHPExcel->getActiveSheet()
+                            ->setCellValueByColumnAndRow($num+1, $i13, $model['all'][$itemName][$numKey]['name']);
+                        $objPHPExcel->getActiveSheet()
+                            ->setCellValueByColumnAndRow($num+2, $i13, $model['all'][$itemName][$numKey][0]['all']);
+                        $objPHPExcel->getActiveSheet()
+                            ->setCellValueByColumnAndRow($num+3, $i13, $model['all'][$itemName][$numKey][0]['sum']);
+                        $objPHPExcel->getActiveSheet()
+                            ->setCellValueByColumnAndRow($num+4, $i13, $model['all'][$itemName][$numKey][0]['money']);
+                    }
                 }
-                if($o%7==2){
-                    $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                }
-                if($o%7==3){
-                    $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                }
-                if($o%7==4){
-                    $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                }
-                if($o%7==5){
-                    $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                }
-                if($o%7==6){
-                    $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                }
-                if($o%7==0){
-                    $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$model['all']['visit'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$model['all']['visit'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$model['all']['visit'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$model['all']['visit'][$o][0]['money']) ;
-                    $i13=$i13+1;
-                }
+                $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
+                $i13++;
             }
-            $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-            $i13=$i13+1;
-            $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'拜访目的') ;
-            $a=$i13;
-            for($o=1;$o<count($model['all']['obj']);$o++){
-                if($o%7==1){
-                    $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==2){
-                    $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==3){
-                    $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==4){
-                    $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==5){
-                    $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==6){
-                    $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                }
-                if($o%7==0){
-                    $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$model['all']['obj'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$model['all']['obj'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$model['all']['obj'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$model['all']['obj'][$o][0]['money']) ;
-                    $i13=$i13+1;
-                }
-            }
-            $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-            $i13=$i13+1;
-            $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'客服类别（餐饮）') ;
-            $a=$i13;
-            for($o=1;$o<count($model['all']['food']);$o++){
-                if($o%7==1){
-                    $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==2){
-                    $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==3){
-                    $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==4){
-                    $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==5){
-                    $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==6){
-                    $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$model['all']['food'][$o][0]['money']) ;
-                }
-                if($o%7==0){
-                    $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$model['all']['food'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$model['all']['food'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$model['all']['food'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$model['all']['food'][$o][0]['money']) ;
-                    $i13=$i13+1;
-                }
-            }
-            $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-            $i13=$i13+1;
-            $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'客服类别（非餐饮）') ;
-            $a=$i13;
-            for($o=1;$o<count($model['all']['nofood']);$o++){
-                if($o%7==1){
-                    $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==2){
-                    $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==3){
-                    $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==4){
-                    $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==5){
-                    $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==6){
-                    $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                }
-                if($o%7==0){
-                    $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$model['all']['nofood'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$model['all']['nofood'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$model['all']['nofood'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$model['all']['nofood'][$o][0]['money']) ;
-                    $i13=$i13+1;
-                }
-            }
-            $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
-            $i13=$i13+1;
-//            区域的
-            $objPHPExcel->getActiveSheet()->setCellValue('A'.$i13,'区域') ;
-            $a=$i13;
-            for($o=1;$o<count($model['all']['address']);$o++){
-                if($o%7==1){
-                    $objPHPExcel->getActiveSheet()->setCellValue('B'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('C'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('D'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('E'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==2){
-                    $objPHPExcel->getActiveSheet()->setCellValue('F'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('G'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('H'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('I'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==3){
-                    $objPHPExcel->getActiveSheet()->setCellValue('J'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('K'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('L'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('M'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==4){
-                    $objPHPExcel->getActiveSheet()->setCellValue('N'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('O'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('P'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Q'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==5){
-                    $objPHPExcel->getActiveSheet()->setCellValue('R'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('S'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('T'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('U'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==6){
-                    $objPHPExcel->getActiveSheet()->setCellValue('V'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('W'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('X'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('Y'.$i13,$model['all']['address'][$o][0]['money']) ;
-                }
-                if($o%7==0){
-                    $objPHPExcel->getActiveSheet()->setCellValue('Z'.$i13,$model['all']['address'][$o]['name']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AA'.$i13,$model['all']['address'][$o][0]['all']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AB'.$i13,$model['all']['address'][$o][0]['sum']) ;
-                    $objPHPExcel->getActiveSheet()->setCellValue('AC'.$i13,$model['all']['address'][$o][0]['money']) ;
-                    $i13=$i13+1;
-                }
-            }
-            $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
             $styleArray = array(
                 'borders' => array(
                     'allborders' => array(
@@ -1829,7 +1187,7 @@ class ReportVisitForm extends CReportForm
                     ),
                 ),
             );
-            $objPHPExcel->getActiveSheet()->getStyle('A'.$ex.':AC'.$i13)->applyFromArray($styleArray);
+            $objPHPExcel->getActiveSheet()->getStyle('A'.$ex.':AC'.($i13-1))->applyFromArray($styleArray);
         }
 
         $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
