@@ -42,7 +42,7 @@ return array(
     'YoY change'=>'YoY change',
     'YTD New'=>'YTD新增(除一次性服务)',
     'YTD Stop'=>'YTD终止',
-    'YTD Net'=>'YTD Net',
+    'YTD Net'=>'YTD 净增长',
     'day num'=>'查询天数',
     'day'=>'天',
     'Actual monthly amount'=>'服务生意额',
