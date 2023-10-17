@@ -149,5 +149,7 @@ return array(
 	'KA Busine'=>'业务模式',
 	'KA Sales'=>'销售模式',
 	'KA Bot(All)'=>'KA项目(所有)',
+
+	'Signed conversion rate'=>'签单转化率',
 );
 ?>

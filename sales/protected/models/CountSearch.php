@@ -933,4 +933,30 @@ class CountSearch{
         }
         return $list;
     }
+
+    public static function getSalesForRW($city_allow,$startDate="",$endDate=""){
+        $suffix = Yii::app()->params['envSuffix'];
+        $startDate = empty($startDate)?date("Y/m/01"):date("Y/m/d",strtotime($startDate));
+        $endDate = empty($endDate)?date("Y/m/d"):date("Y/m/d",strtotime($endDate));
+        $list=array();
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.id,a.name,a.code,a.city,d.user_id,a.staff_status")
+            ->from("security{$suffix}.sec_user_access f")
+            ->leftJoin("hr{$suffix}.hr_binding d","d.user_id=f.username")
+            ->leftJoin("hr{$suffix}.hr_employee a","d.employee_id=a.id")
+            ->where("f.system_id='sal' and f.a_read_write like '%HK01%' and (
+                (a.staff_status = 0 and date_format(a.entry_time,'%Y/%m/%d')<='{$endDate}')
+                or
+                (a.staff_status=-1 and date_format(a.leave_time,'%Y/%m/%d')>='{$startDate}' and date_format(a.entry_time,'%Y/%m/%d')<='{$endDate}')
+             ) AND a.city in ({$city_allow})"
+            )->order("a.city desc,a.position asc,a.entry_time asc,a.id desc")->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $name_label = $row["name"]."({$row["code"]})";
+                $name_label.= empty($row["staff_status"])?"":"（已离职）";
+                $list[] = array("id"=>$row["id"],"name"=>$row["name"],"code"=>$row["code"],"city"=>$row["city"],"user_id"=>$row["user_id"],"name_label"=>$name_label);
+            }
+        }
+        return $list;
+    }
 }

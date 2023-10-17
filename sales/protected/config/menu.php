@@ -106,6 +106,10 @@ return array(
                 'access'=>'HA06',
                 'url'=>'/integral/index',
             ),
+            'Signed conversion rate'=>array( //签单转化率
+                'access'=>'HA08',
+                'url'=>'/signedRate/index',
+            ),
         ),
     ),
 
