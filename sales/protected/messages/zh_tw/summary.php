@@ -199,5 +199,6 @@ return array(
     ' months'=>'個月',
     'group business'=>'商業組',
     'group repast'=>'餐飲組',
+    'search city'=>'查詢城市',
 );
 ?>

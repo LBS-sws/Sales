@@ -8,6 +8,7 @@ class SignedRateForm extends CFormModel
     public $search_type=3;//查詢類型 1：季度 2：月份 3：天
     public $search_year;//查詢年份
     public $search_month;//查詢月份
+    public $search_city;//查詢城市
 	public $start_date;
 	public $end_date;
 	public $day_num;
@@ -36,6 +37,7 @@ class SignedRateForm extends CFormModel
             'search_year'=>Yii::t('summary','search year'),
             'search_quarter'=>Yii::t('summary','search quarter'),
             'search_month'=>Yii::t('summary','search month'),
+            'search_city'=>Yii::t('summary','search city'),
 		);
 	}
 
@@ -45,7 +47,7 @@ class SignedRateForm extends CFormModel
     public function rules()
     {
         return array(
-            array('search_type,search_start_date,search_end_date,search_year,search_month','safe'),
+            array('search_city,search_type,search_start_date,search_end_date,search_year,search_month','safe'),
             array('search_type','required'),
             array('search_type','validateDate'),
         );
@@ -110,6 +112,7 @@ class SignedRateForm extends CFormModel
 
     public function getCriteria() {
         return array(
+            'search_city'=>$this->search_city,
             'search_year'=>$this->search_year,
             'search_month'=>$this->search_month,
             'search_type'=>$this->search_type,
@@ -131,7 +134,11 @@ class SignedRateForm extends CFormModel
 
     public function retrieveData() {
         $data = array();
-        $city_allow = Yii::app()->user->city_allow();
+        $city = $this->search_city;
+        $city_allow = City::model()->getDescendantList($city);
+        $cstr = $city;
+        $city_allow .= (empty($city_allow)) ? "'$cstr'" : ",'$cstr'";
+        //$city_allow = Yii::app()->user->city_allow();
         SignedRateForm::setDayNum($this->start_date,$this->end_date,$this->day_num);
         $startDate = $this->start_date;
         $endDate = $this->end_date;
@@ -461,9 +468,12 @@ class SignedRateForm extends CFormModel
         }
         $this->validateDate("","");
         $headList = $this->getTopArr();
+        $titleTwo = $this->start_date." ~ ".$this->end_date."\r\n";
+        $titleTwo.= Yii::t("summary","search city")."：".General::getCityName($this->search_city);
         $excel = new DownSummary();
+        $excel->colTwo = 7;
         $excel->SetHeaderTitle(Yii::t("app","Signed conversion rate"));
-        $excel->SetHeaderString($this->start_date." ~ ".$this->end_date);
+        $excel->SetHeaderString($titleTwo);
         $excel->init();
         $excel->setSummaryHeader($headList);
         $excel->setUServiceData($excelData);

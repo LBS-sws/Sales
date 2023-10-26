@@ -199,5 +199,6 @@ return array(
     ' months'=>'个月',
     'group business'=>'商业组',
     'group repast'=>'餐饮组',
+    'search city'=>'查询城市',
 );
 ?>

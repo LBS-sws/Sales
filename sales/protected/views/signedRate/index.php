@@ -90,6 +90,14 @@ $this->pageTitle=Yii::app()->name . ' - SignedRate Form';
                     </div>
                 </div>
             </div>
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'search_city',array('class'=>"col-sm-2 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->dropDownList($model, 'search_city', CountSearch::getCityListWithCityAllow(Yii::app()->user->city_allow()),
+                        array('disabled'=>false)
+                    ); ?>
+                </div>
+            </div>
 		</div>
 	</div>
 </section>
