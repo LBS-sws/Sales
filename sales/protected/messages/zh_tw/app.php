@@ -21,6 +21,8 @@ return array(
 'Online Library'=>'網上文庫',
 'Charitable Credit'=>'慈善分系統',
 'Service Report'=>'服務報告系統',
+    'Investment'=>'投資管理系統',
+    'Project progress'=>'項目跟進系統',
 
 'System Use'=>'系統使用',
 
