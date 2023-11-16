@@ -13,7 +13,7 @@ return array(
     'Asked redo'=>'要求重做',
 	'Add'=>'新增',
 	'Add New'=>'新增',
-	'Add Record'=>'新增纪录',
+	'Add Record'=>'新增记录',
 	'Add Another'=>'新增另一纪录',
 	'Record'=>'记录',
 	'-- None --'=>'-- 无 --',

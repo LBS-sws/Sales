@@ -13,7 +13,7 @@ return array(
 'Distribution'=>'分配',
 'Add'=>'新增',
 'Add New'=>'新增',
-'Add Record'=>'新增紀錄',
+'Add Record'=>'新增記錄',
 'Add Another'=>'新增另一紀錄',
 'Record'=>'記錄',
 '-- None --'=>'-- 無 --',
