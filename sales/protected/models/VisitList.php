@@ -60,12 +60,17 @@ class VisitList extends CListPageModel
 		$suffix = Yii::app()->params['envSuffix'];
 		$citylist = Yii::app()->user->city_allow();
 		$user = Yii::app()->user->id;
-		$sql1 = "select a.*,f.code as staff_code,f.name as staff_name, b.name as city_name, concat(f.code,' - ',f.name) as staff, f.staff_status, 
-				(select d.name from sal_visit_type d where a.visit_type = d.id) as visit_type_name,
+		$sql1 = "select a.id,a.lcd,a.username,a.visit_dt,a.status,a.city,a.shift_user,a.cust_name,a.shift,
+                f.code as staff_code,f.name as staff_name, b.name as city_name, concat(f.code,' - ',f.name) as staff, f.staff_status, 
+				d.name as visit_type_name,
 				g.name as cust_type_name,
 				a.doc_count as visitdoc,
-				h.name as district_name, VisitObjDesc(a.visit_obj) as visit_obj_name, i.cust_vip
+				h.name as district_name,
+				 a.visit_obj_name,
+				 a.visit_info_text,
+				  i.cust_vip
 				from sal_visit a
+				inner join sal_visit_type d on a.visit_type = d.id 
 				inner join hr$suffix.hr_binding c on a.username = c.user_id 
 				inner join hr$suffix.hr_employee f on c.employee_id = f.id
 				inner join sal_cust_type g on a.cust_type = g.id
@@ -76,6 +81,7 @@ class VisitList extends CListPageModel
 			";
 		$sql2 = "select count(a.id)
 				from sal_visit a 
+				inner join sal_visit_type d on a.visit_type = d.id 
 				inner join hr$suffix.hr_binding c on a.username = c.user_id 
 				inner join hr$suffix.hr_employee f on c.employee_id = f.id
 				inner join sal_cust_type g on a.cust_type = g.id
@@ -128,7 +134,9 @@ class VisitList extends CListPageModel
 				case 'district': $orderf = 'h.name'; break;
 				case 'street': $orderf = 'a.street'; break;
 				case 'visit_type': $orderf = 'visit_type_name'; break;
-				case 'visit_obj': $orderf = 'visit_obj_name'; break;
+				case 'visit_obj': $orderf = 'a.visit_obj_name'; break;
+				case 'quote': $orderf = 'a.visit_info_text'; break;
+				case 'visitdoc': $orderf = 'a.doc_count'; break;
 				case 'cust_type': $orderf = 'g.name'; break;
 				default: $orderf = $this->orderField; break;
 			}
@@ -154,44 +162,6 @@ class VisitList extends CListPageModel
 		$this->attr = array();
 		if (count($records) > 0) {
 			foreach ($records as $k=>$record) {
-                $sql = "select field_id, field_value from sal_visit_info where field_id in ('svc_A','svc_B','svc_C','svc_D','svc_E','svc_F4','svc_G3','svc_H') and visit_id = '".$record['id']."'";
-                $rows = Yii::app()->db->createCommand($sql)->queryAll();
-                foreach ($rows as $a) {
-                    for ($i = 0; $i < count($rows); $i++) {
-                         $list[$a['field_id']]=$a['field_value'];
-                    }
-                }
-                $quote ="";
-                if(!empty($list['svc_A'])){
-                    $quote.=$list['svc_A']."(清洁) / -";
-                }
-                if(!empty($list['svc_B'])){
-                    $quote.=$list['svc_B']."(机器) / -";
-                }
-                if(!empty($list['svc_C'])){
-                    $quote.=$list['svc_C']."(灭虫) / -";
-                }
-                if(!empty($list['svc_D'])){
-                    $quote.=$list['svc_D']."(飘盈香) / -";
-                }
-                if(!empty($list['svc_H'])){
-                    $quote.=$list['svc_H']."(蔚诺空气业务) / -";
-                }
-                if(!empty($list['svc_E'])){
-                    $quote.=$list['svc_E']."(甲醛) / -";
-                }
-                if(!empty($list['svc_F4'])){
-                    $quote.=$list['svc_F4']."(纸品) / -";
-                }
-                if(!empty($list['svc_G3'])){
-                    $quote.=$list['svc_G3']."(一次性售卖) / -";
-                }
-                if(!empty($quote)){
-                    $sqls="update sal_visit set quotation='是' where id='".$record['id']."'";
-                    $rows = Yii::app()->db->createCommand($sqls)->execute();
-                }
-                $quote = substr($quote,0,strlen($quote)-3);
-                $quote = explode("-", $quote);
 //                print_r("<pre>");
 //                print_r($quote);
 				$this->attr[] = array(
@@ -205,7 +175,7 @@ class VisitList extends CListPageModel
 					'city'=>$record['city'],
 					'staff'=>$record['staff_code']."-".$record['staff_name'],
 					'district'=>$record['district_name'],
-					'quote'=>$quote,
+					'visit_info_text'=>$record['visit_info_text'],
 					'visit_type'=>$record['visit_type_name'],
 					'visit_obj'=>$record['visit_obj_name'],
 					'cust_type'=>$record['cust_type_name'],

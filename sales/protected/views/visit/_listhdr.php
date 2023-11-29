@@ -55,7 +55,7 @@
         ?>
     </th>
     <th>
-        <?php echo TbHtml::link($this->getLabelName('visitdoc'),'#',$this->createOrderLink('request-list','visitdoc'))
+        <?php echo TbHtml::link($this->getLabelName('visitdoc').$this->drawOrderArrow('visitdoc'),'#',$this->createOrderLink('visit-list','visitdoc'))
         ;
         ?>
     </th>

@@ -26,7 +26,7 @@
 	<td <?php echo $cls_str;?>><?php echo $this->record['visit_type']; ?></td>
 	<td <?php echo $cls_str;?>><?php echo $this->record['visit_obj']; ?></td>
 	<td <?php echo $cls_str;?>><?php echo $this->record['district']; ?></td>
-	<td <?php echo $cls_str;?> ><?php for ($i=0;$i<count($this->record['quote']);$i++) {if($i==3||$i==6){echo "<br/>";} echo $this->record['quote'][$i]; } ?>  </td>
+	<td <?php echo $cls_str;?>><?php echo $this->record['visit_info_text']; ?></td>
 	<td data-shift_user="<?php echo $this->record['shift_user']; ?>" <?php echo $cls_str;?>><?php echo $this->record['staff']; if($this->record['shift']=='Y'){echo "(离职)";}if($this->record['shift']=='Z'){echo "(转)";}?></td>
     <td>
         <?php
