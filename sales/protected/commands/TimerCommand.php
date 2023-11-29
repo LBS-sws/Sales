@@ -108,19 +108,22 @@ class TimerCommand extends CConsoleCommand {
         $this->shiftAgainEmailHint();
         //销售俱乐部每天刷新一次
         $this->resetClubSales();
-        //销售拜访的附件数量（仅执行一次）
-        $this->resetFileCount();
+        //销售拜访的保存查询字段（仅执行一次）
+        $this->resetVisitSearch();
 	}
 
-    //销售拜访的附件数量（仅执行一次）
-	private function resetFileCount(){
-	    if(date("Y/m/d")=="2023/08/16"){
-            $suffix = Yii::app()->params['envSuffix'];
-            $sql = "update sal_visit set
-              doc_count=docman{$suffix}.countdoc('visit',id)
-              WHERE id>0
-            ";
-            Yii::app()->db->createCommand($sql)->execute();
+    //销售拜访的保存查询字段（仅执行一次）
+	private function resetVisitSearch(){
+	    if(date("Y/m/d")=="2023/11/29"){
+	        echo "resetVisitSearch Start:".date("Y/m/d H:i:s")."\n";
+            $rows = Yii::app()->db->createCommand()->select("id")->from("sal_visit")
+                ->where("visit_obj_name is null")->queryAll();
+            if($rows){
+                foreach ($rows as $row){
+                    VisitForm::resetVisitObjName($row["id"]);
+                }
+            }
+            echo "resetVisitSearch End:".date("Y/m/d H:i:s")."\n";
         }
     }
 

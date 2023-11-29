@@ -502,6 +502,7 @@ class VisitForm extends CFormModel
 			} else {
 				if ($pushMessage) $this->addNotification($connection);
 			}
+			self::resetVisitObjName($this->id);//由于列表查询慢，所以保存特殊字段
 			$transaction->commit();
 		}
 		catch(Exception $e) {
@@ -933,6 +934,61 @@ class VisitForm extends CFormModel
 	public static function isReadAll() {
 		return Yii::app()->user->validFunction('CN03');
 	}
+
+	//由於列表需要顯示目的及报价，導致列表打開太慢，所以保存目的及报价
+	public static function resetVisitObjName($visit_id=0){
+        $visit_id = is_numeric($visit_id)?intval($visit_id):0;
+        $updateArr = array();
+        $list=array();
+        $sql = "select field_id, field_value from sal_visit_info where field_id in ('svc_A','svc_B','svc_C','svc_D','svc_E','svc_F4','svc_G3','svc_H') and visit_id = '{$visit_id}'";
+        $rows = Yii::app()->db->createCommand($sql)->queryAll();
+        foreach ($rows as $a) {
+            for ($i = 0; $i < count($rows); $i++) {
+                $list[$a['field_id']]=$a['field_value'];
+            }
+        }
+        $quote =array();
+        if(isset($list['svc_A'])&&!empty($list['svc_A'])){
+            $quote[]=$list['svc_A']."(清洁)";
+        }
+        if(isset($list['svc_B'])&&!empty($list['svc_B'])){
+            $quote[]=$list['svc_B']."(机器)";
+        }
+        if(isset($list['svc_C'])&&!empty($list['svc_C'])){
+            $quote[]=$list['svc_C']."(灭虫)";
+        }
+        if(isset($list['svc_D'])&&!empty($list['svc_D'])){
+            $quote[]=$list['svc_D']."(飘盈香)";
+        }
+        if(isset($list['svc_H'])&&!empty($list['svc_H'])){
+            $quote[]=$list['svc_H']."(蔚诺空气业务)";
+        }
+        if(isset($list['svc_E'])&&!empty($list['svc_E'])){
+            $quote[]=$list['svc_E']."(甲醛)";
+        }
+        if(isset($list['svc_F4'])&&!empty($list['svc_F4'])){
+            $quote[]=$list['svc_F4']."(纸品)";
+        }
+        if(isset($list['svc_G3'])&&!empty($list['svc_G3'])){
+            $quote[]=$list['svc_G3']."(一次性售卖)";
+        }
+        $sql = "select VisitObjDesc(visit_obj) as visit_obj_name from sal_visit where id ='{$visit_id}'";
+        $row = Yii::app()->db->createCommand($sql)->queryRow();
+        $updateArr["visit_obj_name"]=$row?$row["visit_obj_name"]:"";
+        if(!empty($quote)){
+            if(count($quote)>3){
+                foreach ($quote as $key=>$item){
+                    if(!empty($key)&&$key%3==0){
+                        $quote[$key]="<br/>".$quote[$key];
+                    }
+                }
+            }
+            //$sqls="update sal_visit set quotation='是' where id='".$visit_id."'";
+            $updateArr["quotation"]='是';//不知道什么作用，以前就有(参考上面被注释的sql)
+            $updateArr["visit_info_text"]=implode("/",$quote);
+        }
+        Yii::app()->db->createCommand()->update("sal_visit",$updateArr,"id='{$visit_id}'");
+    }
 
 	//由於列表需要顯示附件數量，導致列表打開太慢，所以保存附件數量
 	public function resetFileSum($id=0){
