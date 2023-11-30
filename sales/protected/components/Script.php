@@ -1,8 +1,8 @@
 <?php
 class Script {
-	public static function genLookupSelect() {
-		$mesg = Yii::t('dialog','No Record Found');
-		$str = <<<EOF
+    public static function genLookupSelect() {
+        $mesg = Yii::t('dialog','No Record Found');
+        $str = <<<EOF
 $('#btnLookupSelect').on('click',function() {
 	$('#lookupdialog').modal('hide');
 	lookupselect();
@@ -55,12 +55,12 @@ function lookupclear() {
 	$("#lookup-label").removeAttr('style');
 }
 EOF;
-		return $str;
-	}
- 
-	public static function genLookupButton($btnName, $lookupType, $codeField, $valueField, $multiselect=false) {
-		$multiflag = $multiselect ? 'true' : 'false';
-		$str = <<<EOF
+        return $str;
+    }
+
+    public static function genLookupButton($btnName, $lookupType, $codeField, $valueField, $multiselect=false) {
+        $multiflag = $multiselect ? 'true' : 'false';
+        $str = <<<EOF
 $('#$btnName').on('click',function() {
 	var code = $("input[id*='$codeField']").attr("id");
 	var value = $("input[id*='$valueField']").attr("id");
@@ -75,26 +75,26 @@ $('#$btnName').on('click',function() {
 	$('#lookupdialog').modal('show');
 });
 EOF;
-		return $str;
-	}
- 
-	public static function genLookupButtonEx($btnName, $lookupType, $codeField, $valueField, $otherFields=array(), $multiselect=false, $paramFields=array()) {
-		$others = '';
-		if (!empty($otherFields)) {
-			foreach ($otherFields as $key=>$field) {
-				$others .= ($others=='' ? '' : '/').$key.','.$field;
-			}
-		}
-		$params = '';
-		if (!empty($paramFields)) {
-			foreach ($paramFields as $key=>$field) {
-				$params .= ($params=='' ? '' : '/').$key.','.$field;
-			}
-		}
-		$multiflag = $multiselect ? 'true' : 'false';
-		$lookuptypeStmt = ($lookupType!=='*') ? "$('#lookuptype').val('$lookupType');" : '';
-		
-		$str = <<<EOF
+        return $str;
+    }
+
+    public static function genLookupButtonEx($btnName, $lookupType, $codeField, $valueField, $otherFields=array(), $multiselect=false, $paramFields=array()) {
+        $others = '';
+        if (!empty($otherFields)) {
+            foreach ($otherFields as $key=>$field) {
+                $others .= ($others=='' ? '' : '/').$key.','.$field;
+            }
+        }
+        $params = '';
+        if (!empty($paramFields)) {
+            foreach ($paramFields as $key=>$field) {
+                $params .= ($params=='' ? '' : '/').$key.','.$field;
+            }
+        }
+        $multiflag = $multiselect ? 'true' : 'false';
+        $lookuptypeStmt = ($lookupType!=='*') ? "$('#lookuptype').val('$lookupType');" : '';
+
+        $str = <<<EOF
 $('#$btnName').on('click',function() {
 	var code = $("input[id*='$codeField']").attr("id");
 	var value = $("input[id*='$valueField']").attr("id");
@@ -111,13 +111,13 @@ $('#$btnName').on('click',function() {
 	$('#lookupdialog').modal('show');
 });
 EOF;
-		return $str;
-	}
+        return $str;
+    }
 
-	public static function genLookupSearch() {
-		$mesg = Yii::t('dialog','No Record Found');
-		$link = Yii::app()->createAbsoluteUrl("lookup");
-		$str = <<<EOF
+    public static function genLookupSearch() {
+        $mesg = Yii::t('dialog','No Record Found');
+        $link = Yii::app()->createAbsoluteUrl("lookup");
+        $str = <<<EOF
 $('#btnLookup').on('click',function(){
 	var city = $("[id$='_city']").val();
 	var data = "search="+$("#txtlookup").val();
@@ -139,13 +139,15 @@ $('#btnLookup').on('click',function(){
 	});
 });
 EOF;
-		return $str;
-	}
-	
-	public static function genLookupSearchEx() {
-		$mesg = Yii::t('dialog','No Record Found');
-		$link = Yii::app()->createAbsoluteUrl("lookup");
-		$str = <<<EOF
+        return $str;
+    }
+
+    public static function genLookupSearchEx($flag=false) {
+        $mesg = Yii::t('dialog','No Record Found');
+        $link = Yii::app()->createAbsoluteUrl("lookup");
+        $for_company = !$flag ? ''
+            : 'var typename = $("#lookuptype").val(); if (typename=="company") data += "&fullname=true";';
+        $str = <<<EOF
 $('#btnLookup').on('click',function(){
 	var data = "search="+$("#txtlookup").val();
 	
@@ -164,7 +166,7 @@ $('#btnLookup').on('click',function(){
 	
 	var city = $("[id$='_city']").val();
 	if (city !== undefined && city !==null) data += "&incity="+city;
-	
+	$for_company
 	var link = "$link"+"/"+$("#lookuptype").val()+'ex';
 	var ofstr = $('#lookupotherfield').val();
 	$.ajax({
@@ -200,36 +202,36 @@ $('#btnLookup').on('click',function(){
 	});
 });
 EOF;
-		return $str;
-	}
+        return $str;
+    }
 
-	public static function genReadonlyField() {
-		$str = <<<EOF
+    public static function genReadonlyField() {
+        $str = <<<EOF
 $('[readonly]').addClass('readonly');
 EOF;
-		return $str;
-	}
+        return $str;
+    }
 
-	public static function genTableRowClick() {
-		$str = <<<EOF
+    public static function genTableRowClick() {
+        $str = <<<EOF
 $('.clickable-row').click(function() {
 	window.document.location = $(this).data('href');
 });
 EOF;
-		return $str;
-	}
-	
-	public static function genDatePicker($fields) {
+        return $str;
+    }
+
+    public static function genDatePicker($fields) {
         $str = "";
         $language = Yii::app()->language;
         foreach ($fields as $field) {
             $str .= "$('#$field').datepicker({autoclose: true,language: '$language', format: 'yyyy/mm/dd'});";
         }
         return $str;
-	}
+    }
 
-	public static function genDeleteData($link) {
-		$str = "
+    public static function genDeleteData($link) {
+        $str = "
 $('#btnDeleteData').on('click',function() {
 	$('#removedialog').modal('hide');
 	deletedata();
@@ -240,39 +242,41 @@ function deletedata() {
 	jQuery.yii.submitForm(elm,'$link',{});
 }
 		";
-		return $str;
-	}
-	
-	public static function genFileDownload($model, $formname, $doctype) {
-		$doc = new DocMan($doctype,0,get_class($model));
-		$ctrlname = Yii::app()->controller->id;
-		$dwlink = Yii::app()->createAbsoluteUrl($ctrlname."/filedownload");
-		$dlfuncid = $doc->downloadFunctionName;
-		$str = "
+        return $str;
+    }
+
+    public static function genFileDownload($model, $formname, $doctype) {
+        $doc = new DocMan($doctype,0,get_class($model));
+        $ctrlname = Yii::app()->controller->id;
+        $dwlink = Yii::app()->createAbsoluteUrl($ctrlname."/filedownload");
+        $dlfuncid = $doc->downloadFunctionName;
+        $str = "
 function $dlfuncid(mid, did, fid) {
 	href = '$dwlink?mastId='+mid+'&docId='+did+'&fileId='+fid+'&doctype=$doctype';
 	window.open(href);
 }
 		";
-		Yii::app()->clientScript->registerScript('downloadfile1'.$doctype,$str,CClientScript::POS_HEAD);
-	}
-	
-	public static function genFileUpload($model, $formname, $doctype) {
-		$doc = new DocMan($doctype,$model->id,get_class($model));
+        Yii::app()->clientScript->registerScript('downloadfile1'.$doctype,$str,CClientScript::POS_HEAD);
 
-		$msg = Yii::t('dialog','Are you sure to delete record?');
-		$ctrlname = Yii::app()->controller->id;
-		$rmlink = Yii::app()->createAbsoluteUrl($ctrlname."/fileremove",array('doctype'=>$doctype));
-		$dwlink = Yii::app()->createAbsoluteUrl($ctrlname."/filedownload");
-		$rmfldid = get_class($model).'_removeFileId_'.strtolower($doctype);
-		$tblid = $doc->tableName;
-		$rmfuncid = $doc->removeFunctionName;
-		$dlfuncid = $doc->downloadFunctionName;
-		$btnid = $doc->uploadButtonName;
-		$typeid = strtolower($doctype);
-		$modelname = get_class($model);
-		
-		$str = "
+        self::showImgFun();
+    }
+
+    public static function genFileUpload($model, $formname, $doctype) {
+        $doc = new DocMan($doctype,$model->id,get_class($model));
+
+        $msg = Yii::t('dialog','Are you sure to delete record?');
+        $ctrlname = Yii::app()->controller->id;
+        $rmlink = Yii::app()->createAbsoluteUrl($ctrlname."/fileremove",array('doctype'=>$doctype));
+        $dwlink = Yii::app()->createAbsoluteUrl($ctrlname."/filedownload");
+        $rmfldid = get_class($model).'_removeFileId_'.strtolower($doctype);
+        $tblid = $doc->tableName;
+        $rmfuncid = $doc->removeFunctionName;
+        $dlfuncid = $doc->downloadFunctionName;
+        $btnid = $doc->uploadButtonName;
+        $typeid = strtolower($doctype);
+        $modelname = get_class($model);
+
+        $str = "
 function $rmfuncid(id) {
 	if (confirm('$msg')) {
 		document.getElementById('$rmfldid').value = id;
@@ -312,10 +316,10 @@ function $dlfuncid(mid, did, fid) {
 	window.open(href);
 }
 		";
-		Yii::app()->clientScript->registerScript('removefile1'.$doctype,$str,CClientScript::POS_HEAD);
+        Yii::app()->clientScript->registerScript('removefile1'.$doctype,$str,CClientScript::POS_HEAD);
 
-		$link = Yii::app()->createAbsoluteUrl($ctrlname."/fileupload",array('doctype'=>$doctype));
-		$str = "
+        $link = Yii::app()->createAbsoluteUrl($ctrlname."/fileupload",array('doctype'=>$doctype));
+        $str = "
 $('#$btnid').on('click', function() {
 	var form = document.getElementById('$formname');
 	var formdata = new FormData(form);
@@ -348,7 +352,45 @@ $('#$btnid').on('click', function() {
 	});
 });
 		";
-		Yii::app()->clientScript->registerScript('fileUpload'.$doctype,$str,CClientScript::POS_READY);
-	}
+        Yii::app()->clientScript->registerScript('fileUpload'.$doctype,$str,CClientScript::POS_READY);
+
+        self::showImgFun();
+    }
+
+    public static function showImgFun(){
+        Yii::app()->clientScript->registerCssFile(Yii::app()->baseUrl . "/css/viewer.css");//图片阅读
+        Yii::app()->clientScript->registerScriptFile(Yii::app()->baseUrl . "/js/viewer.js", CClientScript::POS_END);//图片阅读
+        $js = "
+            $('body').on('click','.viewer-canvas',function(){
+                $('body').removeClass('viewer-open');
+                $(this).parent('.viewer-container').remove();
+            });
+            $('body').on('click','.viewer-canvas *',function(e){
+                e.stopPropagation();
+            });
+            $('body').on('click','.search_box_img',function(){
+                var clickText = $(this).text();
+                if($('#viewer-ul').length>0){
+                    $('#viewer-ul').remove();
+                }
+                var list = $('<ul id=\"viewer-ul\" class=\"hide\"></ul>');
+                $(this).parents('table:first').find('img').each(function(){
+                    var title = $(this).parents('td.search_box_img').eq(0).text();
+                    var li = $('<li></li>');
+                    var img = $('<img>');
+                    img.attr({ src:$(this).attr('src'),alt:title });
+                    if(title == clickText){
+                        img.addClass('click_viewer_img');
+                    }
+                    li.html(img);
+                    list.append(li);
+                });
+                $('body').append(list);
+                list.viewer({ url: 'src'});
+                list.find('.click_viewer_img').trigger('click');
+            });
+	    ";
+        Yii::app()->clientScript->registerScript('showImgFun',$js,CClientScript::POS_READY);
+    }
 }
 ?>
