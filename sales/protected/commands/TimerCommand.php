@@ -8,6 +8,7 @@ class TimerCommand extends CConsoleCommand {
 		$typelist = $obj->getFiveTypeList();
 		$steplist = $obj->getStepList();
 	    */
+        echo "Timer Start:".date("Y/m/d H:i:s")."\n";
         $typelist = array(
             0=>Yii::t('misc','Insecticidal'),
             1=>Yii::t('misc','Restroom'),
@@ -110,17 +111,19 @@ class TimerCommand extends CConsoleCommand {
         $this->resetClubSales();
         //销售拜访的保存查询字段（仅执行一次）
         $this->resetVisitSearch();
+        echo "Timer End:".date("Y/m/d H:i:s")."\n";
 	}
 
     //销售拜访的保存查询字段（仅执行一次）
 	private function resetVisitSearch(){
-	    if(date("Y/m/d")=="2023/11/29"){
-	        echo "resetVisitSearch Start:".date("Y/m/d H:i:s")."\n";
-            $rows = Yii::app()->db->createCommand()->select("id")->from("sal_visit")
+	    if(date("Y/m/d")=="2023/11/30"){
+            echo "resetVisitSearch Start:".date("Y/m/d H:i:s")."\n";
+            $rows = Yii::app()->db->createCommand()->select("id,visit_obj")->from("sal_visit")
                 ->where("visit_obj_name is null")->queryAll();
             if($rows){
+                $objList = VisitForm::getVisitObjList();
                 foreach ($rows as $row){
-                    VisitForm::resetVisitObjName($row["id"]);
+                    VisitForm::resetVisitObjName($row["id"],$row["visit_obj"],$objList);
                 }
             }
             echo "resetVisitSearch End:".date("Y/m/d H:i:s")."\n";

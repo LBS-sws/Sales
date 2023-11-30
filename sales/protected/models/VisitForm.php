@@ -502,7 +502,7 @@ class VisitForm extends CFormModel
 			} else {
 				if ($pushMessage) $this->addNotification($connection);
 			}
-			self::resetVisitObjName($this->id);//由于列表查询慢，所以保存特殊字段
+			self::resetVisitObjName($this->id,$this->visit_obj);//由于列表查询慢，所以保存特殊字段
 			$transaction->commit();
 		}
 		catch(Exception $e) {
@@ -880,7 +880,7 @@ class VisitForm extends CFormModel
         return $list;
     }
 
-	public function getVisitObjList() {
+	public static function getVisitObjList() {
 //		$rtn = array(''=>Yii::t('misc','-- None --'));
 		$rtn = array();
 		$sql = "select id, name from sal_visit_obj";
@@ -936,7 +936,10 @@ class VisitForm extends CFormModel
 	}
 
 	//由於列表需要顯示目的及报价，導致列表打開太慢，所以保存目的及报价
-	public static function resetVisitObjName($visit_id=0){
+	public static function resetVisitObjName($visit_id=0,$visit_obj='',$objList=array()){
+	    if(empty($objList)){
+            $objList = self::getVisitObjList();
+        }
         $visit_id = is_numeric($visit_id)?intval($visit_id):0;
         $updateArr = array();
         $list=array();
@@ -972,9 +975,19 @@ class VisitForm extends CFormModel
         if(isset($list['svc_G3'])&&!empty($list['svc_G3'])){
             $quote[]=$list['svc_G3']."(一次性售卖)";
         }
-        $sql = "select VisitObjDesc(visit_obj) as visit_obj_name from sal_visit where id ='{$visit_id}'";
-        $row = Yii::app()->db->createCommand($sql)->queryRow();
-        $updateArr["visit_obj_name"]=$row?$row["visit_obj_name"]:"";
+        $search = array("[", "]", '"');
+        $replace = array("","","");
+
+        $visit_obj_name="";
+        $visit_obj = str_replace($search, $replace, $visit_obj);
+        $visit_obj = explode(",",$visit_obj);
+        if(!empty($visit_obj)){
+            foreach ($visit_obj as $item){
+                $visit_obj_name.=empty($visit_obj_name)?"":",";
+                $visit_obj_name.=key_exists($item,$objList)?$objList[$item]:$item;
+            }
+        }
+        $updateArr["visit_obj_name"]=$visit_obj_name;
         if(!empty($quote)){
             if(count($quote)>3){
                 foreach ($quote as $key=>$item){
@@ -984,11 +997,11 @@ class VisitForm extends CFormModel
                 }
             }
             //$sqls="update sal_visit set quotation='是' where id='".$visit_id."'";
-            $updateArr["quotation"]='是';//不知道什么作用，以前就有(参考上面被注释的sql)
+            $updateArr["quotation"]="是";//不知道什么作用，以前就有(参考上面被注释的sql)
             $updateArr["visit_info_text"]=implode("/",$quote);
         }
         Yii::app()->db->createCommand()->update("sal_visit",$updateArr,"id='{$visit_id}'");
-    }
+	}
 
 	//由於列表需要顯示附件數量，導致列表打開太慢，所以保存附件數量
 	public function resetFileSum($id=0){
