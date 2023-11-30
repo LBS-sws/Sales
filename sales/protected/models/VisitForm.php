@@ -979,8 +979,10 @@ class VisitForm extends CFormModel
         $replace = array("","","");
 
         $visit_obj_name="";
-        $visit_obj = str_replace($search, $replace, $visit_obj);
-        $visit_obj = explode(",",$visit_obj);
+        if(!is_array($visit_obj)){
+            $visit_obj = str_replace($search, $replace, $visit_obj);
+            $visit_obj = explode(",",$visit_obj);
+        }
         if(!empty($visit_obj)){
             foreach ($visit_obj as $item){
                 $visit_obj_name.=empty($visit_obj_name)?"":",";
