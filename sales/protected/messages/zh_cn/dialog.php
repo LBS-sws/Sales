@@ -90,5 +90,7 @@ return array(
 	'Saving' => '保存中',
 	'Invalid file type.'=>'无效的文件类型.',
 	'Advice'=>'温馨提示',
+    'Are you sure to back?'=>'确定退回?',
+    'Back Record'=>'退回',
 );
 ?>

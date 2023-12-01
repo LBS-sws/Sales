@@ -109,25 +109,24 @@ class TimerCommand extends CConsoleCommand {
         $this->shiftAgainEmailHint();
         //销售俱乐部每天刷新一次
         $this->resetClubSales();
-        //销售拜访的保存查询字段（仅执行一次）
-        $this->resetVisitSearch();
+        //市场营销的资料超过15天自动退回
+        $this->marketCompanyForBack();
         echo "Timer End:".date("Y/m/d H:i:s")."\n";
 	}
 
-    //销售拜访的保存查询字段（仅执行一次）
-	private function resetVisitSearch(){
-	    if(date("Y/m/d")=="2023/11/30"){
-            echo "resetVisitSearch Start:".date("Y/m/d H:i:s")."\n";
-            $rows = Yii::app()->db->createCommand()->select("id,visit_obj")->from("sal_visit")
-                ->where("visit_obj_name is null")->queryAll();
-            if($rows){
-                $objList = VisitForm::getVisitObjList();
-                foreach ($rows as $row){
-                    VisitForm::resetVisitObjName($row["id"],$row["visit_obj"],$objList);
-                }
-            }
-            echo "resetVisitSearch End:".date("Y/m/d H:i:s")."\n";
-        }
+    //市场营销的资料超过15天自动退回
+    private function marketCompanyForBack(){
+        $endDate = date("Y-m-d", strtotime(" - 15 day"));
+        echo "\n"."marketCompanyForBack start: allot_date < {$endDate}"."\n";
+        //分配中的记录如果超过15天，系统自动退回(地区)
+        $marketArea = new MarketAreaForm();
+        $marketArea->systemBackForLongDate($endDate);
+        //分配中的记录如果超过15天，系统自动退回(销售)
+        $marketSales = new MarketSalesForm();
+        $marketSales->systemBackForLongDate($endDate,3);//销售自动退回
+        $marketSales->systemBackForLongDate($endDate,1);//KA销售自动退回
+
+        echo "\n"."marketCompanyForBack End"."\n";
     }
 
     //销售俱乐部每天刷新一次

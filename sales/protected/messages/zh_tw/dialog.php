@@ -84,6 +84,8 @@ return array(
 'Saving' => '保存中',
 'Invalid file type.'=>'無效的文件類型.',
 'Advice'=>'温馨提示',
+    'Are you sure to back?'=>'確定退回?',
+    'Back Record'=>'退回',
 );
 
 ?>

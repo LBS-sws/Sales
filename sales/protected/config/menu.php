@@ -218,6 +218,37 @@ return array(
             ),
         ),
     ),
+
+    'Market'=>array( //市场营销
+        'access'=>'MT',
+        'icon'=>'fa-glass',
+        'items'=>array(
+            'Market Company'=>array(//客户资料库
+                'access'=>'MT01',
+                'url'=>'marketCompany/index',
+            ),
+            'Market Area'=>array(//地區跟進客戶資料
+                'access'=>'MT02',
+                'url'=>'marketArea/index',
+            ),
+            'Market Sales'=>array(//銷售跟進客戶資料
+                'access'=>'MT03',
+                'url'=>'marketSales/index',
+            ),
+            'Market Reject'=>array(//無意向客戶
+                'access'=>'MT04',
+                'url'=>'marketReject/index',
+            ),
+            'Market Success'=>array(//已完成客戶
+                'access'=>'MT05',
+                'url'=>'marketSuccess/index',
+            ),
+            'Market State set'=>array(//跟進狀態設置
+                'access'=>'MT06',
+                'url'=>'marketState/index',
+            ),
+        ),
+    ),
 	'System Setting'=>array(
 		'access'=>'HC',
 		'icon'=>'fa-gear',

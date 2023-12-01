@@ -27,8 +27,7 @@ class DownKAExcel{
     public function init() {
         //Yii::$enableIncludePath = false;
         $phpExcelPath = Yii::getPathOfAlias('ext.phpexcel');
-        spl_autoload_unregister(array('YiiBase','autoload'));
-        include($phpExcelPath . DIRECTORY_SEPARATOR . 'PHPExcel.php');
+        include_once($phpExcelPath . DIRECTORY_SEPARATOR . 'PHPExcel.php');
         $this->objPHPExcel = new PHPExcel();
         $this->setReportFormat();
         $this->outHeader();
@@ -258,5 +257,207 @@ class DownKAExcel{
         if (($quo == 1) && ($mod == 0)) return 'Z';
         if (($quo > 1) && ($mod == 0)) return chr($quo+63).'Z';
         if ($mod > 0) return chr($quo+64).chr($mod+64);
+    }
+
+
+    public function setHeaderForOneList($headerArr){
+        $this->setKAWidth();
+        $this->th_num=0;
+        if(!empty($headerArr)){
+            $colOne = 0;
+            foreach ($headerArr as $list){
+                $background="FFFFFF";
+                $textColor="000000";
+                $oneStr = $this->getColumn($colOne);
+                if(key_exists("background",$list)){
+                    $background = $list["background"];
+                    $background = end(explode("#",$background));
+                }
+                if(key_exists("color",$list)){
+                    $textColor = $list["color"];
+                    $textColor = end(explode("#",$textColor));
+                }
+                if(key_exists("width",$list)){
+                    $this->objPHPExcel->getActiveSheet()->getColumnDimensionByColumn($colOne)->setWidth($list['width']);
+                }
+                $this->objPHPExcel->getActiveSheet()
+                    ->setCellValueByColumnAndRow($colOne, $this->current_row, $list["name"]);
+                $colOne++;
+                $this->th_num++;
+                $endStr = $this->getColumn($colOne-1);
+                $this->setHeaderStyleTwo("{$oneStr}{$this->current_row}:{$endStr}".$this->current_row,$background,$textColor);
+                //$colOne++;
+                $this->objPHPExcel->getActiveSheet()->getStyle("A{$this->current_row}:{$endStr}".$this->current_row)->applyFromArray(
+                    array(
+                        'font'=>array(
+                            'bold'=>true,
+                        ),
+                        'alignment'=>array(
+                            'horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                            'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,
+                        ),
+                        'borders'=>array(
+                            'allborders'=>array(
+                                'style'=>PHPExcel_Style_Border::BORDER_THIN,
+                            ),
+                        )
+                    )
+                );
+            }
+
+            $this->current_row++;
+        }
+    }
+
+
+    public function setGroupData($data,$group){
+        if(!empty($data)){
+            $startTr = $this->current_row;
+            foreach ($data as $row){
+                $td = 0;
+                $tr = $this->current_row;
+                $maxTr=1;
+                foreach ($group as $key=>$item){
+                    if(is_array($item)){//
+                        $groupList = key_exists($key,$row)?$row[$key]:array();
+                        if($maxTr<count($groupList)){
+                            $maxTr = count($groupList);
+                        }
+                        $groupTr = $tr;
+                        $groupTd = $td;
+                        if(!empty($groupList)){
+                            foreach ($groupList as $oup){
+                                $gd = $groupTd;
+                                foreach ($item as $tm){
+                                    $text = key_exists($tm,$oup)?$oup[$tm]:"";
+                                    $this->setCellValueForSummary($gd, $groupTr, $text);
+                                    $gd++;
+                                }
+                                $groupTr++;
+                            }
+                        }
+                        $td+=count($item);
+
+                        if($tr!==$groupTr){//合并
+                            //$startStr = $this->getColumn($td);
+                            //$this->objPHPExcel->getActiveSheet()->mergeCells($startStr.$this->current_row.':'.$startStr.($this->current_row+2));
+                        }
+                    }else{
+                        $text = key_exists($item,$row)?$row[$item]:"";
+                        $this->setCellValueForSummary($td, $tr, $text);
+                        $td++;
+                    }
+                }
+                $this->current_row+=$maxTr;
+            }
+
+            $endStr = $this->getColumn($this->th_num-1);
+            $this->objPHPExcel->getActiveSheet()
+                ->getStyle("A{$startTr}:{$endStr}".($this->current_row-1))
+                ->applyFromArray(
+                    array(
+                        'borders' => array(
+                            'allborders' => array(
+                                'style' => PHPExcel_Style_Border::BORDER_THIN
+                            )
+                        )
+                    )
+                );
+        }
+    }
+
+    public function setHeaderForErrorList($headerArr){
+        $this->setKAWidth();
+        $this->th_num=0;
+        if(!empty($headerArr)){
+            $colOne = 0;
+            foreach ($headerArr as $list){
+                if(is_array($list)){
+                    $background="FFFFFF";
+                    $textColor="000000";
+                    $oneStr = $this->getColumn($colOne);
+                    if(key_exists("background",$list)){
+                        $background = $list["background"];
+                        $background = end(explode("#",$background));
+                    }
+                    if(key_exists("color",$list)){
+                        $textColor = $list["color"];
+                        $textColor = end(explode("#",$textColor));
+                    }
+                    if(key_exists("width",$list)){
+                        $this->objPHPExcel->getActiveSheet()->getColumnDimensionByColumn($colOne)->setWidth($list['width']);
+                    }
+                    $this->objPHPExcel->getActiveSheet()
+                        ->setCellValueByColumnAndRow($colOne, $this->current_row, $list["name"]);
+                    $colOne++;
+                    $this->th_num++;
+                    $endStr = $this->getColumn($colOne-1);
+                    $this->setHeaderStyleTwo("{$oneStr}{$this->current_row}:{$endStr}".$this->current_row,$background,$textColor);
+                    //$colOne++;
+                    $this->objPHPExcel->getActiveSheet()->getStyle("A{$this->current_row}:{$endStr}".$this->current_row)->applyFromArray(
+                        array(
+                            'font'=>array(
+                                'bold'=>true,
+                            ),
+                            'alignment'=>array(
+                                'horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                                'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,
+                            ),
+                            'borders'=>array(
+                                'allborders'=>array(
+                                    'style'=>PHPExcel_Style_Border::BORDER_THIN,
+                                ),
+                            )
+                        )
+                    );
+                }else{
+                    $this->objPHPExcel->getActiveSheet()
+                        ->setCellValueByColumnAndRow($colOne, $this->current_row, $list);
+                    $colOne++;
+                    $this->th_num++;
+                    $this->objPHPExcel->getActiveSheet()->getColumnDimensionByColumn($colOne)->setWidth(14);
+                }
+            }
+
+            $this->current_row++;
+        }
+    }
+
+
+    public function setErrorData($data,$error){
+        if(!empty($data)){
+            $startTr = $this->current_row;
+            foreach ($data as $row){
+                $td = 0;
+                $tr = $this->current_row;
+                foreach ($error as $item){
+                    $key = $item["sql"];
+                    $errorText = key_exists($key,$row)?$row[$key]:"";
+                    $this->setCellValueForSummary($td, $tr, $errorText);
+                    $td++;
+                    unset($row[$key]);
+                }
+
+                foreach ($row as $bodyText){
+                    $this->setCellValueForSummary($td, $tr, $bodyText);
+                    $td++;
+                }
+
+                $this->current_row++;
+            }
+
+            $endStr = $this->getColumn($this->th_num-1);
+            $this->objPHPExcel->getActiveSheet()
+                ->getStyle("A{$startTr}:{$endStr}".($this->current_row-1))
+                ->applyFromArray(
+                    array(
+                        'borders' => array(
+                            'allborders' => array(
+                                'style' => PHPExcel_Style_Border::BORDER_THIN
+                            )
+                        )
+                    )
+                );
+        }
     }
 }

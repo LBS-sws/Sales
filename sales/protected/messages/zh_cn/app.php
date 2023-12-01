@@ -152,5 +152,13 @@ return array(
 	'KA Bot(All)'=>'KA项目(所有)',
 
 	'Signed conversion rate'=>'签单转化率',
+
+    'Market'=>'市场营销',
+    'Market Company'=>'客户资料库',
+    'Market Area'=>'地区跟进客户',
+    'Market Sales'=>'销售跟进客户',
+    'Market Reject'=>'无意向客户',
+    'Market Success'=>'已完成客户',
+    'Market State set'=>'跟进状态设置',
 );
 ?>
