@@ -1,6 +1,7 @@
 <?php
 class TableView2Widget extends CWidget
 {
+	public $expr_id="";
 	public $model;
 	public $attribute;
 	public $gridsize;
@@ -15,7 +16,8 @@ class TableView2Widget extends CWidget
 	public function run()
 	{
 		$field=$this->attribute;
-		$layout = "<table id='tblDetail' class='table table-hover'><thead>";
+		$id = empty($this->expr_id)?"tblDetail":"tblDetail_{$this->expr_id}";
+		$layout = "<table id='{$id}' data-expr='_{$this->expr_id}' class='table table-hover'><thead>";
 		$layout .= $this->render($this->viewhdr, null, true);
 		$layout .= "</thead>";
 		$layout .= "<tbody>";
@@ -23,7 +25,8 @@ class TableView2Widget extends CWidget
 		if (count($this->model->$field) > 0)
 		{
 			$odd = true;
-			foreach ($this->model->$field as $i=>$row)
+            $i=0;
+			foreach ($this->model->$field as $row)
 			{
 				$this->record = $row;
 				$this->recordptr = $i;
@@ -31,6 +34,7 @@ class TableView2Widget extends CWidget
 //				if ($odd) $line = str_replace("<tr>","<tr class='odd'>",$line);
 				$layout .= $line;
 				$odd = !($odd);
+                $i++;
 			}
 		}
 		$layout .= "</tbody></table>";
