@@ -56,7 +56,7 @@ class MarketSalesList extends CListPageModel
             $this->status_type = is_numeric($this->status_type)?intval($this->status_type):0;
             switch ($this->status_type){
                 case 5://已分配
-                    $whereSql.=" and a.status_type=5 and a.allot_type=3";
+                    $whereSql.=" and a.status_type=5 and a.allot_type in (1,3)";
                     break;
                 case 6://跟进中
                 case 8://无意向
@@ -150,7 +150,7 @@ class MarketSalesList extends CListPageModel
     public function countNotify(){
 	    MarketFun::validateEmployee($this);
         //未跟进
-        $expr_sql = "a.status_type=5 and a.allot_type=3";
+        $expr_sql = "a.status_type=5 and a.allot_type in (1,3)";
         $row = Yii::app()->db->createCommand()
             ->select("count(a.id)")
             ->from("sal_market a")

@@ -258,7 +258,7 @@ class MarketDown extends CFormModel{
             case "user_email"://邮箱
             case "user_wechat"://微信号
                 if(mb_strlen($value, 'UTF-8')>=100){
-                    $dataRow["error"]=$title["name"]."长度不能大于100";
+                    $dataRow["error"]=$title["name"]."长度不能大于100。id:".$this->id;
                     $this->_errorList[]=$dataRow;
                     $this->_errorSum++;
                     $bool = false;

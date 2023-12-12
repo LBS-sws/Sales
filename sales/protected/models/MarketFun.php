@@ -424,10 +424,13 @@ class MarketFun{
 
     public static function getKASalesListForCity($city){
         $suffix = Yii::app()->params['envSuffix'];
+        $system_id = Yii::app()->params['systemId'];
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.code,a.name")
             ->from("hr$suffix.hr_employee a")
-            ->where("a.city=:city",array(":city"=>$city))
+            ->leftJoin("hr$suffix.hr_binding b","b.employee_id=a.id")
+            ->leftJoin("security$suffix.sec_user_access f","f.username=b.user_id and system_id='{$system_id}'")
+            ->where("a.city=:city and f.a_read_write like '%MT03%'",array(":city"=>$city))
             ->queryAll();//
         $arr=array();
         if($rows){

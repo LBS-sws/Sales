@@ -1,7 +1,7 @@
 <?php
 	$ftrbtn = array();
 	$ftrbtn[] = TbHtml::button(Yii::t('dialog','Close'), array('data-dismiss'=>'modal','class'=>'pull-left','color'=>TbHtml::BUTTON_COLOR_DEFAULT));
-	$ftrbtn[] = TbHtml::button(Yii::t('market','Reject'), array('color'=>TbHtml::BUTTON_COLOR_PRIMARY,'id'=>"btnRejectMarket"));
+	$ftrbtn[] = TbHtml::button(Yii::t('market','OK'), array('color'=>TbHtml::BUTTON_COLOR_PRIMARY,'id'=>"btnRejectMarket"));
 	$this->beginWidget('bootstrap.widgets.TbModal', array(
 					'id'=>'rejectDialog',
 					'header'=>Yii::t('market','Reject'),
@@ -13,7 +13,7 @@
 <div class="form-horizontal">
     <div class="form-group">
         <div class="col-lg-10 col-lg-offset-1">
-            <p class="form-control-static text-danger">拒绝后，该资料会转成无意向，且无法修改及跟进。</p>
+            <p class="form-control-static text-danger">确定后，该资料会转成无意向，且无法修改及跟进。</p>
         </div>
     </div>
     <div class="form-group">
