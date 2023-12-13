@@ -192,17 +192,24 @@ class MarketDown extends CFormModel{
         switch ($title["sql"]){
             case "company_name"://企业名称
                 $this->id=0;
-                $row = Yii::app()->db->createCommand()
-                    ->select('id,number_no')->from("sal_market")
-                    ->where("company_name=:name",array(":name"=>$value))->queryRow();
-                if($row){
-                    $dataRow["error"]="企业名称已存在，编号：".$row["number_no"];
+                if(mb_strlen($value, 'UTF-8')>=255){
+                    $dataRow["error"]=$title["name"]."长度不能大于255。";
                     $this->_errorList[]=$dataRow;
                     $this->_errorSum++;
                     $bool = false;
                 }else{
-                    $temp["sqlType"]="add";
-                    $temp["company_name"]=$value;
+                    $row = Yii::app()->db->createCommand()
+                        ->select('id,number_no')->from("sal_market")
+                        ->where("company_name=:name",array(":name"=>$value))->queryRow();
+                    if($row){
+                        $dataRow["error"]="企业名称已存在，编号：".$row["number_no"];
+                        $this->_errorList[]=$dataRow;
+                        $this->_errorSum++;
+                        $bool = false;
+                    }else{
+                        $temp["sqlType"]="add";
+                        $temp["company_name"]=$value;
+                    }
                 }
                 break;
             case "city"://城市
@@ -211,7 +218,14 @@ class MarketDown extends CFormModel{
                     $temp["city"]=$city;
                     $temp["city_name"]=$city;
                 }else{
-                    $temp["city_name"]=$value;
+                    if(mb_strlen($value, 'UTF-8')>=255){
+                        $dataRow["error"]=$title["name"]."长度不能大于255。";
+                        $this->_errorList[]=$dataRow;
+                        $this->_errorSum++;
+                        $bool = false;
+                    }else{
+                        $temp["city_name"]=$value;
+                    }
                 }
                 break;
             case "area"://区域
@@ -243,11 +257,33 @@ class MarketDown extends CFormModel{
                     $temp["company_state"]=$state;
                 }
                 break;
-            case "legal_user"://法定代表人
-            case "company_web"://企业网址
-            case "sign_address"://注册地址
-            case "run_address"://经营地址
-            case "company_note"://企业介绍
+            case "legal_user"://法定代表人(100)
+                if(!empty($value)){
+                    if(mb_strlen($value, 'UTF-8')>=100){
+                        $dataRow["error"]=$title["name"]."长度不能大于100。";
+                        $this->_errorList[]=$dataRow;
+                        $this->_errorSum++;
+                        $bool = false;
+                    }else{
+                        $temp[$title["sql"]]=$value;
+                    }
+                }
+                break;
+            case "company_web"://企业网址(255)
+            case "sign_address"://注册地址(255)
+            case "run_address"://经营地址(255)
+                if(!empty($value)){
+                    if(mb_strlen($value, 'UTF-8')>=255){
+                        $dataRow["error"]=$title["name"]."长度不能大于255。";
+                        $this->_errorList[]=$dataRow;
+                        $this->_errorSum++;
+                        $bool = false;
+                    }else{
+                        $temp[$title["sql"]]=$value;
+                    }
+                }
+                break;
+            case "company_note"://企业介绍(text)
                 if(!empty($value)){
                     $temp[$title["sql"]]=$value;
                 }
