@@ -26,6 +26,13 @@ return array(
 		'name'=>'Sales',
 		'icon'=>'fa fa-suitcase',
 	),
+	'nu'=>array(
+		'webroot'=>'https://dms.lbsapps.cn/nu',
+		'name'=>'New United',
+		'icon'=>'fa fa-suitcase',
+		'param'=>'/admin',
+		'script'=>'goNewUnited',
+	),
 //	'quiz'=>array(
 //		'webroot'=>'http://192.168.0.106/qz-new',
 //		'name'=>'Quiz',
