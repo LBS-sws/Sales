@@ -492,6 +492,8 @@ class KAStatisticForm extends CFormModel
         $employee_id = key_exists("employee_id",$_GET)?$_GET["employee_id"]:0;
         $this->search_year = key_exists("year",$_GET)?$_GET["year"]:0;
         $this->search_month = key_exists("month",$_GET)?$_GET["month"]:0;
+        $this->ka_year = $this->search_year;
+        $this->ka_month = $this->search_month;
         $type = key_exists("type",$_GET)?$_GET["type"]:0;
         $this->validateDate("","");
 
@@ -609,7 +611,8 @@ class KAStatisticForm extends CFormModel
     private function visit_num_table(){
         $suffix = Yii::app()->params['envSuffix'];
         //$whereSql = "DATE_FORMAT(a.apply_date,'%Y/%m/%d')<='{$this->end_date}'";
-        $whereSql = "a.apply_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
+        $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}' and ";
+        $whereSql.= "a.apply_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
@@ -624,8 +627,9 @@ class KAStatisticForm extends CFormModel
     //报价阶段詳情
     private function quota_num_table(){
         $suffix = Yii::app()->params['envSuffix'];
-        //$whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}'";
-        $whereSql = "a.apply_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
+        $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}' and ";
+        $whereSql.= "a.apply_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
+
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
