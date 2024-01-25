@@ -82,5 +82,16 @@ return array(
 
     'available date'=>'可成交日期',
     'available amt'=>'可成交金額',
+    'contact address'=>'聯系人地址',
+    'con user'=>'合同聯系人',
+    'con phone'=>'聯系人電話',
+    'con email'=>'聯系人郵箱',
+    'work user'=>'業務聯系人',
+    'work phone'=>'聯系人電話',
+    'work email'=>'聯系人郵箱',
+    'ava date'=>'可成交日期',
+    'ava amt'=>'可成交金額',
+    'ava rate'=>'預估成交%',
+    'ava fact amt'=>'實際成交金額',
 );
 ?>

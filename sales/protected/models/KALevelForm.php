@@ -7,15 +7,6 @@ class KALevelForm extends CFormModel
 	public $pro_name;
 	public $z_index=0;
 	public $z_display=1;
-    public $detail = array(
-        array('id'=>0,
-            'level_id'=>0,
-            'pro_name'=>'',
-            'z_index'=>0,
-            'z_display'=>1,
-            'uflag'=>'N',
-        ),
-    );
 
 	/**
 	 * Declares customized attribute labels.
@@ -53,21 +44,6 @@ class KALevelForm extends CFormModel
 			$this->pro_name = $row['pro_name'];
 			$this->z_index = $row['z_index'];
 			$this->z_display = $row['z_display'];
-            $sql = "select * from sal_ka_class where level_id=".$index." ";
-            $classRows = Yii::app()->db->createCommand($sql)->queryAll();
-            if($classRows){
-                $this->detail=array();
-                foreach ($classRows as $classRow){
-                    $temp = array();
-                    $temp["id"] = $classRow["id"];
-                    $temp["level_id"] = $classRow["level_id"];
-                    $temp["pro_name"] = $classRow["pro_name"];
-                    $temp["z_index"] = $classRow["z_index"];
-                    $temp["z_display"] = $classRow["z_display"];
-                    $temp['uflag'] = 'N';
-                    $this->detail[] = $temp;
-                }
-            }
 		}
 		return true;
 	}
@@ -78,7 +54,6 @@ class KALevelForm extends CFormModel
 		$transaction=$connection->beginTransaction();
 		try {
 			$this->save($connection);
-            $this->saveDetail($connection);
 			$transaction->commit();
 		}
 		catch(Exception $e) {
@@ -86,75 +61,6 @@ class KALevelForm extends CFormModel
 			throw new CHttpException(404,'Cannot update.');
 		}
 	}
-
-    protected function saveDetail(&$connection)
-    {
-        $uid = Yii::app()->user->id;
-
-        foreach ($_POST['KALevelForm']['detail'] as $row) {
-            $sql = '';
-            switch ($this->scenario) {
-                case 'delete':
-                    $sql = "delete from sal_ka_class where level_id = :level_id";
-                    break;
-                case 'new':
-                    if ($row['uflag']=='Y') {
-                        $sql = "insert into sal_ka_class(
-									level_id, pro_name, z_index, z_display,lcu
-								) values (
-									:level_id,:pro_name,:z_index,:z_display,:lcu
-								)";
-                    }
-                    break;
-                case 'edit':
-                    switch ($row['uflag']) {
-                        case 'D':
-                            $sql = "delete from sal_ka_class where id = :id";
-                            break;
-                        case 'Y':
-                            $sql = ($row['id']==0)
-                                ?
-                                "insert into sal_ka_class(
-									    level_id, pro_name, z_index, z_display,lcu
-									) values (
-									    :level_id,:pro_name,:z_index,:z_display,:lcu
-									)"
-                                :
-                                "update sal_ka_class set
-										pro_name = :pro_name, 
-										z_index = :z_index,
-										z_display = :z_display,
-										luu = :luu 
-									where id = :id
-									";
-                            break;
-                    }
-                    break;
-            }
-
-            if ($sql != '') {
-//                print_r('<pre>');
-//                print_r($sql);exit();
-                $command=$connection->createCommand($sql);
-                if (strpos($sql,':id')!==false)
-                    $command->bindParam(':id',$row['id'],PDO::PARAM_INT);
-                if (strpos($sql,':level_id')!==false)
-                    $command->bindParam(':level_id',$this->id,PDO::PARAM_INT);
-                if (strpos($sql,':pro_name')!==false)
-                    $command->bindParam(':pro_name',$row['pro_name'],PDO::PARAM_STR);
-                if (strpos($sql,':z_index')!==false)
-                    $command->bindParam(':z_index',$row['z_index'],PDO::PARAM_INT);
-                if (strpos($sql,':z_display')!==false)
-                    $command->bindParam(':z_display',$row['z_display'],PDO::PARAM_INT);
-                if (strpos($sql,':luu')!==false)
-                    $command->bindParam(':luu',$uid,PDO::PARAM_STR);
-                if (strpos($sql,':lcu')!==false)
-                    $command->bindParam(':lcu',$uid,PDO::PARAM_STR);
-                $command->execute();
-            }
-        }
-        return true;
-    }
 
 	protected function save(&$connection)
 	{
@@ -204,10 +110,14 @@ class KALevelForm extends CFormModel
 	}
 
 	public function isOccupied($index) {
-		$sql = "select a.id from sal_ka_service a where a.level_id=".$index." limit 1";
-		$row = Yii::app()->db->createCommand($sql)->queryRow();
-		$rtn = ($row !== false);
-		return $rtn;
+        if(is_numeric($index)){
+            $sql = "select a.id from sal_ka_bot a where a.level_id=".$index." limit 1";
+            $row = Yii::app()->db->createCommand($sql)->queryRow();
+            $rtn = ($row !== false);
+            return $rtn;
+        }else{
+            return true;
+        }
 	}
 
     public static function getLevelListForId($id=""){
@@ -223,31 +133,8 @@ class KALevelForm extends CFormModel
         return $list;
     }
 
-    public static function getClassListForId($id=""){
-        $arr = array("list"=>array(""=>""),"options"=>array());
-        $rows = Yii::app()->db->createCommand()->select("pro_name,id,level_id")->from("sal_ka_class")
-            ->where("(id>0 and z_display=1) or id=:id",array(":id"=>$id))
-            ->order("z_index desc")->queryAll();
-        if($rows){
-            foreach ($rows as $row){
-                $arr["list"][$row["id"]] = $row["pro_name"];
-                $arr["options"][$row["id"]] = array("data-level"=>$row["level_id"]);
-            }
-        }
-        return $arr;
-    }
-
     public static function getLevelNameForId($id){
         $row = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_level")
-            ->where("id=:id",array(":id"=>$id))->queryRow();
-        if($row){
-            return $row["pro_name"];
-        }
-        return $id;
-    }
-
-    public static function getClassNameForId($id){
-        $row = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_class")
             ->where("id=:id",array(":id"=>$id))->queryRow();
         if($row){
             return $row["pro_name"];

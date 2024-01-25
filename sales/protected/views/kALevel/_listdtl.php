@@ -3,6 +3,5 @@
 	<td><?php echo $this->record['pro_name']; ?></td>
 	<td><?php echo $this->record['z_index']; ?></td>
 	<td><?php echo $this->record['z_display']; ?></td>
-	<td><?php echo $this->record['class_name']; ?></td>
 </tr>
 

@@ -7,7 +7,7 @@
 	</th>
 	<th>
 		<?php echo Yii::app()->user->validRWFunction('KA01') ?
-				TbHtml::Button('+',array('id'=>'btnAddRow','title'=>Yii::t('misc','Add'),'size'=>TbHtml::BUTTON_SIZE_SMALL))
+				TbHtml::Button('+',array('class'=>'btnAddRow','title'=>Yii::t('misc','Add'),'size'=>TbHtml::BUTTON_SIZE_SMALL))
 				: '&nbsp;';
 		?>
 	</th>

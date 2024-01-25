@@ -67,7 +67,7 @@ class KABotList extends CListPageModel
             $this->sign_odds = is_numeric($this->sign_odds)?intval($this->sign_odds):0;
             $whereSql.=" and a.sign_odds={$this->sign_odds} ";
         }
-		$sql1 = "select a.id,a.available_date,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,
+		$sql1 = "select a.id,a.ava_show_date,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,
                 b.pro_name as class_name,
                 f.pro_name as source_name,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name, 
@@ -99,7 +99,7 @@ class KABotList extends CListPageModel
 					$clause .= General::getSqlConditionClause('a.contact_user',$svalue);
 					break;
 				case 'available_date':
-					$clause .= General::getSqlConditionClause('a.available_date',$svalue);
+					$clause .= General::getSqlConditionClause('a.ava_show_date',$svalue);
 					break;
 				case 'class_id':
 					$clause .= General::getSqlConditionClause('b.pro_name',$svalue);
@@ -150,7 +150,7 @@ class KABotList extends CListPageModel
                 $this->attr[] = array(
                     'id'=>$record['id'],
                     'apply_date'=>General::toDate($record['apply_date']),
-                    'available_date'=>General::toDate($record['available_date']),
+                    'available_date'=>General::toDate($record['ava_show_date']),
                     'customer_no'=>$record['customer_no'],
                     'customer_name'=>$record['customer_name'],
                     'contact_user'=>$record['contact_user'],

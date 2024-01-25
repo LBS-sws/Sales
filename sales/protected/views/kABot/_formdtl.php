@@ -12,7 +12,7 @@
 	<td>
 		<?php 
 			echo Yii::app()->user->validRWFunction('KA01')
-				? TbHtml::Button('-',array('id'=>'btnDelRow','title'=>Yii::t('misc','Delete'),'size'=>TbHtml::BUTTON_SIZE_SMALL))
+				? TbHtml::Button('-',array('class'=>'btnDelRow','title'=>Yii::t('misc','Delete'),'size'=>TbHtml::BUTTON_SIZE_SMALL))
 				: '&nbsp;';
 		?>
 		<?php echo CHtml::hiddenField($this->getFieldName('uflag'),$this->record['uflag']); ?>

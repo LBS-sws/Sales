@@ -109,16 +109,34 @@ class KABusineForm extends CFormModel
 	}
 
 	public function isOccupied($index) {
-		$sql = "select a.id from sal_ka_service a where a.busine_id=".$index." limit 1";
-		$row = Yii::app()->db->createCommand($sql)->queryRow();
-		$rtn = ($row !== false);
-		return $rtn;
+        if(is_numeric($index)){
+            $sql = "select a.id from sal_ka_bot a where a.busine_id=".$index." limit 1";
+            $row = Yii::app()->db->createCommand($sql)->queryRow();
+            $rtn = ($row !== false);
+            return $rtn;
+        }else{
+            return true;
+        }
 	}
 
     public static function getBusineListForId($id=""){
-        $list = array(""=>"");
+        $list = array();
         $rows = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_busine")
             ->where("(id>0 and z_display=1) or id=:id",array(":id"=>$id))
+            ->order("z_index desc")->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $list[$row["id"]] = $row["pro_name"];
+            }
+        }
+        return $list;
+    }
+
+    public static function getBusineListForArr($arr){
+        $list = array();
+        $selectSql = is_array($arr)?implode(",",$arr):"0";
+        $rows = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_busine")
+            ->where("(id>0 and z_display=1) or id in ({$selectSql})")
             ->order("z_index desc")->queryAll();
         if($rows){
             foreach ($rows as $row){
@@ -135,5 +153,19 @@ class KABusineForm extends CFormModel
             return $row["pro_name"];
         }
         return $id;
+    }
+
+    public static function getBusineNameForArr($arr){
+        $selectSql = is_array($arr)?implode(",",$arr):"0";
+        $rows = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_busine")
+            ->where("id in ({$selectSql})")->queryAll();
+        $name = "";
+        if($rows){
+            foreach ($rows as $row){
+                $name.= empty($name)?"":"、";
+                $name.=$row["pro_name"];
+            }
+        }
+        return $name;
     }
 }

@@ -39,6 +39,17 @@ class KABotForm extends CFormModel
 	public $status_type;
     public $reject_id;
 
+    //2024-1-25 年新增字段
+    public $ava_show_date;//可成交日期，列表需要
+    public $contact_adr;//联系人地址
+    public $con_user;//合同联系人
+    public $con_phone;//合同联系人电话
+    public $con_email;//合同联系人邮箱
+    public $work_user;//业务联系人
+    public $work_phone;//业务联系人电话
+    public $work_email;//业务联系人邮箱
+    public $class_other;//当客户类别为其它时
+
     public $employee_id;
     public $employee_code;
     public $employee_name;
@@ -49,6 +60,17 @@ class KABotForm extends CFormModel
             'bot_id'=>0,
             'info_date'=>'',
             'info_text'=>'',
+            'uflag'=>'N',
+        ),
+    );
+
+    public $avaInfo = array(
+        array('id'=>0,
+            'bot_id'=>0,
+            'ava_date'=>'',//可成交日期
+            'ava_amt'=>'',//可成交金额
+            'ava_rate'=>'',//预估成交%
+            'ava_fact_amt'=>'',//实际成交金额
             'uflag'=>'N',
         ),
     );
@@ -93,6 +115,19 @@ class KABotForm extends CFormModel
             'remark'=>Yii::t('ka','remark'),
             'info_date'=>Yii::t('ka','info date'),
             'info_text'=>Yii::t('ka','info text'),
+
+            'contact_adr'=>Yii::t('ka','contact address'),
+            'con_user'=>Yii::t('ka','con user'),
+            'con_phone'=>Yii::t('ka','con phone'),
+            'con_email'=>Yii::t('ka','con email'),
+            'work_user'=>Yii::t('ka','work user'),
+            'work_phone'=>Yii::t('ka','work phone'),
+            'work_email'=>Yii::t('ka','work email'),
+            'class_other'=>Yii::t('ka','class name'),
+            'ava_date'=>Yii::t('ka','ava date'),
+            'ava_amt'=>Yii::t('ka','ava amt'),
+            'ava_rate'=>Yii::t('ka','ava rate'),
+            'ava_fact_amt'=>Yii::t('ka','ava fact amt'),
 		);
 	}
 
@@ -106,6 +141,7 @@ class KABotForm extends CFormModel
                 contact_user,contact_phone,contact_email,contact_dept,source_text,source_id,
                 area_id,level_id,class_id,busine_id,link_id,year_amt,support_user,sign_odds,city,
                 available_date,available_amt,
+                contact_adr,con_user,con_phone,con_email,work_user,work_phone,work_email,class_other
                 quarter_amt,month_amt,sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
             array('apply_date,available_date,customer_name,kam_id,link_id','required'),
             array('apply_date','validateDate'),
@@ -148,13 +184,17 @@ class KABotForm extends CFormModel
         }
 		$sql = "select a.* from sal_ka_bot a left join hr{$suffix}.hr_employee h ON a.kam_id=h.id where a.id=".$index." {$whereSql}";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
+        //contact_adr,con_user,con_phone,con_email,work_user,work_phone,work_email,class_other
+
         $arr = array(
             "id"=>1,"apply_date"=>2,"available_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
             "head_city_id"=>1,"talk_city_id"=>1,"contact_user"=>1,"contact_phone"=>1,
             "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>1,
-            "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>1,"link_id"=>1,"year_amt"=>3,
+            "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,"year_amt"=>3,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"quarter_amt"=>3,"available_amt"=>3,
             "month_amt"=>3,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
+            "contact_adr"=>1,"con_user"=>1,"con_phone"=>1,"con_email"=>1,
+            "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
 		if ($row!==false) {
 			foreach ($arr as $key => $type){
@@ -167,6 +207,15 @@ class KABotForm extends CFormModel
                         break;
                     case 3://数字
                         $this->$key = $row[$key]===null?null:floatval($row[$key]);
+                        break;
+                    case 4://数组
+                        if($row[$key]===null){
+                            $this->$key=null;
+                        }elseif (is_numeric($row[$key])){//老版只能单选，需要兼容
+                            $this->$key=array($row[$key]);
+                        }else{
+                            $this->$key=json_decode($row[$key],true);
+                        }
                         break;
                     default:
                 }
@@ -186,6 +235,22 @@ class KABotForm extends CFormModel
                     $this->detail[] = $temp;
                 }
             }
+            $sql = "select * from sal_ka_bot_ava where bot_id=".$index." ";
+            $avaRows = Yii::app()->db->createCommand($sql)->queryAll();
+            if($avaRows){
+                $this->avaInfo=array();
+                foreach ($avaRows as $avaRow){
+                    $temp = array();
+                    $temp["id"] = $avaRow["id"];
+                    $temp["bot_id"] = $avaRow["bot_id"];
+                    $temp["ava_date"] = General::toDate($avaRow["ava_date"]);
+                    $temp["ava_amt"] = $avaRow["ava_amt"];
+                    $temp["ava_rate"] = $avaRow["ava_rate"];
+                    $temp["ava_fact_amt"] = !empty($avaRow["ava_fact_amt"])?floatval($avaRow["ava_fact_amt"]):null;
+                    $temp['uflag'] = 'N';
+                    $this->avaInfo[] = $temp;
+                }
+            }
             return true;
 		}else{
 		    return false;
@@ -199,9 +264,11 @@ class KABotForm extends CFormModel
             "id"=>1,"apply_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
             "head_city_id"=>1,"talk_city_id"=>1,"contact_user"=>1,"contact_phone"=>1,
             "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>1,
-            "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>1,"link_id"=>1,"year_amt"=>3,
+            "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,"year_amt"=>3,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"quarter_amt"=>3,
             "available_amt"=>3,"available_date"=>2,"month_amt"=>3,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
+            "contact_adr"=>1,"con_user"=>1,"con_phone"=>1,"con_email"=>1,
+            "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
 		if ($row!==false) {
 			foreach ($arr as $key => $type){
@@ -214,6 +281,15 @@ class KABotForm extends CFormModel
                         break;
                     case 3://数字
                         $this->$key = $row[$key]===null?null:floatval($row[$key]);
+                        break;
+                    case 4://数组
+                        if($row[$key]===null){
+                            $this->$key=null;
+                        }elseif (is_numeric($row[$key])){//老版只能单选，需要兼容
+                            $this->$key=array($row[$key]);
+                        }else{
+                            $this->$key=json_decode($row[$key],true);
+                        }
                         break;
                     default:
                 }
@@ -247,6 +323,7 @@ class KABotForm extends CFormModel
             $this->historySave($connection);
 			$this->save($connection);
             $this->saveDetail($connection);
+            $this->saveAvaInfo($connection);
 			$transaction->commit();
 		}
 		catch(Exception $e) {
@@ -260,7 +337,9 @@ class KABotForm extends CFormModel
         return array("apply_date","head_city_id","talk_city_id","contact_user",
             "contact_phone","contact_email","contact_dept","source_text","source_id","area_id",
             "level_id","class_id","busine_id","link_id","year_amt","available_amt","available_date","support_user","sign_odds",
-            "quarter_amt","month_amt","sign_date","sign_month","sign_amt","sum_amt"
+            "quarter_amt","month_amt","sign_date","sign_month","sign_amt","sum_amt",
+            "contact_adr","con_user","con_phone","con_email",
+            "work_user","work_phone","work_email","class_other"
         );
     }
 
@@ -281,7 +360,7 @@ class KABotForm extends CFormModel
                 $value = KALevelForm::getClassNameForId($value);
                 break;
             case "busine_id":
-                $value = KABusineForm::getBusineNameForId($value);
+                $value = KABusineForm::getBusineNameForArr($value);
                 break;
             case "link_id":
                 $value = KALinkForm::getLinkNameForId($value);
@@ -318,6 +397,7 @@ class KABotForm extends CFormModel
                     }
                 }
                 $this->getHistoryDetail($list["update_html"]);
+                $this->getHistoryAvaInfo($list["update_html"]);
                 if(!empty($list["update_html"])){
                     $list["update_html"] = implode("<br/>",$list["update_html"]);
                     $list["espe_type"] = $this->espe_type;
@@ -331,11 +411,12 @@ class KABotForm extends CFormModel
     }
 
     private function getHistoryDetail(&$list){
-        $followDate = empty($this->follow_date)?0:strtotime($this->follow_date);
+        $followDate = empty($this->follow_date)?0:$this->follow_date;
         if(isset($_POST['KABotForm']['detail'])){
             foreach ($_POST['KABotForm']['detail'] as $row) {
-                if(in_array($row['uflag'],array("N","Y"))&&strtotime($row['info_date'])>=$followDate){
-                    $this->follow_date = $row["info_date"];
+                if(in_array($row['uflag'],array("N","Y"))&&strtotime($row['info_date'])>=strtotime($followDate)){
+                    $followDate = $row["info_date"];
+                    $this->follow_date = $followDate;
                 }
                 switch ($row['uflag']){
                     case "Y"://修改
@@ -421,8 +502,116 @@ class KABotForm extends CFormModel
         return true;
     }
 
+    private function getHistoryAvaInfo(&$list){
+        $maxDate = $this->available_date;
+        if(isset($_POST['KABotForm']['avaInfo'])){
+            foreach ($_POST['KABotForm']['avaInfo'] as $row) {
+                if(in_array($row['uflag'],array("N","Y"))&&strtotime($row['ava_date'])>=strtotime($maxDate)){
+                    $maxDate = $row["ava_date"];
+                }
+                switch ($row['uflag']){
+                    case "Y"://修改
+                        if(!empty($row['id'])){
+                            $list[]="<span>修改了可成交列表：".$row['ava_date']."</span>";
+                        }
+                        break;
+                    case "D"://刪除
+                        $list[]="<span>删除了可成交列表：".$row['ava_date']."</span>";
+                        break;
+                }
+            }
+        }
+        $this->ava_show_date = $maxDate;
+        return $list;
+    }
+
+    protected function saveAvaInfo(&$connection)
+    {
+        $uid = Yii::app()->user->id;
+        if(isset($_POST['KABotForm']['avaInfo'])){
+            foreach ($_POST['KABotForm']['avaInfo'] as $row) {
+                if(!isset($row["ava_date"])){
+                    continue;
+                }
+                $sql = '';
+                switch ($this->scenario) {
+                    case 'delete':
+                        $sql = "delete from sal_ka_bot_ava where bot_id = :bot_id";
+                        break;
+                    case 'new':
+                        if ($row['uflag']=='Y') {
+                            $sql = "insert into sal_ka_bot_ava(
+									bot_id, ava_date, ava_amt, ava_rate, ava_fact_amt,lcu
+								) values (
+									:bot_id,:ava_date,:ava_amt,:ava_rate,:ava_fact_amt,:lcu
+								)";
+                        }
+                        break;
+                    case 'edit':
+                        switch ($row['uflag']) {
+                            case 'D':
+                                $sql = "delete from sal_ka_bot_ava where id = :id";
+                                break;
+                            case 'Y':
+                                $sql = ($row['id']==0)
+                                    ?
+                                    "insert into sal_ka_bot_ava(
+                                        bot_id, ava_date, ava_amt, ava_rate, ava_fact_amt,lcu
+                                    ) values (
+                                        :bot_id,:ava_date,:ava_amt,:ava_rate,:ava_fact_amt,:lcu
+									)"
+                                    :
+                                    "update sal_ka_bot_ava set
+										ava_date = :ava_date, 
+										ava_amt = :ava_amt,
+										ava_rate = :ava_rate,
+										ava_fact_amt = :ava_fact_amt,
+										luu = :luu 
+									where id = :id
+									";
+                                break;
+                        }
+                        break;
+                }
+
+                if ($sql != '') {
+//                print_r('<pre>');
+//                print_r($sql);exit();
+                    $command=$connection->createCommand($sql);
+                    if (strpos($sql,':id')!==false)
+                        $command->bindParam(':id',$row['id'],PDO::PARAM_INT);
+                    if (strpos($sql,':bot_id')!==false)
+                        $command->bindParam(':bot_id',$this->id,PDO::PARAM_INT);
+                    if (strpos($sql,':ava_date')!==false){
+                        $row['ava_date']=empty($row['ava_date'])?null:$row['ava_date'];
+                        $command->bindParam(':ava_date',$row['ava_date'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':ava_amt')!==false){
+                        $row['ava_amt']=empty($row['ava_amt'])?null:$row['ava_amt'];
+                        $command->bindParam(':ava_amt',$row['ava_amt'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':ava_rate')!==false){
+                        $row['ava_rate']=empty($row['ava_rate'])?null:$row['ava_rate'];
+                        $command->bindParam(':ava_rate',$row['ava_rate'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':ava_fact_amt')!==false){
+                        $row['ava_fact_amt']=empty($row['ava_fact_amt'])?null:$row['ava_fact_amt'];
+                        $command->bindParam(':ava_fact_amt',$row['ava_fact_amt'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':luu')!==false)
+                        $command->bindParam(':luu',$uid,PDO::PARAM_STR);
+                    if (strpos($sql,':lcu')!==false)
+                        $command->bindParam(':lcu',$uid,PDO::PARAM_STR);
+                    $command->execute();
+                }
+            }
+        }
+        return true;
+    }
+
 	protected function save(&$connection)
 	{
+        $busine_name = KABusineForm::getBusineNameForArr($this->busine_id);
         $uid = Yii::app()->user->id;
         $city = Yii::app()->user->city();
 	    $list=array();
@@ -430,9 +619,12 @@ class KABotForm extends CFormModel
             "apply_date"=>2,"follow_date"=>2,"customer_name"=>1,
             "head_city_id"=>3,"talk_city_id"=>3,"contact_user"=>1,"contact_phone"=>1,
             "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>3,
-            "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>3,"link_id"=>3,"year_amt"=>3,
+            "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>4,"link_id"=>3,"year_amt"=>3,
             "support_user"=>3,"sign_odds"=>3,"remark"=>1,"quarter_amt"=>3,
             "available_amt"=>3,"available_date"=>2,"month_amt"=>3,"sign_date"=>2,"sign_month"=>3,"sign_amt"=>3,"sum_amt"=>3,
+
+            "contact_adr"=>1,"con_user"=>1,"con_phone"=>1,"con_email"=>1,"ava_show_date"=>1,
+            "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
         foreach ($arr as $key=>$type){
             $value=$this->$key;
@@ -445,6 +637,9 @@ class KABotForm extends CFormModel
                 case 3://数字
                     $value = $value===""?null:floatval($value);
                     break;
+                case 4://数字
+                    $value = $value===""?null:json_encode($value);
+                    break;
             }
             $this->$key=$value;
             $list[$key] = $value;
@@ -454,6 +649,7 @@ class KABotForm extends CFormModel
                 $connection->createCommand()->delete("sal_ka_bot", "id=:id", array(":id" => $this->id));
                 break;
             case 'new':
+                $list["busine_name"] = $busine_name;
                 $list["kam_id"] = $this->employee_id;
                 $list["city"] = $city;
                 $list["lcu"] = $uid;
@@ -463,6 +659,7 @@ class KABotForm extends CFormModel
                 unset($list["apply_date"]);
                 unset($list["customer_name"]);
                 unset($list["kam_id"]);
+                $list["busine_name"] = $busine_name;
                 $list["luu"] = $uid;
                 $connection->createCommand()->update("sal_ka_bot", $list, "id=:id", array(":id" => $this->id));
                 break;
@@ -586,5 +783,31 @@ class KABotForm extends CFormModel
             }
         }
         return $list;
+    }
+
+    //查询相似的ka项目公司及备注
+    public function AjaxCustomerName($group){
+        $suffix = Yii::app()->params['envSuffix'];
+        $city = Yii::app()->user->city_allow();//swoper$suffix.swo_service
+        $html = "";
+        if($group!==""){
+            $group = str_replace("'","\'",$group);
+            $records = Yii::app()->db->createCommand()->select('a.customer_name,b.name,b.code')
+                ->from("sal_ka_bot a")
+                ->leftJoin("hr{$suffix}.hr_employee b","a.kam_id = b.id")
+                ->where("a.customer_name like '%$group%' or a.remark like '%$group%'")
+                ->queryAll();
+            if($records){
+                foreach ($records as $row){
+                    $text = $row["customer_name"]."  -  "."{$row["name"]} ({$row['code']})";
+                    $html.="<li><a class='clickThis'>".$text."</a>";
+                }
+            }else{
+                $html = "<li><a>没有结果</a></li>";
+            }
+        }else{
+            $html = "<li><a>请输入客户名称</a></li>";
+        }
+        return $html;
     }
 }

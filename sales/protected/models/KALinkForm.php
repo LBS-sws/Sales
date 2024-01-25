@@ -115,10 +115,14 @@ class KALinkForm extends CFormModel
 	}
 
 	public function isOccupied($index) {
-		$sql = "select a.id from sal_ka_service a where a.class_id=".$index." limit 1";
-		$row = Yii::app()->db->createCommand($sql)->queryRow();
-		$rtn = ($row !== false);
-		return $rtn;
+        if(is_numeric($index)){
+            $sql = "select a.id from sal_ka_bot a where a.link_id=".$index." limit 1";
+            $row = Yii::app()->db->createCommand($sql)->queryRow();
+            $rtn = ($row !== false);
+            return $rtn;
+        }else{
+            return true;
+        }
 	}
 
     public static function getLinkListForId($id=""){
@@ -139,6 +143,15 @@ class KALinkForm extends CFormModel
             ->where("id=:id",array(":id"=>$id))->queryRow();
         if($row){
             return "(".$row["rate_num"]."%) ".$row["pro_name"];
+        }
+        return $id;
+    }
+
+    public static function getLinkRateNumForId($id){
+        $row = Yii::app()->db->createCommand()->select("rate_num")->from("sal_ka_link")
+            ->where("id=:id",array(":id"=>$id))->queryRow();
+        if($row){
+            return is_numeric($row["rate_num"])?intval($row["rate_num"]):0;
         }
         return $id;
     }

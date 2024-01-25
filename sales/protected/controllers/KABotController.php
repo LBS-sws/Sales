@@ -24,7 +24,7 @@ class KABotController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','delete','save','ajaxSupportUser'),
+				'actions'=>array('new','edit','delete','save','ajaxSupportUser','AjaxCustomerName'),
 				'expression'=>array('KABotController','allowReadWrite'),
 			),
 			array('allow', 
@@ -36,6 +36,12 @@ class KABotController extends Controller
 			),
 		);
 	}
+
+    public function actionAjaxCustomerName($group='')
+    {
+        $model = new KABotForm();
+        echo $model->AjaxCustomerName($group);
+    }
 
     //修改ka項目的操作記錄日期 id：歷史記錄的id
     public function actionUpdateHistory($id,$date){

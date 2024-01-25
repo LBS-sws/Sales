@@ -199,6 +199,10 @@ return array(
                 'access'=>'KA03',
                 'url'=>'KASource/index',
             ),
+            'KA Class'=>array(//客户类别
+                'access'=>'KA10',
+                'url'=>'KAClass/index',
+            ),
             'KA Level'=>array(//客户分级
                 'access'=>'KA09',
                 'url'=>'KALevel/index',

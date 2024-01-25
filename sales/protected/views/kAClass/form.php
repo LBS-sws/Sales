@@ -10,7 +10,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 
 <section class="content-header">
 	<h1>
-		<strong><?php echo Yii::t('app','KA Level'); ?></strong>
+		<strong><?php echo Yii::t('app','KA Class'); ?></strong>
 	</h1>
 </section>
 
@@ -20,15 +20,15 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 		<?php 
 			if ($model->scenario!='new' && $model->scenario!='view') {
 				echo TbHtml::button('<span class="fa fa-file-o"></span> '.Yii::t('misc','Add Another'), array(
-					'submit'=>Yii::app()->createUrl('kALevel/new')));
+					'submit'=>Yii::app()->createUrl('kAClass/new')));
 			}
 		?>
 		<?php echo TbHtml::button('<span class="fa fa-reply"></span> '.Yii::t('misc','Back'), array(
-				'submit'=>Yii::app()->createUrl('kALevel/index'))); 
+				'submit'=>Yii::app()->createUrl('kAClass/index'))); 
 		?>
 <?php if ($model->scenario!='view'): ?>
 			<?php echo TbHtml::button('<span class="fa fa-upload"></span> '.Yii::t('misc','Save'), array(
-				'submit'=>Yii::app()->createUrl('kALevel/save'))); 
+				'submit'=>Yii::app()->createUrl('kAClass/save'))); 
 			?>
 <?php endif ?>
 <?php if ($model->scenario=='edit'): ?>
@@ -82,7 +82,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 
 <?php
 
-$js = Script::genDeleteData(Yii::app()->createUrl('kALevel/delete'));
+$js = Script::genDeleteData(Yii::app()->createUrl('kAClass/delete'));
 Yii::app()->clientScript->registerScript('deleteRecord',$js,CClientScript::POS_READY);
 
 $js = Script::genReadonlyField();

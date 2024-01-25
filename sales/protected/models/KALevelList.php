@@ -52,13 +52,9 @@ class KALevelList extends CListPageModel
 		$this->attr = array();
 		if (count($records) > 0) {
 			foreach ($records as $k=>$record) {
-                $sql = "select * from sal_ka_class where level_id=".$record['id']." ";
-                $classRows = Yii::app()->db->createCommand($sql)->queryAll();
-                $classRows = $classRows?array_column($classRows,"pro_name"):array();
                 $this->attr[] = array(
                     'id'=>$record['id'],
                     'pro_name'=>$record['pro_name'],
-                    'class_name'=>implode("、",$classRows),
                     'z_display'=>empty($record['z_display'])?Yii::t("ka","no"):Yii::t("ka","yes"),
                     'z_index'=>$record['z_index'],
                 );

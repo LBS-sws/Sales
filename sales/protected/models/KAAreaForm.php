@@ -115,10 +115,14 @@ class KAAreaForm extends CFormModel
 	}
 
 	public function isOccupied($index) {
-		$sql = "select a.id from sal_ka_service a where a.busine_id=".$index." limit 1";
-		$row = Yii::app()->db->createCommand($sql)->queryRow();
-		$rtn = ($row !== false);
-		return $rtn;
+        if(is_numeric($index)){
+            $sql = "select a.id from sal_ka_bot a where a.area_id=".$index." limit 1";
+            $row = Yii::app()->db->createCommand($sql)->queryRow();
+            $rtn = ($row !== false);
+            return $rtn;
+        }else{
+            return true;
+        }
 	}
 
 	public static function getCityListForId($id=""){
