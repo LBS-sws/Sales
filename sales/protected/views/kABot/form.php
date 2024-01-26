@@ -145,32 +145,6 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                         array('readonly'=>($model->scenario=='view'))
                     ); ?>
                 </div>
-                <?php echo $form->labelEx($model,'contact_adr',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-5">
-                    <?php echo $form->textField($model, 'contact_adr',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'con_user',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'con_user',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'con_phone',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'con_phone',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'con_email',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'con_email',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
             </div>
             <div class="form-group">
                 <?php echo $form->labelEx($model,'work_user',array('class'=>"col-sm-2 control-label")); ?>
@@ -188,6 +162,14 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'work_email',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->textField($model, 'work_email',
+                        array('readonly'=>($model->scenario=='view'))
+                    ); ?>
+                </div>
+            </div>
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'contact_adr',array('class'=>"col-sm-2 control-label")); ?>
+                <div class="col-sm-7">
+                    <?php echo $form->textField($model, 'contact_adr',
                         array('readonly'=>($model->scenario=='view'))
                     ); ?>
                 </div>

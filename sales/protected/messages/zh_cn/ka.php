@@ -18,7 +18,7 @@ return array(
     'apply date'=>'录入日期',
     'customer no'=>'客户编号',
     'customer name'=>'客户公司',
-    'contact user'=>'客户联系人',
+    'contact user'=>'合同联系人',
     'source name'=>'客户来源',
     'class name'=>'客户类别',
     'KAM'=>'KA销售',

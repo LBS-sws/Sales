@@ -42,9 +42,6 @@ class KABotForm extends CFormModel
     //2024-1-25 年新增字段
     public $ava_show_date;//可成交日期，列表需要
     public $contact_adr;//联系人地址
-    public $con_user;//合同联系人
-    public $con_phone;//合同联系人电话
-    public $con_email;//合同联系人邮箱
     public $work_user;//业务联系人
     public $work_phone;//业务联系人电话
     public $work_email;//业务联系人邮箱
@@ -117,9 +114,6 @@ class KABotForm extends CFormModel
             'info_text'=>Yii::t('ka','info text'),
 
             'contact_adr'=>Yii::t('ka','contact address'),
-            'con_user'=>Yii::t('ka','con user'),
-            'con_phone'=>Yii::t('ka','con phone'),
-            'con_email'=>Yii::t('ka','con email'),
             'work_user'=>Yii::t('ka','work user'),
             'work_phone'=>Yii::t('ka','work phone'),
             'work_email'=>Yii::t('ka','work email'),
@@ -141,7 +135,7 @@ class KABotForm extends CFormModel
                 contact_user,contact_phone,contact_email,contact_dept,source_text,source_id,
                 area_id,level_id,class_id,busine_id,link_id,year_amt,support_user,sign_odds,city,
                 available_date,available_amt,
-                contact_adr,con_user,con_phone,con_email,work_user,work_phone,work_email,class_other
+                contact_adr,work_user,work_phone,work_email,class_other
                 quarter_amt,month_amt,sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
             array('apply_date,available_date,customer_name,kam_id,link_id','required'),
             array('apply_date','validateDate'),
@@ -184,7 +178,7 @@ class KABotForm extends CFormModel
         }
 		$sql = "select a.* from sal_ka_bot a left join hr{$suffix}.hr_employee h ON a.kam_id=h.id where a.id=".$index." {$whereSql}";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
-        //contact_adr,con_user,con_phone,con_email,work_user,work_phone,work_email,class_other
+        //contact_adr,work_user,work_phone,work_email,class_other
 
         $arr = array(
             "id"=>1,"apply_date"=>2,"available_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
@@ -193,7 +187,7 @@ class KABotForm extends CFormModel
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,"year_amt"=>3,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"quarter_amt"=>3,"available_amt"=>3,
             "month_amt"=>3,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
-            "contact_adr"=>1,"con_user"=>1,"con_phone"=>1,"con_email"=>1,
+            "contact_adr"=>1,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
 		if ($row!==false) {
@@ -267,7 +261,7 @@ class KABotForm extends CFormModel
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,"year_amt"=>3,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"quarter_amt"=>3,
             "available_amt"=>3,"available_date"=>2,"month_amt"=>3,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
-            "contact_adr"=>1,"con_user"=>1,"con_phone"=>1,"con_email"=>1,
+            "contact_adr"=>1,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
 		if ($row!==false) {
@@ -338,7 +332,7 @@ class KABotForm extends CFormModel
             "contact_phone","contact_email","contact_dept","source_text","source_id","area_id",
             "level_id","class_id","busine_id","link_id","year_amt","available_amt","available_date","support_user","sign_odds",
             "quarter_amt","month_amt","sign_date","sign_month","sign_amt","sum_amt",
-            "contact_adr","con_user","con_phone","con_email",
+            "contact_adr",
             "work_user","work_phone","work_email","class_other"
         );
     }
@@ -623,7 +617,7 @@ class KABotForm extends CFormModel
             "support_user"=>3,"sign_odds"=>3,"remark"=>1,"quarter_amt"=>3,
             "available_amt"=>3,"available_date"=>2,"month_amt"=>3,"sign_date"=>2,"sign_month"=>3,"sign_amt"=>3,"sum_amt"=>3,
 
-            "contact_adr"=>1,"con_user"=>1,"con_phone"=>1,"con_email"=>1,"ava_show_date"=>1,
+            "contact_adr"=>1,"ava_show_date"=>1,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
         foreach ($arr as $key=>$type){

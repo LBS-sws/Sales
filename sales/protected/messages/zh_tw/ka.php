@@ -17,7 +17,7 @@ return array(
     'reject'=>'拒絕',
     'apply date'=>'錄入日期',
     'customer no'=>'客戶編號',
-    'customer name'=>'客戶公司',
+    'customer name'=>'合同公司',
     'contact user'=>'客戶聯系人',
     'source name'=>'客戶來源',
     'class name'=>'客戶類別',
