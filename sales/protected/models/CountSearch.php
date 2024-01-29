@@ -3,7 +3,7 @@
 /**
  * 合同同比分析、查詢
  */
-class CountSearch{
+class CountSearch extends SearchForCurlU {
 
     private static $whereSQL=" and not(f.rpt_cat='INV' and f.single=1)";
     private static $IDBool=true;//是否需要ID服務的查詢
@@ -822,6 +822,9 @@ class CountSearch{
 
     //获取U系统的產品数据
     public static function getUInvMoney($startDay,$endDay,$city_allow=""){
+        if(self::$system==0){//2024年1月29日年大陆版使用了新的U系统
+            return self::getCurlInvForCity($startDay,$endDay,$city_allow);
+        }
         if(self::$system===1){//台灣版的產品為lbs的inv新增
             return self::getServiceTWForAdd($startDay,$endDay,$city_allow);
         }
