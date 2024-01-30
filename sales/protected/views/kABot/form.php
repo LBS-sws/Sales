@@ -226,6 +226,12 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                         array('readonly'=>($model->scenario=='view'),'id'=>'link_id')
                     ); ?>
                 </div>
+                <?php echo $form->labelEx($model,'support_user',array('class'=>"col-sm-1 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->dropDownList($model, 'support_user',KABotForm::getSupportUserList($model->talk_city_id,$model->support_user),
+                        array('readonly'=>($model->scenario=='view'),'id'=>'support_user')
+                    ); ?>
+                </div>
             </div>
             <div class="form-group">
                 <?php echo $form->labelEx($model,'available_date',array('class'=>"col-sm-2 control-label")); ?>
@@ -240,25 +246,10 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                         array('readonly'=>($model->scenario=='view'),'id'=>'available_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'support_user',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->dropDownList($model, 'support_user',KABotForm::getSupportUserList($model->talk_city_id,$model->support_user),
-                        array('readonly'=>($model->scenario=='view'),'id'=>'support_user')
-                    ); ?>
-                </div>
                 <?php echo $form->labelEx($model,'sign_odds',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->dropDownList($model, 'sign_odds',KABotForm::getSignOddsListForId(),
                         array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'sum_amt',array('class'=>"col-sm-1 control-label text-red")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->numberField($model, 'sum_amt',
-                        array('readonly'=>(true),'id'=>'sum_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
             </div>
@@ -276,10 +267,10 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                         array('readonly'=>($model->scenario=='view'))
                     ); ?>
                 </div>
-                <?php echo $form->labelEx($model,'sign_amt',array('class'=>"col-sm-1 control-label")); ?>
+                <?php echo $form->labelEx($model,'sum_amt',array('class'=>"col-sm-1 control-label text-red")); ?>
                 <div class="col-sm-2">
-                    <?php echo $form->numberField($model, 'sign_amt',
-                        array('readonly'=>($model->scenario=='view'),'id'=>'sign_amt','class'=>'changeSumAmt','prepend'=>'<span class="fa fa-money"></span>')
+                    <?php echo $form->numberField($model, 'sum_amt',
+                        array('readonly'=>(true),'id'=>'sum_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
             </div>
@@ -304,19 +295,10 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 
             <div class="form-group">
                 <?php echo $form->labelEx($model,'remark',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-10">
-                    <div class="row ">
-                        <div class="media_table">
-                            <div class="media_remark">
-                                <?php echo $form->textArea($model, 'remark',
-                                    array('readonly'=>($model->scenario=='view'),'rows'=>4)
-                                ); ?>
-                            </div>
-                            <div class="media_text">
-                                <p class="text-red">请备注门店总数/分布城市/集团子品牌/竞争对手份额及报价</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="col-sm-8">
+                    <?php echo $form->textArea($model, 'remark',
+                        array('readonly'=>($model->scenario=='view'),'rows'=>4)
+                    ); ?>
                 </div>
             </div>
 
