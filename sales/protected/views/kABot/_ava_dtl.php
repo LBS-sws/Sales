@@ -1,22 +1,17 @@
 <tr>
 	<td>
 		<?php echo TbHtml::textField($this->getFieldName('ava_date'),  $this->record['ava_date'],
-								array('disabled'=>$this->model->scenario=='view','class'=>'ava_date','prepend'=>'<span class="fa fa-calendar"></span>')
+								array('disabled'=>$this->model->scenario=='view','class'=>'ava_date','autocomplete'=>'off','prepend'=>'<span class="fa fa-calendar"></span>')
 		); ?>
 	</td>
 	<td>
 		<?php echo TbHtml::numberField($this->getFieldName('ava_amt'),  $this->record['ava_amt'],
-								array('disabled'=>$this->model->scenario=='view','min'=>0)
-		); ?>
-	</td>
-	<td>
-		<?php echo TbHtml::numberField($this->getFieldName('ava_rate'),  $this->record['ava_rate'],
-								array('disabled'=>$this->model->scenario=='view','min'=>0,'append'=>"%")
+								array('disabled'=>$this->model->scenario=='view','autocomplete'=>'off','min'=>0)
 		); ?>
 	</td>
 	<td>
 		<?php echo TbHtml::numberField($this->getFieldName('ava_fact_amt'),  $this->record['ava_fact_amt'],
-								array('disabled'=>$this->model->scenario=='view','min'=>0)
+								array('disabled'=>$this->model->scenario=='view','min'=>0,'autocomplete'=>'off','class'=>'changeSumAmt')
 		); ?>
 	</td>
 	<td>

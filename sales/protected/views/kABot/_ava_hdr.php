@@ -6,9 +6,6 @@
 		<?php echo TbHtml::label($this->getLabelName('ava_amt'), false); ?>
 	</th>
 	<th>
-		<?php echo TbHtml::label($this->getLabelName('ava_rate'), false); ?>
-	</th>
-	<th>
 		<?php echo TbHtml::label($this->getLabelName('ava_fact_amt'), false); ?>
 	</th>
 	<th>

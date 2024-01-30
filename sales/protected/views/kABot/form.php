@@ -8,12 +8,22 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 'layout'=>TbHtml::FORM_LAYOUT_HORIZONTAL,
 )); ?>
 <style>
+    .media_table,.media_remark,.media_text {
+        display: block;
+        width: 100%;
+    }
+    .media_remark,.media_text{ padding: 0px 15px;}
+    .media_text>p{ margin: 0px;}
     @media (min-width: 768px){
         .col-sm-1.control-label {
             padding-left: 0px;
             padding-right: 0px;
             white-space: nowrap;
         }
+        .media_table{ display: table;width: 100%;}
+        .media_remark,.media_text{ display: table-cell;vertical-align: bottom;}
+        .media_remark{ width: 50%;}
+        .media_text{ padding: 0px;}
     }
 </style>
 
@@ -139,14 +149,6 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 </div>
             </div>
             <div class="form-group">
-                <?php echo $form->labelEx($model,'contact_dept',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'contact_dept',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group">
                 <?php echo $form->labelEx($model,'work_user',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->textField($model, 'work_user',
@@ -183,16 +185,8 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 </div>
                 <?php echo $form->labelEx($model,'source_text',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'source_text',
+                    <?php echo $form->dropDownList($model, 'source_text',KASraForm::getSourceListForId($model->source_text),
                         array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'busine_id',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-7">
-                    <?php echo $form->dropDownList($model, 'busine_id',KABusineForm::getBusineListForArr($model->busine_id),
-                        array('readonly'=>($model->scenario=='view'),'id'=>'busine_id','class'=>'select2','multiple'=>'multiple')
                     ); ?>
                 </div>
             </div>
@@ -218,6 +212,14 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 </div>
             </div>
             <div class="form-group">
+                <?php echo $form->labelEx($model,'busine_id',array('class'=>"col-sm-2 control-label")); ?>
+                <div class="col-sm-7">
+                    <?php echo $form->dropDownList($model, 'busine_id',KABusineForm::getBusineListForArr($model->busine_id),
+                        array('readonly'=>($model->scenario=='view'),'id'=>'busine_id','class'=>'select2','multiple'=>'multiple')
+                    ); ?>
+                </div>
+            </div>
+            <div class="form-group">
                 <?php echo $form->labelEx($model,'link_id',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-4">
                     <?php echo $form->dropDownList($model, 'link_id',KALinkForm::getLinkListForId($model->link_id),
@@ -225,6 +227,42 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                     ); ?>
                 </div>
             </div>
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'available_date',array('class'=>"col-sm-2 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->textField($model, 'available_date',
+                        array('readonly'=>($model->scenario=='view'),'id'=>'available_date','prepend'=>'<span class="fa fa-calendar"></span>')
+                    ); ?>
+                </div>
+                <?php echo $form->labelEx($model,'available_amt',array('class'=>"col-sm-1 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->numberField($model, 'available_amt',
+                        array('readonly'=>($model->scenario=='view'),'id'=>'available_amt','class'=>'changeSumAmt','prepend'=>'<span class="fa fa-money"></span>')
+                    ); ?>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'support_user',array('class'=>"col-sm-2 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->dropDownList($model, 'support_user',KABotForm::getSupportUserList($model->talk_city_id,$model->support_user),
+                        array('readonly'=>($model->scenario=='view'),'id'=>'support_user')
+                    ); ?>
+                </div>
+                <?php echo $form->labelEx($model,'sign_odds',array('class'=>"col-sm-1 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->dropDownList($model, 'sign_odds',KABotForm::getSignOddsListForId(),
+                        array('readonly'=>($model->scenario=='view'))
+                    ); ?>
+                </div>
+                <?php echo $form->labelEx($model,'sum_amt',array('class'=>"col-sm-1 control-label text-red")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->numberField($model, 'sum_amt',
+                        array('readonly'=>(true),'id'=>'sum_amt','prepend'=>'<span class="fa fa-money"></span>')
+                    ); ?>
+                </div>
+            </div>
+
             <div class="form-group">
                 <?php echo $form->labelEx($model,'sign_date',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
@@ -245,41 +283,6 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                     ); ?>
                 </div>
             </div>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'month_amt',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->numberField($model, 'month_amt',
-                        array('readonly'=>($model->scenario=='view'),'id'=>'month_amt','prepend'=>'<span class="fa fa-money"></span>')
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'quarter_amt',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->numberField($model, 'quarter_amt',
-                        array('readonly'=>($model->scenario=='view'),'id'=>'quarter_amt','prepend'=>'<span class="fa fa-money"></span>')
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'year_amt',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->numberField($model, 'year_amt',
-                        array('readonly'=>($model->scenario=='view'),'id'=>'year_amt','prepend'=>'<span class="fa fa-money"></span>')
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'available_date',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'available_date',
-                        array('readonly'=>($model->scenario=='view'),'id'=>'available_date','prepend'=>'<span class="fa fa-calendar"></span>')
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'available_amt',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->numberField($model, 'available_amt',
-                        array('readonly'=>($model->scenario=='view'),'id'=>'available_amt','prepend'=>'<span class="fa fa-money"></span>')
-                    ); ?>
-                </div>
-            </div>
-
 
             <div id="ava_box" class="box changeTable <?php echo KALinkForm::getLinkRateNumForId($model->link_id)!==100?"hide":"";?>">
                 <div class="box-body table-responsive">
@@ -300,31 +303,20 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
             </div>
 
             <div class="form-group">
-                <?php echo $form->labelEx($model,'support_user',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->dropDownList($model, 'support_user',KABotForm::getSupportUserList($model->talk_city_id,$model->support_user),
-                        array('readonly'=>($model->scenario=='view'),'id'=>'support_user')
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'sign_odds',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->dropDownList($model, 'sign_odds',KABotForm::getSignOddsListForId(),
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'sum_amt',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->numberField($model, 'sum_amt',
-                        array('readonly'=>(true),'id'=>'sum_amt','prepend'=>'<span class="fa fa-money"></span>')
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group">
                 <?php echo $form->labelEx($model,'remark',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-5">
-                    <?php echo $form->textArea($model, 'remark',
-                        array('readonly'=>($model->scenario=='view'),'rows'=>4)
-                    ); ?>
+                <div class="col-sm-10">
+                    <div class="row ">
+                        <div class="media_table">
+                            <div class="media_remark">
+                                <?php echo $form->textArea($model, 'remark',
+                                    array('readonly'=>($model->scenario=='view'),'rows'=>4)
+                                ); ?>
+                            </div>
+                            <div class="media_text">
+                                <p class="text-red">请备注门店总数/分布城市/集团子品牌/竞争对手份额及报价</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -429,23 +421,13 @@ $('body').on('click',function(){
     $('#customer_name').parent('div').removeClass('open');
 });
 
-    $('#month_amt,#quarter_amt,#year_amt,#sign_amt,#available_amt').change(function(){
-        var sign_amt=$('#sign_amt').val();
-        var year_amt=$('#year_amt').val();
-        var quarter_amt=$('#quarter_amt').val();
-        var month_amt=$('#month_amt').val();
-        var available_amt=$('#available_amt').val();
+    $('body').delegate('.changeSumAmt','change keyup',function(){
         var sum_amt=0;
-        if(sign_amt!=''){
-            sum_amt = sign_amt;
-        }else if(year_amt==''&&quarter_amt==''&&month_amt==''&&available_amt==''){
-            sum_amt='';
-        }else{
-            sum_amt+=year_amt==''?0:parseFloat(year_amt);
-            sum_amt+=quarter_amt==''?0:parseFloat(quarter_amt);
-            sum_amt+=month_amt==''?0:parseFloat(month_amt);
-            sum_amt+=available_amt==''?0:parseFloat(available_amt);
-        }
+        $('.changeSumAmt').each(function(){
+            var amt=$(this).val();
+            amt = amt==''?0:parseFloat(amt);
+            sum_amt+=amt;
+        });
         $('#sum_amt').val(sum_amt);
     });
 
@@ -533,7 +515,7 @@ $('.btnAddRow').on('click',function() {
 			}
 			if (id.indexOf('_ava_date') != -1){
 			    $(this).attr('value','');
-			    $(this).datepicker({autoclose: true,language: '$language', format: 'yyyy/mm/dd'});
+			    $(this).datepicker({autoclose: true,language: '$language', format: 'yyyy/mm',maxViewMode:2,minViewMode:1});
 			}
 			if (id.indexOf('_info_text') != -1) $(this).val('');
 			if (id.indexOf('_ava_amt') != -1) $(this).val('');
@@ -551,12 +533,15 @@ EOF;
     Yii::app()->clientScript->registerScript('addRow',$js,CClientScript::POS_READY);
 
     $dateList = array(
-        'sign_date,.info_date,.ava_date,#available_date',
+        'sign_date,.info_date,#available_date',
     );
     if($model->scenario=='new'){
         $dateList[]="apply_date";
     }
     $js = Script::genDatePicker($dateList);
+    $js.="
+		$('.ava_date').datepicker({autoclose: true,language: '$language', format: 'yyyy/mm',maxViewMode:2,minViewMode:1});
+	";
     Yii::app()->clientScript->registerScript('datePick',$js,CClientScript::POS_READY);
 }
 $js = Script::genReadonlyField();

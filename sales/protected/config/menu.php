@@ -195,9 +195,13 @@ return array(
                 'access'=>'KA05',
                 'url'=>'KAArea/index',
             ),
-            'KA Source'=>array(//客户来源
+            'KA Source'=>array(//客户来源（2024年1月29日改为客户类型）
                 'access'=>'KA03',
                 'url'=>'KASource/index',
+            ),
+            'KA Source(A)'=>array(//客户来源（2024年1月29日新加客户来源）
+                'access'=>'KA11',
+                'url'=>'KASra/index',
             ),
             'KA Class'=>array(//客户类别
                 'access'=>'KA10',

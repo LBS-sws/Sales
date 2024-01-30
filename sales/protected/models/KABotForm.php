@@ -66,7 +66,6 @@ class KABotForm extends CFormModel
             'bot_id'=>0,
             'ava_date'=>'',//可成交日期
             'ava_amt'=>'',//可成交金额
-            'ava_rate'=>'',//预估成交%
             'ava_fact_amt'=>'',//实际成交金额
             'uflag'=>'N',
         ),
@@ -132,11 +131,11 @@ class KABotForm extends CFormModel
 	{
 		return array(
             array('id,apply_date,customer_no,customer_name,kam_id,head_city_id,talk_city_id,
-                contact_user,contact_phone,contact_email,contact_dept,source_text,source_id,
-                area_id,level_id,class_id,busine_id,link_id,year_amt,support_user,sign_odds,city,
+                contact_user,contact_phone,contact_email,source_text,source_id,
+                area_id,level_id,class_id,busine_id,link_id,support_user,sign_odds,city,
                 available_date,available_amt,
-                contact_adr,work_user,work_phone,work_email,class_other
-                quarter_amt,month_amt,sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
+                contact_adr,work_user,work_phone,work_email,class_other,
+                sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
             array('apply_date,available_date,customer_name,kam_id,link_id','required'),
             array('apply_date','validateDate'),
             array('sign_amt','computeSignAmt'),
@@ -155,13 +154,16 @@ class KABotForm extends CFormModel
 
 	public function computeSignAmt($attribute, $params){
         $this->sum_amt = 0;
-        if(!empty($this->sign_amt)){
-            $this->sum_amt = $this->sign_amt;
-        }else{
-            $this->sum_amt+=empty($this->month_amt)?0:$this->month_amt;
-            $this->sum_amt+=empty($this->quarter_amt)?0:$this->quarter_amt;
-            $this->sum_amt+=empty($this->year_amt)?0:$this->year_amt;
-            $this->sum_amt+=empty($this->available_amt)?0:$this->available_amt;
+        $this->sum_amt+=empty($this->available_amt)?0:$this->available_amt;
+        if(isset($_POST['KABotForm']['avaInfo'])) {
+            foreach ($_POST['KABotForm']['avaInfo'] as $row) {
+                if(empty($row["ava_date"])){
+                    continue;
+                }
+                if(isset($row["uflag"])&&$row["uflag"]!="D"){
+                    $this->sum_amt+=!empty($row["ava_fact_amt"])?$row["ava_fact_amt"]:0;
+                }
+            }
         }
         $this->follow_date = $this->apply_date;
     }
@@ -183,10 +185,10 @@ class KABotForm extends CFormModel
         $arr = array(
             "id"=>1,"apply_date"=>2,"available_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
             "head_city_id"=>1,"talk_city_id"=>1,"contact_user"=>1,"contact_phone"=>1,
-            "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>1,
-            "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,"year_amt"=>3,
-            "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"quarter_amt"=>3,"available_amt"=>3,
-            "month_amt"=>3,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
+            "contact_email"=>1,"source_text"=>1,"source_id"=>1,
+            "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,
+            "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"available_amt"=>3,
+            "sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
             "contact_adr"=>1,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
@@ -237,9 +239,8 @@ class KABotForm extends CFormModel
                     $temp = array();
                     $temp["id"] = $avaRow["id"];
                     $temp["bot_id"] = $avaRow["bot_id"];
-                    $temp["ava_date"] = General::toDate($avaRow["ava_date"]);
+                    $temp["ava_date"] = date("Y/m",strtotime($avaRow["ava_date"]));
                     $temp["ava_amt"] = $avaRow["ava_amt"];
-                    $temp["ava_rate"] = $avaRow["ava_rate"];
                     $temp["ava_fact_amt"] = !empty($avaRow["ava_fact_amt"])?floatval($avaRow["ava_fact_amt"]):null;
                     $temp['uflag'] = 'N';
                     $this->avaInfo[] = $temp;
@@ -257,10 +258,10 @@ class KABotForm extends CFormModel
         $arr = array(
             "id"=>1,"apply_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
             "head_city_id"=>1,"talk_city_id"=>1,"contact_user"=>1,"contact_phone"=>1,
-            "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>1,
-            "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,"year_amt"=>3,
-            "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"quarter_amt"=>3,
-            "available_amt"=>3,"available_date"=>2,"month_amt"=>3,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
+            "contact_email"=>1,"source_text"=>1,"source_id"=>1,
+            "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,
+            "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,
+            "available_amt"=>3,"available_date"=>2,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
             "contact_adr"=>1,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
@@ -329,9 +330,9 @@ class KABotForm extends CFormModel
     //哪些字段修改后需要记录
     private static function historyUpdateList(){
         return array("apply_date","head_city_id","talk_city_id","contact_user",
-            "contact_phone","contact_email","contact_dept","source_text","source_id","area_id",
-            "level_id","class_id","busine_id","link_id","year_amt","available_amt","available_date","support_user","sign_odds",
-            "quarter_amt","month_amt","sign_date","sign_month","sign_amt","sum_amt",
+            "contact_phone","contact_email","source_text","source_id","area_id",
+            "level_id","class_id","busine_id","link_id","available_amt","available_date","support_user","sign_odds",
+            "sign_date","sign_month","sign_amt","sum_amt",
             "contact_adr",
             "work_user","work_phone","work_email","class_other"
         );
@@ -524,7 +525,7 @@ class KABotForm extends CFormModel
         $uid = Yii::app()->user->id;
         if(isset($_POST['KABotForm']['avaInfo'])){
             foreach ($_POST['KABotForm']['avaInfo'] as $row) {
-                if(!isset($row["ava_date"])){
+                if(empty($row["ava_date"])){
                     continue;
                 }
                 $sql = '';
@@ -535,9 +536,9 @@ class KABotForm extends CFormModel
                     case 'new':
                         if ($row['uflag']=='Y') {
                             $sql = "insert into sal_ka_bot_ava(
-									bot_id, ava_date, ava_amt, ava_rate, ava_fact_amt,lcu
+									bot_id, ava_date, ava_amt, ava_fact_amt,lcu
 								) values (
-									:bot_id,:ava_date,:ava_amt,:ava_rate,:ava_fact_amt,:lcu
+									:bot_id,:ava_date,:ava_amt,:ava_fact_amt,:lcu
 								)";
                         }
                         break;
@@ -550,15 +551,14 @@ class KABotForm extends CFormModel
                                 $sql = ($row['id']==0)
                                     ?
                                     "insert into sal_ka_bot_ava(
-                                        bot_id, ava_date, ava_amt, ava_rate, ava_fact_amt,lcu
+                                        bot_id, ava_date, ava_amt,ava_fact_amt,lcu
                                     ) values (
-                                        :bot_id,:ava_date,:ava_amt,:ava_rate,:ava_fact_amt,:lcu
+                                        :bot_id,:ava_date,:ava_amt,:ava_fact_amt,:lcu
 									)"
                                     :
                                     "update sal_ka_bot_ava set
 										ava_date = :ava_date, 
 										ava_amt = :ava_amt,
-										ava_rate = :ava_rate,
 										ava_fact_amt = :ava_fact_amt,
 										luu = :luu 
 									where id = :id
@@ -577,16 +577,21 @@ class KABotForm extends CFormModel
                     if (strpos($sql,':bot_id')!==false)
                         $command->bindParam(':bot_id',$this->id,PDO::PARAM_INT);
                     if (strpos($sql,':ava_date')!==false){
-                        $row['ava_date']=empty($row['ava_date'])?null:$row['ava_date'];
+                        if(empty($row['ava_date'])){
+                            $row['ava_date']=null;
+                        }else{
+                            $row['ava_date']=str_replace("-","/",$row['ava_date']);
+                            $row['ava_date'] = explode("/",$row['ava_date']);
+                            if(count($row['ava_date'])==2){
+                                $row['ava_date'][]="01";
+                            }
+                            $row['ava_date']=implode("/",$row['ava_date']);
+                        }
                         $command->bindParam(':ava_date',$row['ava_date'],PDO::PARAM_STR);
                     }
                     if (strpos($sql,':ava_amt')!==false){
                         $row['ava_amt']=empty($row['ava_amt'])?null:$row['ava_amt'];
                         $command->bindParam(':ava_amt',$row['ava_amt'],PDO::PARAM_STR);
-                    }
-                    if (strpos($sql,':ava_rate')!==false){
-                        $row['ava_rate']=empty($row['ava_rate'])?null:$row['ava_rate'];
-                        $command->bindParam(':ava_rate',$row['ava_rate'],PDO::PARAM_STR);
                     }
                     if (strpos($sql,':ava_fact_amt')!==false){
                         $row['ava_fact_amt']=empty($row['ava_fact_amt'])?null:$row['ava_fact_amt'];
@@ -612,10 +617,10 @@ class KABotForm extends CFormModel
         $arr = array(
             "apply_date"=>2,"follow_date"=>2,"customer_name"=>1,
             "head_city_id"=>3,"talk_city_id"=>3,"contact_user"=>1,"contact_phone"=>1,
-            "contact_email"=>1,"contact_dept"=>1,"source_text"=>1,"source_id"=>3,
-            "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>4,"link_id"=>3,"year_amt"=>3,
-            "support_user"=>3,"sign_odds"=>3,"remark"=>1,"quarter_amt"=>3,
-            "available_amt"=>3,"available_date"=>2,"month_amt"=>3,"sign_date"=>2,"sign_month"=>3,"sign_amt"=>3,"sum_amt"=>3,
+            "contact_email"=>1,"source_text"=>1,"source_id"=>3,
+            "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>4,"link_id"=>3,
+            "support_user"=>3,"sign_odds"=>3,"remark"=>1,
+            "available_amt"=>3,"available_date"=>2,"sign_date"=>2,"sign_month"=>3,"sign_amt"=>3,"sum_amt"=>3,
 
             "contact_adr"=>1,"ava_show_date"=>1,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,

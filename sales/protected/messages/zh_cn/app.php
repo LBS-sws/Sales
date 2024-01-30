@@ -144,7 +144,7 @@ return array(
 	'KA Statistic'=>'KA项目统计',
 	'KA Link'=>'当前沟通阶段',
 	'KA Area'=>'KA地区',
-	'KA Source'=>'客户来源',
+	'KA Source'=>'客户类型',
 	'KA Level'=>'客户分级',
 	'KA Class'=>'客户类别',
 	'KA Reject'=>'拒绝、暂停理由',
@@ -161,5 +161,6 @@ return array(
     'Market Reject'=>'无意向客户',
     'Market Success'=>'已完成客户',
     'Market State set'=>'跟进状态设置',
+    'KA Source(A)'=>'客户来源',
 );
 ?>
