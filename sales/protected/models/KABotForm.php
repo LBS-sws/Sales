@@ -501,6 +501,9 @@ class KABotForm extends CFormModel
         $maxDate = $this->available_date;
         if(isset($_POST['KABotForm']['avaInfo'])){
             foreach ($_POST['KABotForm']['avaInfo'] as $row) {
+                if(empty($row['ava_date'])){
+                    continue;
+                }
                 if(in_array($row['uflag'],array("N","Y"))&&strtotime($row['ava_date'])>=strtotime($maxDate)){
                     $maxDate = $row["ava_date"];
                 }
