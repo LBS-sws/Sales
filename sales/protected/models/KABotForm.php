@@ -154,7 +154,7 @@ class KABotForm extends CFormModel
 
 	public function computeSignAmt($attribute, $params){
         $this->sum_amt = 0;
-        $this->sum_amt+=empty($this->available_amt)?0:$this->available_amt;
+        $this->sum_amt+=empty($this->sign_amt)?0:$this->sign_amt;
         if(isset($_POST['KABotForm']['avaInfo'])) {
             foreach ($_POST['KABotForm']['avaInfo'] as $row) {
                 if(empty($row["ava_date"])){

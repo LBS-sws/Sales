@@ -237,7 +237,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'available_amt',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->numberField($model, 'available_amt',
-                        array('readonly'=>($model->scenario=='view'),'id'=>'available_amt','class'=>'changeSumAmt','prepend'=>'<span class="fa fa-money"></span>')
+                        array('readonly'=>($model->scenario=='view'),'id'=>'available_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
             </div>
@@ -279,7 +279,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'sign_amt',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->numberField($model, 'sign_amt',
-                        array('readonly'=>($model->scenario=='view'),'id'=>'sign_amt','prepend'=>'<span class="fa fa-money"></span>')
+                        array('readonly'=>($model->scenario=='view'),'id'=>'sign_amt','class'=>'changeSumAmt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
             </div>
