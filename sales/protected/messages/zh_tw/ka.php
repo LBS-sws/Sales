@@ -41,7 +41,7 @@ return array(
     'sum amt'=>"合同累計金額",
     'support user'=>"區域支持者",
     'sign odds'=>"簽約概率",
-    'remark'=>"項目概述",
+    'remark'=>"項目概述（<span class='text-red'>請備註門店總數/分布城市/集團子品牌/競爭對手份額及報價</span>）",
     'info date'=>"跟進時間",
     'info text'=>"跟進內容",
     'Flow Info'=>"操作記錄",
