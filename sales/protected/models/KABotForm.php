@@ -504,6 +504,12 @@ class KABotForm extends CFormModel
                 if(empty($row['ava_date'])){
                     continue;
                 }
+                $row['ava_date']=str_replace("-","/",$row['ava_date']);
+                $row['ava_date'] = explode("/",$row['ava_date']);
+                if(count($row['ava_date'])==2){
+                    $row['ava_date'][]="01";
+                }
+                $row['ava_date']=implode("/",$row['ava_date']);
                 if(in_array($row['uflag'],array("N","Y"))&&strtotime($row['ava_date'])>=strtotime($maxDate)){
                     $maxDate = $row["ava_date"];
                 }
