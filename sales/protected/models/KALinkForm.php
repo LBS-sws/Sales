@@ -38,6 +38,7 @@ class KALinkForm extends CFormModel
 	public function retrieveData($index)
 	{
 		$city = Yii::app()->user->city();
+        $index = empty($index)||!is_numeric($index)?0:$index;
 		$sql = "select * from sal_ka_link where id=".$index." ";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
 		if ($row!==false) {

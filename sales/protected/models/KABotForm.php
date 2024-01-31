@@ -134,11 +134,12 @@ class KABotForm extends CFormModel
             array('id,apply_date,customer_no,customer_name,kam_id,head_city_id,talk_city_id,
                 contact_user,contact_phone,contact_email,source_text,source_id,
                 area_id,level_id,class_id,busine_id,link_id,support_user,sign_odds,city,
-                available_date,available_amt,
+                available_date,available_amt,avaInfo,
                 contact_adr,work_user,work_phone,work_email,class_other,
                 sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
             array('apply_date,available_date,customer_name,kam_id,link_id','required'),
             array('apply_date','validateDate'),
+            array('link_id','validateLinkID'),
             array('sign_amt','computeSignAmt'),
 		);
 	}
@@ -149,6 +150,42 @@ class KABotForm extends CFormModel
 	        $maxDate = strtotime($this->available_date);
 	        if($maxDate<$minDate){
                 $this->addError($attribute, "可成交日期不能小于录入日期");
+            }
+        }
+    }
+
+    public function validateLinkID($attribute, $params) {
+	    if(empty($this->link_id)){
+	        return false;
+        }
+	    $model = new KALinkForm();
+	    $model->retrieveData($this->link_id);
+	    if(empty($model->id)){
+            $this->addError($attribute, "沟通阶段不存在，请刷新重试");
+            return false;
+        }
+        $list = array();
+        $emptyList = array();
+        if(!empty($this->avaInfo)){
+            foreach ($this->avaInfo as $row){
+                if(!empty($row["ava_date"])){
+                    $list[]=$row;
+                    if($row["uflag"]!="D"){
+                        $emptyList[]=$row;
+                    }
+                }
+            }
+        }
+        //$this->avaInfo = $list;
+	    if($model->rate_num==100){
+	        if(empty($this->sign_date)){
+                $this->addError($attribute, "合同签约日期不能为空");
+            }
+	        if(empty($this->sign_month)){
+                $this->addError($attribute, "合同周期(年)不能为空");
+            }
+	        if(empty($emptyList)){
+                $this->addError($attribute, "签约详情不能为空");
             }
         }
     }
@@ -606,7 +643,7 @@ class KABotForm extends CFormModel
                         $command->bindParam(':ava_amt',$row['ava_amt'],PDO::PARAM_STR);
                     }
                     if (strpos($sql,':ava_rate')!==false){
-                        $row['ava_rate']=empty($row['ava_rate'])?null:$row['ava_rate'];
+                        $row['ava_rate']=empty($row['ava_rate'])?0:$row['ava_rate'];
                         $command->bindParam(':ava_rate',$row['ava_rate'],PDO::PARAM_STR);
                     }
                     if (strpos($sql,':ava_fact_amt')!==false){
@@ -762,7 +799,7 @@ class KABotForm extends CFormModel
 	        ""=>"",
             49=>"<50%",
             60=>"51-80%",
-            90=>"80-100%"
+            90=>"81-100%"
         );
 	    if($bool){
 	        if(key_exists($id,$list)){

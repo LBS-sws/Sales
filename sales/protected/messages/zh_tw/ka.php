@@ -93,5 +93,13 @@ return array(
     'ava amt'=>'預估金額',
     'ava rate'=>'簽約概率',
     'ava fact amt'=>'實際金額',
+
+    'Conversion rate'=>'轉化率',
+    '90 Day rate'=>'90天轉化率',
+    'YTD rate'=>'YTD轉化率',
+    'YTD amt rate'=>'金額轉化（成交金額/拜訪階段金額）',
+    'YTD num rate'=>'數量轉化（成交數量/拜訪數量）',
+    'Quotation/Visit'=>'報價/拜訪',
+    '(Actual transactions this month/90 day weighted)'=>'（本月實際成交/90天加權）',
 );
 ?>
