@@ -91,7 +91,7 @@ return array(
     'work email'=>'联系人邮箱',
     'ava date'=>'月份',
     'ava amt'=>'预估金额',
-    'ava rate'=>'预估成交%',
+    'ava rate'=>'签约概率',
     'ava fact amt'=>'实际金额',
 );
 ?>

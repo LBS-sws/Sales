@@ -36,7 +36,7 @@ return array(
     'quarter amt'=>"可簽約金額(季)",
     'year amt'=>"可簽約金額(年)",
     'sign date'=>"合同簽約日期",
-    'sign month'=>"合同週期(年)",
+    'sign month'=>"合同周期(年)",
     'sign amt'=>"簽約合同總金額",
     'sum amt'=>"合同累計金額",
     'support user'=>"區域支持者",
@@ -91,7 +91,7 @@ return array(
     'work email'=>'聯系人郵箱',
     'ava date'=>'月份',
     'ava amt'=>'預估金額',
-    'ava rate'=>'預估成交%',
+    'ava rate'=>'簽約概率',
     'ava fact amt'=>'實際金額',
 );
 ?>

@@ -66,6 +66,7 @@ class KABotForm extends CFormModel
             'bot_id'=>0,
             'ava_date'=>'',//可成交日期
             'ava_amt'=>'',//可成交金额
+            'ava_rate'=>'',//签约概率
             'ava_fact_amt'=>'',//实际成交金额
             'uflag'=>'N',
         ),
@@ -241,6 +242,7 @@ class KABotForm extends CFormModel
                     $temp["bot_id"] = $avaRow["bot_id"];
                     $temp["ava_date"] = date("Y/m",strtotime($avaRow["ava_date"]));
                     $temp["ava_amt"] = $avaRow["ava_amt"];
+                    $temp["ava_rate"] = $avaRow["ava_rate"];
                     $temp["ava_fact_amt"] = !empty($avaRow["ava_fact_amt"])?floatval($avaRow["ava_fact_amt"]):null;
                     $temp['uflag'] = 'N';
                     $this->avaInfo[] = $temp;
@@ -545,9 +547,9 @@ class KABotForm extends CFormModel
                     case 'new':
                         if ($row['uflag']=='Y') {
                             $sql = "insert into sal_ka_bot_ava(
-									bot_id, ava_date, ava_amt, ava_fact_amt,lcu
+									bot_id, ava_date, ava_amt, ava_rate, ava_fact_amt,lcu
 								) values (
-									:bot_id,:ava_date,:ava_amt,:ava_fact_amt,:lcu
+									:bot_id,:ava_date,:ava_amt,:ava_rate,:ava_fact_amt,:lcu
 								)";
                         }
                         break;
@@ -560,14 +562,15 @@ class KABotForm extends CFormModel
                                 $sql = ($row['id']==0)
                                     ?
                                     "insert into sal_ka_bot_ava(
-                                        bot_id, ava_date, ava_amt,ava_fact_amt,lcu
+                                        bot_id, ava_date, ava_amt, ava_rate,ava_fact_amt,lcu
                                     ) values (
-                                        :bot_id,:ava_date,:ava_amt,:ava_fact_amt,:lcu
+                                        :bot_id,:ava_date,:ava_amt,:ava_rate,:ava_fact_amt,:lcu
 									)"
                                     :
                                     "update sal_ka_bot_ava set
 										ava_date = :ava_date, 
 										ava_amt = :ava_amt,
+										ava_rate = :ava_rate,
 										ava_fact_amt = :ava_fact_amt,
 										luu = :luu 
 									where id = :id
@@ -601,6 +604,10 @@ class KABotForm extends CFormModel
                     if (strpos($sql,':ava_amt')!==false){
                         $row['ava_amt']=empty($row['ava_amt'])?null:$row['ava_amt'];
                         $command->bindParam(':ava_amt',$row['ava_amt'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':ava_rate')!==false){
+                        $row['ava_rate']=empty($row['ava_rate'])?null:$row['ava_rate'];
+                        $command->bindParam(':ava_rate',$row['ava_rate'],PDO::PARAM_STR);
                     }
                     if (strpos($sql,':ava_fact_amt')!==false){
                         $row['ava_fact_amt']=empty($row['ava_fact_amt'])?null:$row['ava_fact_amt'];
@@ -722,6 +729,40 @@ class KABotForm extends CFormModel
             60=>"51~80%",
             90=>">80%",
             100=>"100%",
+        );
+	    if($bool){
+	        if(key_exists($id,$list)){
+	            return $list[$id];
+            }else{
+	            return $id;
+            }
+        }
+	    return $list;
+    }
+
+	public static function getSignMonthListForId($id="",$bool=false){
+	    $list = array(
+	        ""=>"",
+            1=>"1".Yii::t("ka"," year"),
+            2=>"2".Yii::t("ka"," year"),
+            3=>"3".Yii::t("ka"," year")
+        );
+	    if($bool){
+	        if(key_exists($id,$list)){
+	            return $list[$id];
+            }else{
+	            return $id;
+            }
+        }
+	    return $list;
+    }
+
+	public static function getAvaRateListForId($id="",$bool=false){
+	    $list = array(
+	        ""=>"",
+            49=>"<50%",
+            60=>"51-80%",
+            90=>"80-100%"
         );
 	    if($bool){
 	        if(key_exists($id,$list)){

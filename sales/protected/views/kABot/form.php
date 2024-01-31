@@ -263,7 +263,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 </div>
                 <?php echo $form->labelEx($model,'sign_month',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
-                    <?php echo $form->numberField($model, 'sign_month',
+                    <?php echo $form->dropDownList($model, 'sign_month',KABotForm::getSignMonthListForId(),
                         array('readonly'=>($model->scenario=='view'))
                     ); ?>
                 </div>
