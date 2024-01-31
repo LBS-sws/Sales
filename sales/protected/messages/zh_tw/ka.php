@@ -36,7 +36,7 @@ return array(
     'quarter amt'=>"可簽約金額(季)",
     'year amt'=>"可簽約金額(年)",
     'sign date'=>"合同簽約日期",
-    'sign month'=>"合同服務時長(月)",
+    'sign month'=>"合同週期(年)",
     'sign amt'=>"簽約合同總金額",
     'sum amt'=>"合同累計金額",
     'support user'=>"區域支持者",
