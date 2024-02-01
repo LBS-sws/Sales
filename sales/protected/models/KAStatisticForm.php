@@ -75,38 +75,175 @@ class KAStatisticForm extends CFormModel
         );
     }
 
-    private function getSignList(){
-	    $list = array();
-	    $sign_90_Rows = $this->sign_90_num_list();
-	    $sign_this_Rows = $this->sign_this_num_list();
-	    $conList = array(
+    //获取KA所有员工
+    private function getKaManForKaBot(){
+        $suffix = Yii::app()->params['envSuffix'];
+        if(Yii::app()->user->validFunction('CN15')){
+            $whereSql= "";//2023/06/16 改為可以看的所有記錄
+        }else{
+            $whereSql= "a.kam_id='{$this->employee_id}'";
+        }
+        $rows = Yii::app()->db->createCommand()
+            ->select("h.id,h.code,h.name,h.city")
+            ->from("sal_ka_bot a")
+            ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
+            ->where($whereSql)
+            ->group("h.id,h.code,h.name,h.city")
+            ->queryAll();
+        return $rows?$rows:array();
+    }
+
+    //获取未来90天的金额及数量
+    private function getAmtNumFor90(){
+        $list = array();
+        $conList = array(
             "sign_90_num"=>0,//未来90天数量
             "sign_90_amt"=>0,//未来90天金额
+        );
+        $startDate = date("Y-m-d",strtotime($this->start_date));
+        $endDate = date("Y-m-d",strtotime($this->start_date." + 2 months"));
+        $whereSql = "a.available_date BETWEEN '{$startDate}' and '{$endDate}' ";
+        if(Yii::app()->user->validFunction('CN15')){
+            $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }else{
+            $whereSql.= " and a.kam_id='{$this->employee_id}'";
+        }
+        $amtSql = "IFNULL(a.available_amt,0)";
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.kam_id,
+                count(a.id) as sign_90_num,
+                sum(if(a.sign_odds<=80,{$amtSql}*0.5,0)) as sign_amt_one,
+                sum(if(a.sign_odds>80,{$amtSql},0)) as sign_amt_two
+            ")->from("sal_ka_bot a")
+            ->leftJoin("sal_ka_link b","a.link_id=b.id")
+            ->where($whereSql." and b.rate_num<100 and a.sign_odds>50 and a.sign_odds<100")
+            ->group("a.kam_id")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $employee_id = $row["kam_id"];
+                if(!key_exists($employee_id,$list)){
+                    $list[$employee_id]=$conList;
+                }
+                $list[$employee_id]["sign_90_num"]+= $row["sign_90_num"];
+                $list[$employee_id]["sign_90_amt"]+= $row["sign_amt_one"];
+                $list[$employee_id]["sign_90_amt"]+= $row["sign_amt_two"];
+            }
+        }
+        return $list;
+    }
+
+    //获取YTD、MTD的金额及数量
+    private function getAmtNumForYM(){
+        $list = array();
+        $conList = array(
+            "ytd_num"=>0,
+            "ytd_amt"=>0,
+            "mtd_num"=>0,
+            "mtd_amt"=>0,
+        );
+        $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}' and b.rate_num=100";
+        if(Yii::app()->user->validFunction('CN15')){
+            $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }else{
+            $whereSql.= " and a.kam_id='{$this->employee_id}'";
+        }
+        $searchDate = date("Y/m",strtotime($this->start_date));
+        $amtSql = "IFNULL(f.ava_fact_amt,0)";
+        $countRows = Yii::app()->db->createCommand()
+            ->select("a.kam_id,
+                count(a.id) as ytd_num,
+                
+                sum(if(DATE_FORMAT(a.available_date,'%Y/%m')='{$searchDate}',1,0)) as mtd_num
+            ")->from("sal_ka_bot a")
+            ->leftJoin("sal_ka_link b","a.link_id=b.id")
+            ->where($whereSql)
+            ->group("a.kam_id")
+            ->queryAll();
+        if($countRows){
+            foreach ($countRows as $countRow){
+                $employee_id = $countRow["kam_id"];
+                if(!key_exists($employee_id,$list)){
+                    $list[$employee_id]=$conList;
+                }
+                $list[$employee_id]["ytd_num"]+= $countRow["ytd_num"];
+                $list[$employee_id]["mtd_num"]+= $countRow["mtd_num"];
+            }
+        }
+        $amtRows = Yii::app()->db->createCommand()
+            ->select("a.kam_id,
+                sum(if(DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}',{$amtSql},0)) as ytd_amt,
+                
+                sum(if(DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}',{$amtSql},0)) as mtd_amt
+            ")->from("sal_ka_bot_ava f")
+            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ->leftJoin("sal_ka_link b","a.link_id=b.id")
+            ->where($whereSql)
+            ->group("a.kam_id")
+            ->queryAll();
+        if($amtRows){
+            foreach ($amtRows as $amtRow){
+                $employee_id = $amtRow["kam_id"];
+                if(!key_exists($employee_id,$list)){
+                    $list[$employee_id]=$conList;
+                }
+                $list[$employee_id]["ytd_amt"]+= $amtRow["ytd_amt"];
+                $list[$employee_id]["mtd_amt"]+= $amtRow["mtd_amt"];
+            }
+        }
+        return $list;
+    }
+
+    //获取拜访、报价、本月的金额及数量
+    private function getAmtNumForVQS(){
+	    $list = array();
+	    $conList = array(
+            "visit_num"=>0,//拜访数量
+            "visit_amt"=>0,//拜访金额
+            "quota_num"=>0,//报价数量
+            "quota_amt"=>0,//报价金额
             "sign_this_num"=>0,//本月数量
             "sign_this_amt"=>0,//本月金额
         );
-
-	    foreach ($sign_90_Rows as $row){
-            $employee_id = $row["kam_id"];
-            if(!key_exists($employee_id,$list)){
-                $list[$employee_id]=$conList;
-            }
-            if($row["old_sign_odds"]>=81){
-                $list[$employee_id]["sign_90_num"]++;
-                $list[$employee_id]["sign_90_amt"]+=$row["old_sum_amt"]*1;//2023-07-10由0.8改成1
-            }elseif ($row["old_sign_odds"]>=51){
-                $list[$employee_id]["sign_90_num"]++;
-                $list[$employee_id]["sign_90_amt"]+=$row["old_sum_amt"]*0.5;
-            }
+        $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
+        if(Yii::app()->user->validFunction('CN15')){
+            $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }else{
+            $whereSql.= " and a.kam_id='{$this->employee_id}'";
         }
-	    foreach ($sign_this_Rows as $row){
-            $employee_id = $row["kam_id"];
-            if(!key_exists($employee_id,$list)){
-                $list[$employee_id]=$conList;
-            }
-            if($row["old_sign_odds"]>=81){
-                $list[$employee_id]["sign_this_num"]++;
-                $list[$employee_id]["sign_this_amt"]+=$row["old_sum_amt"];
+        $searchDate = $this->start_date;
+
+        $amtSql = "IFNULL(a.available_amt,0)";
+        //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.kam_id,
+                count(a.id) as visit_num,
+                sum({$amtSql}) as visit_amt,
+                
+                sum(if(b.rate_num>=30,1,0)) as quota_num,
+                sum(if(b.rate_num>=30,{$amtSql},0)) as quota_amt,
+                
+                sum(if(b.rate_num<100 and a.sign_odds>80 and a.sign_odds<100 and DATE_FORMAT(a.available_date,'%Y/%m/01')='{$searchDate}',1,0)) as sign_this_num,
+                sum(if(b.rate_num<100 and a.sign_odds>80 and a.sign_odds<100 and DATE_FORMAT(a.available_date,'%Y/%m/01')='{$searchDate}',{$amtSql},0)) as sign_this_amt
+                
+            ")->from("sal_ka_bot a")
+            ->leftJoin("sal_ka_link b","a.link_id=b.id")
+            ->where($whereSql)
+            ->group("a.kam_id")
+            ->queryAll();
+
+        if($rows){
+            foreach ($rows as $row){
+                $employee_id = $row["kam_id"];
+                if(!key_exists($employee_id,$list)){
+                    $list[$employee_id]=$conList;
+                }
+                $list[$employee_id]["visit_num"]+= $row["visit_num"];
+                $list[$employee_id]["visit_amt"]+= $row["visit_amt"];
+                $list[$employee_id]["quota_num"]+= $row["quota_num"];
+                $list[$employee_id]["quota_amt"]+= $row["quota_amt"];
+                $list[$employee_id]["sign_this_num"]+= $row["sign_this_num"];
+                $list[$employee_id]["sign_this_amt"]+= $row["sign_this_amt"];
             }
         }
         return $list;
@@ -114,64 +251,21 @@ class KAStatisticForm extends CFormModel
 
     public function retrieveData() {
         $this->data=array();
-        $suffix = Yii::app()->params['envSuffix'];
-        $city_allow = Yii::app()->user->city_allow();
-        $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}'";
-        if(Yii::app()->user->validFunction('CN15')){
-            //$whereSql.= " and (a.kam_id='{$this->employee_id}' or h.city in ({$city_allow}))";
-            $whereSql.= "";//2023/06/16 改為可以看的所有記錄
-        }else{
-            $whereSql.= " and a.kam_id='{$this->employee_id}'";
-        }
-        $dateIFSql = "a.apply_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
-        $rows = Yii::app()->db->createCommand()
-            ->select("DATE_FORMAT(a.apply_date,'%Y') as apply_year,h.id,h.code,h.name,h.city,
-                sum(if({$dateIFSql},1,0)) as visit_num,
-                sum(if({$dateIFSql} and b.rate_num>0,a.sum_amt,0)) as visit_amt,
-                
-                sum(if({$dateIFSql} and b.rate_num>=30,1,0)) as quota_num,
-                sum(if({$dateIFSql} and b.rate_num>=30,a.sum_amt,0)) as quota_amt,
-                
-                sum(if(b.rate_num>=100,1,0)) as ytd_num,
-                sum(if(b.rate_num>=100,a.sum_amt,0)) as ytd_amt
-            ")->from("sal_ka_bot a")
-            ->leftJoin("sal_ka_link b","a.link_id=b.id")
-            ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
-            ->where($whereSql)
-            ->group("apply_year,h.id,h.code,h.name,h.city")
-            ->queryAll();
-        $signAllList = $this->getSignList();
-        if($rows){
-            foreach ($rows as $row){
-                if(key_exists($row["id"],$signAllList)){
-                    $signList = $signAllList[$row["id"]];
-                }else{
-                    $signList = array(
-                        "sign_90_num"=>0,//未来90天数量
-                        "sign_90_amt"=>0,//未来90天金额
-                        "sign_this_num"=>0,//本月数量
-                        "sign_this_amt"=>0,//本月金额
-                    );
-                }
-                $mtdRow = $this->getMtdRow($row);
-                $list = array(
-                    "employee_id"=>$row["id"],
-                    "kam_name"=>$row["name"]." ({$row["code"]})",
-                    "visit_num"=>$row["visit_num"],
-                    "visit_amt"=>$row["visit_amt"],
-                    "quota_num"=>$row["quota_num"],
-                    "quota_amt"=>$row["quota_amt"],
-                    "sign_90_num"=>$signList["sign_90_num"],//未来90天数量
-                    "sign_90_amt"=>$signList["sign_90_amt"],//未来90天金额
-                    "sign_this_num"=>$signList["sign_this_num"],//本月数量
-                    "sign_this_amt"=>$signList["sign_this_amt"],//本月金额
-                    "ytd_num"=>$row["ytd_num"],
-                    "ytd_amt"=>$row["ytd_amt"],
-                    "mtd_num"=>empty($mtdRow["mtd_num"])?0:$mtdRow["mtd_num"],
-                    "mtd_amt"=>empty($mtdRow["mtd_amt"])?0:$mtdRow["mtd_amt"],
-                );
-                $this->data[$row["city"]][$row["id"]] = $list;
-            }
+        $listVQS = $this->getAmtNumForVQS();//获取拜访、报价、本月的金额及数量
+        $list90 = $this->getAmtNumFor90();//获取未来90天的金额及数量
+        $listYM = $this->getAmtNumForYM();//获取YTD、MTD的金额及数量
+        $kaManList = $this->getKaManForKaBot();//KA所有员工
+        foreach ($kaManList as $row){
+            $temp = $this->getTemp();
+            $ka_id = $row["id"];
+            $city = $row["city"];
+            $temp["employee_id"] = $ka_id;
+            $temp["kam_name"] = $row["name"]." ({$row["code"]})";
+            $this->addTempForList($temp,$listVQS,$ka_id);
+            $this->addTempForList($temp,$list90,$ka_id);
+            $this->addTempForList($temp,$listYM,$ka_id);
+
+            $this->data[$city][$ka_id] = $temp;
         }
 
         $session = Yii::app()->session;
@@ -179,22 +273,58 @@ class KAStatisticForm extends CFormModel
         return true;
     }
 
-    private function getMtdRow($row){
-        $row = Yii::app()->db->createCommand()
-            ->select("count(a.id) as mtd_num,sum(a.sum_amt) as mtd_amt")
-            ->from("sal_ka_bot a")
-            ->leftJoin("sal_ka_link b","a.link_id=b.id")
-            ->where("a.kam_id=:id and b.rate_num>=100 and a.sign_date between '{$this->start_date}' and '{$this->end_date}'",
-                array(":id"=>$row["id"])
-            )->queryRow();
-        if($row){
-            return $row;
-        }else{
-            return array("mtd_num"=>0,"mtd_amt"=>0);
+    private function addTempForList(&$temp,$list,$ka_id){
+        if(key_exists($ka_id,$list)){
+            foreach ($list[$ka_id] as $key=>$item){
+                if(key_exists($key,$temp)){
+                    $temp[$key] = $item;
+                }
+            }
         }
     }
 
+    private function getTemp(){
+        return array(
+            "employee_id"=>"",//KA_id
+            "kam_name"=>"",//KA名称
+            "visit_num"=>0,//拜访数量
+            "visit_amt"=>0,//拜访金额
+            "quota_num"=>0,//报价数量
+            "quota_amt"=>0,//报价金额
+            "quota_rate"=>"",//转化率（报价金额/拜访金额）
+            "sign_90_num"=>0,//未来90天数量
+            "sign_90_amt"=>0,//未来90天金额
+            "sign_this_num"=>0,//本月数量
+            "sign_this_amt"=>0,//本月金额
+            "this_rate"=>"",//90天转化率（本月金额/90天金额）
+            "ytd_num"=>0,//ytd数量
+            "ytd_amt"=>0,//ytd金额
+            "ytd_amt_rate"=>"",//金额转化率（ytd_amt/拜访金额）
+            "ytd_num_rate"=>"",//数量转化率（ytd_num/拜访数量）
+            "mtd_num"=>0,//mtd数量
+            "mtd_amt"=>0,//mtd金额
+        );
+    }
+
+    public static function getRateForNumber($number){
+        $rate = "";
+        if(is_numeric($number)){
+            $rate = $number*100;
+            $rate = round($rate);
+            $rate = "".$rate."%";
+        }
+        return $rate;
+    }
+
     protected function resetTdRow(&$list,$bool=false){
+        $list["quota_rate"]=empty($list["visit_amt"])?0:($list["quota_amt"]/$list["visit_amt"]);
+        $list["quota_rate"] = self::getRateForNumber($list["quota_rate"]);
+        $list["this_rate"]=empty($list["sign_90_amt"])?0:($list["sign_this_amt"]/$list["sign_90_amt"]);
+        $list["this_rate"] = self::getRateForNumber($list["this_rate"]);
+        $list["ytd_amt_rate"]=empty($list["visit_amt"])?0:($list["ytd_amt"]/$list["visit_amt"]);
+        $list["ytd_amt_rate"] = self::getRateForNumber($list["ytd_amt_rate"]);
+        $list["ytd_num_rate"]=empty($list["visit_num"])?0:($list["ytd_num"]/$list["visit_num"]);
+        $list["ytd_num_rate"] = self::getRateForNumber($list["ytd_num_rate"]);
     }
 
     //顯示提成表的表格內容
@@ -226,6 +356,12 @@ class KAStatisticForm extends CFormModel
                             array("name"=>Yii::t("ka","Contract amt")),//合同金额
                         )
                     ),
+                    array(
+                        "name"=>Yii::t("ka","Conversion rate"),//转化率
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","Quotation/Visit")),//报价/拜访
+                        )
+                    ),
                 )
             ),//全部数据
             array("name"=>Yii::t("ka","amount for next 90 days"),"background"=>"#2A6BA4","color"=>"#ffffff",//未来90天加权报价金额
@@ -250,6 +386,22 @@ class KAStatisticForm extends CFormModel
                     )
                 )
             ),//本月可实现销售金额
+            array("name"=>Yii::t("ka","90 Day rate"),"background"=>"#2A6BA4","color"=>"#ffffff",//90天转化率
+                "colspan"=>array(
+                    array(
+                        "name"=>$this->search_month.Yii::t("ka"," month"),//月份
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","(Actual transactions this month/90 day weighted)")),//（本月实际成交/90天加权）
+                        )
+                    ),
+                    /*
+                    array(
+                        "name"=>Yii::t("ka","(Actual transactions this month/90 day weighted)"),//（本月实际成交/90天加权）
+                        "rowspan"=>2
+                    )
+                    */
+                )
+            ),//90天转化率
             array("name"=>Yii::t("ka","Sales performance"),"background"=>"#4472C4","color"=>"#ffffff",//每月KA销售业绩
                 "colspan"=>array(
                     array(
@@ -257,6 +409,13 @@ class KAStatisticForm extends CFormModel
                         "colspan"=>array(
                             array("name"=>Yii::t("ka","quantity")),//数量
                             array("name"=>Yii::t("ka","Contract amt")),//合同金额
+                        )
+                    ),
+                    array(
+                        "name"=>Yii::t("ka","YTD rate"),//YTD转化率
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","YTD amt rate")),//金额转化（成交金额/拜访阶段金额）
+                            array("name"=>Yii::t("ka","YTD num rate")),//数量转化（成交数量/拜访数量）
                         )
                     ),
                     array(
@@ -293,16 +452,25 @@ class KAStatisticForm extends CFormModel
             if(!empty($colList)){
                 foreach ($colList as $col){
                     $threeCol=key_exists("colspan",$col)?$col['colspan']:array();
-                    foreach ($threeCol as $three){
-                        $this->th_sum++;
-                        $trThree.="<th style='{$style}'><span>".$three["name"]."</span></th>";
+                    if(!empty($threeCol)){
+                        foreach ($threeCol as $three){
+                            $this->th_sum++;
+                            $trThree.="<th style='{$style}'><span>".$three["name"]."</span></th>";
 
+                        }
+                    }else{
+                        $this->th_sum++;
                     }
                     $threeColNum=count($threeCol);
                     $colNum+=$threeColNum;
                     $threeColNum = empty($threeColNum)?1:$threeColNum;
                     //$this->th_sum++;
-                    $trTwo.="<th colspan='{$threeColNum}' style='{$style}'><span>".$col["name"]."</span></th>";
+
+                    if(key_exists("rowspan",$col)){
+                        $trTwo.="<th colspan='{$threeColNum}' rowspan='{$col["rowspan"]}' style='{$style}'><span>".$col["name"]."</span></th>";
+                    }else{
+                        $trTwo.="<th colspan='{$threeColNum}' style='{$style}'><span>".$col["name"]."</span></th>";
+                    }
                 }
             }
             $colNum = empty($colNum)?1:$colNum;
@@ -350,9 +518,9 @@ class KAStatisticForm extends CFormModel
     //获取td对应的键名
     private function getDataAllKeyStr(){
         $bodyKey = array(
-            "kam_name","visit_num","visit_amt","quota_num","quota_amt",
-            "sign_90_num","sign_90_amt","sign_this_num","sign_this_amt",
-            "ytd_num","ytd_amt","mtd_num","mtd_amt"
+            "kam_name","visit_num","visit_amt","quota_num","quota_amt","quota_rate",
+            "sign_90_num","sign_90_amt","sign_this_num","sign_this_amt","this_rate",
+            "ytd_num","ytd_amt","ytd_amt_rate","ytd_num_rate","mtd_num","mtd_amt"
         );
         return $bodyKey;
     }
@@ -363,10 +531,7 @@ class KAStatisticForm extends CFormModel
             $pre=" +";
             $num = end(explode(" +",$num));
         }
-        if (strpos($num,'%')!==false){
-            $number = floatval($num);
-            $number=sprintf("%.1f",$number)."%";
-        }elseif (is_numeric($num)){
+        if (is_numeric($num)){
             $number = floatval($num);
             //$number=sprintf("%.2f",$number);
         }else{
@@ -526,160 +691,157 @@ class KAStatisticForm extends CFormModel
     }
 
     //未来90天加权报价金额(签约概率>=51)
-    private function sign_90_num_list($employee_id=""){
-        $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
-        $endDate = date("Y/m/d",strtotime("{$startDate} + 1 months - 1 day"));
-        $dateIFSql = " and b.apply_date<='{$endDate}' and IFNULL(b.available_date,b.apply_date)>='{$startDate}'";
-        $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
-        if(!empty($employee_id)){
-            $whereSql.= " and b.kam_id='{$employee_id}'";
-        }
-        $historySql = Yii::app()->db->createCommand()
-            ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
-            ->from("sal_ka_bot_history a")
-            ->leftJoin("sal_ka_bot b","a.bot_id=b.id")
-            ->where("a.espe_type=1 {$whereSql} {$dateIFSql}")
-            ->group("a.bot_id,b.kam_id")
-            ->getText();
-        $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.kam_id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.sum_amt,
-                g.sign_odds as old_sign_odds,g.sum_amt as old_sum_amt
-                ")
-            ->from("($historySql) f")
-            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
-            ->leftJoin("sal_ka_bot_history g","g.bot_id=f.bot_id and g.lcd=f.lcd")
-            ->queryAll();
-        $list = array();
-        if($rows){
-            foreach ($rows as $row){
-                if($row["old_sign_odds"]>=51){
-                    $list[]=$row;
-                }
-            }
-        }
-        return $list;
-    }
-
-    //未来90天加权报价金额(签约概率>=51)
     private function sign_90_num_table(){
-        $list = $this->sign_90_num_list($this->employee_id);
-        return $this->staticTableBodyTwo($list);
-    }
+        $startDate = date("Y-m-d",strtotime($this->start_date));
+        $endDate = date("Y-m-d",strtotime($this->start_date." + 2 months"));
+        $whereSql = "a.available_date BETWEEN '{$startDate}' and '{$endDate}' ";
+        $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num<100 and a.sign_odds>50 and a.sign_odds<100 ";
 
-    //本月可实现销售金额(签约概率>=81)
-    private function sign_this_num_list($employee_id=""){
-        $startDate = date("Y/m/01",strtotime($this->search_year."/{$this->search_month}/01"));
-        $endDate = date("Y/m/d",strtotime("{$startDate} + 1 months - 1 day"));
-        $dateIFSql = " and b.apply_date<='{$endDate}' and IFNULL(b.available_date,b.apply_date)>='{$startDate}'";
-        $whereSql = "and a.lcd BETWEEN '{$startDate}' and '{$endDate}'";
-        if(!empty($employee_id)){
-            $whereSql.= " and b.kam_id='{$employee_id}'";
-        }
-        $historySql = Yii::app()->db->createCommand()
-            ->select("a.bot_id,b.kam_id,max(a.lcd) as lcd")
-            ->from("sal_ka_bot_history a")
-            ->leftJoin("sal_ka_bot b","a.bot_id=b.id")
-            ->where("a.espe_type=1 {$whereSql} {$dateIFSql}")
-            ->group("a.bot_id,b.kam_id")
-            ->getText();
+        $amtSql = "IFNULL(a.available_amt,0)";
+        //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.kam_id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.sum_amt,
-                g.sign_odds as old_sign_odds,g.sum_amt as old_sum_amt
-                ")
-            ->from("($historySql) f")
-            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
-            ->leftJoin("sal_ka_bot_history g","g.bot_id=f.bot_id and g.lcd=f.lcd")
+            ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
+                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
+                ")->from("sal_ka_bot a")
+            ->leftJoin("sal_ka_link g","a.link_id=g.id")
+            ->where($whereSql)
+            ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
             ->queryAll();
-        $list = array();
-        if($rows){
-            foreach ($rows as $row){
-                if($row["old_sign_odds"]>=81){
-                    $list[]=$row;
-                }
-            }
-        }
-        return $list;
+        return $this->staticTableBodyTwo($rows);
     }
 
     //本月可实现销售金额(签约概率>=81)
     private function sign_this_num_table(){
-        $list = $this->sign_this_num_list($this->employee_id);
-        return $this->staticTableBodyThree($list);
+        $searchDate = date("Y/m",strtotime($this->start_date));
+        $whereSql = "DATE_FORMAT(a.available_date,'%Y/%m')='{$searchDate}' and g.rate_num<100 and a.sign_odds>80 and a.sign_odds<100 ";
+        $whereSql.= " and a.kam_id='{$this->employee_id}'";
+
+        $amtSql = "IFNULL(a.available_amt,0)";
+        //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
+                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
+                ")->from("sal_ka_bot a")
+            ->leftJoin("sal_ka_link g","a.link_id=g.id")
+            ->where($whereSql)
+            ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
+            ->queryAll();
+        return $this->staticTableBody($rows);
     }
 
     //拜访阶段詳情
     private function visit_num_table(){
-        $suffix = Yii::app()->params['envSuffix'];
-        //$whereSql = "DATE_FORMAT(a.apply_date,'%Y/%m/%d')<='{$this->end_date}'";
-        $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}' and ";
-        $whereSql.= "a.apply_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
+        $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
+        $whereSql.= " and a.kam_id='{$this->employee_id}'";
+        $searchDate = $this->start_date;
+
+        $amtSql = "IFNULL(a.available_amt,0)";
+        //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
+            ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
                 ")->from("sal_ka_bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
-            ->where("{$whereSql} and a.kam_id='{$this->employee_id}'")
-            ->order("if(g.rate_num>0,a.follow_date,-1) desc,a.follow_date desc")
+            ->where($whereSql)
+            ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
             ->queryAll();
         return $this->staticTableBody($rows);
     }
 
     //报价阶段詳情
     private function quota_num_table(){
-        $suffix = Yii::app()->params['envSuffix'];
-        $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}' and ";
-        $whereSql.= "a.apply_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
+        $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
+        $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num>=30";
 
+        $amtSql = "IFNULL(a.available_amt,0)";
+        //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
+            ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
                 ")->from("sal_ka_bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
-            ->where("{$whereSql} and a.kam_id='{$this->employee_id}' and g.rate_num>=30")
-            ->order("if(g.rate_num>0,a.follow_date,-1) desc,a.follow_date desc")
+            ->where($whereSql)
+            ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
             ->queryAll();
         return $this->staticTableBody($rows);
     }
 
     //YTD
     private function ytd_num_table(){
-        $suffix = Yii::app()->params['envSuffix'];
-        $whereSql = "DATE_FORMAT(a.apply_date,'%Y')='{$this->ka_year}'";
+        $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
+        $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100";
+
+        $amtSql = "IFNULL(a.available_amt,0)";
+        //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
+            ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
                 ")->from("sal_ka_bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
-            ->where("{$whereSql} and a.kam_id='{$this->employee_id}' and g.rate_num>=100")
-            ->order("if(g.rate_num>0,a.follow_date,-1) desc,a.follow_date desc")
+            ->where($whereSql)
+            ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
             ->queryAll();
-        return $this->staticTableBody($rows);
+        if($rows){
+            foreach ($rows as &$row){
+                $row["available_amt"]=self::getBotAvaAmt($row);
+            }
+        }
+        return $this->staticTableBodyThree($rows);
+    }
+
+    private function getBotAvaAmt($row,$type="year"){
+        $amt = 0;
+        if (isset($row["id"])){
+            $whereSql = "a.bot_id='{$row['id']}'";
+            if($type=="month"){
+                $searchDate = date("Y/m",strtotime($this->start_date));
+                $whereSql.=" and DATE_FORMAT(a.ava_date,'%Y/%m')='{$searchDate}'";
+            }else{
+                $whereSql.=" and DATE_FORMAT(a.ava_date,'%Y')='{$this->ka_year}'";
+            }
+            $amt = Yii::app()->db->createCommand()
+                ->select("sum(IFNULL(a.ava_fact_amt,0)) as amt_money")
+                ->from("sal_ka_bot_ava a")
+                ->where($whereSql)
+                ->queryScalar();
+        }
+        return $amt;
     }
 
     //mtd_num
     private function mtd_num_table(){
-        $suffix = Yii::app()->params['envSuffix'];
+        $searchDate = date("Y/m",strtotime($this->start_date));
+        $whereSql = "DATE_FORMAT(a.available_date,'%Y/%m')='$searchDate'";
+        $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100";
+
+        $amtSql = "IFNULL(a.available_amt,0)";
+        //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.sign_odds,a.follow_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.sum_amt,
+            ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
                 ")->from("sal_ka_bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
-            ->where("a.kam_id='{$this->employee_id}' and g.rate_num>=100 and a.sign_date between '{$this->start_date}' and '{$this->end_date}'")
-            ->order("if(g.rate_num>0,a.follow_date,-1) desc,a.follow_date desc")
+            ->where($whereSql)
+            ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
             ->queryAll();
-        return $this->staticTableBody($rows);
+        if($rows){
+            foreach ($rows as &$row){
+                $row["available_amt"]=self::getBotAvaAmt($row,"month");
+            }
+        }
+        return $this->staticTableBodyThree($rows);
     }
 
     private function staticTableBody($rows){
         $html = "<thead>";
         $html.="<tr>";
-        $html.="<th width='95px'>跟进时间</th>";
+        $html.="<th width='120px'>预估可成交日期</th>";
         $html.="<th width='95px'>录入日期</th>";
         $html.="<th width='110px'>客户编号</th>";
         $html.="<th>客户公司</th>";
         $html.="<th width='80px'>签约概率</th>";
         $html.="<th>沟通阶段</th>";
-        $html.="<th width='95px'>总销售机会</th>";
+        $html.="<th width='120px'>预估可成交金额</th>";
         $html.="<th width='1px'></th>";
         $html.="</tr>";
         $html.= "</thead><tbody>";
@@ -687,19 +849,19 @@ class KAStatisticForm extends CFormModel
             $sumAmt = 0;
             $sumNum = 0;
             foreach ($rows as $row){
-                $row['sum_amt'] = floatval($row['sum_amt']);
+                $row['available_amt'] = empty($row['available_amt'])?0:floatval($row['available_amt']);
                 $row['rate_num'] = floatval($row['rate_num']);
-                $sumAmt+= $row['rate_num']>0?$row['sum_amt']:0;
+                $sumAmt+=$row['available_amt'];
                 $sumNum++;
                 $link = self::drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$row['id']));
                 $html.="<tr data-id='{$row["id"]}'>";
-                $html.="<td>".General::toDate($row['follow_date'])."</td>";
+                $html.="<td>".General::toDate($row['available_date'])."</td>";
                 $html.="<td>".General::toDate($row['apply_date'])."</td>";
                 $html.="<td>".$row['customer_no']."</td>";
                 $html.="<td>".$row['customer_name']."</td>";
                 $html.="<td>".KABotForm::getSignOddsListForId($row['sign_odds'],true)."</td>";
                 $html.="<td>".$row['link_name']."</td>";
-                $html.="<td class='text-right'>".$row['sum_amt']."</td>";
+                $html.="<td class='text-right'>".$row['available_amt']."</td>";
                 $html.="<td>".$link."</td>";
                 $html.="</tr>";
             }
@@ -707,7 +869,7 @@ class KAStatisticForm extends CFormModel
             $html.="<td colspan='2' class='text-right'>总数量:</td><td colspan='2'>{$sumNum}</td>";
             $html.="<td colspan='2' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td>";
             $html.="</tr>";
-            $html.="<tr><td colspan='8' class='text-right text-danger'>数量统计所有录入的记录，总金额不统计沟通阶段为0%的客户</td></tr>";
+            $html.="<tr><td colspan='8' class='text-right text-danger'>&nbsp;</td></tr>";
         }else{
             $html.="<tr><td colspan='8'>无</td></tr>";
         }
@@ -719,100 +881,94 @@ class KAStatisticForm extends CFormModel
     private function staticTableBodyTwo($rows){
         $html = "<thead>";
         $html.="<tr>";
-        $html.="<th rowspan='2' width='95px'>跟进时间</th>";
-        $html.="<th rowspan='2' width='95px'>录入日期</th>";
-        $html.="<th rowspan='2' width='110px'>客户编号</th>";
-        $html.="<th rowspan='2'>客户公司</th>";
-        $html.="<th colspan='2' style=\"background:#4472C4;color:#ffffff;\">现在数据</th>";
-        $html.="<th colspan='3' style=\"background:#2A6BA4;color:#ffffff;\">历史数据</th>";
-        $html.="<th rowspan='2' width='1px'>&nbsp;</th>";
-        $html.="</tr>";
-        $html.="<tr>";
-        $html.="<th width='80px' style=\"background:#4472C4;color:#ffffff;\">签约概率</th>";
-        $html.="<th width='95px' style=\"background:#4472C4;color:#ffffff;\">总销售机会</th>";
-        $html.="<th width='80px' style=\"background:#2A6BA4;color:#ffffff;\">签约概率</th>";
-        $html.="<th width='95px' style=\"background:#2A6BA4;color:#ffffff;\">总销售机会</th>";
-        $html.="<th width='80px' style=\"background:#2A6BA4;color:#ffffff;\">计算金额</th>";
+        $html.="<th width='120px'>预估可成交日期</th>";
+        $html.="<th width='95px'>录入日期</th>";
+        $html.="<th width='110px'>客户编号</th>";
+        $html.="<th>客户公司</th>";
+        $html.="<th width='80px'>签约概率</th>";
+        $html.="<th>沟通阶段</th>";
+        $html.="<th width='120px'>预估可成交金额</th>";
+        $html.="<th width='95px'>统计金额</th>";
+        $html.="<th width='1px'></th>";
         $html.="</tr>";
         $html.= "</thead><tbody>";
         if($rows){
             $sumAmt = 0;
             $sumNum = 0;
             foreach ($rows as $row){
-                $row['old_sum_amt'] = floatval($row['old_sum_amt']);
-                $com_amt = $row['sign_odds']>=81?$row['old_sum_amt']*1:$row['old_sum_amt']*0.5;
-                $sumAmt+= $com_amt;
+                $row['sign_odds'] = empty($row['sign_odds'])?0:floatval($row['sign_odds']);
+                $row['available_amt'] = empty($row['available_amt'])?0:floatval($row['available_amt']);
+                $row['rate_num'] = floatval($row['rate_num']);
+                $amt_me = $row['available_amt'];
+                $amt_me*= $row['sign_odds']>80?1:0.5;
+                $sumAmt+=$amt_me;
                 $sumNum++;
                 $link = self::drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$row['id']));
                 $html.="<tr data-id='{$row["id"]}'>";
-                $html.="<td>".General::toDate($row['follow_date'])."</td>";
+                $html.="<td>".General::toDate($row['available_date'])."</td>";
                 $html.="<td>".General::toDate($row['apply_date'])."</td>";
                 $html.="<td>".$row['customer_no']."</td>";
                 $html.="<td>".$row['customer_name']."</td>";
                 $html.="<td>".KABotForm::getSignOddsListForId($row['sign_odds'],true)."</td>";
-                $html.="<td class='text-right'>".floatval($row['sum_amt'])."</td>";
-                $html.="<td>".KABotForm::getSignOddsListForId($row['old_sign_odds'],true)."</td>";
-                $html.="<td class='text-right'>".$row['old_sum_amt']."</td>";
-                $html.="<td class='text-right'>".$com_amt."</td>";
+                $html.="<td>".$row['link_name']."</td>";
+                $html.="<td class='text-right'>".$row['available_amt']."</td>";
+                $html.="<td class='text-right'>".$amt_me."</td>";
                 $html.="<td>".$link."</td>";
                 $html.="</tr>";
             }
             $html.="<tr>";
-            $html.="<td colspan='2' class='text-right'>总数量:</td><td colspan='4'>{$sumNum}</td>";
-            $html.="<td colspan='2' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td>";
+            $html.="<td colspan='2' class='text-right'>总数量:</td><td colspan='2'>{$sumNum}</td>";
+            $html.="<td colspan='3' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td>";
             $html.="</tr>";
+            $html.="<tr><td colspan='9' class='text-right text-danger'>&nbsp;</td></tr>";
         }else{
-            $html.="<tr><td colspan='10'>无</td></tr>";
+            $html.="<tr><td colspan='9'>无</td></tr>";
         }
         $html.= "</tbody>";
         return $html;
     }
 
-    //本月可实现销售金额
+    //YTD、MTD
     private function staticTableBodyThree($rows){
         $html = "<thead>";
         $html.="<tr>";
-        $html.="<th rowspan='2' width='95px'>跟进时间</th>";
-        $html.="<th rowspan='2' width='95px'>录入日期</th>";
-        $html.="<th rowspan='2' width='110px'>客户编号</th>";
-        $html.="<th rowspan='2'>客户公司</th>";
-        $html.="<th colspan='2' style=\"background:#4472C4;color:#ffffff;\">现在数据</th>";
-        $html.="<th colspan='2' style=\"background:#2A6BA4;color:#ffffff;\">历史数据</th>";
-        $html.="<th rowspan='2' width='1px'>&nbsp;</th>";
-        $html.="</tr>";
-        $html.="<tr>";
-        $html.="<th width='80px' style=\"background:#4472C4;color:#ffffff;\">签约概率</th>";
-        $html.="<th width='95px' style=\"background:#4472C4;color:#ffffff;\">总销售机会</th>";
-        $html.="<th width='80px' style=\"background:#2A6BA4;color:#ffffff;\">签约概率</th>";
-        $html.="<th width='95px' style=\"background:#2A6BA4;color:#ffffff;\">总销售机会</th>";
+        $html.="<th width='120px'>预估可成交日期</th>";
+        $html.="<th width='95px'>录入日期</th>";
+        $html.="<th width='110px'>客户编号</th>";
+        $html.="<th>客户公司</th>";
+        $html.="<th width='80px'>签约概率</th>";
+        $html.="<th>沟通阶段</th>";
+        $html.="<th width='120px'>计算金额</th>";
+        $html.="<th width='1px'></th>";
         $html.="</tr>";
         $html.= "</thead><tbody>";
         if($rows){
             $sumAmt = 0;
             $sumNum = 0;
             foreach ($rows as $row){
-                $row['old_sum_amt'] = floatval($row['old_sum_amt']);
-                $sumAmt+= $row['old_sum_amt'];
+                $row['available_amt'] = empty($row['available_amt'])?0:floatval($row['available_amt']);
+                $row['rate_num'] = floatval($row['rate_num']);
+                $sumAmt+=$row['available_amt'];
                 $sumNum++;
                 $link = self::drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$row['id']));
                 $html.="<tr data-id='{$row["id"]}'>";
-                $html.="<td>".General::toDate($row['follow_date'])."</td>";
+                $html.="<td>".General::toDate($row['available_date'])."</td>";
                 $html.="<td>".General::toDate($row['apply_date'])."</td>";
                 $html.="<td>".$row['customer_no']."</td>";
                 $html.="<td>".$row['customer_name']."</td>";
                 $html.="<td>".KABotForm::getSignOddsListForId($row['sign_odds'],true)."</td>";
-                $html.="<td class='text-right'>".floatval($row['sum_amt'])."</td>";
-                $html.="<td>".KABotForm::getSignOddsListForId($row['old_sign_odds'],true)."</td>";
-                $html.="<td class='text-right'>".$row['old_sum_amt']."</td>";
+                $html.="<td>".$row['link_name']."</td>";
+                $html.="<td class='text-right'>".$row['available_amt']."</td>";
                 $html.="<td>".$link."</td>";
                 $html.="</tr>";
             }
             $html.="<tr>";
-            $html.="<td colspan='2' class='text-right'>总数量:</td><td colspan='3'>{$sumNum}</td>";
+            $html.="<td colspan='2' class='text-right'>总数量:</td><td colspan='2'>{$sumNum}</td>";
             $html.="<td colspan='2' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td>";
             $html.="</tr>";
+            $html.="<tr><td colspan='8' class='text-right text-danger'>&nbsp;</td></tr>";
         }else{
-            $html.="<tr><td colspan='9'>无</td></tr>";
+            $html.="<tr><td colspan='8'>无</td></tr>";
         }
         $html.= "</tbody>";
         return $html;

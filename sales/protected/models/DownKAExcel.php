@@ -57,20 +57,25 @@ class DownKAExcel{
                     ->setCellValueByColumnAndRow($colOne, $this->current_row, $list["name"]);
                 if(isset($list["colspan"])){
                     $twoStr = $this->getColumn($colOne);
-                    foreach ($list["colspan"] as $col){
-                        $startStr = $this->getColumn($colOne);
-                        $threeCol=key_exists("colspan",$col)?$col['colspan']:array();
-                        $this->objPHPExcel->getActiveSheet()
-                            ->setCellValueByColumnAndRow($colOne, $this->current_row+1, $col["name"]);
-                        foreach ($threeCol as $three){
+                    if(key_exists("colspan",$list)){
+                        foreach ($list["colspan"] as $col){
+                            $startStr = $this->getColumn($colOne);
+                            $threeCol=key_exists("colspan",$col)?$col['colspan']:array();
                             $this->objPHPExcel->getActiveSheet()
-                                ->setCellValueByColumnAndRow($colOne, $this->current_row+2, $three["name"]);
-                            $colOne++;
-                            $this->th_num++;
+                                ->setCellValueByColumnAndRow($colOne, $this->current_row+1, $col["name"]);
+                            foreach ($threeCol as $three){
+                                $this->objPHPExcel->getActiveSheet()
+                                    ->setCellValueByColumnAndRow($colOne, $this->current_row+2, $three["name"]);
+                                $colOne++;
+                                $this->th_num++;
+                            }
+                            $endStr = $this->getColumn($colOne-1);
+                            $this->objPHPExcel->getActiveSheet()
+                                ->mergeCells($startStr.($this->current_row+1).':'.$endStr.($this->current_row+1));
                         }
-                        $endStr = $this->getColumn($colOne-1);
-                        $this->objPHPExcel->getActiveSheet()
-                            ->mergeCells($startStr.($this->current_row+1).':'.$endStr.($this->current_row+1));
+                    }else{
+                        $colOne++;
+                        $this->th_num++;
                     }
                     $endStr = $this->getColumn($colOne-1);
                     $this->objPHPExcel->getActiveSheet()

@@ -249,7 +249,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'sign_odds',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->dropDownList($model, 'sign_odds',KABotForm::getSignOddsListForId(),
-                        array('readonly'=>($model->scenario=='view'))
+                        array('readonly'=>($model->scenario=='view'),'id'=>'sign_odds')
                     ); ?>
                 </div>
             </div>
@@ -264,7 +264,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'sign_month',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->dropDownList($model, 'sign_month',KABotForm::getSignMonthListForId(),
-                        array('readonly'=>($model->scenario=='view'))
+                        array('readonly'=>($model->scenario=='view'),'id'=>'sign_month')
                     ); ?>
                 </div>
                 <?php echo $form->labelEx($model,'sum_amt',array('class'=>"col-sm-1 control-label text-red")); ?>
@@ -371,8 +371,16 @@ $('#class_id').change(function(){
 $('#link_id').change(function(){
     if($(this).children('option:selected').text().indexOf('100%')>-1){
         $('#ava_box').removeClass('hide');
+        $('#sign_date').prop('readonly','');
+        $('#sign_month').prop('disabled','');
+        $('#sign_odds').val(100);
     }else{
         $('#ava_box').addClass('hide');
+        $('#sign_date').val('').prop('readonly','readonly');
+        $('#sign_month').val('').prop('disabled','disabled');
+        if($('#sign_odds').val()==100){
+            $('#sign_odds').val('');
+        }
     }
 });
 

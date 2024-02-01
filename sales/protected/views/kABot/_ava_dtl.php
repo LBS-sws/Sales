@@ -10,6 +10,11 @@
 		); ?>
 	</td>
 	<td>
+		<?php echo TbHtml::textField($this->getFieldName('ava_num'),  $this->record['ava_num'],
+								array('disabled'=>$this->model->scenario=='view','autocomplete'=>'off','min'=>0)
+		); ?>
+	</td>
+	<td>
 		<?php echo TbHtml::dropDownList($this->getFieldName('ava_rate'),  $this->record['ava_rate'],KABotForm::getAvaRateListForId(),
 								array('disabled'=>$this->model->scenario=='view','autocomplete'=>'off')
 		); ?>

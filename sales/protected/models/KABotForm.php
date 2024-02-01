@@ -66,6 +66,7 @@ class KABotForm extends CFormModel
             'bot_id'=>0,
             'ava_date'=>'',//可成交日期
             'ava_amt'=>'',//可成交金额
+            'ava_num'=>'',//门店数量
             'ava_rate'=>'',//签约概率
             'ava_fact_amt'=>'',//实际成交金额
             'uflag'=>'N',
@@ -121,6 +122,7 @@ class KABotForm extends CFormModel
             'ava_date'=>Yii::t('ka','ava date'),
             'ava_amt'=>Yii::t('ka','ava amt'),
             'ava_rate'=>Yii::t('ka','ava rate'),
+            'ava_num'=>Yii::t('ka','ava num'),
             'ava_fact_amt'=>Yii::t('ka','ava fact amt'),
 		);
 	}
@@ -186,6 +188,14 @@ class KABotForm extends CFormModel
             }
 	        if(empty($emptyList)){
                 $this->addError($attribute, "签约详情不能为空");
+            }elseif(!isset($emptyList[0]["ava_rate"])||$emptyList[0]["ava_rate"]<=80){
+                $this->addError($attribute, "签约详情第一条的签约概率必须大于80");
+            }
+        }else{
+	        $this->sign_date=null;
+	        $this->sign_month=null;
+	        if($this->sign_odds=100){
+                $this->sign_odds=null;
             }
         }
     }
@@ -768,6 +778,7 @@ class KABotForm extends CFormModel
             100=>"100%",
         );
 	    if($bool){
+            $id="".$id;
 	        if(key_exists($id,$list)){
 	            return $list[$id];
             }else{
@@ -798,7 +809,7 @@ class KABotForm extends CFormModel
 	    $list = array(
 	        ""=>"",
             49=>"<50%",
-            60=>"51-80%",
+            60=>"50-80%",
             90=>"81-100%"
         );
 	    if($bool){

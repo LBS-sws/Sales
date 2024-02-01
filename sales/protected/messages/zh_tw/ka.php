@@ -100,6 +100,7 @@ return array(
     'YTD amt rate'=>'金額轉化（成交金額/拜訪階段金額）',
     'YTD num rate'=>'數量轉化（成交數量/拜訪數量）',
     'Quotation/Visit'=>'報價/拜訪',
+    'ava num'=>'門店數量',
     '(Actual transactions this month/90 day weighted)'=>'（本月實際成交/90天加權）',
 );
 ?>
