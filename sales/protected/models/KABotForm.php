@@ -191,10 +191,11 @@ class KABotForm extends CFormModel
             }elseif(!isset($emptyList[0]["ava_rate"])||$emptyList[0]["ava_rate"]<=80){
                 $this->addError($attribute, "签约详情第一条的签约概率必须大于80");
             }
+            $this->sign_odds=100;
         }else{
 	        $this->sign_date=null;
 	        $this->sign_month=null;
-	        if($this->sign_odds=100){
+	        if(is_numeric($this->sign_odds)&&$this->sign_odds==100){
                 $this->sign_odds=null;
             }
         }
@@ -289,6 +290,7 @@ class KABotForm extends CFormModel
                     $temp["bot_id"] = $avaRow["bot_id"];
                     $temp["ava_date"] = date("Y/m",strtotime($avaRow["ava_date"]));
                     $temp["ava_amt"] = $avaRow["ava_amt"];
+                    $temp["ava_num"] = $avaRow["ava_num"];
                     $temp["ava_rate"] = $avaRow["ava_rate"];
                     $temp["ava_fact_amt"] = !empty($avaRow["ava_fact_amt"])?floatval($avaRow["ava_fact_amt"]):null;
                     $temp['uflag'] = 'N';
