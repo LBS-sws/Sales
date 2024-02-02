@@ -168,12 +168,18 @@ class KABotForm extends CFormModel
         }
         $list = array();
         $emptyList = array();
+        $avaDateList = array();
+        $avaDateBool = false;//判断月份是否重复
         if(!empty($this->avaInfo)){
             foreach ($this->avaInfo as $row){
                 if(!empty($row["ava_date"])){
                     $list[]=$row;
                     if($row["uflag"]!="D"){
                         $emptyList[]=$row;
+                        if(!$avaDateBool&&in_array($row["ava_date"],$avaDateList)){
+                            $avaDateBool = true;
+                        }
+                        $avaDateList[]=$row["ava_date"];
                     }
                 }
             }
@@ -190,6 +196,9 @@ class KABotForm extends CFormModel
                 $this->addError($attribute, "签约详情不能为空");
             }elseif(!isset($emptyList[0]["ava_rate"])||$emptyList[0]["ava_rate"]<=80){
                 $this->addError($attribute, "签约详情第一条的签约概率必须大于80");
+            }
+            if($avaDateBool){
+                $this->addError($attribute, "签约详情的月份不能重复");
             }
             $this->sign_odds=100;
         }else{

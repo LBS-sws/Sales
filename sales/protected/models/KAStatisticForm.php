@@ -142,7 +142,7 @@ class KAStatisticForm extends CFormModel
             "mtd_num"=>0,
             "mtd_amt"=>0,
         );
-        $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}' and b.rate_num=100";
+        $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}' and b.rate_num=100";
         if(Yii::app()->user->validFunction('CN15')){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }else{
@@ -150,15 +150,27 @@ class KAStatisticForm extends CFormModel
         }
         $searchDate = date("Y/m",strtotime($this->start_date));
         $amtSql = "IFNULL(f.ava_fact_amt,0)";
-        $countRows = Yii::app()->db->createCommand()
-            ->select("a.kam_id,
-                count(a.id) as ytd_num,
-                
-                sum(if(DATE_FORMAT(a.available_date,'%Y/%m')='{$searchDate}',1,0)) as mtd_num
-            ")->from("sal_ka_bot a")
+        $sqlText = Yii::app()->db->createCommand()
+            ->select("a.id,a.kam_id,
+                sum({$amtSql}) as ytd_amt,
+            
+                sum(if(DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}',1,0)) as mtd_num,
+                sum(if(DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}',{$amtSql},0)) as mtd_amt
+            ")->from("sal_ka_bot_ava f")
+            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link b","a.link_id=b.id")
             ->where($whereSql)
-            ->group("a.kam_id")
+            ->group("a.id,a.kam_id")
+            ->getText();
+        $countRows = Yii::app()->db->createCommand()
+            ->select("bot.kam_id,
+                count(bot.id) as ytd_num,
+                sum(bot.ytd_amt) as ytd_amt,
+                
+                sum(if(bot.mtd_num>0,1,0)) as mtd_num,
+                sum(bot.mtd_amt) as mtd_amt
+            ")->from("({$sqlText}) bot")
+            ->group("bot.kam_id")
             ->queryAll();
         if($countRows){
             foreach ($countRows as $countRow){
@@ -167,28 +179,9 @@ class KAStatisticForm extends CFormModel
                     $list[$employee_id]=$conList;
                 }
                 $list[$employee_id]["ytd_num"]+= $countRow["ytd_num"];
+                $list[$employee_id]["ytd_amt"]+= $countRow["ytd_amt"];
                 $list[$employee_id]["mtd_num"]+= $countRow["mtd_num"];
-            }
-        }
-        $amtRows = Yii::app()->db->createCommand()
-            ->select("a.kam_id,
-                sum(if(DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}',{$amtSql},0)) as ytd_amt,
-                
-                sum(if(DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}',{$amtSql},0)) as mtd_amt
-            ")->from("sal_ka_bot_ava f")
-            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
-            ->leftJoin("sal_ka_link b","a.link_id=b.id")
-            ->where($whereSql)
-            ->group("a.kam_id")
-            ->queryAll();
-        if($amtRows){
-            foreach ($amtRows as $amtRow){
-                $employee_id = $amtRow["kam_id"];
-                if(!key_exists($employee_id,$list)){
-                    $list[$employee_id]=$conList;
-                }
-                $list[$employee_id]["ytd_amt"]+= $amtRow["ytd_amt"];
-                $list[$employee_id]["mtd_amt"]+= $amtRow["mtd_amt"];
+                $list[$employee_id]["mtd_amt"]+= $countRow["mtd_amt"];
             }
         }
         return $list;
@@ -768,24 +761,22 @@ class KAStatisticForm extends CFormModel
 
     //YTD
     private function ytd_num_table(){
-        $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
+        $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}'";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100";
 
-        $amtSql = "IFNULL(a.available_amt,0)";
-        //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
+        $amtSql = "IFNULL(f.ava_fact_amt,0)";
+        $selectText="a.id,a.kam_id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,
+        a.customer_name,a.contact_user,g.pro_name,g.rate_num";
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
-                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
-                ")->from("sal_ka_bot a")
+            ->select("{$selectText},
+            CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,
+            sum({$amtSql}) as available_amt")
+            ->from("sal_ka_bot_ava f")
+            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
-            ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
+            ->group($selectText)
             ->queryAll();
-        if($rows){
-            foreach ($rows as &$row){
-                $row["available_amt"]=self::getBotAvaAmt($row);
-            }
-        }
         return $this->staticTableBodyThree($rows);
     }
 
@@ -811,24 +802,19 @@ class KAStatisticForm extends CFormModel
     //mtd_num
     private function mtd_num_table(){
         $searchDate = date("Y/m",strtotime($this->start_date));
-        $whereSql = "DATE_FORMAT(a.available_date,'%Y/%m')='$searchDate'";
+        $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='$searchDate'";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100";
 
-        $amtSql = "IFNULL(a.available_amt,0)";
-        //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
+        $amtSql = "IFNULL(f.ava_fact_amt,0)";
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
+            ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,{$amtSql} as available_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
-                ")->from("sal_ka_bot a")
+                ")->from("sal_ka_bot_ava f")
+            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
-            ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
+            ->group("a.kam_id")
             ->queryAll();
-        if($rows){
-            foreach ($rows as &$row){
-                $row["available_amt"]=self::getBotAvaAmt($row,"month");
-            }
-        }
         return $this->staticTableBodyThree($rows);
     }
 

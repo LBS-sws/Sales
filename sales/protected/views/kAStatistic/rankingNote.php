@@ -5,7 +5,7 @@
     .ranking-note{
         position: fixed;
         background: #fff;
-        top:22%;
+        top:16%;
         z-index: 10;
         right: 15px;
         width: 35%;
@@ -35,10 +35,22 @@
                 <p ><?php echo Yii::t("ka","bot_remark:");?></p>
                 <p class="note_p"><?php echo Yii::t("ka","bot_remark_1");?></p>
                 <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_1_1");?></small></p>
+                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_1_2");?></small></p>
                 <p class="note_p"><?php echo Yii::t("ka","bot_remark_2");?></p>
                 <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_2_1");?></small></p>
                 <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_2_2");?></small></p>
-                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_2_3");?></small></p>
+                <p class="note_p"><small><?php echo Yii::t("ka","bot_remark_3_1");?></small></p>
+                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_3_2");?></small></p>
+                <p class="note_p"><?php echo Yii::t("ka","bot_remark_4");?></p>
+                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_4_1");?></small></p>
+                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_4_2");?></small></p>
+                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_4_3");?></small></p>
+                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_4_4");?></small></p>
+                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_4_5");?></small></p>
+                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_4_6");?></small></p>
+                <p class="note_p"><?php echo Yii::t("ka","bot_remark_5");?></p>
+                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_5_1");?></small></p>
+                <p class="note_small"><small><?php echo Yii::t("ka","bot_remark_5_2");?></small></p>
             </div>
         </div>
     </div>
