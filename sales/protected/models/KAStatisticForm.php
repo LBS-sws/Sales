@@ -101,7 +101,7 @@ class KAStatisticForm extends CFormModel
             "sign_90_amt"=>0,//未来90天金额
         );
         $startDate = date("Y-m-d",strtotime($this->start_date));
-        $endDate = date("Y-m-d",strtotime($this->start_date." + 2 months"));
+        $endDate = date("Y-m-d",strtotime($this->start_date." + 3 months - 1 days"));
         $whereSql = "a.available_date BETWEEN '{$startDate}' and '{$endDate}' ";
         if(Yii::app()->user->validFunction('CN15')){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
@@ -693,7 +693,7 @@ class KAStatisticForm extends CFormModel
     //未来90天加权报价金额(签约概率>=51)
     private function sign_90_num_table(){
         $startDate = date("Y-m-d",strtotime($this->start_date));
-        $endDate = date("Y-m-d",strtotime($this->start_date." + 2 months"));
+        $endDate = date("Y-m-d",strtotime($this->start_date." + 3 months - 1 days"));
         $whereSql = "a.available_date BETWEEN '{$startDate}' and '{$endDate}' ";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num<100 and a.sign_odds>50 and a.sign_odds<100 ";
 
