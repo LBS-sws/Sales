@@ -106,6 +106,7 @@ return array(
     'ava rate'=>'签约概率',
     'ava fact amt'=>'实际金额',
 
+    'available date'=>'预估可成交日期',
     'Conversion rate'=>'转化率',
     '90 Day rate'=>'90天转化率',
     'YTD rate'=>'YTD转化率',
