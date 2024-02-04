@@ -806,14 +806,17 @@ class KAStatisticForm extends CFormModel
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100";
 
         $amtSql = "IFNULL(f.ava_fact_amt,0)";
+        $selectText="a.id,a.kam_id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,
+        a.customer_name,a.contact_user,g.pro_name,g.rate_num";
         $rows = Yii::app()->db->createCommand()
-            ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,{$amtSql} as available_amt,
-                CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
-                ")->from("sal_ka_bot_ava f")
+            ->select("{$selectText},
+            CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,
+            sum({$amtSql}) as available_amt")
+            ->from("sal_ka_bot_ava f")
             ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
-            ->group("a.kam_id")
+            ->group($selectText)
             ->queryAll();
         return $this->staticTableBodyThree($rows);
     }
