@@ -25,6 +25,9 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
         .media_remark{ width: 50%;}
         .media_text{ padding: 0px;}
     }
+    input[readonly]{pointer-events: none;}
+    select[readonly]{pointer-events: none;}
+    .select2-container .select2-selection--single{ height: 34px;}
 </style>
 
 <section class="content-header">
@@ -101,7 +104,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'customer_name',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-7">
                     <div class="btn-group" style="width: 100%">
-                        <?php echo $form->textField($model, 'customer_name', array('maxlength'=>250,'id'=>'customer_name','autocomplete'=>'off','readonly'=>($model->scenario!='new'))); ?>
+                        <?php echo $form->textField($model, 'customer_name', array('maxlength'=>250,'id'=>'customer_name','autocomplete'=>'off','readonly'=>($model->scenario=='view'))); ?>
                         <ul class="dropdown-menu" id="customer_name_menu" style="width: 100%">
                         </ul>
                     </div>
@@ -129,26 +132,6 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 </div>
             </div>
             <div class="form-group">
-                <?php echo $form->labelEx($model,'contact_user',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'contact_user',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'contact_phone',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'contact_phone',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'contact_email',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'contact_email',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group">
                 <?php echo $form->labelEx($model,'work_user',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->textField($model, 'work_user',
@@ -164,6 +147,26 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'work_email',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->textField($model, 'work_email',
+                        array('readonly'=>($model->scenario=='view'))
+                    ); ?>
+                </div>
+            </div>
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'contact_user',array('class'=>"col-sm-2 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->textField($model, 'contact_user',
+                        array('readonly'=>($model->scenario=='view'))
+                    ); ?>
+                </div>
+                <?php echo $form->labelEx($model,'contact_phone',array('class'=>"col-sm-1 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->textField($model, 'contact_phone',
+                        array('readonly'=>($model->scenario=='view'))
+                    ); ?>
+                </div>
+                <?php echo $form->labelEx($model,'contact_email',array('class'=>"col-sm-1 control-label")); ?>
+                <div class="col-sm-2">
+                    <?php echo $form->textField($model, 'contact_email',
                         array('readonly'=>($model->scenario=='view'))
                     ); ?>
                 </div>
@@ -277,7 +280,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 
             <div id="ava_box" class="box changeTable <?php echo KALinkForm::getLinkRateNumForId($model->link_id)!==100?"hide":"";?>">
                 <div class="box-body table-responsive">
-                    <div class="col-lg-10 col-lg-offset-1">
+                    <div class="col-lg-12">
                         <div class="row">
                             <?php
                             $this->widget('ext.layout.TableView2Widget', array(
@@ -348,6 +351,12 @@ function formatState(state) {
 	var rtn = $('<span style=\"color:black\">'+state.text+'</span>');
 	return rtn;
 }
+$('#support_user').select2({
+    multiple: false,
+    maximumInputLength: 10,
+    language: '$lang',
+    disabled: $disabled
+});
 
 $('#busine_id').select2({
 	tags: false,
@@ -388,7 +397,7 @@ function changeCustomerName(){
     var that = $(this);
     $(this).parent('div').addClass('open');
     $(this).next('.dropdown-menu').html('<li><a>查询中...</span></li>');
-	var data = \"group=\"+$(this).val();
+	var data = \"group=\"+$(this).val()+\"&id=\"+$('#KABotForm_id').val();
 	$.ajax({
 		type: 'GET',
 		url: '$link3',
@@ -435,7 +444,6 @@ $('body').on('click',function(){
     
     
     $('#talk_city_id').on('change',function(){
-        console.log('ajax');
         $.ajax({
             type: 'POST',
             url: '{$ajaxUrl}',
@@ -511,6 +519,9 @@ $('.btnAddRow').on('click',function() {
 			if (id.indexOf('_ava_amt') != -1) $(this).val('');
 			if (id.indexOf('_ava_rate') != -1) $(this).val('');
 			if (id.indexOf('_ava_fact_amt') != -1) $(this).val('');
+			if (id.indexOf('_ava_note') != -1) $(this).val('');
+			if (id.indexOf('_ava_city') != -1) $(this).val('');
+			if (id.indexOf('_ava_num') != -1) $(this).val('');
 			if (id.indexOf('_id') != -1) $(this).attr('value',0);
 		});
 		if (nid != '') {

@@ -30,6 +30,11 @@
 		); ?>
 	</td>
 	<td>
+		<?php echo TbHtml::textArea($this->getFieldName('ava_note'),  $this->record['ava_note'],
+								array('disabled'=>$this->model->scenario=='view','rows'=>3,'autocomplete'=>'off')
+		); ?>
+	</td>
+	<td>
 		<?php 
 			echo Yii::app()->user->validRWFunction('KA01')
 				? TbHtml::Button('-',array('class'=>'btnDelRow','title'=>Yii::t('misc','Delete'),'size'=>TbHtml::BUTTON_SIZE_SMALL))

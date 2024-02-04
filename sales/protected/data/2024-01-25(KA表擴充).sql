@@ -34,3 +34,4 @@ CREATE TABLE `sal_ka_bot_ava` (
 
 ALTER TABLE sal_ka_bot_ava ADD COLUMN `ava_num`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '门店数量' AFTER ava_amt;
 ALTER TABLE sal_ka_bot_ava ADD COLUMN `ava_city`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '城市' AFTER ava_amt;
+ALTER TABLE sal_ka_bot_ava ADD COLUMN `ava_note`  text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '备注' AFTER ava_amt;

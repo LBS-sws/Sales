@@ -115,6 +115,7 @@ return array(
     'Quotation/Visit'=>'報價/拜訪',
     'ava num'=>'門店數量',
     'ava city'=>'城市',
+    'ava note'=>'備註(<span style="color:red;">請備註減少門店總數和金額詳情等內容</span>)',
     '(Actual transactions this month/90 day weighted)'=>'（本月實際成交/90天加權）',
 );
 ?>

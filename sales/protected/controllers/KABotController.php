@@ -37,10 +37,10 @@ class KABotController extends Controller
 		);
 	}
 
-    public function actionAjaxCustomerName($group='')
+    public function actionAjaxCustomerName($group='',$id=0)
     {
         $model = new KABotForm();
-        echo $model->AjaxCustomerName($group);
+        echo $model->AjaxCustomerName($group,$id);
     }
 
     //修改ka項目的操作記錄日期 id：歷史記錄的id

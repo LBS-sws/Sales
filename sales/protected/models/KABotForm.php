@@ -69,6 +69,7 @@ class KABotForm extends CFormModel
             'ava_num'=>'',//门店数量
             'ava_city'=>'',//城市
             'ava_rate'=>'',//签约概率
+            'ava_note'=>'',//備註
             'ava_fact_amt'=>'',//实际成交金额
             'uflag'=>'N',
         ),
@@ -125,6 +126,7 @@ class KABotForm extends CFormModel
             'ava_rate'=>Yii::t('ka','ava rate'),
             'ava_num'=>Yii::t('ka','ava num'),
             'ava_city'=>Yii::t('ka','ava city'),
+            'ava_note'=>Yii::t('ka','ava note'),
             'ava_fact_amt'=>Yii::t('ka','ava fact amt'),
 		);
 	}
@@ -141,7 +143,7 @@ class KABotForm extends CFormModel
                 available_date,available_amt,avaInfo,
                 contact_adr,work_user,work_phone,work_email,class_other,
                 sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
-            array('apply_date,available_date,customer_name,kam_id,link_id','required'),
+            array('apply_date,work_user,contact_adr,available_date,customer_name,kam_id,link_id','required'),
             array('apply_date','validateDate'),
             array('link_id','validateLinkID'),
             array('sign_amt','computeSignAmt'),
@@ -304,6 +306,7 @@ class KABotForm extends CFormModel
                     $temp["ava_num"] = $avaRow["ava_num"];
                     $temp["ava_city"] = $avaRow["ava_city"];
                     $temp["ava_rate"] = $avaRow["ava_rate"];
+                    $temp["ava_note"] = $avaRow["ava_note"];
                     $temp["ava_fact_amt"] = !empty($avaRow["ava_fact_amt"])?floatval($avaRow["ava_fact_amt"]):null;
                     $temp['uflag'] = 'N';
                     $this->avaInfo[] = $temp;
@@ -608,9 +611,9 @@ class KABotForm extends CFormModel
                     case 'new':
                         if ($row['uflag']=='Y') {
                             $sql = "insert into sal_ka_bot_ava(
-									bot_id, ava_date, ava_amt, ava_num, ava_city, ava_rate, ava_fact_amt,lcu
+									bot_id, ava_date, ava_amt, ava_num, ava_city, ava_rate, ava_note, ava_fact_amt,lcu
 								) values (
-									:bot_id,:ava_date,:ava_amt,:ava_num,:ava_city,:ava_rate,:ava_fact_amt,:lcu
+									:bot_id,:ava_date,:ava_amt,:ava_num,:ava_city,:ava_rate,:ava_note,:ava_fact_amt,:lcu
 								)";
                         }
                         break;
@@ -623,15 +626,16 @@ class KABotForm extends CFormModel
                                 $sql = ($row['id']==0)
                                     ?
                                     "insert into sal_ka_bot_ava(
-                                        bot_id, ava_date, ava_amt, ava_num, ava_city, ava_rate,ava_fact_amt,lcu
+                                        bot_id, ava_date, ava_amt, ava_num, ava_city, ava_rate, ava_note,ava_fact_amt,lcu
                                     ) values (
-                                        :bot_id,:ava_date,:ava_amt,:ava_num,:ava_city,:ava_rate,:ava_fact_amt,:lcu
+                                        :bot_id,:ava_date,:ava_amt,:ava_num,:ava_city,:ava_rate,:ava_note,:ava_fact_amt,:lcu
 									)"
                                     :
                                     "update sal_ka_bot_ava set
 										ava_date = :ava_date, 
 										ava_amt = :ava_amt,
 										ava_rate = :ava_rate,
+										ava_note = :ava_note,
 										ava_num = :ava_num,
 										ava_city = :ava_city,
 										ava_fact_amt = :ava_fact_amt,
@@ -684,6 +688,8 @@ class KABotForm extends CFormModel
                         $row['ava_fact_amt']=empty($row['ava_fact_amt'])?null:$row['ava_fact_amt'];
                         $command->bindParam(':ava_fact_amt',$row['ava_fact_amt'],PDO::PARAM_STR);
                     }
+                    if (strpos($sql,':ava_note')!==false)
+                        $command->bindParam(':ava_note',$row['ava_note'],PDO::PARAM_STR);
                     if (strpos($sql,':luu')!==false)
                         $command->bindParam(':luu',$uid,PDO::PARAM_STR);
                     if (strpos($sql,':lcu')!==false)
@@ -743,7 +749,7 @@ class KABotForm extends CFormModel
                 break;
             case 'edit':
                 unset($list["apply_date"]);
-                unset($list["customer_name"]);
+                //unset($list["customer_name"]);
                 unset($list["kam_id"]);
                 $list["busine_name"] = $busine_name;
                 $list["luu"] = $uid;
@@ -885,21 +891,28 @@ class KABotForm extends CFormModel
                 ->where("id=:id",array(":id"=>$ka_city))
                 ->queryScalar();//查询KA城市的日报表系统编号
             $city=$city?$city:0;
-            $incharge = Yii::app()->db->createCommand()->select("incharge")
+            $city_allow = City::model()->getDescendantList($city);
+            $city_allow .= (empty($city_allow)) ? "'$city'" : ",'$city'";
+            $inRows = Yii::app()->db->createCommand()->select("code,incharge")
                 ->from("security{$suffix}.sec_city")
-                ->where("code=:code",array(":code"=>$city))
-                ->queryScalar();//查询城市的负责人
-            $incharge=$incharge?$incharge:0;
-            $rows = Yii::app()->db->createCommand()->select("b.id,b.code,b.name")
-                ->from("hr{$suffix}.hr_binding a")
-                ->leftJoin("hr{$suffix}.hr_employee b","a.employee_id=b.id")
-                ->leftJoin("hr{$suffix}.hr_dept f","b.position=f.id")
-                ->where("(b.city=:city and f.dept_class='Sales') or a.user_id=:user_id or b.id=:id",
-                    array(":city"=>$city,":user_id"=>$incharge,":id"=>$id)
-                )->queryAll();//查询城市下的销售人员
-            if($rows){
-                foreach ($rows as $row){
-                    $list[$row["id"]] = $row["name"]." ({$row["code"]})";
+                ->where("code in ({$city_allow})",array(":code"=>$city))
+                ->queryAll();//查询城市的负责人
+            if($inRows){
+                foreach ($inRows as $inRow){
+                    $city = $inRow["code"];
+                    $incharge = $inRow["incharge"];
+                    $rows = Yii::app()->db->createCommand()->select("b.id,b.code,b.name")
+                        ->from("hr{$suffix}.hr_binding a")
+                        ->leftJoin("hr{$suffix}.hr_employee b","a.employee_id=b.id")
+                        ->leftJoin("hr{$suffix}.hr_dept f","b.position=f.id")
+                        ->where("(b.city=:city and f.dept_class='Sales') or a.user_id=:user_id or b.id=:id",
+                            array(":city"=>$city,":user_id"=>$incharge,":id"=>$id)
+                        )->queryAll();//查询城市下的销售人员
+                    if($rows){
+                        foreach ($rows as $row){
+                            $list[$row["id"]] = $row["name"]." ({$row["code"]})";
+                        }
+                    }
                 }
             }
         }
@@ -907,16 +920,17 @@ class KABotForm extends CFormModel
     }
 
     //查询相似的ka项目公司及备注
-    public function AjaxCustomerName($group){
+    public function AjaxCustomerName($group,$id=0){
         $suffix = Yii::app()->params['envSuffix'];
         $city = Yii::app()->user->city_allow();//swoper$suffix.swo_service
         $html = "";
+        $id = is_numeric($id)?$id:0;
         if($group!==""){
             $group = str_replace("'","\'",$group);
             $records = Yii::app()->db->createCommand()->select('a.customer_name,b.name,b.code')
                 ->from("sal_ka_bot a")
                 ->leftJoin("hr{$suffix}.hr_employee b","a.kam_id = b.id")
-                ->where("a.customer_name like '%$group%' or a.remark like '%$group%'")
+                ->where("a.id!='{$id}' and (a.customer_name like '%$group%' or a.remark like '%$group%')")
                 ->queryAll();
             if($records){
                 foreach ($records as $row){
