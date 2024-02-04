@@ -67,6 +67,7 @@ class KABotForm extends CFormModel
             'ava_date'=>'',//可成交日期
             'ava_amt'=>'',//可成交金额
             'ava_num'=>'',//门店数量
+            'ava_city'=>'',//城市
             'ava_rate'=>'',//签约概率
             'ava_fact_amt'=>'',//实际成交金额
             'uflag'=>'N',
@@ -123,6 +124,7 @@ class KABotForm extends CFormModel
             'ava_amt'=>Yii::t('ka','ava amt'),
             'ava_rate'=>Yii::t('ka','ava rate'),
             'ava_num'=>Yii::t('ka','ava num'),
+            'ava_city'=>Yii::t('ka','ava city'),
             'ava_fact_amt'=>Yii::t('ka','ava fact amt'),
 		);
 	}
@@ -300,6 +302,7 @@ class KABotForm extends CFormModel
                     $temp["ava_date"] = date("Y/m",strtotime($avaRow["ava_date"]));
                     $temp["ava_amt"] = $avaRow["ava_amt"];
                     $temp["ava_num"] = $avaRow["ava_num"];
+                    $temp["ava_city"] = $avaRow["ava_city"];
                     $temp["ava_rate"] = $avaRow["ava_rate"];
                     $temp["ava_fact_amt"] = !empty($avaRow["ava_fact_amt"])?floatval($avaRow["ava_fact_amt"]):null;
                     $temp['uflag'] = 'N';
@@ -605,9 +608,9 @@ class KABotForm extends CFormModel
                     case 'new':
                         if ($row['uflag']=='Y') {
                             $sql = "insert into sal_ka_bot_ava(
-									bot_id, ava_date, ava_amt, ava_num, ava_rate, ava_fact_amt,lcu
+									bot_id, ava_date, ava_amt, ava_num, ava_city, ava_rate, ava_fact_amt,lcu
 								) values (
-									:bot_id,:ava_date,:ava_amt,:ava_num,:ava_rate,:ava_fact_amt,:lcu
+									:bot_id,:ava_date,:ava_amt,:ava_num,:ava_city,:ava_rate,:ava_fact_amt,:lcu
 								)";
                         }
                         break;
@@ -620,9 +623,9 @@ class KABotForm extends CFormModel
                                 $sql = ($row['id']==0)
                                     ?
                                     "insert into sal_ka_bot_ava(
-                                        bot_id, ava_date, ava_amt, ava_num, ava_rate,ava_fact_amt,lcu
+                                        bot_id, ava_date, ava_amt, ava_num, ava_city, ava_rate,ava_fact_amt,lcu
                                     ) values (
-                                        :bot_id,:ava_date,:ava_amt,:ava_num,:ava_rate,:ava_fact_amt,:lcu
+                                        :bot_id,:ava_date,:ava_amt,:ava_num,:ava_city,:ava_rate,:ava_fact_amt,:lcu
 									)"
                                     :
                                     "update sal_ka_bot_ava set
@@ -630,6 +633,7 @@ class KABotForm extends CFormModel
 										ava_amt = :ava_amt,
 										ava_rate = :ava_rate,
 										ava_num = :ava_num,
+										ava_city = :ava_city,
 										ava_fact_amt = :ava_fact_amt,
 										luu = :luu 
 									where id = :id
@@ -671,6 +675,10 @@ class KABotForm extends CFormModel
                     if (strpos($sql,':ava_num')!==false){
                         $row['ava_num']=empty($row['ava_num'])?null:$row['ava_num'];
                         $command->bindParam(':ava_num',$row['ava_num'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':ava_city')!==false){
+                        $row['ava_city']=empty($row['ava_city'])?null:$row['ava_city'];
+                        $command->bindParam(':ava_city',$row['ava_city'],PDO::PARAM_STR);
                     }
                     if (strpos($sql,':ava_fact_amt')!==false){
                         $row['ava_fact_amt']=empty($row['ava_fact_amt'])?null:$row['ava_fact_amt'];

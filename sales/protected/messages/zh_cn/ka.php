@@ -114,6 +114,7 @@ return array(
     'YTD num rate'=>'数量转化（成交数量/拜访数量）',
     'Quotation/Visit'=>'报价/拜访',
     'ava num'=>'门店数量',
+    'ava city'=>'城市',
     '(Actual transactions this month/90 day weighted)'=>'（本月实际成交/90天加权）',
 );
 ?>

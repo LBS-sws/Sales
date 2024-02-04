@@ -5,8 +5,11 @@
 	<th>
 		<?php echo TbHtml::label($this->getLabelName('ava_amt'), false); ?>
 	</th>
-	<th width="15%">
+	<th width="13%">
 		<?php echo TbHtml::label($this->getLabelName('ava_num'), false); ?>
+	</th>
+	<th width="13%">
+		<?php echo TbHtml::label($this->getLabelName('ava_city'), false); ?>
 	</th>
 	<th width="20%">
 		<?php echo TbHtml::label($this->getLabelName('ava_rate'), false); ?>

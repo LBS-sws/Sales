@@ -11,7 +11,12 @@
 	</td>
 	<td>
 		<?php echo TbHtml::textField($this->getFieldName('ava_num'),  $this->record['ava_num'],
-								array('disabled'=>$this->model->scenario=='view','autocomplete'=>'off','min'=>0)
+								array('disabled'=>$this->model->scenario=='view','autocomplete'=>'off')
+		); ?>
+	</td>
+	<td>
+		<?php echo TbHtml::textField($this->getFieldName('ava_city'),  $this->record['ava_city'],
+								array('disabled'=>$this->model->scenario=='view','autocomplete'=>'off')
 		); ?>
 	</td>
 	<td>

@@ -33,3 +33,4 @@ CREATE TABLE `sal_ka_bot_ava` (
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COMMENT='KA客户的可成交日期列表（一对多）';
 
 ALTER TABLE sal_ka_bot_ava ADD COLUMN `ava_num`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '门店数量' AFTER ava_amt;
+ALTER TABLE sal_ka_bot_ava ADD COLUMN `ava_city`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '城市' AFTER ava_amt;

@@ -277,7 +277,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 
             <div id="ava_box" class="box changeTable <?php echo KALinkForm::getLinkRateNumForId($model->link_id)!==100?"hide":"";?>">
                 <div class="box-body table-responsive">
-                    <div class="col-lg-8 col-lg-offset-2">
+                    <div class="col-lg-10 col-lg-offset-1">
                         <div class="row">
                             <?php
                             $this->widget('ext.layout.TableView2Widget', array(
