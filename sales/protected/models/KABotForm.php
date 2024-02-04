@@ -605,9 +605,9 @@ class KABotForm extends CFormModel
                     case 'new':
                         if ($row['uflag']=='Y') {
                             $sql = "insert into sal_ka_bot_ava(
-									bot_id, ava_date, ava_amt, ava_rate, ava_fact_amt,lcu
+									bot_id, ava_date, ava_amt, ava_num, ava_rate, ava_fact_amt,lcu
 								) values (
-									:bot_id,:ava_date,:ava_amt,:ava_rate,:ava_fact_amt,:lcu
+									:bot_id,:ava_date,:ava_amt,:ava_num,:ava_rate,:ava_fact_amt,:lcu
 								)";
                         }
                         break;
@@ -620,15 +620,16 @@ class KABotForm extends CFormModel
                                 $sql = ($row['id']==0)
                                     ?
                                     "insert into sal_ka_bot_ava(
-                                        bot_id, ava_date, ava_amt, ava_rate,ava_fact_amt,lcu
+                                        bot_id, ava_date, ava_amt, ava_num, ava_rate,ava_fact_amt,lcu
                                     ) values (
-                                        :bot_id,:ava_date,:ava_amt,:ava_rate,:ava_fact_amt,:lcu
+                                        :bot_id,:ava_date,:ava_amt,:ava_num,:ava_rate,:ava_fact_amt,:lcu
 									)"
                                     :
                                     "update sal_ka_bot_ava set
 										ava_date = :ava_date, 
 										ava_amt = :ava_amt,
 										ava_rate = :ava_rate,
+										ava_num = :ava_num,
 										ava_fact_amt = :ava_fact_amt,
 										luu = :luu 
 									where id = :id
@@ -666,6 +667,10 @@ class KABotForm extends CFormModel
                     if (strpos($sql,':ava_rate')!==false){
                         $row['ava_rate']=empty($row['ava_rate'])?0:$row['ava_rate'];
                         $command->bindParam(':ava_rate',$row['ava_rate'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':ava_num')!==false){
+                        $row['ava_num']=empty($row['ava_num'])?null:$row['ava_num'];
+                        $command->bindParam(':ava_num',$row['ava_num'],PDO::PARAM_STR);
                     }
                     if (strpos($sql,':ava_fact_amt')!==false){
                         $row['ava_fact_amt']=empty($row['ava_fact_amt'])?null:$row['ava_fact_amt'];
