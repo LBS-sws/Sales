@@ -99,6 +99,8 @@ class KAStatisticForm extends CFormModel
         $conList = array(
             "sign_90_num"=>0,//未来90天数量
             "sign_90_amt"=>0,//未来90天金额
+            //"sign_this_num"=>0,//本月数量
+            //"sign_this_amt"=>0,//本月金額
         );
         $startDate = date("Y-m-d",strtotime($this->start_date));
         $endDate = date("Y-m-d",strtotime($this->start_date." + 3 months - 1 days"));
@@ -128,6 +130,48 @@ class KAStatisticForm extends CFormModel
                 $list[$employee_id]["sign_90_num"]+= $row["sign_90_num"];
                 $list[$employee_id]["sign_90_amt"]+= $row["sign_amt_one"];
                 $list[$employee_id]["sign_90_amt"]+= $row["sign_amt_two"];
+            }
+        }
+        //本月、未來90天需要添加溝通100%的金額
+        $searchDate = date("Y/m",strtotime($this->start_date));
+        $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}' and b.rate_num=100 and f.ava_rate>50";
+        if(Yii::app()->user->validFunction('CN15')){
+            $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }else{
+            $whereSql.= " and a.kam_id='{$this->employee_id}'";
+        }
+        $amtSql = "IFNULL(f.ava_amt,0)";
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.kam_id,
+                count(f.id) as amt_all,
+                sum(if(f.ava_rate<=80,{$amtSql}*0.5,0)) as amt_one,
+                sum(if(f.ava_rate>80,{$amtSql},0)) as amt_two,
+                sum(if(f.ava_rate>80,1,0)) as amt_80
+            ")->from("sal_ka_bot_ava f")
+            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ->leftJoin("sal_ka_link b","a.link_id=b.id")
+            ->where($whereSql)
+            ->group("a.kam_id")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $employee_id = $row["kam_id"];
+                if(!key_exists($employee_id,$list)){
+                    $list[$employee_id]=$conList;
+                }
+                //未來90天金額
+                $list[$employee_id]["sign_90_num"]+= $row["amt_all"];
+                $list[$employee_id]["sign_90_amt"]+= $row["amt_one"];
+                $list[$employee_id]["sign_90_amt"]+= $row["amt_two"];
+                //本月金額
+                if(!key_exists("sign_this_num",$list[$employee_id])){
+                    $list[$employee_id]["sign_this_num"]=0;
+                }
+                if(!key_exists("sign_this_amt",$list[$employee_id])){
+                    $list[$employee_id]["sign_this_amt"]=0;
+                }
+                $list[$employee_id]["sign_this_num"]+= $row["amt_80"];
+                $list[$employee_id]["sign_this_amt"]+= $row["amt_two"];
             }
         }
         return $list;
@@ -685,6 +729,7 @@ class KAStatisticForm extends CFormModel
 
     //未来90天加权报价金额(签约概率>=51)
     private function sign_90_num_table(){
+        $searchDate = date("Y/m",strtotime($this->start_date));
         $startDate = date("Y-m-d",strtotime($this->start_date));
         $endDate = date("Y-m-d",strtotime($this->start_date." + 3 months - 1 days"));
         $whereSql = "a.available_date BETWEEN '{$startDate}' and '{$endDate}' ";
@@ -700,6 +745,26 @@ class KAStatisticForm extends CFormModel
             ->where($whereSql)
             ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
             ->queryAll();
+        $rows =$rows?$rows:array();
+
+        //需要加上沟通100%的数据
+        $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}'";
+        $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100 and f.ava_rate>50";
+
+        $amtSql = "IFNULL(f.ava_amt,0)";
+        $selectText="a.id,a.kam_id,f.ava_rate as sign_odds,f.ava_date as available_date,a.apply_date,a.customer_no,
+        a.customer_name,a.contact_user,g.pro_name,g.rate_num";
+        $rowsTwo = Yii::app()->db->createCommand()
+            ->select("{$selectText},
+            CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,
+            sum({$amtSql}) as available_amt")
+            ->from("sal_ka_bot_ava f")
+            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ->leftJoin("sal_ka_link g","a.link_id=g.id")
+            ->where($whereSql)
+            ->queryAll();
+        $rowsTwo =$rowsTwo?$rowsTwo:array();
+        $rows = array_merge($rows,$rowsTwo);
         return $this->staticTableBodyTwo($rows);
     }
 
@@ -719,6 +784,25 @@ class KAStatisticForm extends CFormModel
             ->where($whereSql)
             ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
             ->queryAll();
+        $rows =$rows?$rows:array();
+
+        $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}'";
+        $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100 and f.ava_rate>50";
+
+        $amtSql = "IFNULL(f.ava_amt,0)";
+        $selectText="a.id,a.kam_id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,
+        a.customer_name,a.contact_user,g.pro_name,g.rate_num";
+        $rowsTwo = Yii::app()->db->createCommand()
+            ->select("{$selectText},
+            CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,
+            sum({$amtSql}) as available_amt")
+            ->from("sal_ka_bot_ava f")
+            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ->leftJoin("sal_ka_link g","a.link_id=g.id")
+            ->where($whereSql)
+            ->queryAll();
+        $rowsTwo =$rowsTwo?$rowsTwo:array();
+        $rows = array_merge($rows,$rowsTwo);
         return $this->staticTableBody($rows);
     }
 
