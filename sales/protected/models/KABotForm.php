@@ -412,7 +412,7 @@ class KABotForm extends CFormModel
                 $value = KALevelForm::getLevelNameForId($value);
                 break;
             case "class_id":
-                $value = KALevelForm::getClassNameForId($value);
+                $value = KAClassForm::getClassNameForId($value);
                 break;
             case "busine_id":
                 $value = KABusineForm::getBusineNameForArr($value);
