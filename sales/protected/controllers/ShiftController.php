@@ -61,7 +61,7 @@ class ShiftController extends Controller
         }
         $model->determinePageNum($pageNum);
         $model->retrieveDataByPage($model->pageNum);
-        $saleman=$model->saleman();
+        $saleman=$model->salemanForSec();
         $this->render('index',array('model'=>$model,'saleman'=>$saleman));
 	}
 

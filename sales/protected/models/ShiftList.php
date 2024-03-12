@@ -160,4 +160,20 @@ class ShiftList extends CListPageModel
         //print_r($name);
         return $records;
     }
+
+    public static function salemanForSec(){
+        $suffix = Yii::app()->params['envSuffix'];
+        $city=Yii::app()->user->city();
+        $rows = Yii::app()->db->createCommand()
+            ->select("b.id,b.name,b.code")
+            ->from("security{$suffix}.sec_user_access a")
+            ->leftJoin("hr{$suffix}.hr_binding h","a.username=h.user_id")
+            ->leftJoin("hr{$suffix}.hr_employee b","h.employee_id=b.id")
+            ->leftJoin("security{$suffix}.sec_user j","a.username=j.username")
+            ->where("a.system_id='sal' and a.a_read_write like '%HK01%' and b.city='{$city}'and j.status='A'")->queryAll();
+        return $rows?$rows:array();
+        //$sql="select code,name,id from hr$suffix.hr_employee WHERE  position in (SELECT id FROM hr$suffix.hr_dept where dept_class='sales') AND staff_status = 0 and city ='{$city}'";
+        //$records = Yii::app()->db->createCommand($sql)->queryAll();
+        //return $records;
+    }
 }
