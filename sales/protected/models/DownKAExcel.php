@@ -33,6 +33,57 @@ class DownKAExcel{
         $this->outHeader();
     }
 
+    public function setYTDHeader($headerArr){
+        $this->th_num=0;
+        if(!empty($headerArr)){
+            $colOne = 0;
+            foreach ($headerArr as $list) {
+                $background = "FFFFFF";
+                $textColor = "000000";
+                $width = 13;
+                $oneStr = $this->getColumn($colOne);
+                if (key_exists("background", $list)) {
+                    $background = $list["background"];
+                    $background = end(explode("#", $background));
+                }
+                if (key_exists("color", $list)) {
+                    $textColor = $list["color"];
+                    $textColor = end(explode("#", $textColor));
+                }
+                if (key_exists("width", $list)) {
+                    $width = $list["width"];
+                }
+                $this->objPHPExcel->getActiveSheet()->getColumnDimensionByColumn($colOne)->setWidth($width);
+                $this->objPHPExcel->getActiveSheet()->getRowDimension($this->current_row)->setRowHeight(30);
+
+                $this->objPHPExcel->getActiveSheet()
+                    ->setCellValueByColumnAndRow($colOne, $this->current_row, $list["name"]);
+                $this->setHeaderStyleTwo("{$oneStr}{$this->current_row}",$background,$textColor);
+
+                $colOne++;
+                $this->th_num++;
+            }
+            $endStr = $this->getColumn($colOne-1);
+            $this->objPHPExcel->getActiveSheet()->getStyle("A{$this->current_row}:{$endStr}".$this->current_row)->applyFromArray(
+                array(
+                    'font'=>array(
+                        'bold'=>true,
+                    ),
+                    'alignment'=>array(
+                        'horizontal'=>PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                        'vertical'=>PHPExcel_Style_Alignment::VERTICAL_CENTER,
+                    ),
+                    'borders'=>array(
+                        'allborders'=>array(
+                            'style'=>PHPExcel_Style_Border::BORDER_THIN,
+                        ),
+                    )
+                )
+            );
+            $this->current_row++;
+        }
+    }
+
     public function setKAHeader($headerArr){
         $this->setKAWidth();
         if(!empty($headerArr)){
@@ -131,6 +182,7 @@ class DownKAExcel{
                         $col++;
                     }
                     if($staff_id==="count"){
+                        $this->objPHPExcel->getActiveSheet()->getRowDimension($this->current_row)->setRowHeight(20);
                         $this->objPHPExcel->getActiveSheet()
                             ->getStyle("A{$this->current_row}:{$endStr}{$this->current_row}")
                             ->applyFromArray(

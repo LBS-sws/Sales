@@ -117,5 +117,7 @@ return array(
     'ava city'=>'城市',
     'ava note'=>'备注(<span style="color:red;">请备注减少门店总数和金额详情等内容</span>)',
     '(Actual transactions this month/90 day weighted)'=>'（本月实际成交/90天加权）',
+
+    'YTD Rpt'=>'YTD报表',
 );
 ?>

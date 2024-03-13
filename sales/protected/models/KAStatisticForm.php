@@ -649,6 +649,94 @@ class KAStatisticForm extends CFormModel
         return $html;
     }
 
+    //下載YTD
+    public function downYTD(){
+        $excelData = $this->getYTDDownData();
+        $headList = $this->getYTDDownHeader();
+        $excel = new DownKAExcel();
+        $excel->colTwo=1;
+        $title = $this->ka_year."年".Yii::t("ka","YTD Rpt");
+        $excel->SetHeaderTitle($title);
+        $excel->SetHeaderString($title);
+        $excel->init();
+        $excel->setYTDHeader($headList);
+        $excel->setKAData($excelData);
+        $excel->outExcel($title);
+    }
+
+    private function getYTDDownHeader(){
+        $list = array(
+            array("width"=>30,"background"=>"#305496","color"=>"#ffffff","name"=>"KA销售"),
+            array("width"=>30,"background"=>"#305496","color"=>"#ffffff","name"=>"客户编号"),
+            array("width"=>30,"background"=>"#305496","color"=>"#ffffff","name"=>"客户名称"),
+        );
+        for($i=1;$i<=12;$i++){
+            $list[]=array("width"=>15,"background"=>"#2A6BA4","color"=>"#ffffff","name"=>$this->ka_year."年{$i}月");
+        }
+        $list[]=array("width"=>15,"background"=>"#4472C4","color"=>"#ffffff","name"=>"统计");
+        return $list;
+    }
+
+    private function getYTDDownData(){
+        $this->ka_year = $this->search_year;
+        $suffix = Yii::app()->params['envSuffix'];
+        $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}'";
+        if(Yii::app()->user->validFunction('CN15')){
+            $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }else{
+            KABotForm::validateEmployee($this);
+            $whereSql.= " and a.kam_id='{$this->employee_id}'";
+        }
+        $whereSql.= " and g.rate_num=100";
+
+        $selectText="a.id,a.customer_no,a.customer_name,b.name,b.code
+        ,f.ava_fact_amt,f.ava_date";
+        $rows = Yii::app()->db->createCommand()
+            ->select($selectText)
+            ->from("sal_ka_bot_ava f")
+            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ->leftJoin("sal_ka_link g","a.link_id=g.id")
+            ->leftJoin("hr{$suffix}.hr_employee b","a.kam_id = b.id")
+            ->where($whereSql)
+            ->queryAll();
+        $data=array();
+        $dateTemp = array();
+        $countList = array("ka_man"=>"","customer_no"=>"","customer_name"=>"汇总：");
+        for ($i=1;$i<=12;$i++){
+            $dateTemp["{$this->ka_year}/{$i}"]="";
+            $countList["{$this->ka_year}/{$i}"]=0;
+        }
+        $countList["count"] = 0;
+        if($rows){
+            $data["city"]=array();
+            foreach ($rows as $row){
+                $id = $row["id"];
+                $dateKey = date("Y/n",strtotime($row["ava_date"]));
+                $money = empty($row["ava_fact_amt"])?0:floatval($row["ava_fact_amt"]);
+                if(!key_exists($id,$data["city"])){
+                    $temp=array(
+                        "ka_man"=>$row["name"]." ({$row['code']})",
+                        "customer_no"=>$row["customer_no"],
+                        "customer_name"=>$row["customer_name"],
+                    );
+                    $temp = array_merge($temp,$dateTemp);
+                    $temp["count"]=0;
+                    $data["city"][$id]=$temp;
+                }
+                if(is_numeric($data["city"][$id][$dateKey])){
+                    $data["city"][$id][$dateKey]+=$money;
+                }else{
+                    $data["city"][$id][$dateKey]=$money;
+                }
+                $data["city"][$id]["count"]+=$money;
+                $countList[$dateKey]+=$money;
+                $countList["count"]+=$money;
+            }
+            $data["city"]["count"]=$countList;
+        }
+        return $data;
+    }
+
     //下載
     public function downExcel($excelData){
         if(!is_array($excelData)){
@@ -757,7 +845,7 @@ class KAStatisticForm extends CFormModel
         $rowsTwo = Yii::app()->db->createCommand()
             ->select("{$selectText},
             CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,
-            sum({$amtSql}) as available_amt")
+            {$amtSql} as available_amt")
             ->from("sal_ka_bot_ava f")
             ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
@@ -795,7 +883,7 @@ class KAStatisticForm extends CFormModel
         $rowsTwo = Yii::app()->db->createCommand()
             ->select("{$selectText},
             CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,
-            sum({$amtSql}) as available_amt")
+            {$amtSql} as available_amt")
             ->from("sal_ka_bot_ava f")
             ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")

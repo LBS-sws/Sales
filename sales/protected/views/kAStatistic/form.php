@@ -41,6 +41,9 @@ $this->pageTitle=Yii::app()->name . ' - KA Statistic Form';
 		?>
 	</div>
             <div class="btn-group pull-right" role="group">
+                <?php echo TbHtml::button('<span class="fa fa-download"></span> '.Yii::t('ka','YTD Rpt'), array(
+                    'submit'=>Yii::app()->createUrl('kAStatistic/downYTD')));
+                ?>
                 <?php echo TbHtml::button('<span class="fa fa-download"></span> '.Yii::t('dialog','Download'), array(
                     'submit'=>Yii::app()->createUrl('kAStatistic/downExcel')));
                 ?>

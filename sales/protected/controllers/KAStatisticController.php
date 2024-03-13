@@ -28,7 +28,7 @@ class KAStatisticController extends Controller
 				'expression'=>array('KAStatisticController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view','downExcel','ajaxDetail'),
+				'actions'=>array('index','view','downExcel','downYTD','ajaxDetail'),
 				'expression'=>array('KAStatisticController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -89,6 +89,18 @@ class KAStatisticController extends Controller
             $model->attributes = $_POST['KAStatisticForm'];
             $excelData = key_exists("excel",$_POST)?$_POST["excel"]:array();
             $model->downExcel($excelData);
+        }else{
+            $model->setScenario("index");
+            $this->render('index',array('model'=>$model));
+        }
+	}
+
+	public function actionDownYTD()
+	{
+        $model = new KAStatisticForm('view');
+        if (isset($_POST['KAStatisticForm'])) {
+            $model->attributes = $_POST['KAStatisticForm'];
+            $model->downYTD();
         }else{
             $model->setScenario("index");
             $this->render('index',array('model'=>$model));
