@@ -787,11 +787,9 @@ class CountSearch extends SearchForCurlU {
 
     //获取U系统的服务单数据
     public static function getUServiceMoney($startDay,$endDay,$city_allow=""){
-        /*
         if(self::$system==0){//2024年1月29日年大陆版使用了新的U系统
             return self::getCurlServiceForCity($startDay,$endDay,$city_allow);
         }
-        */
         $list = array();
         $citySql = "";
         $textSql = "b.Text";
@@ -827,11 +825,9 @@ class CountSearch extends SearchForCurlU {
 
     //获取U系统的產品数据
     public static function getUInvMoney($startDay,$endDay,$city_allow=""){
-        /*
         if(self::$system==0){//2024年1月29日年大陆版使用了新的U系统
             return self::getCurlInvForCity($startDay,$endDay,$city_allow);
         }
-        */
         if(self::$system===1){//台灣版的產品為lbs的inv新增
             return self::getServiceTWForAdd($startDay,$endDay,$city_allow);
         }
