@@ -25,7 +25,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type';
 				)); 
 		?>
 	</div>
-	<div class="btn-group pull-right" role="group">
+	<div class="btn-group pull-right hide" role="group">
 		<?php
         echo TbHtml::button('<span class="fa fa-down"></span> '.Yii::t('ka','Download'), array(
             'data-toggle'=>'modal','data-target'=>'#downDialog'

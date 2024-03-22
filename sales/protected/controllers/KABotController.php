@@ -147,6 +147,9 @@ class KABotController extends Controller
 		if (!$model->retrieveData($index)) {
 			throw new CHttpException(404,'The requested page does not exist.');
 		} else {
+			if($model->employee_id!=$model->kam_id){
+				$model->scenario="view";
+			}
 			$this->render('form',array('model'=>$model,));
 		}
 	}

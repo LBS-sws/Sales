@@ -1,5 +1,6 @@
 <?php
 $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
+
 ?>
 <?php $form=$this->beginWidget('TbActiveForm', array(
 'id'=>'code-form',
@@ -28,6 +29,11 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
     input[readonly]{pointer-events: none;}
     select[readonly]{pointer-events: none;}
     .select2-container .select2-selection--single{ height: 34px;}
+	
+	
+			.bat_phone_div_click.open{ }
+			.bat_phone_div_click{ border-top:1px solid #d2d6de;padding-bottom:4px;}
+			.bat_phone_div_click span{ display:inline-block;border:1px solid #d2d6de; padding:7px 12px;}
 </style>
 
 <section class="content-header">
@@ -61,7 +67,16 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 <?php endif ?>
 	</div>
             <?php if ($model->scenario!='new'): ?>
+		
                 <div class="btn-group pull-right" role="group">
+			
+					<?php 
+					
+						if($model->employee_id==$model->kam_id){
+							echo TbHtml::button('<span class="glyphicon glyphicon-pencil"></span> '."编辑", array(
+									'submit'=>Yii::app()->createUrl('kABot/edit',array("index"=>$model->id)))); 
+						}
+					?>
                     <?php echo TbHtml::button('<span class="fa fa-list"></span> '.Yii::t('ka','Flow Info'), array(
                             'data-toggle'=>'modal','data-target'=>'#flowinfodialog',)
                     );
@@ -75,6 +90,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 			<?php echo $form->hiddenField($model, 'scenario'); ?>
 			<?php echo $form->hiddenField($model, 'id'); ?>
 			<?php echo $form->hiddenField($model, 'city'); ?>
+			<?php echo $form->hiddenField($model, 'kam_id'); ?>
             <?php echo CHtml::hiddenField('dtltemplate_info'); ?>
             <?php echo CHtml::hiddenField('dtltemplate_ava'); ?>
 
@@ -87,7 +103,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 </div>
                 <?php echo $form->labelEx($model,'kam_id',array('class'=>"col-sm-1 control-label")); ?>
                 <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'kam_id',
+                    <?php echo $form->textField($model, 'kam_name',
                         array('readonly'=>(true))
                     ); ?>
                 </div>
@@ -111,74 +127,77 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 </div>
 
             </div>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'head_city_id',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->dropDownList($model, 'head_city_id',KAAreaForm::getCityListForId($model->head_city_id),
-                        array('readonly'=>($model->scenario=='view'),'class'=>'changeCity')
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'talk_city_id',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->dropDownList($model, 'talk_city_id',KAAreaForm::getCityListForId($model->talk_city_id),
-                        array('readonly'=>($model->scenario=='view'),'class'=>'changeCity','id'=>'talk_city_id')
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'area_id',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->dropDownList($model, 'area_id',KAAreaForm::getCityListForId($model->area_id),
-                        array('readonly'=>($model->scenario=='view'),'class'=>'changeCity')
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'work_user',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'work_user',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'work_phone',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'work_phone',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'work_email',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'work_email',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'contact_user',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'contact_user',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'contact_phone',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'contact_phone',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-                <?php echo $form->labelEx($model,'contact_email',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
-                    <?php echo $form->textField($model, 'contact_email',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-            </div>
-            <div class="form-group">
-                <?php echo $form->labelEx($model,'contact_adr',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-7">
-                    <?php echo $form->textField($model, 'contact_adr',
-                        array('readonly'=>($model->scenario=='view'))
-                    ); ?>
-                </div>
-            </div>
+			<div class="bat_phone_div_click text-center"><span>展开</span></div>
+			<div class="bat_phone_div" style="display:none;">
+				<div class="form-group">
+					<?php echo $form->labelEx($model,'head_city_id',array('class'=>"col-sm-2 control-label")); ?>
+					<div class="col-sm-2">
+						<?php echo $form->dropDownList($model, 'head_city_id',KAAreaForm::getCityListForId($model->head_city_id),
+							array('readonly'=>($model->scenario=='view'),'class'=>'changeCity')
+						); ?>
+					</div>
+					<?php echo $form->labelEx($model,'talk_city_id',array('class'=>"col-sm-1 control-label")); ?>
+					<div class="col-sm-2">
+						<?php echo $form->dropDownList($model, 'talk_city_id',KAAreaForm::getCityListForId($model->talk_city_id),
+							array('readonly'=>($model->scenario=='view'),'class'=>'changeCity','id'=>'talk_city_id')
+						); ?>
+					</div>
+					<?php echo $form->labelEx($model,'area_id',array('class'=>"col-sm-1 control-label")); ?>
+					<div class="col-sm-2">
+						<?php echo $form->dropDownList($model, 'area_id',KAAreaForm::getCityListForId($model->area_id),
+							array('readonly'=>($model->scenario=='view'),'class'=>'changeCity')
+						); ?>
+					</div>
+				</div>
+				<div class="form-group">
+					<?php echo $form->labelEx($model,'work_user',array('class'=>"col-sm-2 control-label")); ?>
+					<div class="col-sm-2">
+						<?php echo $form->textField($model, 'work_user',
+							array('readonly'=>($model->scenario=='view'))
+						); ?>
+					</div>
+					<?php echo $form->labelEx($model,'work_phone',array('class'=>"col-sm-1 control-label")); ?>
+					<div class="col-sm-2">
+						<?php echo $form->textField($model, 'work_phone',
+							array('readonly'=>($model->scenario=='view'))
+						); ?>
+					</div>
+					<?php echo $form->labelEx($model,'work_email',array('class'=>"col-sm-1 control-label")); ?>
+					<div class="col-sm-2">
+						<?php echo $form->textField($model, 'work_email',
+							array('readonly'=>($model->scenario=='view'))
+						); ?>
+					</div>
+				</div>
+				<div class="form-group">
+					<?php echo $form->labelEx($model,'contact_user',array('class'=>"col-sm-2 control-label")); ?>
+					<div class="col-sm-2">
+						<?php echo $form->textField($model, 'contact_user',
+							array('readonly'=>($model->scenario=='view'))
+						); ?>
+					</div>
+					<?php echo $form->labelEx($model,'contact_phone',array('class'=>"col-sm-1 control-label")); ?>
+					<div class="col-sm-2">
+						<?php echo $form->textField($model, 'contact_phone',
+							array('readonly'=>($model->scenario=='view'))
+						); ?>
+					</div>
+					<?php echo $form->labelEx($model,'contact_email',array('class'=>"col-sm-1 control-label")); ?>
+					<div class="col-sm-2">
+						<?php echo $form->textField($model, 'contact_email',
+							array('readonly'=>($model->scenario=='view'))
+						); ?>
+					</div>
+				</div>
+				<div class="form-group">
+					<?php echo $form->labelEx($model,'contact_adr',array('class'=>"col-sm-2 control-label")); ?>
+					<div class="col-sm-7">
+						<?php echo $form->textField($model, 'contact_adr',
+							array('readonly'=>($model->scenario=='view'))
+						); ?>
+					</div>
+				</div>
+			</div>
             <div class="form-group">
                 <?php echo $form->labelEx($model,'source_id',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
@@ -335,7 +354,24 @@ $('table').on('change','[id^=\"KABotForm\"]',function() {
 	var n=$(this).attr('id').split('_');
 	$('#KABotForm_'+n[1]+'_'+n[2]+'_uflag').val('Y');
 });
+
+
+			$('.bat_phone_div_click').click(function(){
+				if($(this).hasClass('open')){
+					$(this).removeClass('open');
+					$(this).find('span').eq(0).text('展开');
+					$(this).next('.bat_phone_div').slideUp(100);
+				}else{
+					$(this).addClass('open');
+					$(this).find('span').eq(0).text('收起');
+					$(this).next('.bat_phone_div').slideDown(100);
+				}
+			});
 ";
+
+if ($model->scenario=='new') {
+	$js.="$('.bat_phone_div_click').trigger('click');";
+}
 Yii::app()->clientScript->registerScript('setFlag',$js,CClientScript::POS_READY);
 switch(Yii::app()->language) {
     case 'zh_cn': $lang = 'zh-CN'; break;

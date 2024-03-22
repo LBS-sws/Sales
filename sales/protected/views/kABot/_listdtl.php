@@ -3,8 +3,7 @@ $labels = $this->model->attributeLabels();
 $withrow = count($this->record['detail'])>0;
 $idX = $this->record['id'];
 ?>
-<tr class='clickable-row <?php echo $this->record['color']; ?>' data-href='<?php echo $this->getLink('KA01', 'kABot/edit', 'kABot/view', array('index'=>$this->record['id']));?>'>
-	<td><?php echo $this->drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$this->record['id'])); ?></td>
+<tr class='clickable-row <?php echo $this->record['color']; ?>' data-href='<?php echo $this->getLink('KA201', 'kABot/edit', 'kABot/view', array('index'=>$this->record['id']));?>'>
 	<td><?php echo $this->record['follow_date']; ?></td>
 	<td><?php echo $this->record['apply_date']; ?></td>
 	<td><?php echo $this->record['customer_no']; ?></td>

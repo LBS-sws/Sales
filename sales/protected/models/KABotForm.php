@@ -9,6 +9,7 @@ class KABotForm extends CFormModel
 	public $customer_no;
 	public $customer_name;
 	public $kam_id;
+	public $kam_name;
 	public $head_city_id;
 	public $talk_city_id;
 	public $contact_user;
@@ -143,7 +144,7 @@ class KABotForm extends CFormModel
                 available_date,available_amt,avaInfo,
                 contact_adr,work_user,work_phone,work_email,class_other,
                 sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
-            array('apply_date,work_user,contact_adr,available_date,customer_name,kam_id,link_id','required'),
+            array('apply_date,work_user,work_phone,contact_adr,available_date,customer_name,kam_id,link_id','required'),
             array('apply_date','validateDate'),
             array('link_id','validateLinkID'),
             array('sign_amt','computeSignAmt'),
@@ -278,7 +279,7 @@ class KABotForm extends CFormModel
                     default:
                 }
             }
-            $this->kam_id = self::getEmployeeNameForId($this->kam_id);
+            $this->kam_name = self::getEmployeeNameForId($this->kam_id);
             $sql = "select * from sal_ka_bot_info where bot_id=".$index." ";
             $infoRows = Yii::app()->db->createCommand($sql)->queryAll();
             if($infoRows){
@@ -786,7 +787,7 @@ class KABotForm extends CFormModel
 
     private function lenStr(){
         $code = strval($this->id);
-        $this->customer_no = "LBSKA";
+        $this->customer_no = "NKA";
         for($i = 0;$i < 5-strlen($code);$i++){
             $this->customer_no.="0";
         }

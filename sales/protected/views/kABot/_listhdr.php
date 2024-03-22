@@ -1,5 +1,4 @@
 <tr>
-	<th></th>
 	<th>
 		<?php echo TbHtml::link($this->getLabelName('follow_date').$this->drawOrderArrow('a.follow_date'),'#',$this->createOrderLink('code-list','a.follow_date'))
 			;
