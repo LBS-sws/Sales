@@ -202,7 +202,7 @@ foreach ($models as $key=>$item) {
         $notCityList = array_keys($notCityList);
 	    $list = array(
             "CS","H-N","HK","TC","ZS1","TP","TY","KS","TN",
-            "XM","KH","ZY","MO","RN","MY","WL","HN1",
+            "XM","KH","ZY","MO","RN","MY","WL","HN1","QD",
         );//排行榜需要特別排除的城市
 	    return array_merge($notCityList,$list);
     }
