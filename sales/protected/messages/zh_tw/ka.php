@@ -119,5 +119,6 @@ return array(
     '(Actual transactions this month/90 day weighted)'=>'（本月實際成交/90天加權）',
 
     'YTD Rpt'=>'YTD报表',
+    'KA Type'=>'KA類別',
 );
 ?>

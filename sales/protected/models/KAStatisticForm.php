@@ -19,6 +19,9 @@ class KAStatisticForm extends CFormModel
     public $employee_name;
 
     public $downJsonText='';
+
+    protected $function_id='CN15';
+    protected $table_pre='_ka_';
 	/**
 	 * Declares customized attribute labels.
 	 * If not declared here, an attribute would have a label that is
@@ -76,16 +79,17 @@ class KAStatisticForm extends CFormModel
     }
 
     //获取KA所有员工
-    private function getKaManForKaBot(){
+    protected function getKaManForKaBot(){
         $suffix = Yii::app()->params['envSuffix'];
-        if(Yii::app()->user->validFunction('CN15')){
+        $table_pre = $this->table_pre;
+        if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql= "";//2023/06/16 改為可以看的所有記錄
         }else{
             $whereSql= "a.kam_id='{$this->employee_id}'";
         }
         $rows = Yii::app()->db->createCommand()
             ->select("h.id,h.code,h.name,h.city")
-            ->from("sal_ka_bot a")
+            ->from("sal{$table_pre}bot a")
             ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
             ->where($whereSql)
             ->group("h.id,h.code,h.name,h.city")
@@ -94,7 +98,8 @@ class KAStatisticForm extends CFormModel
     }
 
     //获取未来90天的金额及数量
-    private function getAmtNumFor90(){
+    protected function getAmtNumFor90(){
+        $table_pre = $this->table_pre;
         $list = array();
         $conList = array(
             "sign_90_num"=>0,//未来90天数量
@@ -105,7 +110,7 @@ class KAStatisticForm extends CFormModel
         $startDate = date("Y-m-d",strtotime($this->start_date));
         $endDate = date("Y-m-d",strtotime($this->start_date." + 3 months - 1 days"));
         $whereSql = "a.available_date BETWEEN '{$startDate}' and '{$endDate}' ";
-        if(Yii::app()->user->validFunction('CN15')){
+        if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }else{
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
@@ -116,7 +121,7 @@ class KAStatisticForm extends CFormModel
                 count(a.id) as sign_90_num,
                 sum(if(a.sign_odds<=80,{$amtSql}*0.5,0)) as sign_amt_one,
                 sum(if(a.sign_odds>80,{$amtSql},0)) as sign_amt_two
-            ")->from("sal_ka_bot a")
+            ")->from("sal{$table_pre}bot a")
             ->leftJoin("sal_ka_link b","a.link_id=b.id")
             ->where($whereSql." and b.rate_num<100 and a.sign_odds>50 and a.sign_odds<100")
             ->group("a.kam_id")
@@ -135,7 +140,7 @@ class KAStatisticForm extends CFormModel
         //本月、未來90天需要添加溝通100%的金額
         $searchDate = date("Y/m",strtotime($this->start_date));
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}' and b.rate_num=100 and f.ava_rate>50";
-        if(Yii::app()->user->validFunction('CN15')){
+        if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }else{
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
@@ -147,8 +152,8 @@ class KAStatisticForm extends CFormModel
                 sum(if(f.ava_rate<=80,{$amtSql}*0.5,0)) as amt_one,
                 sum(if(f.ava_rate>80,{$amtSql},0)) as amt_two,
                 sum(if(f.ava_rate>80,1,0)) as amt_80
-            ")->from("sal_ka_bot_ava f")
-            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ")->from("sal{$table_pre}bot_ava f")
+            ->leftJoin("sal{$table_pre}bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link b","a.link_id=b.id")
             ->where($whereSql)
             ->group("a.kam_id")
@@ -178,7 +183,8 @@ class KAStatisticForm extends CFormModel
     }
 
     //获取YTD、MTD的金额及数量
-    private function getAmtNumForYM(){
+    protected function getAmtNumForYM(){
+        $table_pre = $this->table_pre;
         $list = array();
         $conList = array(
             "ytd_num"=>0,
@@ -187,7 +193,7 @@ class KAStatisticForm extends CFormModel
             "mtd_amt"=>0,
         );
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}' and b.rate_num=100";
-        if(Yii::app()->user->validFunction('CN15')){
+        if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }else{
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
@@ -200,8 +206,8 @@ class KAStatisticForm extends CFormModel
             
                 sum(if(DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}',1,0)) as mtd_num,
                 sum(if(DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}',{$amtSql},0)) as mtd_amt
-            ")->from("sal_ka_bot_ava f")
-            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ")->from("sal{$table_pre}bot_ava f")
+            ->leftJoin("sal{$table_pre}bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link b","a.link_id=b.id")
             ->where($whereSql)
             ->group("a.id,a.kam_id")
@@ -232,7 +238,8 @@ class KAStatisticForm extends CFormModel
     }
 
     //获取拜访、报价、本月的金额及数量
-    private function getAmtNumForVQS(){
+    protected function getAmtNumForVQS(){
+        $table_pre = $this->table_pre;
 	    $list = array();
 	    $conList = array(
             "visit_num"=>0,//拜访数量
@@ -243,7 +250,7 @@ class KAStatisticForm extends CFormModel
             "sign_this_amt"=>0,//本月金额
         );
         $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
-        if(Yii::app()->user->validFunction('CN15')){
+        if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }else{
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
@@ -263,7 +270,7 @@ class KAStatisticForm extends CFormModel
                 sum(if(b.rate_num<100 and a.sign_odds>80 and a.sign_odds<100 and DATE_FORMAT(a.available_date,'%Y/%m/01')='{$searchDate}',1,0)) as sign_this_num,
                 sum(if(b.rate_num<100 and a.sign_odds>80 and a.sign_odds<100 and DATE_FORMAT(a.available_date,'%Y/%m/01')='{$searchDate}',{$amtSql},0)) as sign_this_amt
                 
-            ")->from("sal_ka_bot a")
+            ")->from("sal{$table_pre}bot a")
             ->leftJoin("sal_ka_link b","a.link_id=b.id")
             ->where($whereSql)
             ->group("a.kam_id")
@@ -310,7 +317,7 @@ class KAStatisticForm extends CFormModel
         return true;
     }
 
-    private function addTempForList(&$temp,$list,$ka_id){
+    protected function addTempForList(&$temp,$list,$ka_id){
         if(key_exists($ka_id,$list)){
             foreach ($list[$ka_id] as $key=>$item){
                 if(key_exists($key,$temp)){
@@ -320,7 +327,7 @@ class KAStatisticForm extends CFormModel
         }
     }
 
-    private function getTemp(){
+    protected function getTemp(){
         return array(
             "employee_id"=>"",//KA_id
             "kam_name"=>"",//KA名称
@@ -374,7 +381,7 @@ class KAStatisticForm extends CFormModel
         return $html;
     }
 
-    private function getTopArr(){
+    protected function getTopArr(){
         $topList=array(
             array("name"=>Yii::t("ka","KAM"),"background"=>"#305496","color"=>"#ffffff","rowspan"=>3),//ka销售
             array("name"=>Yii::t("ka","Total data"),"background"=>"#305496","color"=>"#ffffff",//全部数据
@@ -469,7 +476,7 @@ class KAStatisticForm extends CFormModel
     }
 
     //顯示提成表的表格內容（表頭）
-    private function tableTopHtml(){
+    protected function tableTopHtml(){
         $topList = self::getTopArr();
         $trOne="";
         $trTwo="";
@@ -528,7 +535,7 @@ class KAStatisticForm extends CFormModel
     }
 
     //設置表格的單元格寬度
-    private function tableHeaderWidth(){
+    protected function tableHeaderWidth(){
         $html="<tr>";
         for($i=0;$i<=$this->th_sum;$i++){
             if($i==0){
@@ -553,7 +560,7 @@ class KAStatisticForm extends CFormModel
         return $html;
     }
     //获取td对应的键名
-    private function getDataAllKeyStr(){
+    protected function getDataAllKeyStr(){
         $bodyKey = array(
             "kam_name","visit_num","visit_amt","quota_num","quota_amt","quota_rate",
             "sign_90_num","sign_90_amt","sign_this_num","sign_this_amt","this_rate",
@@ -578,7 +585,7 @@ class KAStatisticForm extends CFormModel
     }
 
     //將城市数据寫入表格
-    private function showServiceHtml($data){
+    protected function showServiceHtml($data){
         $bodyKey = $this->getDataAllKeyStr();
         $clickTdList = $this->getClickTdList();
         $html="";
@@ -664,7 +671,7 @@ class KAStatisticForm extends CFormModel
         $excel->outExcel($title);
     }
 
-    private function getYTDDownHeader(){
+    protected function getYTDDownHeader(){
         $list = array(
             array("width"=>30,"background"=>"#305496","color"=>"#ffffff","name"=>"KA销售"),
             array("width"=>30,"background"=>"#305496","color"=>"#ffffff","name"=>"客户编号"),
@@ -677,11 +684,12 @@ class KAStatisticForm extends CFormModel
         return $list;
     }
 
-    private function getYTDDownData(){
+    protected function getYTDDownData(){
+        $table_pre = $this->table_pre;
         $this->ka_year = $this->search_year;
         $suffix = Yii::app()->params['envSuffix'];
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}'";
-        if(Yii::app()->user->validFunction('CN15')){
+        if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }else{
             KABotForm::validateEmployee($this);
@@ -693,8 +701,8 @@ class KAStatisticForm extends CFormModel
         ,f.ava_fact_amt,f.ava_date";
         $rows = Yii::app()->db->createCommand()
             ->select($selectText)
-            ->from("sal_ka_bot_ava f")
-            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ->from("sal{$table_pre}bot_ava f")
+            ->leftJoin("sal{$table_pre}bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->leftJoin("hr{$suffix}.hr_employee b","a.kam_id = b.id")
             ->where($whereSql)
@@ -804,7 +812,7 @@ class KAStatisticForm extends CFormModel
     }
 
     //需要顯示表格詳情的欄位
-    private function getClickTdList(){
+    protected function getClickTdList(){
         return array(
             "visit_num"=>Yii::t("ka","Visiting stage"),//拜访阶段
             "quota_num"=>Yii::t("ka","Quotation stage"),//报价阶段
@@ -816,7 +824,8 @@ class KAStatisticForm extends CFormModel
     }
 
     //未来90天加权报价金额(签约概率>=51)
-    private function sign_90_num_table(){
+    protected function sign_90_num_table(){
+        $table_pre = $this->table_pre;
         $searchDate = date("Y/m",strtotime($this->start_date));
         $startDate = date("Y-m-d",strtotime($this->start_date));
         $endDate = date("Y-m-d",strtotime($this->start_date." + 3 months - 1 days"));
@@ -828,7 +837,7 @@ class KAStatisticForm extends CFormModel
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
-                ")->from("sal_ka_bot a")
+                ")->from("sal{$table_pre}bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
             ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
@@ -846,8 +855,8 @@ class KAStatisticForm extends CFormModel
             ->select("{$selectText},
             CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,
             {$amtSql} as available_amt")
-            ->from("sal_ka_bot_ava f")
-            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ->from("sal{$table_pre}bot_ava f")
+            ->leftJoin("sal{$table_pre}bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
             ->queryAll();
@@ -857,7 +866,8 @@ class KAStatisticForm extends CFormModel
     }
 
     //本月可实现销售金额(签约概率>=81)
-    private function sign_this_num_table(){
+    protected function sign_this_num_table(){
+        $table_pre = $this->table_pre;
         $searchDate = date("Y/m",strtotime($this->start_date));
         $whereSql = "DATE_FORMAT(a.available_date,'%Y/%m')='{$searchDate}' and g.rate_num<100 and a.sign_odds>80 and a.sign_odds<100 ";
         $whereSql.= " and a.kam_id='{$this->employee_id}'";
@@ -867,7 +877,7 @@ class KAStatisticForm extends CFormModel
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
-                ")->from("sal_ka_bot a")
+                ")->from("sal{$table_pre}bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
             ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
@@ -884,8 +894,8 @@ class KAStatisticForm extends CFormModel
             ->select("{$selectText},
             CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,
             {$amtSql} as available_amt")
-            ->from("sal_ka_bot_ava f")
-            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ->from("sal{$table_pre}bot_ava f")
+            ->leftJoin("sal{$table_pre}bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
             ->queryAll();
@@ -895,7 +905,8 @@ class KAStatisticForm extends CFormModel
     }
 
     //拜访阶段詳情
-    private function visit_num_table(){
+    protected function visit_num_table(){
+        $table_pre = $this->table_pre;
         $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
         $whereSql.= " and a.kam_id='{$this->employee_id}'";
         $searchDate = $this->start_date;
@@ -905,7 +916,7 @@ class KAStatisticForm extends CFormModel
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
-                ")->from("sal_ka_bot a")
+                ")->from("sal{$table_pre}bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
             ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
@@ -914,7 +925,8 @@ class KAStatisticForm extends CFormModel
     }
 
     //报价阶段詳情
-    private function quota_num_table(){
+    protected function quota_num_table(){
+        $table_pre = $this->table_pre;
         $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num>=30";
 
@@ -923,7 +935,7 @@ class KAStatisticForm extends CFormModel
         $rows = Yii::app()->db->createCommand()
             ->select("a.id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,a.customer_name,a.contact_user,a.kam_id,a.available_amt,
                 CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,g.rate_num
-                ")->from("sal_ka_bot a")
+                ")->from("sal{$table_pre}bot a")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
             ->order("if(g.rate_num>0,a.available_date,-1) desc,a.available_date desc")
@@ -932,7 +944,8 @@ class KAStatisticForm extends CFormModel
     }
 
     //YTD
-    private function ytd_num_table(){
+    protected function ytd_num_table(){
+        $table_pre = $this->table_pre;
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}'";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100";
 
@@ -943,8 +956,8 @@ class KAStatisticForm extends CFormModel
             ->select("{$selectText},
             CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,
             sum({$amtSql}) as available_amt")
-            ->from("sal_ka_bot_ava f")
-            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ->from("sal{$table_pre}bot_ava f")
+            ->leftJoin("sal{$table_pre}bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
             ->group($selectText)
@@ -952,7 +965,8 @@ class KAStatisticForm extends CFormModel
         return $this->staticTableBodyThree($rows);
     }
 
-    private function getBotAvaAmt($row,$type="year"){
+    protected function getBotAvaAmt($row,$type="year"){
+        $table_pre = $this->table_pre;
         $amt = 0;
         if (isset($row["id"])){
             $whereSql = "a.bot_id='{$row['id']}'";
@@ -964,7 +978,7 @@ class KAStatisticForm extends CFormModel
             }
             $amt = Yii::app()->db->createCommand()
                 ->select("sum(IFNULL(a.ava_fact_amt,0)) as amt_money")
-                ->from("sal_ka_bot_ava a")
+                ->from("sal{$table_pre}bot_ava a")
                 ->where($whereSql)
                 ->queryScalar();
         }
@@ -972,7 +986,8 @@ class KAStatisticForm extends CFormModel
     }
 
     //mtd_num
-    private function mtd_num_table(){
+    protected function mtd_num_table(){
+        $table_pre = $this->table_pre;
         $searchDate = date("Y/m",strtotime($this->start_date));
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='$searchDate'";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100";
@@ -984,8 +999,8 @@ class KAStatisticForm extends CFormModel
             ->select("{$selectText},
             CONCAT('(',g.rate_num,'%) ',g.pro_name) as link_name,
             sum({$amtSql}) as available_amt")
-            ->from("sal_ka_bot_ava f")
-            ->leftJoin("sal_ka_bot a","f.bot_id=a.id")
+            ->from("sal{$table_pre}bot_ava f")
+            ->leftJoin("sal{$table_pre}bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link g","a.link_id=g.id")
             ->where($whereSql)
             ->group($selectText)
@@ -993,7 +1008,7 @@ class KAStatisticForm extends CFormModel
         return $this->staticTableBodyThree($rows);
     }
 
-    private function staticTableBody($rows){
+    protected function staticTableBody($rows){
         $html = "<thead>";
         $html.="<tr>";
         $html.="<th width='120px'>预估可成交日期</th>";
@@ -1039,7 +1054,7 @@ class KAStatisticForm extends CFormModel
     }
 
     //未来90天加权报价金额
-    private function staticTableBodyTwo($rows){
+    protected function staticTableBodyTwo($rows){
         $html = "<thead>";
         $html.="<tr>";
         $html.="<th width='120px'>预估可成交日期</th>";
@@ -1090,7 +1105,7 @@ class KAStatisticForm extends CFormModel
     }
 
     //YTD、MTD
-    private function staticTableBodyThree($rows){
+    protected function staticTableBodyThree($rows){
         $html = "<thead>";
         $html.="<tr>";
         $html.="<th width='120px'>预估可成交日期</th>";

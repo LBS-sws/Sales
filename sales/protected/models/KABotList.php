@@ -170,7 +170,7 @@ class KABotList extends CListPageModel
 		return true;
 	}
 
-	private function getTdColor($row){
+	protected function getTdColor($row){
 	    if(empty($row["available_date"])){
 	        return "";
         }

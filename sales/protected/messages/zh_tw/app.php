@@ -154,5 +154,10 @@ return array(
     'Market Success'=>'已完成客戶',
     'Market State set'=>'跟進狀態設置',
     'KA Source(A)'=>'客戶來源',
+
+    'RA Manager'=>'RKA業務管理',
+    'RA Bot'=>'RKA項目',
+    'RA Statistic'=>'RKA項目統計',
+    'RA Bot(All)'=>'RKA項目(所有)',
 );
 ?>

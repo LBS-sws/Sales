@@ -227,6 +227,21 @@ return array(
         ),
     ),
 
+    'RA Manager'=>array( //RKA业务管理
+        'access'=>'RA',
+        'icon'=>'fa-trophy',
+        'items'=>array(
+            'RA Bot'=>array(//RKA項目
+                'access'=>'RA01',
+                'url'=>'RABot/index',
+            ),
+            'RA Statistic'=>array(//RKA項目統計
+                'access'=>'RA02',
+                'url'=>'RAStatistic/index',
+            ),
+        ),
+    ),
+
     'Market'=>array( //市场营销
         'access'=>'MT',
         'icon'=>'fa-glass',

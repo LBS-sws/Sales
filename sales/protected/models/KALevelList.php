@@ -12,6 +12,7 @@ class KALevelList extends CListPageModel
 		return array(
             'class_name'=>Yii::t('ka','class type name'),
 			'pro_name'=>Yii::t('ka','project name'),
+			'ka_type'=>Yii::t('ka','KA Type'),
 			'z_index'=>Yii::t('ka','z index'),
 			'z_display'=>Yii::t('ka','z display'),
 		);
@@ -55,6 +56,7 @@ class KALevelList extends CListPageModel
                 $this->attr[] = array(
                     'id'=>$record['id'],
                     'pro_name'=>$record['pro_name'],
+                    'ka_type'=>$record['ka_type'],
                     'z_display'=>empty($record['z_display'])?Yii::t("ka","no"):Yii::t("ka","yes"),
                     'z_index'=>$record['z_index'],
                 );

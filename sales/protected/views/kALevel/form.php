@@ -56,6 +56,16 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 			</div>
 
 			<div class="form-group">
+				<?php echo $form->labelEx($model,'ka_type',array('class'=>"col-sm-2 control-label")); ?>
+				<div class="col-sm-2">
+					<?php
+                    echo $form->dropDownList($model, 'ka_type',array("NKA"=>"NKA","RKA"=>"RKA"),
+						array('size'=>50,'maxlength'=>100,'readonly'=>($model->scenario=='view'))
+					); ?>
+				</div>
+			</div>
+
+			<div class="form-group">
 				<?php echo $form->labelEx($model,'z_index',array('class'=>"col-sm-2 control-label")); ?>
 				<div class="col-sm-2">
 					<?php echo $form->numberField($model, 'z_index',

@@ -5,6 +5,7 @@ class KALevelForm extends CFormModel
 	/* User Fields */
 	public $id;
 	public $pro_name;
+	public $ka_type;
 	public $z_index=0;
 	public $z_display=1;
 
@@ -18,6 +19,7 @@ class KALevelForm extends CFormModel
 		return array(
             'class_name'=>Yii::t('ka','class type name'),
             'pro_name'=>Yii::t('ka','project name'),
+            'ka_type'=>Yii::t('ka','KA Type'),
             'z_index'=>Yii::t('ka','z index'),
             'z_display'=>Yii::t('ka','z display'),
 		);
@@ -29,8 +31,8 @@ class KALevelForm extends CFormModel
 	public function rules()
 	{
 		return array(
-            array('pro_name,id,z_index,z_display','safe'),
-            array('pro_name,z_index,z_display','required'),
+            array('pro_name,ka_type,id,z_index,z_display','safe'),
+            array('pro_name,ka_type,z_index,z_display','required'),
 		);
 	}
 
@@ -42,6 +44,7 @@ class KALevelForm extends CFormModel
 		if ($row!==false) {
 			$this->id = $row['id'];
 			$this->pro_name = $row['pro_name'];
+			$this->ka_type = $row['ka_type'];
 			$this->z_index = $row['z_index'];
 			$this->z_display = $row['z_display'];
 		}
@@ -71,12 +74,13 @@ class KALevelForm extends CFormModel
 				break;
 			case 'new':
 				$sql = "insert into sal_ka_level(
-						pro_name, z_index, z_display, city, lcu) values (
-						:pro_name, :z_index, :z_display, :city, :lcu)";
+						pro_name, ka_type, z_index, z_display, city, lcu) values (
+						:pro_name, :ka_type, :z_index, :z_display, :city, :lcu)";
 				break;
 			case 'edit':
 				$sql = "update sal_ka_level set 
 					pro_name = :pro_name, 
+					ka_type = :ka_type, 
 					z_index = :z_index,
 					z_display = :z_display,
 					luu = :luu
@@ -92,6 +96,8 @@ class KALevelForm extends CFormModel
 			$command->bindParam(':id',$this->id,PDO::PARAM_INT);
 		if (strpos($sql,':pro_name')!==false)
 			$command->bindParam(':pro_name',$this->pro_name,PDO::PARAM_STR);
+		if (strpos($sql,':ka_type')!==false)
+			$command->bindParam(':ka_type',$this->ka_type,PDO::PARAM_STR);
 		if (strpos($sql,':city')!==false)
 			$command->bindParam(':city',$city,PDO::PARAM_STR);
 		if (strpos($sql,':z_index')!==false)
@@ -120,11 +126,12 @@ class KALevelForm extends CFormModel
         }
 	}
 
-    public static function getLevelListForId($id=""){
+    public static function getLevelListForId($id="",$type="NKA"){
         $list = array(""=>"");
         $rows = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_level")
-            ->where("(id>0 and z_display=1) or id=:id",array(":id"=>$id))
-            ->order("z_index desc")->queryAll();
+            ->where("(id>0 and z_display=1 and ka_type=:type) or id=:id",
+                array(":id"=>$id,":type"=>$type)
+            )->order("z_index desc")->queryAll();
         if($rows){
             foreach ($rows as $row){
                 $list[$row["id"]] = $row["pro_name"];

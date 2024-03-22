@@ -76,6 +76,8 @@ class KABotForm extends CFormModel
         ),
     );
 
+    protected $function_id='CN15';
+    protected $table_pre='_ka_';
 	/**
 	 * Declares customized attribute labels.
 	 * If not declared here, an attribute would have a label that is
@@ -218,8 +220,9 @@ class KABotForm extends CFormModel
 	public function computeSignAmt($attribute, $params){
         $this->sum_amt = 0;
         $this->sum_amt+=empty($this->sign_amt)?0:$this->sign_amt;
-        if(isset($_POST['KABotForm']['avaInfo'])) {
-            foreach ($_POST['KABotForm']['avaInfo'] as $row) {
+        $className = get_class($this);
+        if(isset($_POST[$className]['avaInfo'])) {
+            foreach ($_POST[$className]['avaInfo'] as $row) {
                 if(empty($row["ava_date"])){
                     continue;
                 }
@@ -235,13 +238,14 @@ class KABotForm extends CFormModel
 		$city = Yii::app()->user->city();
         $suffix = Yii::app()->params['envSuffix'];
         $city_allow = Yii::app()->user->city_allow();
-        if(Yii::app()->user->validFunction('CN15')){
+        $table_pre = $this->table_pre;
+        if(Yii::app()->user->validFunction($this->function_id)){
             //$whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
             $whereSql = "";//2023/06/16 改為可以看的所有記錄
         }else{
             $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}')";
         }
-		$sql = "select a.* from sal_ka_bot a left join hr{$suffix}.hr_employee h ON a.kam_id=h.id where a.id=".$index." {$whereSql}";
+		$sql = "select a.* from sal{$table_pre}bot a left join hr{$suffix}.hr_employee h ON a.kam_id=h.id where a.id=".$index." {$whereSql}";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
         //contact_adr,work_user,work_phone,work_email,class_other
 
@@ -280,7 +284,7 @@ class KABotForm extends CFormModel
                 }
             }
             $this->kam_name = self::getEmployeeNameForId($this->kam_id);
-            $sql = "select * from sal_ka_bot_info where bot_id=".$index." ";
+            $sql = "select * from sal{$table_pre}bot_info where bot_id=".$index." ";
             $infoRows = Yii::app()->db->createCommand($sql)->queryAll();
             if($infoRows){
                 $this->detail=array();
@@ -294,7 +298,7 @@ class KABotForm extends CFormModel
                     $this->detail[] = $temp;
                 }
             }
-            $sql = "select * from sal_ka_bot_ava where bot_id=".$index." ";
+            $sql = "select * from sal{$table_pre}bot_ava where bot_id=".$index." ";
             $avaRows = Yii::app()->db->createCommand($sql)->queryAll();
             if($avaRows){
                 $this->avaInfo=array();
@@ -320,7 +324,8 @@ class KABotForm extends CFormModel
 	}
 
 	public function setModelData($index){
-		$sql = "select a.* from sal_ka_bot a where a.id=".$index."";
+        $table_pre = $this->table_pre;
+		$sql = "select a.* from sal{$table_pre}bot a where a.id=".$index."";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
         $arr = array(
             "id"=>1,"apply_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
@@ -395,7 +400,7 @@ class KABotForm extends CFormModel
 	}
 
     //哪些字段修改后需要记录
-    private static function historyUpdateList(){
+    protected static function historyUpdateList(){
         return array("apply_date","head_city_id","talk_city_id","contact_user",
             "contact_phone","contact_email","source_text","source_id","area_id",
             "level_id","class_id","busine_id","link_id","available_amt","available_date","support_user","sign_odds",
@@ -405,7 +410,7 @@ class KABotForm extends CFormModel
         );
     }
 
-    private static function getNameForValue($type,$value){
+    protected static function getNameForValue($type,$value){
         switch ($type){
             case "head_city_id":
             case "talk_city_id":
@@ -439,9 +444,10 @@ class KABotForm extends CFormModel
 
 	//保存历史记录
     protected function historySave(&$connection){
+        $table_pre = $this->table_pre;
         switch ($this->getScenario()){
             case "delete":
-                $connection->createCommand()->delete("sal_ka_bot_history", "bot_id=:id", array(":id" => $this->id));
+                $connection->createCommand()->delete("sal{$table_pre}bot_history", "bot_id=:id", array(":id" => $this->id));
                 break;
             case "edit":
                 $uid = Yii::app()->user->id;
@@ -466,16 +472,17 @@ class KABotForm extends CFormModel
                     $list["sum_amt"] = empty($this->sum_amt)?0:$this->sum_amt;
                     $list["sign_odds"] = empty($this->sign_odds)?0:$this->sign_odds;
                     $list["update_json"] = $this->getUpdateJson();
-                    $connection->createCommand()->insert("sal_ka_bot_history", $list);
+                    $connection->createCommand()->insert("sal{$table_pre}bot_history", $list);
                 }
                 break;
         }
     }
 
-    private function getHistoryDetail(&$list){
+    protected function getHistoryDetail(&$list){
         $followDate = empty($this->follow_date)?0:$this->follow_date;
-        if(isset($_POST['KABotForm']['detail'])){
-            foreach ($_POST['KABotForm']['detail'] as $row) {
+        $className = get_class($this);
+        if(isset($_POST[$className]['detail'])){
+            foreach ($_POST[$className]['detail'] as $row) {
                 if(in_array($row['uflag'],array("N","Y"))&&strtotime($row['info_date'])>=strtotime($followDate)){
                     $followDate = $row["info_date"];
                     $this->follow_date = $followDate;
@@ -498,16 +505,18 @@ class KABotForm extends CFormModel
     protected function saveDetail(&$connection)
     {
         $uid = Yii::app()->user->id;
-        if(isset($_POST['KABotForm']['detail'])){
-            foreach ($_POST['KABotForm']['detail'] as $row) {
+        $table_pre = $this->table_pre;
+        $className = get_class($this);
+        if(isset($_POST[$className]['detail'])){
+            foreach ($_POST[$className]['detail'] as $row) {
                 $sql = '';
                 switch ($this->scenario) {
                     case 'delete':
-                        $sql = "delete from sal_ka_bot_info where bot_id = :bot_id";
+                        $sql = "delete from sal{$table_pre}bot_info where bot_id = :bot_id";
                         break;
                     case 'new':
                         if ($row['uflag']=='Y') {
-                            $sql = "insert into sal_ka_bot_info(
+                            $sql = "insert into sal{$table_pre}bot_info(
 									bot_id, info_date, info_text,lcu
 								) values (
 									:bot_id,:info_date,:info_text,:lcu
@@ -517,18 +526,18 @@ class KABotForm extends CFormModel
                     case 'edit':
                         switch ($row['uflag']) {
                             case 'D':
-                                $sql = "delete from sal_ka_bot_info where id = :id";
+                                $sql = "delete from sal{$table_pre}bot_info where id = :id";
                                 break;
                             case 'Y':
                                 $sql = ($row['id']==0)
                                     ?
-                                    "insert into sal_ka_bot_info(
+                                    "insert into sal{$table_pre}bot_info(
 									  bot_id, info_date, info_text,lcu
 									) values (
 									  :bot_id,:info_date,:info_text,:lcu
 									)"
                                     :
-                                    "update sal_ka_bot_info set
+                                    "update sal{$table_pre}bot_info set
 										info_date = :info_date, 
 										info_text = :info_text,
 										luu = :luu 
@@ -564,10 +573,11 @@ class KABotForm extends CFormModel
         return true;
     }
 
-    private function getHistoryAvaInfo(&$list){
+    protected function getHistoryAvaInfo(&$list){
         $maxDate = $this->available_date;
-        if(isset($_POST['KABotForm']['avaInfo'])){
-            foreach ($_POST['KABotForm']['avaInfo'] as $row) {
+        $className = get_class($this);
+        if(isset($_POST[$className]['avaInfo'])){
+            foreach ($_POST[$className]['avaInfo'] as $row) {
                 if(empty($row['ava_date'])){
                     continue;
                 }
@@ -598,20 +608,22 @@ class KABotForm extends CFormModel
 
     protected function saveAvaInfo(&$connection)
     {
+        $table_pre = $this->table_pre;
         $uid = Yii::app()->user->id;
-        if(isset($_POST['KABotForm']['avaInfo'])){
-            foreach ($_POST['KABotForm']['avaInfo'] as $row) {
+        $className = get_class($this);
+        if(isset($_POST[$className]['avaInfo'])){
+            foreach ($_POST[$className]['avaInfo'] as $row) {
                 if(empty($row["ava_date"])){
                     continue;
                 }
                 $sql = '';
                 switch ($this->scenario) {
                     case 'delete':
-                        $sql = "delete from sal_ka_bot_ava where bot_id = :bot_id";
+                        $sql = "delete from sal{$table_pre}bot_ava where bot_id = :bot_id";
                         break;
                     case 'new':
                         if ($row['uflag']=='Y') {
-                            $sql = "insert into sal_ka_bot_ava(
+                            $sql = "insert into sal{$table_pre}bot_ava(
 									bot_id, ava_date, ava_amt, ava_num, ava_city, ava_rate, ava_note, ava_fact_amt,lcu
 								) values (
 									:bot_id,:ava_date,:ava_amt,:ava_num,:ava_city,:ava_rate,:ava_note,:ava_fact_amt,:lcu
@@ -621,18 +633,18 @@ class KABotForm extends CFormModel
                     case 'edit':
                         switch ($row['uflag']) {
                             case 'D':
-                                $sql = "delete from sal_ka_bot_ava where id = :id";
+                                $sql = "delete from sal{$table_pre}bot_ava where id = :id";
                                 break;
                             case 'Y':
                                 $sql = ($row['id']==0)
                                     ?
-                                    "insert into sal_ka_bot_ava(
+                                    "insert into sal{$table_pre}bot_ava(
                                         bot_id, ava_date, ava_amt, ava_num, ava_city, ava_rate, ava_note,ava_fact_amt,lcu
                                     ) values (
                                         :bot_id,:ava_date,:ava_amt,:ava_num,:ava_city,:ava_rate,:ava_note,:ava_fact_amt,:lcu
 									)"
                                     :
-                                    "update sal_ka_bot_ava set
+                                    "update sal{$table_pre}bot_ava set
 										ava_date = :ava_date, 
 										ava_amt = :ava_amt,
 										ava_rate = :ava_rate,
@@ -704,6 +716,7 @@ class KABotForm extends CFormModel
 
 	protected function save(&$connection)
 	{
+        $table_pre = $this->table_pre;
         $busine_name = KABusineForm::getBusineNameForArr($this->busine_id);
         $uid = Yii::app()->user->id;
         $city = Yii::app()->user->city();
@@ -739,14 +752,14 @@ class KABotForm extends CFormModel
         }
         switch ($this->scenario) {
             case 'delete':
-                $connection->createCommand()->delete("sal_ka_bot", "id=:id", array(":id" => $this->id));
+                $connection->createCommand()->delete("sal{$table_pre}bot", "id=:id", array(":id" => $this->id));
                 break;
             case 'new':
                 $list["busine_name"] = $busine_name;
                 $list["kam_id"] = $this->employee_id;
                 $list["city"] = $city;
                 $list["lcu"] = $uid;
-                $connection->createCommand()->insert("sal_ka_bot", $list);
+                $connection->createCommand()->insert("sal{$table_pre}bot", $list);
                 break;
             case 'edit':
                 unset($list["apply_date"]);
@@ -754,14 +767,14 @@ class KABotForm extends CFormModel
                 unset($list["kam_id"]);
                 $list["busine_name"] = $busine_name;
                 $list["luu"] = $uid;
-                $connection->createCommand()->update("sal_ka_bot", $list, "id=:id", array(":id" => $this->id));
+                $connection->createCommand()->update("sal{$table_pre}bot", $list, "id=:id", array(":id" => $this->id));
                 break;
         }
 
 		if ($this->scenario=='new'){
             $this->id = Yii::app()->db->getLastInsertID();
             $this->lenStr();
-            Yii::app()->db->createCommand()->update('sal_ka_bot', array(
+            Yii::app()->db->createCommand()->update("sal{$table_pre}bot", array(
                 'customer_no'=>$this->customer_no
             ), 'id=:id', array(':id'=>$this->id));
 
@@ -780,12 +793,12 @@ class KABotForm extends CFormModel
             if(strtotime($this->apply_date)!=strtotime(date("Y/m/d"))){
                 $list["update_html"].="<br/><span>保存日期:".date("Y/m/d H:i:s")."</span>";
             }
-            $connection->createCommand()->insert("sal_ka_bot_history", $list);
+            $connection->createCommand()->insert("sal{$table_pre}bot_history", $list);
         }
 		return true;
 	}
 
-    private function lenStr(){
+    protected function lenStr(){
         $code = strval($this->id);
         $this->customer_no = "NKA";
         for($i = 0;$i < 5-strlen($code);$i++){
@@ -922,6 +935,7 @@ class KABotForm extends CFormModel
 
     //查询相似的ka项目公司及备注
     public function AjaxCustomerName($group,$id=0){
+        $table_pre = $this->table_pre;
         $suffix = Yii::app()->params['envSuffix'];
         $city = Yii::app()->user->city_allow();//swoper$suffix.swo_service
         $html = "";
@@ -929,7 +943,7 @@ class KABotForm extends CFormModel
         if($group!==""){
             $group = str_replace("'","\'",$group);
             $records = Yii::app()->db->createCommand()->select('a.customer_name,b.name,b.code')
-                ->from("sal_ka_bot a")
+                ->from("sal{$table_pre}bot a")
                 ->leftJoin("hr{$suffix}.hr_employee b","a.kam_id = b.id")
                 ->where("a.id!='{$id}' and (a.customer_name like '%$group%' or a.remark like '%$group%')")
                 ->queryAll();
