@@ -150,10 +150,10 @@ class DashboardController extends Controller
         $models = array();
         $cities = General::getCityListWithNoDescendant();
         $time= date('Y-m-d', strtotime(date('Y-m-01') ));
-        $notCityList = self::notCityList();
+        $inCityList = self::inCityList();
         foreach ($cities as $code=>$name) {
             $sum_arr = array();
-            if (!in_array($code,$notCityList)) {
+            if (in_array($code,$inCityList)) {
                 $sql = "select a.name as city_name, b.name as region_name 
 						from security$suffix.sec_city a
 						left outer join security$suffix.sec_city b on a.region=b.code
@@ -197,7 +197,7 @@ foreach ($models as $key=>$item) {
         echo json_encode($result);
     }
 
-    public static function notCityList(){
+    public static function notCityList(){ //已失效，可以由日报表系统的城市自由设置
         $notCityList = General::getKAAndAreaCityList();//KA城市及區域不參與排行榜
         $notCityList = array_keys($notCityList);
 	    $list = array(
@@ -207,14 +207,29 @@ foreach ($models as $key=>$item) {
 	    return array_merge($notCityList,$list);
     }
 
+    public static function inCityList(){
+        $suffix = Yii::app()->params['envSuffix'];
+        $rows = Yii::app()->db->createCommand()->select("code")
+            ->from("security{$suffix}.sec_city_info")
+            ->where("field_id='SARANK' and field_value=1")
+            ->group("code")->queryAll();
+        $list = array();//排行榜需要的城市
+        if($rows){
+            foreach ($rows as $row){
+                $list[] = $row["code"];
+            }
+        }
+	    return $list;
+    }
+
     public function actionSalelists() {
         $suffix = Yii::app()->params['envSuffix'];
         $models = array();
         $cities = General::getCityListWithNoDescendant();
         $time= date('Y-m-d', strtotime(date('Y-m-01') ));
-        $notCityList = self::notCityList();
+        $inCityList = self::inCityList();
         foreach ($cities as $code=>$name) {
-            if (!in_array($code,$notCityList)) {
+            if (in_array($code,$inCityList)) {
                 $sql = "select a.name as city_name, b.name as region_name 
 						from security$suffix.sec_city a
 						left outer join security$suffix.sec_city b on a.region=b.code
