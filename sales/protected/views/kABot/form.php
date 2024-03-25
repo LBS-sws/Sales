@@ -531,8 +531,8 @@ $('.btnAddRow').on('click',function() {
 	if (r>0) {
 		var nid = '';
 		var ct = $('#dtltemplate'+expr_id).val();
-		$('#tblDetail'+expr_id+' tbody:last').append('<tr>'+ct+'</tr>');
-		$('#tblDetail'+expr_id+' tr').eq(-1).find('[id*=\"KABotForm_\"]').each(function(index) {
+		$('#tblDetail'+expr_id+' tbody:last').prepend('<tr>'+ct+'</tr>');
+		$('#tblDetail'+expr_id+' tbody>tr').eq(0).find('[id*=\"KABotForm_\"]').each(function(index) {
 			var id = $(this).attr('id');
 			var name = $(this).attr('name');
 

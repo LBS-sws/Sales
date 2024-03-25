@@ -284,7 +284,7 @@ class KABotForm extends CFormModel
                 }
             }
             $this->kam_name = self::getEmployeeNameForId($this->kam_id);
-            $sql = "select * from sal{$table_pre}bot_info where bot_id=".$index." ";
+            $sql = "select * from sal{$table_pre}bot_info where bot_id=".$index." order by info_date desc";
             $infoRows = Yii::app()->db->createCommand($sql)->queryAll();
             if($infoRows){
                 $this->detail=array();
@@ -298,7 +298,7 @@ class KABotForm extends CFormModel
                     $this->detail[] = $temp;
                 }
             }
-            $sql = "select * from sal{$table_pre}bot_ava where bot_id=".$index." ";
+            $sql = "select * from sal{$table_pre}bot_ava where bot_id=".$index." order by ava_date desc";
             $avaRows = Yii::app()->db->createCommand($sql)->queryAll();
             if($avaRows){
                 $this->avaInfo=array();
