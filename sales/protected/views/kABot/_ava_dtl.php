@@ -1,7 +1,7 @@
 <tr>
 	<td>
 		<?php echo TbHtml::textField($this->getFieldName('ava_date'),  $this->record['ava_date'],
-								array('disabled'=>$this->model->scenario=='view','class'=>'ava_date','autocomplete'=>'off','prepend'=>'<span class="fa fa-calendar"></span>')
+								array('disabled'=>$this->model->scenario=='view','autocomplete'=>'off','class'=>'ava_date','autocomplete'=>'off','prepend'=>'<span class="fa fa-calendar"></span>')
 		); ?>
 	</td>
 	<td>

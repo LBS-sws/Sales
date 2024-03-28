@@ -98,7 +98,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'apply_date',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->textField($model, 'apply_date',
-                        array('readonly'=>($model->scenario!='new'),'prepend'=>'<span class="fa fa-calendar"></span>','id'=>'apply_date')
+                        array('readonly'=>($model->scenario!='new'),'autocomplete'=>'off','prepend'=>'<span class="fa fa-calendar"></span>','id'=>'apply_date')
                     ); ?>
                 </div>
                 <?php echo $form->labelEx($model,'kam_id',array('class'=>"col-sm-1 control-label")); ?>
@@ -259,7 +259,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'available_date',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->textField($model, 'available_date',
-                        array('readonly'=>($model->scenario=='view'),'id'=>'available_date','prepend'=>'<span class="fa fa-calendar"></span>')
+                        array('readonly'=>($model->scenario=='view'),'autocomplete'=>'off','id'=>'available_date','prepend'=>'<span class="fa fa-calendar"></span>')
                     ); ?>
                 </div>
                 <?php echo $form->labelEx($model,'available_amt',array('class'=>"col-sm-1 control-label")); ?>
@@ -280,7 +280,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php echo $form->labelEx($model,'sign_date',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->textField($model, 'sign_date',
-                        array('readonly'=>($model->scenario=='view'),'id'=>'sign_date','prepend'=>'<span class="fa fa-calendar"></span>')
+                        array('readonly'=>($model->scenario=='view'),'autocomplete'=>'off','id'=>'sign_date','prepend'=>'<span class="fa fa-calendar"></span>')
                     ); ?>
                 </div>
                 <?php echo $form->labelEx($model,'sign_month',array('class'=>"col-sm-1 control-label")); ?>
