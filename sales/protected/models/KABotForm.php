@@ -178,9 +178,10 @@ class KABotForm extends CFormModel
         $avaDateList = array();
         $avaDateBool = false;//判断月份是否重复
         if(!empty($this->avaInfo)){
-            foreach ($this->avaInfo as $row){
+            foreach ($this->avaInfo as &$row){
                 if(!empty($row["ava_date"])){
                     $list[]=$row;
+                    $row["uflag"] = $model->rate_num==100?$row["uflag"]:"D";//如果沟通不是100，则没有详情
                     if($row["uflag"]!="D"){
                         $emptyList[]=$row;
                         if(!$avaDateBool&&in_array($row["ava_date"],$avaDateList)){
@@ -201,8 +202,11 @@ class KABotForm extends CFormModel
             }
 	        if(empty($emptyList)){
                 $this->addError($attribute, "签约详情不能为空");
-            }elseif(!isset($emptyList[0]["ava_rate"])||$emptyList[0]["ava_rate"]<=80){
-                $this->addError($attribute, "签约详情第一条的签约概率必须大于80");
+            }else{
+	            $endAvaList = end($emptyList);
+                if(!isset($endAvaList["ava_rate"])||$endAvaList["ava_rate"]<=80){
+                    $this->addError($attribute, "签约详情第一条的签约概率必须大于80");
+                }
             }
             if($avaDateBool){
                 $this->addError($attribute, "签约详情的月份不能重复");
@@ -611,8 +615,8 @@ class KABotForm extends CFormModel
         $table_pre = $this->table_pre;
         $uid = Yii::app()->user->id;
         $className = get_class($this);
-        if(isset($_POST[$className]['avaInfo'])){
-            foreach ($_POST[$className]['avaInfo'] as $row) {
+        if(isset($this->avaInfo)){
+            foreach ($this->avaInfo as $row) {
                 if(empty($row["ava_date"])){
                     continue;
                 }
