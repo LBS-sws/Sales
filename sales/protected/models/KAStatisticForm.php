@@ -1009,6 +1009,8 @@ class KAStatisticForm extends CFormModel
     }
 
     protected function staticTableBody($rows){
+        $urlName = ":".get_class($this);
+        $urlName = (strpos($urlName,':KA')!==false)?"kABot":"rABot";
         $html = "<thead>";
         $html.="<tr>";
         $html.="<th width='120px'>预估可成交日期</th>";
@@ -1029,7 +1031,7 @@ class KAStatisticForm extends CFormModel
                 $row['rate_num'] = floatval($row['rate_num']);
                 $sumAmt+=$row['available_amt'];
                 $sumNum++;
-                $link = self::drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$row['id']));
+                $link = self::drawEditButton('KA01',"{$urlName}/view", "{$urlName}/view", array('index'=>$row['id']));
                 $html.="<tr data-id='{$row["id"]}'>";
                 $html.="<td>".General::toDate($row['available_date'])."</td>";
                 $html.="<td>".General::toDate($row['apply_date'])."</td>";
@@ -1055,6 +1057,8 @@ class KAStatisticForm extends CFormModel
 
     //未来90天加权报价金额
     protected function staticTableBodyTwo($rows){
+        $urlName = ":".get_class($this);
+        $urlName = (strpos($urlName,':KA')!==false)?"kABot":"rABot";
         $html = "<thead>";
         $html.="<tr>";
         $html.="<th width='120px'>预估可成交日期</th>";
@@ -1079,7 +1083,7 @@ class KAStatisticForm extends CFormModel
                 $amt_me*= $row['sign_odds']>80?1:0.5;
                 $sumAmt+=$amt_me;
                 $sumNum++;
-                $link = self::drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$row['id']));
+                $link = self::drawEditButton('KA01',"{$urlName}/view", "{$urlName}/view", array('index'=>$row['id']));
                 $html.="<tr data-id='{$row["id"]}'>";
                 $html.="<td>".General::toDate($row['available_date'])."</td>";
                 $html.="<td>".General::toDate($row['apply_date'])."</td>";
@@ -1106,6 +1110,8 @@ class KAStatisticForm extends CFormModel
 
     //YTD、MTD
     protected function staticTableBodyThree($rows){
+        $urlName = ":".get_class($this);
+        $urlName = (strpos($urlName,':KA')!==false)?"kABot":"rABot";
         $html = "<thead>";
         $html.="<tr>";
         $html.="<th width='120px'>预估可成交日期</th>";
@@ -1126,7 +1132,7 @@ class KAStatisticForm extends CFormModel
                 $row['rate_num'] = floatval($row['rate_num']);
                 $sumAmt+=$row['available_amt'];
                 $sumNum++;
-                $link = self::drawEditButton('KA01', 'kABot/edit', 'kABot/view', array('index'=>$row['id']));
+                $link = self::drawEditButton('KA01',"{$urlName}/view", "{$urlName}/view", array('index'=>$row['id']));
                 $html.="<tr data-id='{$row["id"]}'>";
                 $html.="<td>".General::toDate($row['available_date'])."</td>";
                 $html.="<td>".General::toDate($row['apply_date'])."</td>";
