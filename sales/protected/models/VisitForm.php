@@ -314,6 +314,15 @@ class VisitForm extends CFormModel
             $this->addError($attribute, Yii::t('dialog','No visit Slip'));
         }
     }
+
+    public function inAmtFiles($gid){
+        $key = "".$gid;
+        if (in_array($key, $this->amount_fields)) {
+            return 1;
+        }else{
+            return 0;
+        }
+    }
 	
 	public function validateServiceAmount($attribute, $param) {
 		if ($this->isMakingDeal($this->visit_obj)) {

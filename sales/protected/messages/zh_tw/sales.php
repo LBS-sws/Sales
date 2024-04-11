@@ -196,5 +196,6 @@ return array(
     '-- all --'=>'--全部--',
     'shift staff'=>'轉移銷售拜訪',
     'not shift staff'=>'非轉移銷售拜訪',
+    'amt hint'=>'金額提示',
 );
 ?>

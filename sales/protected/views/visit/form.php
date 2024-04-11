@@ -33,7 +33,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 		?>
 <?php if (!$model->isReadOnly()): ?>
 			<?php echo TbHtml::button('<span class="fa fa-upload"></span> '.Yii::t('misc','Save'), array(
-				'submit'=>Yii::app()->createUrl('visit/save'))); 
+                'id'=>'amtOpenBtn','data-url'=>Yii::app()->createUrl('visit/save')));
 			?>
 <?php endif ?>
 <?php if ($model->scenario=='edit' && !$model->isReadOnly()): ?>
@@ -129,7 +129,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 							echo $form->hiddenField($model, 'visit_type');
 							echo TbHtml::textField('visit_type_name', $typelist[$model->visit_type], array('readonly'=>($model->isReadOnly()||$model->status!='N')));
 						} else {
-							echo $form->dropDownList($model, 'visit_type', $typelist, array('readonly'=>($model->isReadOnly()||$model->status!='N')));
+							echo $form->dropDownList($model, 'visit_type', $typelist, array('readonly'=>($model->isReadOnly()||$model->status!='N'),'class'=>'de_class','de_type'=>'val'));
 						}
 					?>
 				</div>
@@ -142,7 +142,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
                             '否'=>Yii::t('sales','No Quotation'),
                             '是'=>Yii::t('sales','Quotations'),
                     );
-                        echo $form->dropDownList($model, 'quotation', $quotation, array('readonly'=>''));
+                        echo $form->dropDownList($model, 'quotation', $quotation, array('readonly'=>'','class'=>'de_class','de_type'=>'val'));
                     ?>
                 </div>
             </div>
@@ -156,7 +156,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 //							echo TbHtml::textField('visit_obj_name', $typelist[$model->visit_obj], array('readonly'=>true));
 //						} else {
 							echo $form->dropDownList($model, 'visit_obj', $typelist,
-								array('class'=>'select2','multiple'=>'multiple','disabled'=>'disabled')
+								array('class'=>'select2 de_class','multiple'=>'multiple','disabled'=>'disabled','de_type'=>'select2')
 							);
 //						}
 					?>
@@ -182,7 +182,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
 					<?php 
 						echo $form->checkBox($model, 'cust_vip', 
 								array('disabled'=>($model->isReadOnly()),
-									'uncheckValue'=>'N', 'value'=>'Y',
+									'uncheckValue'=>'N', 'value'=>'Y','class'=>'de_class','de_type'=>'checked'
 								)
 							); 
 						echo $form->labelEx($model,'cust_vip',array('class'=>"control-label"));
@@ -200,7 +200,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
                     //							echo TbHtml::textField('visit_obj_name', $typelist[$model->visit_obj], array('readonly'=>true));
                     //						} else {
                     echo $form->dropDownList($model, 'service_type', $typelist,
-                        array('class'=>'select2','multiple'=>'multiple','disabled'=>'disabled')
+                        array('class'=>'de_class','multiple'=>'multiple','disabled'=>'disabled','de_type'=>'select2')
                     );
                     //						}
                     ?>
@@ -292,10 +292,14 @@ $currcode = City::getCurrency($model->city);
 $sign = Currency::getSign($currcode);
 
 foreach($model->serviceDefinition() as $gid=>$items) {
+		$amtOpen = $model->inAmtFiles($gid);
 		$fieldid = get_class($model).'_service_svc_'.$gid;
 		$fieldname = get_class($model).'[service][svc_'.$gid.']';
 		$fieldvalue = isset($model->service['svc_'.$gid]) ? $model->service['svc_'.$gid] : '';
-		
+
+    $de_bool=2;//默認值專用 1：默認 2：空白
+    $de_bool = in_array($items['name'],array('纸品','一次性售卖'))?2:1;
+
 		$content = "<legend>".$items['name']."</legend>";
 		$content .= "<div class='form-group' data-num='11111'>";
 		switch ($items['type']) {
@@ -303,8 +307,8 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 				$content .= TbHtml::label(Yii::t('sales','Qty'),$fieldid, array('class'=>"col-sm-2 control-label"));
 				$content .= "<div class='col-sm-2'>"
 							.TbHtml::numberField($fieldname, $fieldvalue,
-								array('size'=>5,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),
-									'placeholder'=>Yii::t('sales','Qty'),
+								array('size'=>5,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
+									'placeholder'=>Yii::t('sales','Qty'),'data-legend'=>$items["name"],'data-amt'=>$amtOpen,
 								)
 							)
 							."</div>";
@@ -313,8 +317,9 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 				$content .= TbHtml::label(Yii::t('sales','Monthly Amount'),$fieldid, array('class'=>"col-sm-2 control-label"));
 				$content .= "<div class='col-sm-2'>"
 							.TbHtml::numberField($fieldname, $fieldvalue, 
-								array('size'=>8,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),	
-									'placeholder'=>Yii::t('sales','Amount'),'prepend'=>'<span class="fa '.$sign.'"></span>'
+								array('size'=>8,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
+									'placeholder'=>Yii::t('sales','Amount'),'prepend'=>'<span class="fa '.$sign.'"></span>',
+                                    'data-legend'=>$items["name"],'data-amt'=>$amtOpen,
 								)
 							)
 							."</div>"; 
@@ -323,8 +328,9 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 				$content .= TbHtml::label(Yii::t('sales','Amount'),$fieldid, array('class'=>"col-sm-2 control-label"));
 				$content .= "<div class='col-sm-2'>"
 							.TbHtml::numberField($fieldname, $fieldvalue, 
-								array('size'=>8,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),	
-									'placeholder'=>Yii::t('sales','Amount'),'prepend'=>'<span class="fa '.$sign.'"></span>'
+								array('size'=>8,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
+									'placeholder'=>Yii::t('sales','Amount'),'prepend'=>'<span class="fa '.$sign.'"></span>',
+                                    'data-legend'=>$items["name"],'data-amt'=>$amtOpen,
 								)
 							)
 							."</div>"; 
@@ -334,9 +340,8 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 
 		$cnt = 0;
 		$out = '';
-		$de_bool=2;//默認值專用 1：默認 2：空白
 		foreach ($items['items'] as $fid=>$fv) {
-            $de_bool = $items['type']=="none"||in_array($fid,array('A7','B6','C7','D6','E7'))?2:1;
+            $amtOpen = $model->inAmtFiles($fid);
             $fieldid = get_class($model).'_service_svc_'.$fid;
 			$fieldname = get_class($model).'[service][svc_'.$fid.']';
 			$fieldvalue = $model->service['svc_'.$fid];
@@ -354,7 +359,8 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 					$out .= '<div class="col-sm-2">';
 					$out .= TbHtml::numberField($fieldname, $fieldvalue, 
 								array('size'=>5,'min'=>0,'max'=>100,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
-									'placeholder'=>Yii::t('sales','Percentage'),'append'=>'<span>%</span>'
+									'placeholder'=>Yii::t('sales','Percentage'),'append'=>'<span>%</span>',
+                                    'data-legend'=>$items["name"],'data-amt'=>$amtOpen,
 								)
 							); 
 					break;
@@ -363,6 +369,7 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 					$out .= TbHtml::numberField($fieldname, $fieldvalue, 
 								array('size'=>5,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
 									'placeholder'=>Yii::t('sales','Qty'),
+                                    'data-legend'=>$items["name"],'data-amt'=>$amtOpen,
 								)
 							); 
 					break;
@@ -371,7 +378,8 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 					$out .= '<div class="col-sm-2">';
 					$out .= TbHtml::numberField($fieldname, $fieldvalue, 
 								array('size'=>8,'min'=>0,'id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
-									'placeholder'=>Yii::t('sales','Amount'),'prepend'=>'<span class="fa '.$sign.'"></span>'
+									'placeholder'=>Yii::t('sales','Amount'),'prepend'=>'<span class="fa '.$sign.'"></span>',
+                                    'data-legend'=>$items["name"],'data-amt'=>$amtOpen,
 								)
 							); 
 					break;
@@ -380,6 +388,7 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 					$out .= TbHtml::textField($fieldname, $fieldvalue, 
 								array('id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
 									'placeholder'=>Yii::t('sales','Text'),
+                                    'data-legend'=>$items["name"],'data-amt'=>$amtOpen,
 								)
 							); 
 					break;
@@ -396,6 +405,7 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 					$out .= TbHtml::dropDownList($fieldname, $fieldvalue,$fvList,
 								array('id'=>$fieldid,'readonly'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
 									'placeholder'=>Yii::t('sales','select'),
+                                    'data-legend'=>$items["name"],'data-amt'=>$amtOpen,
 								)
 							);
 					break;
@@ -404,7 +414,8 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 					$out .= TbHtml::textArea($fieldname, $fieldvalue, 
 								array('id'=>$fieldid,'rows'=>3,'cols'=>60,'maxlength'=>5000,'class'=>'de_class','de_type'=>'val','de_bool'=>$de_bool,
 									'placeholder'=>Yii::t('sales','Remarks'),
-									'readonly'=>($model->isReadOnly())
+									'readonly'=>($model->isReadOnly()),
+                                    'data-legend'=>$items["name"],'data-amt'=>$amtOpen,
 								)
 							);
 					break;
@@ -413,6 +424,7 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 					$out .= TbHtml::checkBox($fieldname, ($fieldvalue=='Y'), 
 								array('id'=>$fieldid,'disabled'=>($model->isReadOnly()),'class'=>'de_class','de_type'=>'checked','de_bool'=>$de_bool,
 									'uncheckValue'=>'N', 'value'=>'Y',
+                                    'data-legend'=>$items["name"],'data-amt'=>$amtOpen,
 								)
 							); 
 					break;
@@ -442,6 +454,7 @@ foreach($model->serviceDefinition() as $gid=>$items) {
 	</div>
 </section>
 
+<?php $this->renderPartial('//visit/amtOpen'); ?>
 <?php $this->renderPartial('//site/removedialog'); ?>
 <?php $this->renderPartial('//site/fileupload',array('model'=>$model,
 													'form'=>$form,
@@ -549,12 +562,31 @@ $('#VisitForm_cust_name').on('change', function(){
 		    $('.de_class').each(function(){
 		        var de_type = $(this).attr('de_type');
 		        var de_bool = $(this).attr('de_bool');
+		        var this_val = $(this).val();
 		        var str = $(this).attr('name');
+		        if(de_type=='select2'){
+		            this_val = this_val.length==0?'':this_val;
+		        }
+		        if(de_type=='checked'){
+		            this_val = $(this).prop('checked')===false?'':$(this).val();
+		        }
+		        if(str.indexOf('[]')>-1){
+		            str = str.replace('[]','');
+		        }
 		        str = str.split("[").pop();
 		        str = str.split("]")[0];
 		        var dataValue = data.hasOwnProperty(str)?data[str]:false;
-		        if(de_bool != 2&&dataValue!==false&&dataValue!==false){
+		        if($(this).attr('id')=='VisitForm_service_svc_A7'){
+		            console.log(this_val);
+		            console.log(de_bool);
+		            console.log(dataValue);
+		            console.log(de_type);
+		        }
+		        if((this_val=='')&&de_bool != 2&&dataValue!==false){
 		            switch(de_type){
+		                case 'select2':
+                            $(this).val(dataValue).trigger('change');
+		                    break;
 		                case 'checked':
                             $(this).prop('checked', dataValue=='Y');
 		                    break;
@@ -662,6 +694,40 @@ Yii::app()->clientScript->registerScript('deleteRecord',$js,CClientScript::POS_R
 
 $js = Script::genReadonlyField();
 Yii::app()->clientScript->registerScript('readonlyClass',$js,CClientScript::POS_READY);
+
+$js = <<<EOF
+$('#amtOpenBtn').click(function(){
+    var objTypes = $('#VisitForm_visit_obj').select2('data');
+    var url = $(this).data('url');
+    var inList = ['签单','续约'];
+    $.each(objTypes,function(key,objList){
+        if(inList.indexOf(objList['text'])>-1){
+            $('#amtOpenDialog').modal('show');
+            inList = true;
+            return false;
+        }
+    });
+    if(inList!==true){
+        jQuery.yii.submitForm(this,url,{});
+    }
+});
+
+$('#amtOpenDialog').on('show.bs.modal', function (e) {
+    var html='<ul>';
+    var amtText='';
+    var amt='';
+    $('input[data-amt=1]').each(function(){
+        amtText=$(this).data('legend');
+        amt=''+$(this).val();
+        if(amt!=''){
+            html+='<li><b>'+amtText+'</b>合同年金额：'+amt+'</li>';
+        }
+    });
+    html+='</ul>';
+    $('#amtHintDiv').html(html);
+})
+EOF;
+Yii::app()->clientScript->registerScript('amtOpen',$js,CClientScript::POS_READY);
 ?>
 
 <?php $this->endWidget(); ?>

@@ -79,8 +79,8 @@ class VisitController extends Controller
 		if (isset($_POST['VisitForm'])) {
 			$model = new VisitForm($_POST['VisitForm']['scenario']);
 			$model->attributes = $_POST['VisitForm'];
-			$model->status = 'Y';
 			if ($model->validate()) {
+                $model->status = 'Y';
 				$model->saveData();
 				Dialog::message(Yii::t('dialog','Information'), Yii::t('dialog','Save Done'));
 				$this->redirect(Yii::app()->createUrl('visit/edit',array('index'=>$model->id)));
@@ -123,6 +123,7 @@ class VisitController extends Controller
 	public function actionNew()
 	{
 		$model = new VisitForm('new');
+		$model->visit_dt=date("Y/m/d");
 		$this->render('form',array('model'=>$model,));
 	}
 	
@@ -162,7 +163,9 @@ class VisitController extends Controller
 	
 	public function actionReadcust($name) {
 		$uid = Yii::app()->user->id;
-		$sql = "select f.remarks,d.type_group as cust_type_group,a.cust_person, a.cust_person_role, a.cust_tel, a.district, a.street, a.cust_type, b.cust_vip  ,a.visit_id
+		$sql = "select f.remarks,f.visit_type,f.quotation,f.visit_obj,f.service_type,
+                d.type_group as cust_type_group,
+                a.cust_person, a.cust_person_role, a.cust_tel, a.district, a.street, a.cust_type, b.cust_vip  ,a.visit_id
 				from sal_custcache a
 				LEFT JOIN sal_visit f ON a.visit_id = f.id
 				inner join sal_cust_type d on f.cust_type = d.id
@@ -171,6 +174,8 @@ class VisitController extends Controller
 			";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
         if(!empty($row)){
+            $row["visit_obj"]=json_decode($row["visit_obj"]);
+            $row["service_type"]=json_decode($row["service_type"]);
             $sql1="select field_id,field_value from sal_visit_info where visit_id='".$row['visit_id']."'";
             $arr = Yii::app()->db->createCommand($sql1)->queryALL();
             foreach ($arr as $a){
