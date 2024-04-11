@@ -224,6 +224,10 @@ return array(
                 'access'=>'KA08',
                 'url'=>'KASales/index',
             ),
+            'Customer duplicate'=>array(//客户名称查重设置
+                'access'=>'KA12',
+                'url'=>'KADup/index',
+            ),
         ),
     ),
 
@@ -238,6 +242,21 @@ return array(
             'RA Statistic'=>array(//RKA項目統計
                 'access'=>'RA02',
                 'url'=>'RAStatistic/index',
+            ),
+        ),
+    ),
+
+    'CA Manager'=>array( //地方业务管理
+        'access'=>'CA',
+        'icon'=>'fa-trophy',
+        'items'=>array(
+            'CA Bot'=>array(//地方业务項目
+                'access'=>'CA01',
+                'url'=>'CABot/index',
+            ),
+            'CA Statistic'=>array(//地方业务項目統計
+                'access'=>'CA02',
+                'url'=>'CAStatistic/index',
             ),
         ),
     ),

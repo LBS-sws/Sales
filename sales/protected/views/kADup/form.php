@@ -10,7 +10,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 
 <section class="content-header">
 	<h1>
-		<strong><?php echo Yii::t('app','KA Level'); ?></strong>
+		<strong><?php echo Yii::t('app','Customer duplicate'); ?></strong>
 	</h1>
 </section>
 
@@ -20,15 +20,15 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 		<?php 
 			if ($model->scenario!='new' && $model->scenario!='view') {
 				echo TbHtml::button('<span class="fa fa-file-o"></span> '.Yii::t('misc','Add Another'), array(
-					'submit'=>Yii::app()->createUrl('kALevel/new')));
+					'submit'=>Yii::app()->createUrl('kADup/new')));
 			}
 		?>
 		<?php echo TbHtml::button('<span class="fa fa-reply"></span> '.Yii::t('misc','Back'), array(
-				'submit'=>Yii::app()->createUrl('kALevel/index'))); 
+				'submit'=>Yii::app()->createUrl('kADup/index'))); 
 		?>
 <?php if ($model->scenario!='view'): ?>
 			<?php echo TbHtml::button('<span class="fa fa-upload"></span> '.Yii::t('misc','Save'), array(
-				'submit'=>Yii::app()->createUrl('kALevel/save'))); 
+				'submit'=>Yii::app()->createUrl('kADup/save'))); 
 			?>
 <?php endif ?>
 <?php if ($model->scenario=='edit'): ?>
@@ -43,23 +43,20 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 	<div class="box box-info">
 		<div class="box-body">
 			<?php echo $form->hiddenField($model, 'scenario'); ?>
-            <?php echo CHtml::hiddenField('dtltemplate'); ?>
 			<?php echo $form->hiddenField($model, 'id'); ?>
 
 			<div class="form-group">
-				<?php echo $form->labelEx($model,'pro_name',array('class'=>"col-sm-2 control-label")); ?>
+				<?php echo $form->labelEx($model,'dup_name',array('class'=>"col-sm-2 control-label")); ?>
 				<div class="col-sm-3">
-					<?php echo $form->textField($model, 'pro_name',
+					<?php echo $form->textField($model, 'dup_name',
 						array('size'=>50,'maxlength'=>100,'readonly'=>($model->scenario=='view'))
 					); ?>
 				</div>
 			</div>
-
 			<div class="form-group">
-				<?php echo $form->labelEx($model,'ka_type',array('class'=>"col-sm-2 control-label")); ?>
-				<div class="col-sm-2">
-					<?php
-                    echo $form->dropDownList($model, 'ka_type',KALevelForm::getLevelTypeListForType(),
+				<?php echo $form->labelEx($model,'dup_value',array('class'=>"col-sm-2 control-label")); ?>
+				<div class="col-sm-3">
+					<?php echo $form->textField($model, 'dup_value',
 						array('size'=>50,'maxlength'=>100,'readonly'=>($model->scenario=='view'))
 					); ?>
 				</div>
@@ -76,23 +73,15 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                     <p class="form-control-static text-danger">层级的数值越高，显示越靠前</p>
 				</div>
 			</div>
-			<div class="form-group">
-				<?php echo $form->labelEx($model,'z_display',array('class'=>"col-sm-2 control-label")); ?>
-				<div class="col-sm-7">
-					<?php echo $form->inlineRadioButtonList($model, 'z_display',array(0=>Yii::t("ka","no"),1=>Yii::t("ka","yes")),
-						array('readonly'=>($model->scenario=='view'))
-					); ?>
-				</div>
-			</div>
-        </div>
+			
+		</div>
 	</div>
 </section>
 
 <?php $this->renderPartial('//site/removedialog'); ?>
 
 <?php
-
-$js = Script::genDeleteData(Yii::app()->createUrl('kALevel/delete'));
+$js = Script::genDeleteData(Yii::app()->createUrl('kADup/delete'));
 Yii::app()->clientScript->registerScript('deleteRecord',$js,CClientScript::POS_READY);
 
 $js = Script::genReadonlyField();

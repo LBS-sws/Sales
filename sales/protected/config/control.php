@@ -17,4 +17,5 @@ return array(
     'Club Sales Confirm'=>array('access'=>'CN14',),
     'KA Bot(All)'=>array('access'=>'CN15',),
     'RA Bot(All)'=>array('access'=>'CN16',),
+    'CA Bot(All)'=>array('access'=>'CN17',),
 );

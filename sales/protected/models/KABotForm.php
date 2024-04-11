@@ -8,6 +8,7 @@ class KABotForm extends CFormModel
 	public $follow_date;
 	public $customer_no;
 	public $customer_name;
+	public $search_name;
 	public $kam_id;
 	public $kam_name;
 	public $head_city_id;
@@ -147,11 +148,53 @@ class KABotForm extends CFormModel
                 contact_adr,work_user,work_phone,work_email,class_other,
                 sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
             array('apply_date,work_user,work_phone,contact_adr,available_date,customer_name,kam_id,link_id','required'),
+            array('customer_name','validateCustomerName'),
             array('apply_date','validateDate'),
             array('link_id','validateLinkID'),
             array('sign_amt','computeSignAmt'),
 		);
 	}
+
+    public function validateCustomerName($attribute, $params) {
+        $ka_id = 0;
+        $ra_id = 0;
+        $ca_id = 0;
+        $group = str_replace("'","\'",$this->customer_name);
+        $group = KADupForm::getSearchNameForName($group);
+        $this->search_name = $group;
+        switch ($this->table_pre){
+            case "_ka_":
+                $ka_id = $this->id;
+                break;
+            case "_ra_":
+                $ra_id = $this->id;
+                break;
+            case "_ca_":
+                $ca_id = $this->id;
+                break;
+        }
+        $rowKa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
+            ->from("sal_ka_bot a")
+            ->where("a.search_name=:name and id!=:id",array(":name"=>$group,":id"=>$ka_id))
+            ->queryRow();
+        if($rowKa){
+            $this->addError($attribute, "客户名称不能重复：".$rowKa["customer_name"]."({$rowKa["customer_no"]})");
+        }
+        $rowRa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
+            ->from("sal_ra_bot a")
+            ->where("a.search_name=:name and id!=:id",array(":name"=>$group,":id"=>$ra_id))
+            ->queryRow();
+        if($rowRa){
+            $this->addError($attribute, "客户名称不能重复：".$rowRa["customer_name"]."({$rowRa["customer_no"]})");
+        }
+        $rowCa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
+            ->from("sal_ca_bot a")
+            ->where("a.search_name=:name and id!=:id",array(":name"=>$group,":id"=>$ca_id))
+            ->queryRow();
+        if($rowCa){
+            $this->addError($attribute, "客户名称不能重复：".$rowCa["customer_name"]."({$rowCa["customer_no"]})");
+        }
+    }
 
     public function validateDate($attribute, $params) {
 	    if(!empty($this->apply_date)&&!empty($this->available_date)){
@@ -726,7 +769,7 @@ class KABotForm extends CFormModel
         $city = Yii::app()->user->city();
 	    $list=array();
         $arr = array(
-            "apply_date"=>2,"follow_date"=>2,"customer_name"=>1,
+            "apply_date"=>2,"follow_date"=>2,"customer_name"=>1,"search_name"=>1,
             "head_city_id"=>3,"talk_city_id"=>3,"contact_user"=>1,"contact_phone"=>1,
             "contact_email"=>1,"source_text"=>1,"source_id"=>3,
             "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>4,"link_id"=>3,
@@ -946,15 +989,32 @@ class KABotForm extends CFormModel
         $id = is_numeric($id)?$id:0;
         if($group!==""){
             $group = str_replace("'","\'",$group);
-            $records = Yii::app()->db->createCommand()->select('a.customer_name,b.name,b.code')
-                ->from("sal{$table_pre}bot a")
-                ->leftJoin("hr{$suffix}.hr_employee b","a.kam_id = b.id")
-                ->where("a.id!='{$id}' and (a.customer_name like '%$group%' or a.remark like '%$group%')")
+            $recordsKa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
+                ->from("sal_ka_bot a")
+                ->where("a.id!='{$id}' and (a.search_name like '%$group%')")
                 ->queryAll();
+            $recordsKa = $recordsKa?$recordsKa:array();
+            $recordsRa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
+                ->from("sal_ra_bot a")
+                ->where("a.id!='{$id}' and (a.search_name like '%$group%')")
+                ->queryAll();
+            $recordsRa = $recordsRa?$recordsRa:array();
+            $recordsCa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
+                ->from("sal_ca_bot a")
+                ->where("a.id!='{$id}' and (a.search_name like '%$group%')")
+                ->queryAll();
+            $recordsCa = $recordsCa?$recordsCa:array();
+            $records = array_merge($recordsKa,$recordsRa,$recordsCa);
             if($records){
                 foreach ($records as $row){
-                    $text = $row["customer_name"]."  -  "."{$row["name"]} ({$row['code']})";
-                    $html.="<li><a class='clickThis'>".$text."</a>";
+                    $staffRow = Yii::app()->db->createCommand()->select('code,name')
+                        ->from("hr{$suffix}.hr_employee")
+                        ->where("id=:id",array(":id"=>$row["kam_id"]))
+                        ->queryRow();
+                    if($staffRow){
+                        $text = "({$row["customer_no"]})".$row["customer_name"]."  -  "."{$staffRow["name"]} ({$staffRow['code']})";
+                        $html.="<li><a class='clickThis'>".$text."</a>";
+                    }
                 }
             }else{
                 $html = "<li><a>没有结果</a></li>";

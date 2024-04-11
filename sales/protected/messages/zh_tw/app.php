@@ -159,5 +159,12 @@ return array(
     'RA Bot'=>'RKA項目',
     'RA Statistic'=>'RKA項目統計',
     'RA Bot(All)'=>'RKA項目(所有)',
+
+    'CA Manager'=>'地方業務管理',
+    'CA Bot'=>'地方業務項目',
+    'CA Statistic'=>'地方業務項目統計',
+    'CA Bot(All)'=>'地方業務項目(所有)',
+
+    'Customer duplicate'=>'客戶名稱查重設置',
 );
 ?>

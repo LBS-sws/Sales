@@ -120,5 +120,7 @@ return array(
 
     'YTD Rpt'=>'YTD报表',
     'KA Type'=>'KA類別',
+    'dup name'=>'需要替換的字符串',
+    'dup value'=>'替換後的字符串',
 );
 ?>

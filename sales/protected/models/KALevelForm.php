@@ -140,6 +140,18 @@ class KALevelForm extends CFormModel
         return $list;
     }
 
+    public static function getLevelTypeListForType($type="",$bool=false){
+        $list = array("NKA"=>"NKA","RKA"=>"RKA","CKA"=>"地方业务");
+        if($bool){
+            if(key_exists($type,$list)){
+                return $list[$type];
+            }else{
+                return $type;
+            }
+        }
+        return $list;
+    }
+
     public static function getLevelNameForId($id){
         $row = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_level")
             ->where("id=:id",array(":id"=>$id))->queryRow();

@@ -1,6 +1,6 @@
 <?php
 
-class KALevelList extends CListPageModel
+class KADupList extends CListPageModel
 {
 	/**
 	 * Declares customized attribute labels.
@@ -9,10 +9,9 @@ class KALevelList extends CListPageModel
 	 */
 	public function attributeLabels()
 	{
-		return array(
-            'class_name'=>Yii::t('ka','class type name'),
-			'pro_name'=>Yii::t('ka','project name'),
-			'ka_type'=>Yii::t('ka','KA Type'),
+		return array(	
+			'dup_name'=>Yii::t('ka','dup name'),
+			'dup_value'=>Yii::t('ka','dup value'),
 			'z_index'=>Yii::t('ka','z index'),
 			'z_display'=>Yii::t('ka','z display'),
 		);
@@ -21,17 +20,20 @@ class KALevelList extends CListPageModel
 	public function retrieveDataByPage($pageNum=1)
 	{
 		$sql1 = "select *
-				from sal_ka_level
-				where 1=1 ";
+				from sal_ka_dup
+				where z_display=1 ";
 		$sql2 = "select count(id)
-				from sal_ka_level
-				where 1=1 ";
+				from sal_ka_dup
+				where z_display=1 ";
 		$clause = "";
 		if (!empty($this->searchField) && !empty($this->searchValue)) {
 			$svalue = str_replace("'","\'",$this->searchValue);
 			switch ($this->searchField) {
-				case 'pro_name':
-					$clause .= General::getSqlConditionClause('pro_name',$svalue);
+				case 'dup_name':
+					$clause .= General::getSqlConditionClause('dup_name',$svalue);
+					break;
+				case 'dup_value':
+					$clause .= General::getSqlConditionClause('dup_value',$svalue);
 					break;
 			}
 		}
@@ -53,17 +55,17 @@ class KALevelList extends CListPageModel
 		$this->attr = array();
 		if (count($records) > 0) {
 			foreach ($records as $k=>$record) {
-                $this->attr[] = array(
-                    'id'=>$record['id'],
-                    'pro_name'=>$record['pro_name'],
-                    'ka_type'=>KALevelForm::getLevelTypeListForType($record['ka_type'],true),
-                    'z_display'=>empty($record['z_display'])?Yii::t("ka","no"):Yii::t("ka","yes"),
-                    'z_index'=>$record['z_index'],
-                );
+					$this->attr[] = array(
+						'id'=>$record['id'],
+						'dup_name'=>$record['dup_name'],
+						'dup_value'=>$record['dup_value'],
+						'z_display'=>empty($record['z_display'])?Yii::t("ka","no"):Yii::t("ka","yes"),
+						'z_index'=>$record['z_index'],
+					);
 			}
 		}
 		$session = Yii::app()->session;
-		$session['kALevel_c01'] = $this->getCriteria();
+		$session['kADup_c01'] = $this->getCriteria();
 		return true;
 	}
 
