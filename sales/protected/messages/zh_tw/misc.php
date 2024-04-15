@@ -98,6 +98,7 @@ return array(
 'Your ranking is:'=>'你當前的段位為:',
 'Air Purifier'=>'空氣淨化',
 'Oil separator'=>'隔油池',
+    'Mouse catching'=>'智能捕鼠',
 );
 
 ?>

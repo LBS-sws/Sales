@@ -531,6 +531,7 @@ class FivestepForm extends CFormModel
 			2=>Yii::t('misc','Third'),
 			3=>Yii::t('misc','Air Purifier'),
 			4=>Yii::t('misc','Oil separator'),
+			5=>Yii::t('misc','Mouse catching'),//智能捕鼠
 		);
 	}
 	
