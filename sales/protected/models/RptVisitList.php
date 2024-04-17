@@ -63,6 +63,7 @@ class RptVisitList extends CReport {
 			'svc_C4'=>array('label'=>Yii::t('sales','果蝇'),'width'=>10,'align'=>'C'),
 			'svc_C5'=>array('label'=>Yii::t('sales','租灭蝇灯'),'width'=>10,'align'=>'C'),
             'svc_C9'=>array('label'=>Yii::t('sales','焗雾'),'width'=>10,'align'=>'C'),
+            'svc_C11'=>array('label'=>Yii::t('sales','白蚁'),'width'=>10,'align'=>'C'),
 			'svc_C6'=>array('label'=>Yii::t('sales','预估成交率').'(0-100%)','width'=>10,'align'=>'C'),
 			'svc_C7'=>array('label'=>Yii::t('sales','合同年金额'),'width'=>10,'align'=>'C'),
 			'svc_C8'=>array('label'=>Yii::t('sales','备注'),'width'=>30,'align'=>'L'),
@@ -179,6 +180,7 @@ class RptVisitList extends CReport {
 					'svc_C4',
 					'svc_C5',
                     'svc_C9',
+                    'svc_C11',
 					'svc_C6',
 					'svc_C7',
 					'svc_C8',
@@ -369,7 +371,7 @@ class RptVisitList extends CReport {
                             $temp[$line['field_id']] = VisitForm::getTypeListForH($line['field_value'],true);
                             break;
                         default:
-                            if (strpos('svc_C2,svc_C3,svc_C4,svc_C5,svc_C9,',$line['field_id'].',')===false)
+                            if (strpos('svc_C2,svc_C3,svc_C4,svc_C5,svc_C9,svc_C11,',$line['field_id'].',')===false)
                                 $temp[$line['field_id']] = $line['field_value'];
                             else
                                 $temp[$line['field_id']] = $line['field_value']=='Y' ? 'Y' : '';
