@@ -69,6 +69,7 @@ class ReportController extends Controller
 		$this->function_id = self::$actions['visit'];
 		Yii::app()->session['active_func'] = $this->function_id;
         $model = new ReportVisitForm;
+        $model->city = Yii::app()->user->city();
         if (isset($_POST['ReportVisitForm'])) {
             $model->attributes = $_POST['ReportVisitForm'];
 
@@ -97,16 +98,20 @@ class ReportController extends Controller
         if (isset($_POST['ReportVisitForm'])) {
             $fenxi = $_POST['ReportVisitForm'];
             $model['all'] = $model->sale($fenxi);
+
+            $this->render('sale',array('model'=>$model,'fenxi'=>$fenxi));
+        }else{
+            throw new CHttpException(404,'数据异常，请与管理员联系');
         }
 //        print_r('<pre/>');
 //       print_r($model);
-        $this->render('sale',array('model'=>$model,'fenxi'=>$fenxi));
     }
 
     public function actionPerformance() {
         $this->function_id = self::$actions['performance'];
         Yii::app()->session['active_func'] = $this->function_id;
         $model = new ReportVisitForm;
+        $model->city = Yii::app()->user->city();
         if (isset($_POST['ReportVisitForm'])) {
             $model->attributes = $_POST['ReportVisitForm'];
         }

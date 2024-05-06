@@ -51,18 +51,14 @@ class ReportVisitForm extends CReportForm
 
 	public function city(){
         $suffix = Yii::app()->params['envSuffix'];
-        $model = new City();
-        $city=Yii::app()->user->city();
-        $records=$model->getDescendant($city);
-        array_unshift($records,$city);
-        $cityname=array();
-        foreach ($records as $k) {
-            $sql = "select name from security$suffix.sec_city where code='" . $k . "'";
-            $name = Yii::app()->db->createCommand($sql)->queryAll();
-            $cityname[]=$name[0]['name'];
+        $city_allow=Yii::app()->user->city_allow();
+        $cityList=array();
+        $sql = "select code,name from security$suffix.sec_city where code in ({$city_allow})";
+        $records = Yii::app()->db->createCommand($sql)->queryAll();
+        foreach ($records as $record) {
+            $cityList[$record["code"]]=$record['name'];
         }
-        $city=array_combine($records,$cityname);
-        return $city;
+        return $cityList;
     }
 
     public function saleman(){
