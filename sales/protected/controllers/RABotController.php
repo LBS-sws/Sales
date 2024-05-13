@@ -31,11 +31,33 @@ class RABotController extends Controller
 				'actions'=>array('index','view','downExcel','updateHistory'),
 				'expression'=>array('RABotController','allowReadOnly'),
 			),
+            array('allow',
+                'actions'=>array('shift'),
+                'expression'=>array('RABotController','allowShift'),
+            ),
 			array('deny',  // deny all users
 				'users'=>array('*'),
 			),
 		);
 	}
+
+    public function actionShift()
+    {
+        if (isset($_POST['RABotForm'])) {
+            $model = new RABotForm($_POST['RABotForm']['scenario']);
+            $model->attributes = $_POST['RABotForm'];
+            if ($model->validateShift()) {
+                $model->shiftData();
+//				$model->scenario = 'edit';
+                Dialog::message(Yii::t('dialog','Information'), Yii::t('ka','Shift Done'));
+                $this->redirect(Yii::app()->createUrl('rABot/view',array('index'=>$model->id)));
+            } else {
+                $message = CHtml::errorSummary($model);
+                Dialog::message(Yii::t('dialog','Validation Message'), $message);
+                $this->redirect(Yii::app()->createUrl('rABot/edit',array('index'=>$model->id)));
+            }
+        }
+    }
 
     public function actionAjaxCustomerName($group='',$id=0)
     {
@@ -177,4 +199,8 @@ class RABotController extends Controller
 	public static function allowReadOnly() {
 		return Yii::app()->user->validFunction('RA01');
 	}
+
+    public static function allowShift() {//转移
+        return Yii::app()->user->validFunction('CN18');
+    }
 }

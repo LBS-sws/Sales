@@ -18,4 +18,5 @@ return array(
     'KA Bot(All)'=>array('access'=>'CN15',),
     'RA Bot(All)'=>array('access'=>'CN16',),
     'CA Bot(All)'=>array('access'=>'CN17',),
+    'Shift KA Bot'=>array('access'=>'CN18',),//KA项目转移
 );

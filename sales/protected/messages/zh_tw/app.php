@@ -166,5 +166,6 @@ return array(
     'CA Bot(All)'=>'地方業務項目(所有)',
 
     'Customer duplicate'=>'客戶名稱查重設置',
+    'Shift KA Bot'=>'KA項目轉移',
 );
 ?>

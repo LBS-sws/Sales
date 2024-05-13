@@ -37,6 +37,7 @@ class KABotForm extends CFormModel
 	public $support_user;
 	public $sign_odds;
 	public $city;
+	public $shift_bool=0;
 
 	public $status_type;
     public $reject_id;
@@ -155,6 +156,75 @@ class KABotForm extends CFormModel
 		);
 	}
 
+	public function getThisTablePre(){
+	    return $this->table_pre;
+    }
+
+    public function validateShift() {
+        $shift_to_tab = key_exists("shift_to_tab",$_POST)?$_POST["shift_to_tab"]:"";
+        $shift_to_staff = key_exists("shift_to_staff",$_POST)?$_POST["shift_to_staff"]:"";
+        $shift_remark = key_exists("shift_remark",$_POST)?$_POST["shift_remark"]:"";
+        $tablePreList = self::getTablePreList();
+        if(empty($shift_to_tab)){
+            $this->addError("id", "转移位置不能为空！");
+        }
+        if(!empty($shift_to_tab)&&!key_exists($shift_to_tab,$tablePreList)){
+            $this->addError("id", "转移位置格式异常！");
+        }
+        if(empty($shift_to_staff)){
+            $this->addError("id", "转移后员工不能为空！");
+        }
+        if(empty($shift_remark)){
+            $this->addError("id", "转移说明不能为空！");
+        }
+        $rowShift = Yii::app()->db->createCommand()->select('*')->from("sal_ka_shift")
+            ->where("shift_from_tab=:table_pre and shift_from_id=:id",array(":table_pre"=>$this->table_pre,":id"=>$this->id))
+            ->queryRow();
+        if($rowShift){
+            $shiftCode = Yii::app()->db->createCommand()->select('customer_no')->from("sal{$rowShift["shift_to_tab"]}bot")
+                ->where("id=:id",array(":id"=>$rowShift["shift_to_id"]))
+                ->queryRow();
+            if($shiftCode){
+                $this->addError("id", "该记录已被转移，无法继续转移：".self::getTableStrForPre($rowShift["shift_to_tab"])." (".$shiftCode["customer_no"].")");
+            }
+        }
+
+        $errorMsg = $this->getError("id");
+        if(empty($errorMsg)){
+            return true;
+        }
+        return false;
+    }
+
+    public static function getShiftRowForID($table_pre,$id){
+        $rowShift = Yii::app()->db->createCommand()->select('*')->from("sal_ka_shift")
+            ->where("(shift_from_tab=:table and shift_from_id=:id) or (shift_to_tab=:table and shift_to_id=:id)",array(":table"=>$table_pre,":id"=>$id))
+            ->order("id desc")->queryRow();
+        if($rowShift){
+            return $rowShift;
+        }else{
+            return array();
+        }
+    }
+
+    public static function getTablePreList(){
+	    $list = array(
+            "_ka_"=>Yii::t("app","KA Bot"),//"NKA项目"
+            "_ra_"=>Yii::t("app","RA Bot"),//"RKA项目"
+            "_ca_"=>Yii::t("app","CA Bot"),//"地方业务项目"
+        );
+	    return $list;
+    }
+
+    public static function getTableStrForPre($table_pre){
+        $list = self::getTablePreList();
+        if(key_exists($table_pre,$list)){
+            return $list[$table_pre];
+        }else{
+            return $table_pre;
+        }
+    }
+
     public function validateCustomerName($attribute, $params) {
         $ka_id = 0;
         $ra_id = 0;
@@ -175,21 +245,21 @@ class KABotForm extends CFormModel
         }
         $rowKa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
             ->from("sal_ka_bot a")
-            ->where("a.search_name=:name and id!=:id",array(":name"=>$group,":id"=>$ka_id))
+            ->where("a.search_name=:name and a.shift_bool=0 and id!=:id",array(":name"=>$group,":id"=>$ka_id))
             ->queryRow();
         if($rowKa){
             $this->addError($attribute, "客户名称不能重复：".$rowKa["customer_name"]."({$rowKa["customer_no"]})");
         }
         $rowRa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
             ->from("sal_ra_bot a")
-            ->where("a.search_name=:name and id!=:id",array(":name"=>$group,":id"=>$ra_id))
+            ->where("a.search_name=:name and a.shift_bool=0 and id!=:id",array(":name"=>$group,":id"=>$ra_id))
             ->queryRow();
         if($rowRa){
             $this->addError($attribute, "客户名称不能重复：".$rowRa["customer_name"]."({$rowRa["customer_no"]})");
         }
         $rowCa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
             ->from("sal_ca_bot a")
-            ->where("a.search_name=:name and id!=:id",array(":name"=>$group,":id"=>$ca_id))
+            ->where("a.search_name=:name and a.shift_bool=0 and id!=:id",array(":name"=>$group,":id"=>$ca_id))
             ->queryRow();
         if($rowCa){
             $this->addError($attribute, "客户名称不能重复：".$rowCa["customer_name"]."({$rowCa["customer_no"]})");
@@ -299,7 +369,7 @@ class KABotForm extends CFormModel
         $arr = array(
             "id"=>1,"apply_date"=>2,"available_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
             "head_city_id"=>1,"talk_city_id"=>1,"contact_user"=>1,"contact_phone"=>1,
-            "contact_email"=>1,"source_text"=>1,"source_id"=>1,
+            "contact_email"=>1,"source_text"=>1,"source_id"=>1,"shift_bool"=>1,
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"available_amt"=>3,
             "sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
@@ -800,6 +870,8 @@ class KABotForm extends CFormModel
         switch ($this->scenario) {
             case 'delete':
                 $connection->createCommand()->delete("sal{$table_pre}bot", "id=:id", array(":id" => $this->id));
+                //删除转移记录
+                $this->deleteShiftData($connection);
                 break;
             case 'new':
                 $list["busine_name"] = $busine_name;
@@ -855,7 +927,14 @@ class KABotForm extends CFormModel
     }
 
 	public function isOccupied(){
-	    return false;
+        $row = Yii::app()->db->createCommand()->select('*')->from("sal_ka_shift")
+            ->where("shift_from_tab='{$this->table_pre}' and shift_from_id=:id",array(":id"=>$this->id))
+            ->queryRow();
+        if($row){
+            return true;
+        }else{
+            return false;
+        }
     }
 
 	public static function getSignOddsListForId($id="",$bool=false){
@@ -980,6 +1059,24 @@ class KABotForm extends CFormModel
         return $list;
     }
 
+    public static function getKABotStaffForAccess(){
+        $list = array();
+        $systemId = Yii::app()->params['systemId'];
+        $suffix = Yii::app()->params['envSuffix'];
+        $rows = Yii::app()->db->createCommand()->select("b.id,b.code,b.name")
+            ->from("hr{$suffix}.hr_binding a")
+            ->leftJoin("hr{$suffix}.hr_employee b","a.employee_id=b.id")
+            ->leftJoin("security{$suffix}.sec_user_access f","a.user_id=f.username and f.system_id='{$systemId}'")
+            ->where("f.a_read_write like '%KA01%' or f.a_read_write like '%RA01%' or f.a_read_write like '%CA01%'")
+            ->queryAll();//查询拥有读写权限的员工
+        if($rows){
+            foreach ($rows as $row){
+                $list[$row["id"]] = $row["name"]." ({$row["code"]})";
+            }
+        }
+        return $list;
+    }
+
     //查询相似的ka项目公司及备注
     public function AjaxCustomerName($group,$id=0){
         $table_pre = $this->table_pre;
@@ -991,17 +1088,17 @@ class KABotForm extends CFormModel
             $group = str_replace("'","\'",$group);
             $recordsKa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
                 ->from("sal_ka_bot a")
-                ->where("a.id!='{$id}' and (a.search_name like '%$group%')")
+                ->where("a.id!='{$id}' and a.shift_bool=0 and (a.search_name like '%$group%')")
                 ->queryAll();
             $recordsKa = $recordsKa?$recordsKa:array();
             $recordsRa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
                 ->from("sal_ra_bot a")
-                ->where("a.id!='{$id}' and (a.search_name like '%$group%')")
+                ->where("a.id!='{$id}' and a.shift_bool=0 and (a.search_name like '%$group%')")
                 ->queryAll();
             $recordsRa = $recordsRa?$recordsRa:array();
             $recordsCa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
                 ->from("sal_ca_bot a")
-                ->where("a.id!='{$id}' and (a.search_name like '%$group%')")
+                ->where("a.id!='{$id}' and a.shift_bool=0 and (a.search_name like '%$group%')")
                 ->queryAll();
             $recordsCa = $recordsCa?$recordsCa:array();
             $records = array_merge($recordsKa,$recordsRa,$recordsCa);
@@ -1023,5 +1120,108 @@ class KABotForm extends CFormModel
             $html = "<li><a>请输入客户名称</a></li>";
         }
         return $html;
+    }
+
+    //项目转移
+    public function shiftData(){
+        $botRow = Yii::app()->db->createCommand()->select('*')->from("sal{$this->table_pre}bot")
+            ->where("id=:id",array(":id"=>$this->id))
+            ->queryRow();
+        if($botRow){
+            $connection = Yii::app()->db;
+            $transaction=$connection->beginTransaction();
+            try {
+                $this->shiftSave($connection,$botRow);
+                $transaction->commit();
+            }catch(Exception $e) {
+                $transaction->rollback();
+                throw new CHttpException(404,$e->getMessage());
+            }
+            //
+        }
+    }
+
+    protected function shiftSave($connection,$botRow){
+        $connection->createCommand()->update("sal{$this->table_pre}bot",array(
+            "shift_bool"=>1
+        ),'id='.$this->id);
+        $shift_to_tab = key_exists("shift_to_tab",$_POST)?$_POST["shift_to_tab"]:"";
+        $shift_to_staff = key_exists("shift_to_staff",$_POST)?$_POST["shift_to_staff"]:"";
+        $shift_remark = key_exists("shift_remark",$_POST)?$_POST["shift_remark"]:"";
+        $historyArr = array("<span>转移</span>");
+        if($shift_to_tab!=$this->table_pre){
+            $historyArr[] = "<span>类型：".self::getTableStrForPre($this->table_pre)." 转移 ".self::getTableStrForPre($shift_to_tab)."</span>";
+        }
+        $historyArr[] = "<span>销售：".KABotForm::getEmployeeNameForId($botRow["kam_id"])." 转移 ".KABotForm::getEmployeeNameForId($shift_to_staff)."</span>";
+        $historyArr[] = "<span>转移说明：{$shift_remark}</span>";
+        $historyArr = implode("<br/>",$historyArr);
+        $copyTable = array(
+            array("from_table"=>"sal{$this->table_pre}bot_ava","to_table"=>"sal{$shift_to_tab}bot_ava"),
+            array("from_table"=>"sal{$this->table_pre}bot_history","to_table"=>"sal{$shift_to_tab}bot_history"),
+            array("from_table"=>"sal{$this->table_pre}bot_info","to_table"=>"sal{$shift_to_tab}bot_info"),
+        );
+        $uid = Yii::app()->user->id;
+        //$dateTime = date_format(date_create(),"Y/m/d H:i:s");
+        $arr = $botRow;
+        unset($arr["id"]);
+        unset($arr["customer_no"]);
+        $arr["kam_id"] =$shift_to_staff;
+        $connection->createCommand()->insert("sal{$shift_to_tab}bot",$arr);
+        $shift_id = Yii::app()->db->getLastInsertID();
+        $customer_no = "SIT".(100000+$shift_id);
+        $connection->createCommand()->update("sal{$shift_to_tab}bot",array(
+            "customer_no"=>$customer_no
+        ),'id='.$shift_id);
+        $connection->createCommand()->insert("sal{$this->table_pre}bot_history",array(
+            "bot_id"=>$this->id,
+            "update_type"=>4,
+            "update_html"=>$historyArr,
+            "lcu"=>$uid,
+        ));//生成转移历史记录
+
+        //复制ava、info、history
+        foreach ($copyTable as $tableRow){
+            $rows = $connection->createCommand()->select('*')->from($tableRow["from_table"])
+                ->where("bot_id=:id",array(":id"=>$this->id))->queryAll();
+            if($rows){
+                foreach ($rows as $row){
+                    $infoArr = $row;
+                    unset($infoArr["id"]);
+                    $infoArr["bot_id"] =$shift_id;
+                    $connection->createCommand()->insert($tableRow["to_table"],$infoArr);
+                }
+            }
+        }
+
+        //生成转移table
+        $connection->createCommand()->insert("sal_ka_shift",array(
+            "shift_from_tab"=>$this->table_pre,
+            "shift_from_id"=>$this->id,
+            "shift_from_staff"=>$botRow["kam_id"],
+            "shift_to_tab"=>$shift_to_tab,
+            "shift_to_id"=>$shift_id,
+            "shift_to_staff"=>$shift_to_staff,
+            "shift_remark"=>$shift_remark,
+            "lcu"=>$uid,
+        ));
+    }
+
+    //删除项目时删除转移数据
+    protected function deleteShiftData($connection){
+        $row = $connection->createCommand()->select('*')->from("sal_ka_shift")
+            ->where("shift_to_tab='{$this->table_pre}' and shift_to_id=:id",array(":id"=>$this->id))
+            ->queryRow();
+        if($row){
+            $connection->createCommand()->delete("sal_ka_shift", "id=:id", array(":id" =>$row["id"]));
+            $connection->createCommand()->update("sal{$row["shift_from_tab"]}bot",array(
+                "shift_bool"=>0
+            ),'id='.$row["shift_from_id"]);
+            $connection->createCommand()->insert("sal{$row["shift_from_tab"]}bot_history",array(
+                "bot_id"=>$row["shift_from_id"],
+                "update_type"=>5,
+                "update_html"=>"<span>转移后的数据被删除</span>",
+                "lcu"=>Yii::app()->user->id,
+            ));//生成转移历史记录
+        }
     }
 }

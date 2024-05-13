@@ -69,9 +69,14 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
             <?php if ($model->scenario!='new'): ?>
 		
                 <div class="btn-group pull-right" role="group">
-			
-					<?php 
-					
+                    <?php
+                    if (Yii::app()->user->validFunction('CN18')){
+                        echo TbHtml::button('<span class="fa fa-refresh"></span> '.Yii::t('ka','Shift'), array(
+                                'data-toggle'=>'modal','data-target'=>'#shiftDialog',)
+                        );
+                    }
+                    ?>
+					<?php
 						if($model->employee_id==$model->kam_id){
 							echo TbHtml::button('<span class="glyphicon glyphicon-pencil"></span> '."编辑", array(
 									'submit'=>Yii::app()->createUrl('kABot/edit',array("index"=>$model->id)))); 
@@ -93,6 +98,8 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 			<?php echo $form->hiddenField($model, 'kam_id'); ?>
             <?php echo CHtml::hiddenField('dtltemplate_info'); ?>
             <?php echo CHtml::hiddenField('dtltemplate_ava'); ?>
+
+            <?php $this->renderPartial('//kABot/shiftForm',array("model"=>$model)); ?>
 
             <div class="form-group">
                 <?php echo $form->labelEx($model,'apply_date',array('class'=>"col-sm-2 control-label")); ?>
@@ -348,6 +355,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 
 <?php $this->renderPartial('//site/removedialog'); ?>
 <?php $this->renderPartial('//kABot/historylist',array("model"=>$model)); ?>
+<?php $this->renderPartial('//kABot/shiftDialog',array("model"=>$model,"submit"=>Yii::app()->createUrl('kABot/shift'))); ?>
 <?php
 $js = "
 $('table').on('change','[id^=\"KABotForm\"]',function() {

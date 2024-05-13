@@ -174,5 +174,6 @@ return array(
     'CA Bot(All)'=>'地方业务项目(所有)',
 
     'Customer duplicate'=>'客户名称查重设置',
+    'Shift KA Bot'=>'KA项目转移',
 );
 ?>

@@ -122,5 +122,7 @@ return array(
     'KA Type'=>'KA类别',
     'dup name'=>'需要替换的字符串',
     'dup value'=>'替换后的字符串',
+    'Shift'=>'转移',
+    'Shift Done'=>'转移成功',
 );
 ?>

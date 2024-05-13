@@ -31,11 +31,33 @@ class KABotController extends Controller
 				'actions'=>array('index','view','downExcel','resetOldData','updateHistory'),
 				'expression'=>array('KABotController','allowReadOnly'),
 			),
+			array('allow',
+				'actions'=>array('shift'),
+				'expression'=>array('KABotController','allowShift'),
+			),
 			array('deny',  // deny all users
 				'users'=>array('*'),
 			),
 		);
 	}
+
+    public function actionShift()
+    {
+        if (isset($_POST['KABotForm'])) {
+            $model = new KABotForm($_POST['KABotForm']['scenario']);
+            $model->attributes = $_POST['KABotForm'];
+            if ($model->validateShift()) {
+                $model->shiftData();
+//				$model->scenario = 'edit';
+                Dialog::message(Yii::t('dialog','Information'), Yii::t('ka','Shift Done'));
+                $this->redirect(Yii::app()->createUrl('kABot/view',array('index'=>$model->id)));
+            } else {
+                $message = CHtml::errorSummary($model);
+                Dialog::message(Yii::t('dialog','Validation Message'), $message);
+                $this->redirect(Yii::app()->createUrl('kABot/edit',array('index'=>$model->id)));
+            }
+        }
+    }
 
     public function actionAjaxCustomerName($group='',$id=0)
     {
@@ -176,6 +198,10 @@ class KABotController extends Controller
 	
 	public static function allowReadOnly() {
 		return Yii::app()->user->validFunction('KA01');
+	}
+
+	public static function allowShift() {//转移
+		return Yii::app()->user->validFunction('CN18');
 	}
 
     //由於2023/06/23日修改，所以之前的舊數據需要清空
