@@ -80,6 +80,25 @@ class KABotForm extends CFormModel
 
     protected $function_id='CN15';
     protected $table_pre='_ka_';
+
+    public $files;
+    public $file_key='kabot';
+
+    public $docMasterId = array(
+        'kabot'=>0,
+        'cabot'=>0,
+        'rabot'=>0,
+    );
+    public $removeFileId = array(
+        'kabot'=>0,
+        'cabot'=>0,
+        'rabot'=>0,
+    );
+    public $no_of_attm = array(
+        'kabot'=>0,
+        'cabot'=>0,
+        'rabot'=>0,
+    );
 	/**
 	 * Declares customized attribute labels.
 	 * If not declared here, an attribute would have a label that is
@@ -153,6 +172,7 @@ class KABotForm extends CFormModel
             array('apply_date','validateDate'),
             array('link_id','validateLinkID'),
             array('sign_amt','computeSignAmt'),
+            array('files, removeFileId, docMasterId, no_of_attm','safe'),
 		);
 	}
 
@@ -362,7 +382,7 @@ class KABotForm extends CFormModel
         }else{
             $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}')";
         }
-		$sql = "select a.* from sal{$table_pre}bot a left join hr{$suffix}.hr_employee h ON a.kam_id=h.id where a.id=".$index." {$whereSql}";
+		$sql = "select a.*,docman$suffix.countdoc('{$this->file_key}',a.id) as countdoc from sal{$table_pre}bot a left join hr{$suffix}.hr_employee h ON a.kam_id=h.id where a.id=".$index." {$whereSql}";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
         //contact_adr,work_user,work_phone,work_email,class_other
 
@@ -377,6 +397,7 @@ class KABotForm extends CFormModel
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
 		if ($row!==false) {
+            $this->no_of_attm[$this->file_key] = $row['countdoc'];
 			foreach ($arr as $key => $type){
 			    switch ($type){
                     case 1://原值
@@ -508,6 +529,7 @@ class KABotForm extends CFormModel
 			$this->save($connection);
             $this->saveDetail($connection);
             $this->saveAvaInfo($connection);
+            $this->updateDocman($connection,$this->file_key);
 			$transaction->commit();
 		}
 		catch(Exception $e) {
@@ -515,6 +537,17 @@ class KABotForm extends CFormModel
 			throw new CHttpException(404,$e->getMessage());
 		}
 	}
+
+    protected function updateDocman(&$connection, $doctype) {
+        if ($this->scenario=='new') {
+            $docidx = strtolower($doctype);
+            if ($this->docMasterId[$docidx] > 0) {
+                $docman = new DocMan($doctype,$this->id,get_class($this));
+                $docman->masterId = $this->docMasterId[$docidx];
+                $docman->updateDocId($connection, $this->docMasterId[$docidx]);
+            }
+        }
+    }
 
     //哪些字段修改后需要记录
     protected static function historyUpdateList(){

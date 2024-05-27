@@ -4,6 +4,7 @@ class RABotForm extends KABotForm{
 
     protected $function_id='CN16';
     protected $table_pre='_ra_';
+    public $file_key='rabot';
 
     public static function getBotHistoryRows($bot_id){
         $rows = Yii::app()->db->createCommand()->select("id,update_html,lcu,lcd")

@@ -252,7 +252,7 @@ class MarketCompanyController extends Controller
     }
 
     public function actionFileDownload($mastId, $docId, $fileId, $doctype) {
-        $sql = "select id from sal_market where id = $docId";
+        $sql = "select id,city from sal_market where id = $docId";
         $row = Yii::app()->db->createCommand($sql)->queryRow();
         if ($row!==false) {
             $citylist = Yii::app()->user->city_allow();

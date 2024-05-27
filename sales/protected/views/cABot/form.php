@@ -66,9 +66,9 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 	?>
 <?php endif ?>
 	</div>
-            <?php if ($model->scenario!='new'): ?>
-		
-                <div class="btn-group pull-right" role="group">
+
+            <div class="btn-group pull-right" role="group">
+                <?php if ($model->scenario!='new'): ?>
                     <?php
                     if (Yii::app()->user->validFunction('CN18')){
                         echo TbHtml::button('<span class="fa fa-refresh"></span> '.Yii::t('ka','Shift'), array(
@@ -76,20 +76,26 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                         );
                     }
                     ?>
-			
-					<?php 
-					
-						if($model->employee_id==$model->kam_id){
-							echo TbHtml::button('<span class="glyphicon glyphicon-pencil"></span> '."编辑", array(
-									'submit'=>Yii::app()->createUrl('cABot/edit',array("index"=>$model->id))));
-						}
-					?>
+
+                    <?php
+
+                    if($model->employee_id==$model->kam_id){
+                        echo TbHtml::button('<span class="glyphicon glyphicon-pencil"></span> '."编辑", array(
+                            'submit'=>Yii::app()->createUrl('cABot/edit',array("index"=>$model->id))));
+                    }
+                    ?>
                     <?php echo TbHtml::button('<span class="fa fa-list"></span> '.Yii::t('ka','Flow Info'), array(
                             'data-toggle'=>'modal','data-target'=>'#flowinfodialog',)
                     );
                     ?>
-                </div>
-            <?php endif ?>
+                <?php endif ?>
+                <?php
+                $counter = ($model->no_of_attm[$model->file_key] > 0) ? ' <span id="doc'.$model->file_key.'" class="label label-info">'.$model->no_of_attm[$model->file_key].'</span>' : ' <span id="doc'.$model->file_key.'"></span>';
+                echo TbHtml::button('<span class="fa  fa-file-text-o"></span> '.Yii::t('misc','Attachment').$counter, array(
+                        'name'=>'btnFile','id'=>'btnFile','data-toggle'=>'modal','data-target'=>'#fileupload'.$model->file_key,)
+                );
+                ?>
+            </div>
 	</div></div>
 
 	<div class="box box-info">
@@ -355,10 +361,18 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 	</div>
 </section>
 
+<?php $this->renderPartial('//site/fileupload',array('model'=>$model,
+    'form'=>$form,
+    'doctype'=>strtoupper($model->file_key),
+    'header'=>Yii::t('dialog','File Attachment'),
+    'ronly'=>($model->scenario=='view'),
+));
+?>
 <?php $this->renderPartial('//site/removedialog'); ?>
 <?php $this->renderPartial('//cABot/historylist',array("model"=>$model)); ?>
 <?php $this->renderPartial('//kABot/shiftDialog',array("model"=>$model,"submit"=>Yii::app()->createUrl('cABot/shift'))); ?>
 <?php
+Script::genFileUpload($model,$form->id,strtoupper($model->file_key));
 $js = "
 $('table').on('change','[id^=\"CABotForm\"]',function() {
 	var n=$(this).attr('id').split('_');

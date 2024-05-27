@@ -24,11 +24,11 @@ class CABotController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','delete','save','ajaxSupportUser','AjaxCustomerName'),
+				'actions'=>array('new','edit','delete','save','ajaxSupportUser','AjaxCustomerName','fileupload','fileremove'),
 				'expression'=>array('CABotController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view','downExcel','updateHistory'),
+				'actions'=>array('index','view','downExcel','updateHistory','filedownload'),
 				'expression'=>array('CABotController','allowReadOnly'),
 			),
             array('allow',
@@ -191,6 +191,47 @@ class CABotController extends Controller
 			}
 		}
 	}
+
+    public function actionFileupload($doctype) {
+        $model = new CABotForm();
+        if (isset($_POST['CABotForm'])) {
+            $model->attributes = $_POST['CABotForm'];
+
+            $id = ($_POST['CABotForm']['scenario']=='new') ? 0 : $model->id;
+            $docman = new DocMan($doctype,$id,get_class($model));
+            $docman->masterId = $model->docMasterId[strtolower($doctype)];
+            if (isset($_FILES[$docman->inputName])) $docman->files = $_FILES[$docman->inputName];
+            $docman->fileUpload();
+            echo $docman->genTableFileList(false);
+        } else {
+            echo "NIL";
+        }
+    }
+
+    public function actionFileRemove($doctype) {
+        $model = new CABotForm();
+        if (isset($_POST['CABotForm'])) {
+            $model->attributes = $_POST['CABotForm'];
+            $docman = new DocMan($doctype,$model->id,get_class($model));
+            $docman->masterId = $model->docMasterId[strtolower($doctype)];
+            $docman->fileRemove($model->removeFileId[strtolower($doctype)]);
+            echo $docman->genTableFileList(false);
+        } else {
+            echo "NIL";
+        }
+    }
+
+    public function actionFileDownload($mastId, $docId, $fileId, $doctype) {
+        $sql = "select id,city from sal_ca_bot where id = $docId";
+        $row = Yii::app()->db->createCommand($sql)->queryRow();
+        if ($row!==false) {
+            $docman = new DocMan($doctype,$docId,'CABotForm');
+            $docman->masterId = $mastId;
+            $docman->fileDownload($fileId);
+        } else {
+            throw new CHttpException(404,'Record not found.');
+        }
+    }
 	
 	public static function allowReadWrite() {
 		return Yii::app()->user->validRWFunction('CA01');
