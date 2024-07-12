@@ -103,6 +103,8 @@ class SalesSearchCustomerList extends CListPageModel
 		if ($record) {
             $this->countBool = true;
             $detail = $this->getServiceList($record['id'], $record['code'], $record['name'], $record['city']);
+            $kaDetail = $this->getServiceKAList($record['id'], $record['code'], $record['name'], $record['city']);
+            $idDetail = $this->getServiceIDList($record['id'], $record['code'], $record['name'], $record['city']);
             $this->attr[] = array(
                 'company_id'=>$record['id'],
                 'company_code'=>$record['code'],
@@ -112,7 +114,7 @@ class SalesSearchCustomerList extends CListPageModel
                 'cont_phone'=>$record['cont_phone'],
                 'city_name'=>$record['city_name'],
                 'company_status'=>$this->statusDesc($record['status']),
-                'detail'=>$detail,
+                'detail'=>array_merge($detail,$kaDetail,$idDetail),
             );
 		}
 /*		$session = Yii::app()->session;
@@ -206,6 +208,73 @@ class SalesSearchCustomerList extends CListPageModel
 		} 
 		return $rtn;
 	}
+
+	protected function getServiceKAList($id, $code, $name, $city) {
+        $suffix = Yii::app()->params['envSuffix'];
+		$rtn = array();
+		$name = str_replace("'","\'",$name);
+		$sql = "select a.*, c.description as cust_type_desc, d.description as product_desc   
+				from swoper$suffix.swo_service_ka a
+				left outer join swoper$suffix.swo_service_ka b on a.company_name=b.company_name 
+					and a.status_dt < b.status_dt and a.cust_type=b.cust_type
+				left outer join swoper$suffix.swo_customer_type c on a.cust_type=c.id 
+				left outer join swoper$suffix.swo_product d on a.product_id=d.id 
+				where b.id is null and a.city='$city'
+				and (a.company_id=$id or a.company_name like concat('$code',' %') 
+				or a.company_name like concat('%','$name'));
+			";
+		$rows = Yii::app()->db->createCommand($sql)->queryAll();
+		if (count($rows) > 0) {
+			foreach ($rows as $row) {
+				$rtn[] = array(
+							'status_dt'=>General::toDate($row['status_dt']),
+							'status'=>($row['status']=='T' ? $this->statusDesc('T') : $this->statusDesc('A')),
+							'service'=>$row['service'],
+							'first_dt'=>General::toDate($row['first_dt']),
+							'amt_paid'=>$row['amt_paid'],
+							'cust_type_desc'=>$row['cust_type_desc'],
+							'product_desc'=>$row['product_desc'],
+							'paid_type'=>($row['paid_type']=='M' ? Yii::t('service','Monthly')
+											: ($row['paid_type']=='Y' ? Yii::t('service','Yearly')
+												: ($row['paid_type']=='1' ? Yii::t('service','One time') : ''))
+									),
+						);
+			}
+		}
+		return $rtn;
+	}
+
+	protected function getServiceIDList($id, $code, $name, $city) {
+        $suffix = Yii::app()->params['envSuffix'];
+		$rtn = array();
+		$name = str_replace("'","\'",$name);
+		$sql = "select a.*, c.description as cust_type_desc, d.description as product_desc   
+				from swoper$suffix.swo_serviceid a
+				left outer join swoper$suffix.swo_serviceid b on a.company_name=b.company_name 
+					and a.status_dt < b.status_dt and a.cust_type=b.cust_type
+				left outer join swoper$suffix.swo_customer_type c on a.cust_type=c.id 
+				left outer join swoper$suffix.swo_product d on a.product_id=d.id 
+				where b.id is null and a.city='$city'
+				and (a.company_id=$id or a.company_name like concat('$code',' %') 
+				or a.company_name like concat('%','$name'));
+			";
+		$rows = Yii::app()->db->createCommand($sql)->queryAll();
+		if (count($rows) > 0) {
+			foreach ($rows as $row) {
+				$rtn[] = array(
+							'status_dt'=>General::toDate($row['status_dt']),
+							'status'=>($row['status']=='T' ? $this->statusDesc('T') : $this->statusDesc('A')),
+							'service'=>$row['service'],
+							'first_dt'=>General::toDate($row['first_dt']),
+							'amt_paid'=>$row['amt_paid'],
+							'cust_type_desc'=>$row['cust_type_desc'],
+							'product_desc'=>$row['product_desc'],
+							'paid_type'=>Yii::t('service','Monthly'),
+						);
+			}
+		}
+		return $rtn;
+	}
 	
 	public function getCriteria() {
 		$rtn1 = parent::getCriteria();
@@ -231,8 +300,7 @@ class SalesSearchCustomerList extends CListPageModel
             $group = str_replace("'","\'",$group);
             $records = Yii::app()->db->createCommand()->select('a.id,a.code,a.name')
                 ->from("swoper$suffix.swo_company a")
-                ->leftJoin("swoper$suffix.swo_company_status b","a.id=b.id")
-                ->where("a.name like '%$group%' and a.city in ($city) and b.status in ('A','T')")
+                ->where("(a.name like '%$group%' or a.code like '%$group%') and a.city in ($city) and a.status!=2")
                 ->queryAll();
             if($records){
                 foreach ($records as $row){
