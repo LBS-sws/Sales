@@ -252,7 +252,7 @@ class SalesSearchCustomerList extends CListPageModel
 				from swoper$suffix.swo_serviceid a
 				left outer join swoper$suffix.swo_serviceid b on a.company_name=b.company_name 
 					and a.status_dt < b.status_dt and a.cust_type=b.cust_type
-				left outer join swoper$suffix.swo_customer_type c on a.cust_type=c.id 
+				left outer join swoper$suffix.swo_customer_type_id c on a.cust_type=c.id 
 				left outer join swoper$suffix.swo_product d on a.product_id=d.id 
 				where b.id is null and a.city='$city'
 				and (a.company_id=$id or a.company_name like concat('$code',' %') 
