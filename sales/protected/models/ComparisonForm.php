@@ -173,6 +173,7 @@ class ComparisonForm extends CFormModel
             if(key_exists($city,$serviceForST)){
                 $defMoreList["stop_sum"]+=key_exists($city,$serviceForST)?-1*$serviceForST[$city]["num_stop"]:0;
                 $defMoreList["pause_sum"]+=key_exists($city,$serviceForST)?-1*$serviceForST[$city]["num_pause"]:0;
+                $defMoreList["stop_sum_none"]+=key_exists($city,$serviceForST)?-1*$serviceForST[$city]["num_stop_none"]:0;
                 $defMoreList["stopSumOnly"]+=key_exists($city,$serviceForST)?$serviceForST[$city]["num_month"]:0;
             }
             if(key_exists($city,$lastServiceForST)){
@@ -197,14 +198,13 @@ class ComparisonForm extends CFormModel
     public static function setComparisonConfig(&$arr,$year,$start_date,$city){
         $suffix = Yii::app()->params['envSuffix'];
         $monthNum = date("n",strtotime($start_date));
-        $year2024 = false;//2024年的年初生意额 = 滚动生意额
-        if($year==2024){
-            $year2024=true;
-            $monthList = array(
-                1=>array("min"=>1,"max"=>3),
-                4=>array("min"=>4,"max"=>7),
-                7=>array("min"=>8,"max"=>12),
-            );
+        $year2024 = false;//2024年以后年初生意额 = 滚动生意额
+        if($year>=2024){
+            $year2024 = true;
+            $monthList = array();
+            for ($i=1;$i<=12;$i++){
+                $monthList[$i] = array("min"=>$i,"max"=>$i);
+            }
         }else{
             $monthList = array(
                 1=>array("min"=>1,"max"=>3),
@@ -311,6 +311,7 @@ class ComparisonForm extends CFormModel
             "u_sum"=>0,//U系统金额
             "stopSumOnly"=>0,//本月停單金額（月）
             "monthStopRate"=>0,//月停單率
+            "comStopRate"=>0,//综合停單率
             "new_sum_last"=>0,//新增(上一年)
             "new_sum"=>0,//新增
             "new_rate"=>0,//新增对比比例
@@ -328,6 +329,7 @@ class ComparisonForm extends CFormModel
 
             "stop_sum_last"=>0,//终止（上一年）
             "stop_sum"=>0,//终止
+            "stop_sum_none"=>0,//终止(本条终止的前一条、后一条没有暂停、终止)
             "stop_rate"=>0,//终止对比比例
 
             "resume_sum_last"=>0,//恢复（上一年）
@@ -355,9 +357,15 @@ class ComparisonForm extends CFormModel
         //2023年9月改版：月停单率 = (new_sum_n+new_month_n+stop_sum/12)/last_u_actual
         if($bool){
             $list["monthStopRate"] = "-";
+            $list["comStopRate"] = "-";
         }else{
             $list["monthStopRate"] = $list["new_sum_n"]+$list["new_month_n"]+round($list["stop_sum"]/12,2);
             $list["monthStopRate"] = $this->comparisonRate($list["monthStopRate"],$list["last_u_actual"]);
+
+            $list["comStopRate"] = $list["stop_sum_none"]+$list["resume_sum"]+$list["pause_sum"]+$list["amend_sum"];
+            $list["comStopRate"]/= 12;//
+            $lastSum = $list["new_month_n"]+$list["last_u_actual"];
+            $list["comStopRate"] = $this->comparisonRate($list["comStopRate"],$lastSum);
         }
         $list["net_sum"]=0;
         $list["net_sum"]+=$list["new_sum"]+$list["new_sum_n"]+$list["new_month_n"];
@@ -376,8 +384,8 @@ class ComparisonForm extends CFormModel
         $list["amend_rate"] = $this->nowAndLastRate($list["amend_sum"],$list["amend_sum_last"],true);
         $list["net_rate"] = $this->nowAndLastRate($list["net_sum"],$list["net_sum_last"],true);
 
-        $list["start_one_gross"] = $bool?$list["start_one_gross"]:ComparisonForm::resetNetOrGross($list["start_one_gross"],$this->day_num);
-        $list["start_one_net"] = $bool?$list["start_one_net"]:ComparisonForm::resetNetOrGross($list["start_one_net"],$this->day_num);
+        //$list["start_one_gross"] = $bool?$list["start_one_gross"]:ComparisonForm::resetNetOrGross($list["start_one_gross"],$this->day_num);
+        //$list["start_one_net"] = $bool?$list["start_one_net"]:ComparisonForm::resetNetOrGross($list["start_one_net"],$this->day_num);
         $list["start_two_gross"] = $bool?$list["start_two_gross"]:ComparisonForm::resetNetOrGross($list["start_two_gross"],$this->day_num);
         $list["start_two_net"] = $bool?$list["start_two_net"]:ComparisonForm::resetNetOrGross($list["start_two_net"],$this->day_num);
         $list["two_gross"] = $bool?$list["two_gross"]:ComparisonForm::resetNetOrGross($list["two_gross"],$this->day_num);
@@ -387,8 +395,8 @@ class ComparisonForm extends CFormModel
         $list["net_rate"] = $this->nowAndLastRate($list["net_sum"],$list["net_sum_last"],true);
         $list["start_two_gross_rate"] = $this->comparisonRate($newSum,$list["start_two_gross"]);
         $list["start_two_net_rate"] = $this->comparisonRate($list["net_sum"],$list["start_two_net"],"net");
-        $list["start_one_gross_rate"] = $this->comparisonRate($newSum,$list["start_one_gross"]);
-        $list["start_one_net_rate"] = $this->comparisonRate($list["net_sum"],$list["start_one_net"],"net");
+        //$list["start_one_gross_rate"] = $this->comparisonRate($newSum,$list["start_one_gross"]);
+        //$list["start_one_net_rate"] = $this->comparisonRate($list["net_sum"],$list["start_one_net"],"net");
         //$list["two_gross_rate"] = $this->comparisonRate($newSum,$list["two_gross"]);
         //$list["two_net_rate"] = $this->comparisonRate($newSum,$list["two_net"],"net");
     }
@@ -547,6 +555,7 @@ class ComparisonForm extends CFormModel
                     array("name"=>$this->comparison_year),//查询年份
                     array("name"=>Yii::t("summary","YoY change")),//YoY change
                     array("name"=>Yii::t("summary","Month Stop Rate")),//月停单率
+                    array("name"=>Yii::t("summary","Composite Stop Rate")),//月停单率
                 )
             ),//YTD终止
             array("name"=>Yii::t("summary","YTD Resume").$monthStr,"exprName"=>$monthStr,"background"=>"#C5D9F1",
@@ -584,12 +593,14 @@ class ComparisonForm extends CFormModel
             //array("name"=>Yii::t("summary","Gross")),//Gross
             //array("name"=>Yii::t("summary","Net")),//Net
         );
+        /*
         $topList[]=array("name"=>Yii::t("summary","Annual target (upside case)"),"background"=>"#FDE9D9",
             "colspan"=>$colspan
         );//年金额目标 (upside case)
         $topList[]=array("name"=>Yii::t("summary","Goal degree (upside case)"),"background"=>"#FDE9D9",
             "colspan"=>$colspan
         );//目标完成度 (upside case)
+        */
         $topList[]=array("name"=>Yii::t("summary","Annual target (base case)"),"background"=>"#DCE6F1",
             "colspan"=>$colspan
         );//年金额目标 (base case)
@@ -597,6 +608,11 @@ class ComparisonForm extends CFormModel
             "colspan"=>$colspan
         );//目标完成度 (base case)
 
+        $topList[]=array("name"=>Yii::t("summary","stop sum none"),"background"=>"#fcd5b4",
+            "colspan"=>array(
+                array("name"=>$this->comparison_year),//查询年份
+            )
+        );//计算停单率的终止金额
         return $topList;
     }
 
@@ -657,16 +673,18 @@ class ComparisonForm extends CFormModel
             "city_name","u_actual_money","new_sum_last","new_sum","new_rate",
             "new_sum_n_last","new_sum_n","new_n_rate",
             "new_month_n_last","new_month_n","new_month_rate",
-            "stop_sum_last","stop_sum","stop_rate","monthStopRate",
+            "stop_sum_last","stop_sum","stop_rate","monthStopRate","comStopRate",
             "resume_sum_last","resume_sum","resume_rate",
             "pause_sum_last","pause_sum","pause_rate",
             "amend_sum_last","amend_sum","amend_rate",
             "net_sum_last","net_sum","net_rate"
         );
+        /*
         $bodyKey[]="start_one_gross";
         $bodyKey[]="start_one_net";
         $bodyKey[]="start_one_gross_rate";
         $bodyKey[]="start_one_net_rate";
+        */
 
         $bodyKey[]="start_two_gross";
         $bodyKey[]="start_two_net";
@@ -676,6 +694,7 @@ class ComparisonForm extends CFormModel
         $bodyKey[]="start_two_net_rate";
         //$bodyKey[]="two_gross_rate";
         //$bodyKey[]="two_net_rate";
+        $bodyKey[]="stop_sum_none";
         return $bodyKey;
     }
 }
