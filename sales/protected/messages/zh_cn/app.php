@@ -172,6 +172,7 @@ return array(
     'CA Bot'=>'地方业务项目',
     'CA Statistic'=>'地方业务项目统计',
     'CA Bot(All)'=>'地方业务项目(所有)',
+    'KA Bot(Local)'=>'KA项目(本地)',
 
     'Customer duplicate'=>'客户名称查重设置',
     'Shift KA Bot'=>'KA项目转移',

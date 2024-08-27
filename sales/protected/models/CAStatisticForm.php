@@ -2,7 +2,7 @@
 
 class CAStatisticForm extends KAStatisticForm
 {
-    protected $function_id='CN16';
+    protected $function_id='CN17';
     protected $table_pre='_ca_';
 
     public function retrieveData() {
@@ -25,7 +25,7 @@ class CAStatisticForm extends KAStatisticForm
         }
 
         $session = Yii::app()->session;
-        $session['kAStatistic_c01'] = $this->getCriteria();
+        $session['cAStatistic_c01'] = $this->getCriteria();
         return true;
     }
 
@@ -40,12 +40,12 @@ class CAStatisticForm extends KAStatisticForm
         $headList = $this->getTopArr();
         $excel = new DownKAExcel();
         $excel->colTwo=1;
-        $excel->SetHeaderTitle(Yii::t("app","RA Statistic"));
+        $excel->SetHeaderTitle(Yii::t("app","CA Statistic"));
         $excel->SetHeaderString($this->start_date." ~ ".$this->end_date);
         $excel->init();
         $excel->setKAHeader($headList);
         $excel->setKAData($excelData);
-        $excel->outExcel(Yii::t("app","RA Statistic"));
+        $excel->outExcel(Yii::t("app","CA Statistic"));
     }
 
 }

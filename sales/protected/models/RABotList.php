@@ -9,6 +9,8 @@ class RABotList extends KABotList {
         if(Yii::app()->user->validFunction('CN16')){
             //$whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
             $whereSql = "";//2023/06/16 改為可以看的所有記錄
+        }elseif(Yii::app()->user->validFunction('CN19')){
+            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
         }else{
             $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}')";
         }

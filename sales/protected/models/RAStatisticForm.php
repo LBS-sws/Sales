@@ -25,7 +25,7 @@ class RAStatisticForm extends KAStatisticForm
         }
 
         $session = Yii::app()->session;
-        $session['kAStatistic_c01'] = $this->getCriteria();
+        $session['rAStatistic_c01'] = $this->getCriteria();
         return true;
     }
 

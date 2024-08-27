@@ -2,7 +2,7 @@
 
 class CABotForm extends KABotForm{
 
-    protected $function_id='CN16';
+    protected $function_id='CN17';
     protected $table_pre='_ca_';
     public $file_key='cabot';
 

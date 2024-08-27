@@ -19,4 +19,5 @@ return array(
     'RA Bot(All)'=>array('access'=>'CN16',),
     'CA Bot(All)'=>array('access'=>'CN17',),
     'Shift KA Bot'=>array('access'=>'CN18',),//KA项目转移
+    'KA Bot(Local)'=>array('access'=>'CN19',),//KA项目本地
 );

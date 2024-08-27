@@ -54,9 +54,11 @@ class KABotList extends CListPageModel
 	{
         $suffix = Yii::app()->params['envSuffix'];
         $city_allow = Yii::app()->user->city_allow();
-        if(Yii::app()->user->validFunction('CN15')){
+        if(Yii::app()->user->validFunction('CN15')){//所有
             //$whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
             $whereSql = "";//2023/06/16 改為可以看的所有記錄
+        }elseif(Yii::app()->user->validFunction('CN19')){//本地
+            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
         }else{
             $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}')";
         }

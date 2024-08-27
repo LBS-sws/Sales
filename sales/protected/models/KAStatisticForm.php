@@ -84,6 +84,8 @@ class KAStatisticForm extends CFormModel
         $table_pre = $this->table_pre;
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql= "";//2023/06/16 改為可以看的所有記錄
+        }elseif(Yii::app()->user->validFunction('CN19')){
+            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
         }else{
             $whereSql= "a.kam_id='{$this->employee_id}'";
         }
@@ -99,6 +101,7 @@ class KAStatisticForm extends CFormModel
 
     //获取未来90天的金额及数量
     protected function getAmtNumFor90(){
+        $suffix = Yii::app()->params['envSuffix'];
         $table_pre = $this->table_pre;
         $list = array();
         $conList = array(
@@ -112,6 +115,8 @@ class KAStatisticForm extends CFormModel
         $whereSql = "a.available_date BETWEEN '{$startDate}' and '{$endDate}' ";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }elseif(Yii::app()->user->validFunction('CN19')){
+            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
         }else{
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
         }
@@ -123,6 +128,7 @@ class KAStatisticForm extends CFormModel
                 sum(if(a.sign_odds>80,{$amtSql},0)) as sign_amt_two
             ")->from("sal{$table_pre}bot a")
             ->leftJoin("sal_ka_link b","a.link_id=b.id")
+            ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
             ->where($whereSql." and b.rate_num<100 and a.sign_odds>50 and a.sign_odds<100")
             ->group("a.kam_id")
             ->queryAll();
@@ -142,6 +148,8 @@ class KAStatisticForm extends CFormModel
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}' and b.rate_num=100 and f.ava_rate>50";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }elseif(Yii::app()->user->validFunction('CN19')){
+            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
         }else{
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
         }
@@ -155,6 +163,7 @@ class KAStatisticForm extends CFormModel
             ")->from("sal{$table_pre}bot_ava f")
             ->leftJoin("sal{$table_pre}bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link b","a.link_id=b.id")
+            ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
             ->where($whereSql)
             ->group("a.kam_id")
             ->queryAll();
@@ -184,6 +193,7 @@ class KAStatisticForm extends CFormModel
 
     //获取YTD、MTD的金额及数量
     protected function getAmtNumForYM(){
+        $suffix = Yii::app()->params['envSuffix'];
         $table_pre = $this->table_pre;
         $list = array();
         $conList = array(
@@ -195,6 +205,8 @@ class KAStatisticForm extends CFormModel
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}' and b.rate_num=100";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }elseif(Yii::app()->user->validFunction('CN19')){
+            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
         }else{
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
         }
@@ -209,6 +221,7 @@ class KAStatisticForm extends CFormModel
             ")->from("sal{$table_pre}bot_ava f")
             ->leftJoin("sal{$table_pre}bot a","f.bot_id=a.id")
             ->leftJoin("sal_ka_link b","a.link_id=b.id")
+            ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
             ->where($whereSql)
             ->group("a.id,a.kam_id")
             ->getText();
@@ -239,6 +252,7 @@ class KAStatisticForm extends CFormModel
 
     //获取拜访、报价、本月的金额及数量
     protected function getAmtNumForVQS(){
+        $suffix = Yii::app()->params['envSuffix'];
         $table_pre = $this->table_pre;
 	    $list = array();
 	    $conList = array(
@@ -252,6 +266,9 @@ class KAStatisticForm extends CFormModel
         $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }elseif(Yii::app()->user->validFunction('CN19')){
+            $city_allow = Yii::app()->user->city_allow();
+            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
         }else{
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
         }
@@ -272,6 +289,7 @@ class KAStatisticForm extends CFormModel
                 
             ")->from("sal{$table_pre}bot a")
             ->leftJoin("sal_ka_link b","a.link_id=b.id")
+            ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
             ->where($whereSql)
             ->group("a.kam_id")
             ->queryAll();
@@ -691,6 +709,9 @@ class KAStatisticForm extends CFormModel
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}'";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }elseif(Yii::app()->user->validFunction('CN19')){
+            $city_allow = Yii::app()->user->city_allow();
+            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
         }else{
             KABotForm::validateEmployee($this);
             $whereSql.= " and a.kam_id='{$this->employee_id}'";
