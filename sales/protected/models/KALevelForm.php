@@ -141,7 +141,7 @@ class KALevelForm extends CFormModel
     }
 
     public static function getLevelTypeListForType($type="",$bool=false){
-        $list = array("NKA"=>"NKA","RKA"=>"RKA","CKA"=>"地方业务");
+        $list = array("NKA"=>"KA","CKA"=>"地方业务");
         if($bool){
             if(key_exists($type,$list)){
                 return $list[$type];

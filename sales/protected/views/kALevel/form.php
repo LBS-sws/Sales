@@ -60,7 +60,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 				<div class="col-sm-2">
 					<?php
                     echo $form->dropDownList($model, 'ka_type',KALevelForm::getLevelTypeListForType(),
-						array('size'=>50,'maxlength'=>100,'readonly'=>($model->scenario=='view'))
+						array('size'=>50,'maxlength'=>100,'readonly'=>($model->scenario=='view'),'empty'=>'')
 					); ?>
 				</div>
 			</div>

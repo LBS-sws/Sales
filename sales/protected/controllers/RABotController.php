@@ -32,7 +32,7 @@ class RABotController extends Controller
 				'expression'=>array('RABotController','allowReadOnly'),
 			),
             array('allow',
-                'actions'=>array('shift'),
+                'actions'=>array('shift','copyToKA'),
                 'expression'=>array('RABotController','allowShift'),
             ),
 			array('deny',  // deny all users
@@ -40,6 +40,13 @@ class RABotController extends Controller
 			),
 		);
 	}
+
+    public function actionCopyToKA()
+    {
+        $model = new RABotForm();
+        $model->copyToKA();
+        Yii::app()->end();
+    }
 
     public function actionShift()
     {

@@ -139,9 +139,9 @@ return array(
 	'Stop Customer'=>'终止客户',
 	'Club Sales Confirm'=>'销售俱乐部确认功能',
 	'sales min setting'=>'周拜访数量设定',
-	'KA Manager'=>'NKA业务管理',
-	'KA Bot'=>'NKA项目',
-	'KA Statistic'=>'NKA项目统计',
+	'KA Manager'=>'KA业务管理',
+	'KA Bot'=>'KA项目',
+	'KA Statistic'=>'KA项目统计',
 	'KA Link'=>'当前沟通阶段',
 	'KA Area'=>'KA地区',
 	'KA Source'=>'客户类型',
@@ -150,7 +150,7 @@ return array(
 	'KA Reject'=>'拒绝、暂停理由',
 	'KA Busine'=>'业务模式',
 	'KA Sales'=>'销售模式',
-	'KA Bot(All)'=>'NKA项目(所有)',
+	'KA Bot(All)'=>'KA项目(所有)',
 
 	'Signed conversion rate'=>'签单转化率',
 

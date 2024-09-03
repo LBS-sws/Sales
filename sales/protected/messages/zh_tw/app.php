@@ -131,9 +131,9 @@ return array(
     'Stop Customer'=>'終止客戶',
     'Club Sales Confirm'=>'銷售俱樂部確認功能',
     'sales min setting'=>'周拜訪數量設定',
-    'KA Manager'=>'NKA業務管理',
-    'KA Bot'=>'NKA項目',
-    'KA Statistic'=>'NKA項目統計',
+    'KA Manager'=>'KA業務管理',
+    'KA Bot'=>'KA項目',
+    'KA Statistic'=>'KA項目統計',
     'KA Link'=>'當前溝通階段',
     'KA Area'=>'KA地區',
     'KA Source'=>'客戶類型',
@@ -142,7 +142,7 @@ return array(
     'KA Reject'=>'拒絕、暫停理由',
     'KA Busine'=>'業務模式',
     'KA Sales'=>'銷售模式',
-    'KA Bot(All)'=>'NKA項目(所有)',
+    'KA Bot(All)'=>'KA項目(所有)',
 
     'Signed conversion rate'=>'簽單轉化率',
 
