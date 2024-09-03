@@ -43,9 +43,9 @@ class RABotForm extends KABotForm{
                     continue;
                 }
                 echo " success!<br/>";
+                unset($row["id"]);
                 Yii::app()->db->createCommand()->insert("sal_ka_bot",$row);
                 $add_id = Yii::app()->db->getLastInsertID();
-                unset($row["id"]);
                 $avaRows = Yii::app()->db->createCommand()->select("*")->from("sal_ra_bot_ava")
                     ->where("bot_id=:bot_id",array(":bot_id"=>$old_id))->queryAll();
                 if($avaRows){
