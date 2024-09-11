@@ -380,9 +380,11 @@ class KABotForm extends CFormModel
             //$whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
             $whereSql = "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){//本地
-            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
-            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}')";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}))";
         }
 		$sql = "select a.*,docman$suffix.countdoc('{$this->file_key}',a.id) as countdoc from sal{$table_pre}bot a left join hr{$suffix}.hr_employee h ON a.kam_id=h.id where a.id=".$index." {$whereSql}";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
@@ -1056,6 +1058,30 @@ class KABotForm extends CFormModel
         }else{
             return "";
         }
+    }
+
+    public static function getGroupIDStrForEmployeeID($employee_id){
+        $suffix = Yii::app()->params['envSuffix'];
+        $employee_id = empty($employee_id)||!is_numeric($employee_id)?0:$employee_id;
+        $list = array($employee_id);
+        $bossRow = Yii::app()->db->createCommand()->select("a.id")
+            ->from("hr{$suffix}.hr_group_staff a")
+            ->leftJoin("hr{$suffix}.hr_group b","a.group_id=b.id")
+            ->where("a.employee_id=:employee_id and b.group_code='KALIST'",array(":employee_id"=>$employee_id))
+            ->queryRow();
+        if($bossRow){//该员工有分组
+            $infoRows = Yii::app()->db->createCommand()->select("b.id,b.code,b.name")
+                ->from("hr{$suffix}.hr_group_branch a")
+                ->leftJoin("hr{$suffix}.hr_employee b","a.employee_id=b.id")
+                ->where("a.group_staff_id=:group_staff_id",array(":group_staff_id"=>$bossRow["id"]))
+                ->queryAll();
+            if($infoRows){//该员工有管辖员工
+                foreach ($infoRows as $infoRow){
+                    $list[] = $infoRow["id"];
+                }
+            }
+        }
+        return "'".implode("','",$list)."'";
     }
 
     public static function getSupportUserList($ka_city,$id=0){

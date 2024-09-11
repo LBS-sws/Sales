@@ -82,12 +82,15 @@ class KAStatisticForm extends CFormModel
     protected function getKaManForKaBot(){
         $suffix = Yii::app()->params['envSuffix'];
         $table_pre = $this->table_pre;
+        $city_allow = Yii::app()->user->city_allow();
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
-            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
-            $whereSql= "a.kam_id='{$this->employee_id}'";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql= "a.kam_id in ({$idSQL})";
         }
         $rows = Yii::app()->db->createCommand()
             ->select("h.id,h.code,h.name,h.city")
@@ -113,12 +116,15 @@ class KAStatisticForm extends CFormModel
         $startDate = date("Y-m-d",strtotime($this->start_date));
         $endDate = date("Y-m-d",strtotime($this->start_date." + 3 months - 1 days"));
         $whereSql = "a.available_date BETWEEN '{$startDate}' and '{$endDate}' ";
+        $city_allow = Yii::app()->user->city_allow();
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
-            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
-            $whereSql.= " and a.kam_id='{$this->employee_id}'";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql.= " and a.kam_id in ({$idSQL})";
         }
         $amtSql = "IFNULL(a.available_amt,0)";
         $rows = Yii::app()->db->createCommand()
@@ -149,9 +155,11 @@ class KAStatisticForm extends CFormModel
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
-            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
-            $whereSql.= " and a.kam_id='{$this->employee_id}'";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql.= " and a.kam_id in ({$idSQL})";
         }
         $amtSql = "IFNULL(f.ava_amt,0)";
         $rows = Yii::app()->db->createCommand()
@@ -203,12 +211,15 @@ class KAStatisticForm extends CFormModel
             "mtd_amt"=>0,
         );
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}' and b.rate_num=100";
+        $city_allow = Yii::app()->user->city_allow();
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
-            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
-            $whereSql.= " and a.kam_id='{$this->employee_id}'";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql.= " and a.kam_id in ({$idSQL})";
         }
         $searchDate = date("Y/m",strtotime($this->start_date));
         $amtSql = "IFNULL(f.ava_fact_amt,0)";
@@ -268,9 +279,11 @@ class KAStatisticForm extends CFormModel
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
             $city_allow = Yii::app()->user->city_allow();
-            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
-            $whereSql.= " and a.kam_id='{$this->employee_id}'";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql.= " and a.kam_id in ({$idSQL})";
         }
         $searchDate = $this->start_date;
 
@@ -711,10 +724,12 @@ class KAStatisticForm extends CFormModel
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
             $city_allow = Yii::app()->user->city_allow();
-            $whereSql = " and (a.kam_id='{$this->employee_id}' or a.support_user='{$this->employee_id}' or h.city in ({$city_allow}))";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
             KABotForm::validateEmployee($this);
-            $whereSql.= " and a.kam_id='{$this->employee_id}'";
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql.= " and a.kam_id in ({$idSQL})";
         }
         $whereSql.= " and g.rate_num=100";
 
