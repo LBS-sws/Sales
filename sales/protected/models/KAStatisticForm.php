@@ -83,6 +83,7 @@ class KAStatisticForm extends CFormModel
         $suffix = Yii::app()->params['envSuffix'];
         $table_pre = $this->table_pre;
         $city_allow = Yii::app()->user->city_allow();
+        $whereSql = "a.id>0 ";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){

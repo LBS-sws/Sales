@@ -22,7 +22,7 @@ $this->pageTitle=Yii::app()->name . ' - RA Statistic Form';
 
 <section class="content-header">
 	<h1>
-        <strong><?php echo Yii::t('app','RA Statistic'); ?></strong>
+        <strong><?php echo Yii::t('app','CA Statistic'); ?></strong>
 	</h1>
 <!--
 	<ol class="breadcrumb">
