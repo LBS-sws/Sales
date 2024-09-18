@@ -85,13 +85,13 @@ class KAStatisticForm extends CFormModel
         $city_allow = Yii::app()->user->city_allow();
         $whereSql = "a.id>0 ";
         if(Yii::app()->user->validFunction($this->function_id)){
-            $whereSql= "";//2023/06/16 改為可以看的所有記錄
+            $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
+            $whereSql.= " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql= "a.kam_id in ({$idSQL})";
+            $whereSql.= " and a.kam_id in ({$idSQL})";
         }
         $rows = Yii::app()->db->createCommand()
             ->select("h.id,h.code,h.name,h.city")
@@ -122,7 +122,7 @@ class KAStatisticForm extends CFormModel
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
+            $whereSql.= " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
             $whereSql.= " and a.kam_id in ({$idSQL})";
@@ -157,7 +157,7 @@ class KAStatisticForm extends CFormModel
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
+            $whereSql.= " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
             $whereSql.= " and a.kam_id in ({$idSQL})";
@@ -217,7 +217,7 @@ class KAStatisticForm extends CFormModel
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
+            $whereSql.= " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
             $whereSql.= " and a.kam_id in ({$idSQL})";
@@ -281,7 +281,7 @@ class KAStatisticForm extends CFormModel
         }elseif(Yii::app()->user->validFunction('CN19')){
             $city_allow = Yii::app()->user->city_allow();
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
+            $whereSql.= " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
             $whereSql.= " and a.kam_id in ({$idSQL})";
@@ -726,7 +726,7 @@ class KAStatisticForm extends CFormModel
         }elseif(Yii::app()->user->validFunction('CN19')){
             $city_allow = Yii::app()->user->city_allow();
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql = " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
+            $whereSql.= " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
             KABotForm::validateEmployee($this);
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
