@@ -87,7 +87,7 @@ class FivestepController extends Controller
 				'expression'=>array('FivestepController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view','showmedia','downloadmedia'),
+				'actions'=>array('index','view','showmedia','downloadmedia','showVideo'),
 				'expression'=>array('FivestepController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -305,7 +305,6 @@ class FivestepController extends Controller
 		if (!$model->retrieveData($index)) {
 			throw new CHttpException(404,'The requested page does not exist.');
 		} else {
-			$content = $model->getMediaFile();
 			switch($model->filetype) {
 				case 'video/quicktime':
 				case 'video/x-quicktime':
@@ -315,9 +314,34 @@ class FivestepController extends Controller
 				default:
 					$mediatype = $model->filetype;
 			}
-			echo "<source src='$content' type='$mediatype'>";
+			$url = Yii::app()->createUrl('fivestep/showVideo',array('index'=>$index));
+			echo "<source src='{$url}' type='$mediatype'>";
 		}
 	}
+
+	public function actionShowVideo($index){
+        $model = new FivestepForm('view');
+        if (!$model->retrieveData($index)) {
+            echo "not find video";
+        } else {
+            $videoPath = $model->filename;
+            switch($model->filetype) {
+                case 'video/quicktime':
+                case 'video/x-quicktime':
+                case 'video/3gpp':
+                    $mediatype = 'video/mp4';
+                    break;
+                default:
+                    $mediatype = $model->filetype;
+            }
+            // 设置正确的内容类型头信息
+            header("Content-Type: {$mediatype}");
+            header('Content-Length: ' . filesize($videoPath));
+            // 输出视频文件内容
+            readfile($videoPath);
+        }
+        exit;
+    }
 
 	public function actionDownloadmedia($index) {
 		$model = new FivestepForm('view');

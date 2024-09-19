@@ -311,14 +311,6 @@ Yii::app()->clientScript->registerScript('deleteRecord',$js,CClientScript::POS_R
 $js = Script::genReadonlyField();
 Yii::app()->clientScript->registerScript('readonlyClass',$js,CClientScript::POS_READY);
 
-$js = <<<EOF
-$(document).on('change','#FivestepForm_filename',function() {
-	var fileUrl = URL.createObjectURL(this.files[0]);
-	$('#video_here').attr('src',fileUrl);
-});
-EOF;
-Yii::app()->clientScript->registerScript('video',$js,CClientScript::POS_READY);
-
 if (!empty($model->filename)) {
 	$link = Yii::app()->createAbsoluteUrl("fivestep");
 	$index = $model->id;
