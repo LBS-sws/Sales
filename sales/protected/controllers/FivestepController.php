@@ -301,22 +301,8 @@ class FivestepController extends Controller
 	}
 	
 	public function actionShowmedia($index) {
-		$model = new FivestepForm('view');
-		if (!$model->retrieveData($index)) {
-			throw new CHttpException(404,'The requested page does not exist.');
-		} else {
-			switch($model->filetype) {
-				case 'video/quicktime':
-				case 'video/x-quicktime':
-				case 'video/3gpp':
-					$mediatype = 'video/mp4';
-					break;
-				default:
-					$mediatype = $model->filetype;
-			}
-			$url = Yii::app()->createUrl('fivestep/showVideo',array('index'=>$index));
-			echo "<source src='{$url}' type='$mediatype'>";
-		}
+        $url = Yii::app()->createUrl('fivestep/showVideo',array('index'=>$index));
+        echo "<source src='{$url}'>";
 	}
 
 	public function actionShowVideo($index){
