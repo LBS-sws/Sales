@@ -262,7 +262,11 @@ $this->pageTitle=Yii::app()->name . ' - Five Steps Form';
 			</div>
 			<div class="form-group">
 				<div class="col-sm-7">
-					<video width='300' controls id='video_here'>
+                    <?php
+                    $videoSrc = Yii::app()->createUrl('fivestep/showVideo',array('index'=>$model->id,'timer'=>4));
+                    $videoSrc = empty($model->id)?'':$videoSrc;
+                    ?>
+					<video width='300' controls id='video_here' src="<?php echo $videoSrc;?>">
 						<?php
 /*
 							if (!empty($model->filename)) {
@@ -328,7 +332,6 @@ $(document).ready(function() {
 			$("#mediafile").html('$msg');
 		},
 		success: function(data) {
-			$("#video_here").html(data);
 			$("#mediafile").html('$link2');
 		},
 		error: function(data) { // if error occured

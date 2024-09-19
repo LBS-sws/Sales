@@ -323,6 +323,10 @@ class FivestepController extends Controller
             // 设置正确的内容类型头信息
             header("Content-Type: {$mediatype}");
             header('Content-Length: ' . filesize($videoPath));
+
+            // 禁用缓存
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Pragma: no-cache');
             // 输出视频文件内容
             readfile($videoPath);
         }
