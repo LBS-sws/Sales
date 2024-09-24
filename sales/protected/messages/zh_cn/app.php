@@ -176,5 +176,6 @@ return array(
 
     'Customer duplicate'=>'客户名称查重设置',
     'Shift KA Bot'=>'KA项目转移',
+    'Indicator setting'=>'个人年度指标设置',
 );
 ?>

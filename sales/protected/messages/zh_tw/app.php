@@ -168,5 +168,6 @@ return array(
 
     'Customer duplicate'=>'客戶名稱查重設置',
     'Shift KA Bot'=>'KA項目轉移',
+    'Indicator setting'=>'個人年度指標設置',
 );
 ?>

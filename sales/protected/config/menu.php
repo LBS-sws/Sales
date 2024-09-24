@@ -228,9 +228,14 @@ return array(
                 'access'=>'KA12',
                 'url'=>'KADup/index',
             ),
+            'Indicator setting'=>array(//个人年度指标设置
+                'access'=>'KA13',
+                'url'=>'KAIndicator/index',
+            ),
         ),
     ),
 
+    /*
     'RA Manager'=>array( //RKA业务管理
         'access'=>'RA',
         'icon'=>'fa-trophy',
@@ -245,6 +250,7 @@ return array(
             ),
         ),
     ),
+    */
 
     'CA Manager'=>array( //地方业务管理
         'access'=>'CA',

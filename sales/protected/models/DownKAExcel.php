@@ -178,7 +178,17 @@ class DownKAExcel{
                 foreach ($staffList as $staff_id =>$list){
                     $col = 0;
                     foreach ($list as $text){
-                        $this->setCellValueForSummary($col, $this->current_row, $text);
+                        if(is_array($text)){
+                            $groupLen = key_exists("groupLen",$text)?$text["groupLen"]:1;
+                            $groupLen-=1;
+                            $groupStr = $this->getColumn($col);
+                            $text = key_exists("text",$text)?$text["text"]:"";
+                            $this->setCellValueForSummary($col, $this->current_row, $text);
+                            $this->objPHPExcel->getActiveSheet()
+                                ->mergeCells($groupStr.$this->current_row.':'.$groupStr.($this->current_row+$groupLen));
+                        }else{
+                            $this->setCellValueForSummary($col, $this->current_row, $text);
+                        }
                         $col++;
                     }
                     if($staff_id==="count"){

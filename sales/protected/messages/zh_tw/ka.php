@@ -124,5 +124,13 @@ return array(
     'dup value'=>'替換後的字符串',
     'Shift'=>'轉移',
     'Shift Done'=>'轉移成功',
+
+    'employee name'=>'員工',
+    'effect date'=>'生效日期',
+    'indicator money'=>'個人年度指標',
+    'indicator sales'=>'個人年度指標',
+    'indicator sales rate'=>'個人年度指標',
+    'indicator group'=>'團隊年度指標',
+    'indicator group rate'=>'團隊年度指標',
 );
 ?>

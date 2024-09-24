@@ -99,6 +99,7 @@ class KAStatisticForm extends CFormModel
             ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
             ->where($whereSql)
             ->group("h.id,h.code,h.name,h.city")
+            ->order("h.city")
             ->queryAll();
         return $rows?$rows:array();
     }
@@ -325,23 +326,62 @@ class KAStatisticForm extends CFormModel
         return $list;
     }
 
+    public function getKASalesGroup(){
+        $suffix = Yii::app()->params['envSuffix'];
+        $groupList = array();
+        $rows = Yii::app()->db->createCommand()->select("a.employee_id,a.group_id")
+            ->from("hr{$suffix}.hr_group_staff a")
+            ->leftJoin("hr{$suffix}.hr_group b","a.group_id=b.id")
+            ->where("b.group_code='KAGROUP'")
+            ->order("a.group_id asc")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $groupList[$row["employee_id"]] = $row["group_id"];
+            }
+        }
+        return $groupList;
+    }
+
+    public function getKAIndicatorList($date='')
+    {
+        $date = empty($date)?date_format(date_create(),"Y-m-01"):date_format(date_create($date),"Y-m-01");
+        $list = array();
+        $sql = "select employee_id,indicator_money from sal_ka_idx where DATE_FORMAT(effect_date,'%Y-%m-01')<='{$date}' order by effect_date asc";
+        $rows = Yii::app()->db->createCommand($sql)->queryAll();
+        if ($rows) {
+            foreach ($rows as $row){
+                $list[$row["employee_id"]] = array("idx_sales_money"=>floatval($row['indicator_money']));
+            }
+        }
+        return $list;
+    }
+
     public function retrieveData() {
         $this->data=array();
         $listVQS = $this->getAmtNumForVQS();//获取拜访、报价、本月的金额及数量
         $list90 = $this->getAmtNumFor90();//获取未来90天的金额及数量
         $listYM = $this->getAmtNumForYM();//获取YTD、MTD的金额及数量
         $kaManList = $this->getKaManForKaBot();//KA所有员工
+        $kaGroupList = $this->getKASalesGroup();//KA分组
+        $kaIDXList = $this->getKAIndicatorList($this->start_date);//KA个人指标金额
         foreach ($kaManList as $row){
             $temp = $this->getTemp();
             $ka_id = $row["id"];
             $city = $row["city"];
+            if(key_exists($ka_id,$kaGroupList)){
+                $group_id = $kaGroupList[$ka_id];
+            }else{
+                $group_id = $city."_".$ka_id;
+            }
             $temp["employee_id"] = $ka_id;
             $temp["kam_name"] = $row["name"]." ({$row["code"]})";
             $this->addTempForList($temp,$listVQS,$ka_id);
             $this->addTempForList($temp,$list90,$ka_id);
             $this->addTempForList($temp,$listYM,$ka_id);
+            $this->addTempForList($temp,$kaIDXList,$ka_id);
 
-            $this->data[$city][$ka_id] = $temp;
+            $this->data[$group_id][$ka_id] = $temp;
         }
 
         $session = Yii::app()->session;
@@ -379,6 +419,11 @@ class KAStatisticForm extends CFormModel
             "ytd_num_rate"=>"",//数量转化率（ytd_num/拜访数量）
             "mtd_num"=>0,//mtd数量
             "mtd_amt"=>0,//mtd金额
+            "idx_sales_money"=>0,//个人指标金额
+            "idx_sales_rate"=>"",//个人指标金额
+            "group_amt"=>0,//团队金额
+            "idx_group_money"=>0,//团队指标金额
+            "idx_group_rate"=>"",//团队指标金额
         );
     }
 
@@ -401,6 +446,13 @@ class KAStatisticForm extends CFormModel
         $list["ytd_amt_rate"] = self::getRateForNumber($list["ytd_amt_rate"]);
         $list["ytd_num_rate"]=empty($list["visit_num"])?0:($list["ytd_num"]/$list["visit_num"]);
         $list["ytd_num_rate"] = self::getRateForNumber($list["ytd_num_rate"]);
+        if($this->table_pre=="_ka_"){
+            $list["idx_sales_money"] = key_exists("idx_sales_money",$list)?$list["idx_sales_money"]:0;
+            $list["idx_sales_rate"]=empty($list["idx_sales_money"])?0:round($list["ytd_amt"]/$list["idx_sales_money"],2);
+            $list["idx_sales_rate"] = self::getRateForNumber($list["idx_sales_rate"]);
+            $list["idx_group_money"]=$list["idx_sales_money"];
+            $list["idx_group_rate"]=$list["idx_sales_rate"];
+        }
     }
 
     //顯示提成表的表格內容
@@ -504,6 +556,18 @@ class KAStatisticForm extends CFormModel
                 )
             ),//每月KA销售业绩
         );
+        if($this->table_pre=="_ka_"){
+
+            //个人年度指标
+            $topList[]=array("name"=>Yii::t("ka","indicator sales"),"background"=>"#4472C4","color"=>"#ffffff","rowspan"=>3);
+            //个人达成率
+            $topList[]=array("name"=>Yii::t("ka","indicator sales rate"),"background"=>"#4472C4","color"=>"#ffffff","rowspan"=>3);
+            //团队年度指标
+            $topList[]=array("name"=>Yii::t("ka","indicator group"),"background"=>"#4472C4","color"=>"#ffffff","rowspan"=>3);
+            //团队达成率
+            $topList[]=array("name"=>Yii::t("ka","indicator group rate"),"background"=>"#4472C4","color"=>"#ffffff","rowspan"=>3);
+
+        }
         return $topList;
     }
 
@@ -540,7 +604,6 @@ class KAStatisticForm extends CFormModel
                     $threeColNum=count($threeCol);
                     $colNum+=$threeColNum;
                     $threeColNum = empty($threeColNum)?1:$threeColNum;
-                    //$this->th_sum++;
 
                     if(key_exists("rowspan",$col)){
                         $trTwo.="<th colspan='{$threeColNum}' rowspan='{$col["rowspan"]}' style='{$style}'><span>".$col["name"]."</span></th>";
@@ -548,6 +611,8 @@ class KAStatisticForm extends CFormModel
                         $trTwo.="<th colspan='{$threeColNum}' style='{$style}'><span>".$col["name"]."</span></th>";
                     }
                 }
+            }else{
+                $this->th_sum++;
             }
             $colNum = empty($colNum)?1:$colNum;
             $trOne.="<th style='{$style}' colspan='{$colNum}'";
@@ -560,7 +625,6 @@ class KAStatisticForm extends CFormModel
             $trOne.=" ><span>".$clickName."</span></th>";
         }
         $html.=$this->tableHeaderWidth();//設置表格的單元格寬度
-        $this->th_sum++;
         $html.="<tr>{$trOne}</tr><tr>{$trTwo}</tr><tr>{$trThree}</tr>";
         $html.="</thead>";
         return $html;
@@ -569,7 +633,7 @@ class KAStatisticForm extends CFormModel
     //設置表格的單元格寬度
     protected function tableHeaderWidth(){
         $html="<tr>";
-        for($i=0;$i<=$this->th_sum;$i++){
+        for($i=0;$i<$this->th_sum;$i++){
             if($i==0){
                 $width = 120;
             }else{
@@ -598,6 +662,12 @@ class KAStatisticForm extends CFormModel
             "sign_90_num","sign_90_amt","sign_this_num","sign_this_amt","this_rate",
             "ytd_num","ytd_amt","ytd_amt_rate","ytd_num_rate","mtd_num","mtd_amt"
         );
+        if($this->table_pre=="_ka_"){
+            $bodyKey[]="idx_sales_money";
+            $bodyKey[]="idx_sales_rate";
+            $bodyKey[]="idx_group_money";
+            $bodyKey[]="idx_group_rate";
+        }
         return $bodyKey;
     }
 
@@ -624,20 +694,29 @@ class KAStatisticForm extends CFormModel
         if(!empty($data)){
             $allRow = [];//总计(所有地区)
             foreach ($data as $city=>$row){
-                $regionRow = [];//地区汇总
+                $currentRow = $row;
+                $staff_id=array_shift($currentRow)["employee_id"];
+                $rowspan = count($row);
+                $regionRow = ["idx_group_money"=>0,"group_amt"=>0];//分组汇总
                 foreach ($row as $list){
                     $id = $list["employee_id"];
                     $this->resetTdRow($list);
                     $html.="<tr>";
                     foreach ($bodyKey as $keyStr){
-                        if(!key_exists($keyStr,$regionRow)){
-                            $regionRow[$keyStr]=0;
+                        if(in_array($keyStr,array("idx_group_money","idx_group_rate"))){
+                            $html.=($keyStr=="idx_group_money"&&$staff_id==$id)?":groupMoneyHtml:":"";
+                            continue;
+                        }
+                        $text = key_exists($keyStr,$list)?$list[$keyStr]:"0";
+                        if($keyStr=="ytd_amt"){
+                            $regionRow["group_amt"]+=is_numeric($text)?floatval($text):0;
+                        }
+                        if($keyStr=="idx_sales_money"){
+                            $regionRow["idx_group_money"]+=is_numeric($text)?floatval($text):0;
                         }
                         if(!key_exists($keyStr,$allRow)){
                             $allRow[$keyStr]=0;
                         }
-                        $text = key_exists($keyStr,$list)?$list[$keyStr]:"0";
-                        $regionRow[$keyStr]+=is_numeric($text)?floatval($text):0;
                         $allRow[$keyStr]+=is_numeric($text)?floatval($text):0;
                         $text = self::showNum($text);
                         $this->downJsonText["excel"][$city][$id][]=$text;
@@ -653,9 +732,16 @@ class KAStatisticForm extends CFormModel
                     }
                     $html.="</tr>";
                 }
-                //地区汇总
-                //$html.=$this->printTableTr($regionRow,$bodyKey);
-                //$html.="<tr class='tr-end'><td colspan='{$this->th_sum}'>&nbsp;</td></tr>";
+
+                if(in_array("idx_group_money",$bodyKey)){
+                    $regionRow["idx_group_rate"] = empty($regionRow["idx_group_money"])?0:($regionRow["group_amt"]/$regionRow["idx_group_money"]);
+                    $regionRow["idx_group_rate"] = self::getRateForNumber($regionRow["idx_group_rate"]);
+                    $groupHtml="<td rowspan='{$rowspan}'>".$regionRow["idx_group_money"]."</td>";
+                    $groupHtml.="<td rowspan='{$rowspan}'>".$regionRow["idx_group_rate"]."</td>";
+                    $html=str_replace(":groupMoneyHtml:", $groupHtml, $html);
+                    $this->downJsonText["excel"][$city][$staff_id][]=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_money"]);
+                    $this->downJsonText["excel"][$city][$staff_id][]=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_rate"]);
+                }
             }
             //所有汇总
             $allRow["city"]="_ALL";
