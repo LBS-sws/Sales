@@ -186,21 +186,29 @@ class KABotList extends CListPageModel
         }
     }
 
-	public function downExcel($year){
+	public function downExcel(){
         $rptModel = new RptKABot();
+        $city_allow = Yii::app()->user->city_allow();
+        $staffIDStr="";
+        if(Yii::app()->user->validFunction('CN15')){//所有
+            $searchType=0;
+        }elseif(Yii::app()->user->validFunction('CN19')){//本地
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $staffIDStr=$idSQL;
+            $searchType=1;
+        }else{
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $staffIDStr=$idSQL;
+            $searchType=2;
+        }
         $criteria=array(
-            "city"=>Yii::app()->user->city(),
-            "city_allow"=>Yii::app()->user->city_allow(),
-            "year"=>$year,
-            "employee_id"=>$this->employee_id,
-            "sign_odds"=>$this->sign_odds,
-            "auto_all"=>Yii::app()->user->validFunction('CN15'),
+            "city_allow"=>$city_allow,
+            "staffIDStr"=>$staffIDStr,
+            "searchType"=>$searchType,
         );
         $param['RPT_NAME'] = "KA Bot";
-        $param['CITY'] = $criteria["city"];
-        $param['YEAR'] = $criteria["year"];
         $param['CRITERIA'] = json_encode($criteria);
         $rptModel->criteria = $param;
-        $rptModel->downExcel("KA项目({$year})");
+        $rptModel->downExcel("KA项目");
     }
 }

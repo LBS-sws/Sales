@@ -141,11 +141,7 @@ class KABotController extends Controller
 	{
 		$model = new KABotList();
         KABotForm::validateEmployee($model);
-        if (isset($_POST['KABotList'])) {
-            $model->attributes = $_POST['KABotList'];
-        }
-		$year=isset($_POST["year"])?$_POST["year"]:date("Y");
-		$model->downExcel($year);
+		$model->downExcel();
 	}
 	
 	public function actionNew()
