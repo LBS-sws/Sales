@@ -112,4 +112,23 @@ class KAIndicatorForm extends CFormModel
 		$rtn = ($row === false);
 		return $rtn;
 	}
+
+    public static function getKABotStaffForAccess(){
+        $list = array();
+        $systemId = Yii::app()->params['systemId'];
+        $suffix = Yii::app()->params['envSuffix'];
+        $rows = Yii::app()->db->createCommand()->select("b.id,b.code,b.name")
+            ->from("hr{$suffix}.hr_binding a")
+            ->leftJoin("hr{$suffix}.hr_employee b","a.employee_id=b.id")
+            ->leftJoin("security{$suffix}.sec_user g","a.user_id=g.username")
+            ->leftJoin("security{$suffix}.sec_user_access f","a.user_id=f.username and f.system_id='{$systemId}'")
+            ->where("f.a_read_write like '%KA01%' and g.status='A'")
+            ->queryAll();//查询拥有读写权限的员工
+        if($rows){
+            foreach ($rows as $row){
+                $list[$row["id"]] = $row["name"]." ({$row["code"]})";
+            }
+        }
+        return $list;
+    }
 }

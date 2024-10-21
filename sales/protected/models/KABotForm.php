@@ -120,7 +120,7 @@ class KABotForm extends CFormModel
 
             'head_city_id'=>Yii::t('ka','head city'),
             'talk_city_id'=>Yii::t('ka','talk city'),
-            'area_id'=>Yii::t('ka','area city'),
+            'area_id'=>Yii::t('ka','city'),
             'contact_phone'=>Yii::t('ka','contact phone'),
             'contact_email'=>Yii::t('ka','contact email'),
             'contact_dept'=>Yii::t('ka','contact dept'),
@@ -167,7 +167,9 @@ class KABotForm extends CFormModel
                 available_date,available_amt,avaInfo,
                 contact_adr,work_user,work_phone,work_email,class_other,
                 sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
-            array('apply_date,work_user,work_phone,contact_adr,available_date,customer_name,kam_id,link_id','required'),
+            array('apply_date,work_user,work_phone,contact_adr,available_date,customer_name,kam_id,link_id
+            ,head_city_id,talk_city_id,area_id,source_id,source_text,available_amt,sign_odds
+            ,class_id,level_id','required'),
             array('customer_name','validateCustomerName'),
             array('apply_date','validateDate'),
             array('link_id','validateLinkID'),
@@ -392,7 +394,7 @@ class KABotForm extends CFormModel
 
         $arr = array(
             "id"=>1,"apply_date"=>2,"available_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
-            "head_city_id"=>1,"talk_city_id"=>1,"contact_user"=>1,"contact_phone"=>1,
+            "head_city_id"=>1,"talk_city_id"=>4,"contact_user"=>1,"contact_phone"=>1,
             "contact_email"=>1,"source_text"=>1,"source_id"=>1,"shift_bool"=>1,
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"available_amt"=>3,
@@ -471,7 +473,7 @@ class KABotForm extends CFormModel
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
         $arr = array(
             "id"=>1,"apply_date"=>2,"customer_no"=>1,"customer_name"=>1,"kam_id"=>1,
-            "head_city_id"=>1,"talk_city_id"=>1,"contact_user"=>1,"contact_phone"=>1,
+            "head_city_id"=>1,"talk_city_id"=>4,"contact_user"=>1,"contact_phone"=>1,
             "contact_email"=>1,"source_text"=>1,"source_id"=>1,
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,
@@ -555,7 +557,7 @@ class KABotForm extends CFormModel
 
     //哪些字段修改后需要记录
     protected static function historyUpdateList(){
-        return array("apply_date","head_city_id","talk_city_id","contact_user",
+        return array("apply_date","customer_name","head_city_id","talk_city_id","contact_user",
             "contact_phone","contact_email","source_text","source_id","area_id",
             "level_id","class_id","busine_id","link_id","available_amt","available_date","support_user","sign_odds",
             "sign_date","sign_month","sign_amt","sum_amt",
@@ -566,8 +568,10 @@ class KABotForm extends CFormModel
 
     protected static function getNameForValue($type,$value){
         switch ($type){
-            case "head_city_id":
             case "talk_city_id":
+                $value = KAAreaForm::getAreaNameForArr($value);
+                break;
+            case "head_city_id":
             case "area_id":
                 $value = KAAreaForm::getAreaNameForId($value);
                 break;
@@ -596,6 +600,18 @@ class KABotForm extends CFormModel
         return $value;
     }
 
+    public function getThisModel(){
+        switch ($this->table_pre){
+            case "_ca_":
+                return new CABotForm();
+            case "_ra_":
+                return new CABotForm();
+            default:
+                return new KABotForm();
+        }
+
+    }
+
 	//保存历史记录
     protected function historySave(&$connection){
         $table_pre = $this->table_pre;
@@ -605,7 +621,7 @@ class KABotForm extends CFormModel
                 break;
             case "edit":
                 $uid = Yii::app()->user->id;
-                $model = new KABotForm();
+                $model = $this->getThisModel();
                 $model->employee_id = $this->employee_id;
                 $model->retrieveData($this->id);
                 $keyArr = self::historyUpdateList();
@@ -877,7 +893,7 @@ class KABotForm extends CFormModel
 	    $list=array();
         $arr = array(
             "apply_date"=>2,"follow_date"=>2,"customer_name"=>1,"search_name"=>1,
-            "head_city_id"=>3,"talk_city_id"=>3,"contact_user"=>1,"contact_phone"=>1,
+            "head_city_id"=>3,"talk_city_id"=>4,"contact_user"=>1,"contact_phone"=>1,
             "contact_email"=>1,"source_text"=>1,"source_id"=>3,
             "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>4,"link_id"=>3,
             "support_user"=>3,"sign_odds"=>3,"remark"=>1,
@@ -897,7 +913,7 @@ class KABotForm extends CFormModel
                 case 3://数字
                     $value = $value===""?null:floatval($value);
                     break;
-                case 4://数字
+                case 4://数组
                     $value = $value===""?null:json_encode($value);
                     break;
             }
@@ -926,7 +942,6 @@ class KABotForm extends CFormModel
                 $connection->createCommand()->update("sal{$table_pre}bot", $list, "id=:id", array(":id" => $this->id));
                 break;
         }
-
 		if ($this->scenario=='new'){
             $this->id = Yii::app()->db->getLastInsertID();
             $this->lenStr();
@@ -1088,32 +1103,45 @@ class KABotForm extends CFormModel
         $suffix = Yii::app()->params['envSuffix'];
         $list=array(""=>"");
         if(!empty($ka_city)){
-            $city = Yii::app()->db->createCommand()->select("city_code")->from("sal_ka_area")
-                ->where("id=:id",array(":id"=>$ka_city))
-                ->queryScalar();//查询KA城市的日报表系统编号
-            $city=$city?$city:0;
-            $city_allow = City::model()->getDescendantList($city);
-            $city_allow .= (empty($city_allow)) ? "'$city'" : ",'$city'";
-            $inRows = Yii::app()->db->createCommand()->select("code,incharge")
-                ->from("security{$suffix}.sec_city")
-                ->where("code in ({$city_allow})",array(":code"=>$city))
-                ->queryAll();//查询城市的负责人
-            if($inRows){
-                foreach ($inRows as $inRow){
-                    $city = $inRow["code"];
-                    $incharge = $inRow["incharge"];
-                    $rows = Yii::app()->db->createCommand()->select("b.id,b.code,b.name")
-                        ->from("hr{$suffix}.hr_binding a")
-                        ->leftJoin("hr{$suffix}.hr_employee b","a.employee_id=b.id")
-                        ->leftJoin("hr{$suffix}.hr_dept f","b.position=f.id")
-                        ->where("(b.city=:city and f.dept_class='Sales') or a.user_id=:user_id or b.id=:id",
-                            array(":city"=>$city,":user_id"=>$incharge,":id"=>$id)
-                        )->queryAll();//查询城市下的销售人员
-                    if($rows){
-                        foreach ($rows as $row){
-                            $list[$row["id"]] = $row["name"]." ({$row["code"]})";
+            $idSql = is_array($ka_city)?implode(",",$ka_city):$ka_city;
+            $cityRows = Yii::app()->db->createCommand()->select("city_code")->from("sal_ka_area")
+                ->where("id in ({$idSql})")
+                ->queryAll();//查询KA城市的日报表系统编号
+            $cityList = array();//城市列表
+            $inchargeList = array();//城市负责人
+            if($cityRows){
+                foreach ($cityRows as $cityRow){
+                    $city=$cityRow["city_code"];
+                    $city_allow = City::model()->getDescendantList($city);
+                    $city_allow .= (empty($city_allow)) ? "'$city'" : ",'$city'";
+                    $inRows = Yii::app()->db->createCommand()->select("code,incharge")
+                        ->from("security{$suffix}.sec_city")
+                        ->where("code in ({$city_allow})",array(":code"=>$city))
+                        ->queryAll();//查询城市的负责人
+                    if($inRows){
+                        foreach ($inRows as $inRow){
+                            if(!in_array($inRow["code"],$cityList)){
+                                $cityList[]=$inRow["code"];
+                            }
+                            if(!in_array($inRow["incharge"],$inchargeList)){
+                                $inchargeList[]=$inRow["incharge"];
+                            }
                         }
                     }
+                }
+            }
+            $citySql = implode("','",$cityList);
+            $inchargeSql = implode("','",$inchargeList);
+            $rows = Yii::app()->db->createCommand()->select("b.id,b.code,b.name")
+                ->from("hr{$suffix}.hr_binding a")
+                ->leftJoin("hr{$suffix}.hr_employee b","a.employee_id=b.id")
+                ->leftJoin("hr{$suffix}.hr_dept f","b.position=f.id")
+                ->where("(b.city in ('{$citySql}') and f.dept_class='Sales') or a.user_id in ('{$inchargeSql}') or b.id=:id",
+                    array(":id"=>$id)
+                )->queryAll();//查询城市下的销售人员
+            if($rows){
+                foreach ($rows as $row){
+                    $list[$row["id"]] = $row["name"]." ({$row["code"]})";
                 }
             }
         }

@@ -126,9 +126,24 @@ class KAAreaForm extends CFormModel
 	}
 
 	public static function getCityListForId($id=""){
-	    $list = array(""=>"");
+	    $list = array();
         $rows = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_area")
             ->where("(id>0 and z_display=1) or id=:id",array(":id"=>$id))
+            ->order("z_index desc")->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $list[$row["id"]] = $row["pro_name"];
+            }
+        }
+        return $list;
+    }
+
+	public static function getCityListForArr($arr=array()){
+	    $selectSql = empty($arr)?0:$arr;
+	    $selectSql = is_array($arr)?implode(",",$arr):$arr;
+	    $list = array();
+        $rows = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_area")
+            ->where("(id>0 and z_display=1) or id in ({$selectSql})")
             ->order("z_index desc")->queryAll();
         if($rows){
             foreach ($rows as $row){
@@ -145,5 +160,20 @@ class KAAreaForm extends CFormModel
             return $row["pro_name"];
         }
         return $id;
+    }
+
+    public static function getAreaNameForArr($arr){
+        $arr = empty($arr)?0:$arr;
+        $selectSql = is_array($arr)?implode(",",$arr):$arr;
+        $rows = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_area")
+            ->where("id in ({$selectSql})")->queryAll();
+        $name = "";
+        if($rows){
+            foreach ($rows as $row){
+                $name.= empty($name)?"":"、";
+                $name.=$row["pro_name"];
+            }
+        }
+        return $name;
     }
 }

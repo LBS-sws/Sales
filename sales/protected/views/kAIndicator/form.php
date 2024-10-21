@@ -48,7 +48,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 			<div class="form-group">
 				<?php echo $form->labelEx($model,'employee_id',array('class'=>"col-sm-2 control-label")); ?>
 				<div class="col-sm-3">
-					<?php echo $form->dropDownList($model, 'employee_id',KABotForm::getKABotStaffForAccess(),
+					<?php echo $form->dropDownList($model, 'employee_id',KAIndicatorForm::getKABotStaffForAccess(),
 						array('readonly'=>($model->scenario=='view'),'empty'=>'')
 					); ?>
 				</div>

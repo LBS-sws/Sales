@@ -80,7 +80,7 @@ class KABotController extends Controller
     //区域支持者的異步請求
     public function actionAjaxSupportUser(){
         if(Yii::app()->request->isAjaxRequest) {//是否ajax请求
-            $city = key_exists("city",$_POST)?$_POST["city"]:0;
+            $city = key_exists("city",$_POST)?$_POST["city"]:array();
             $list =KABotForm::getSupportUserList($city);
             echo CJSON::encode(array('status'=>1,'list'=>$list));//Yii 的方法将数组处理成json数据
         }else{

@@ -28,6 +28,8 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
     }
     input[readonly]{pointer-events: none;}
     select[readonly]{pointer-events: none;}
+    .select2.select2-container{ width: 100%!important;}
+    .select2-container--default .select2-selection--multiple .select2-selection__choice{ padding: 0px 7px;}
     .select2-container .select2-selection--single{ height: 34px;}
 	
 	
@@ -151,8 +153,8 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 					</div>
 					<?php echo $form->labelEx($model,'talk_city_id',array('class'=>"col-sm-1 control-label")); ?>
 					<div class="col-sm-2">
-						<?php echo $form->dropDownList($model, 'talk_city_id',KAAreaForm::getCityListForId($model->talk_city_id),
-							array('readonly'=>($model->scenario=='view'),'class'=>'changeCity','id'=>'talk_city_id')
+						<?php echo $form->dropDownList($model, 'talk_city_id',KAAreaForm::getCityListForArr($model->talk_city_id),
+							array('readonly'=>($model->scenario=='view'),'class'=>'changeCity select2','id'=>'talk_city_id','multiple'=>'multiple')
 						); ?>
 					</div>
 					<?php echo $form->labelEx($model,'area_id',array('class'=>"col-sm-1 control-label")); ?>
@@ -416,7 +418,7 @@ $('#support_user').select2({
     disabled: $disabled
 });
 
-$('#busine_id').select2({
+$('#busine_id,#talk_city_id').select2({
 	tags: false,
 	multiple: true,
 	maximumInputLength: 0,
@@ -450,6 +452,7 @@ $('#link_id').change(function(){
         }
     }
 });
+$('#link_id').trigger('change');
 
 function changeCustomerName(){
     var that = $(this);
@@ -487,19 +490,6 @@ $('body').on('click',function(){
         });
         $('#sum_amt').val(sum_amt);
     });
-
-    $('.changeCity').change(function(){
-        var city = $(this).val();
-        $('.changeCity').each(function(){
-            if($(this).val()==''){
-                $(this).val(city);
-                if($(this).attr('id')=='talk_city_id'){
-                    $(this).trigger('change');
-                }
-            }
-        });
-    });
-    
     
     $('#talk_city_id').on('change',function(){
         $.ajax({

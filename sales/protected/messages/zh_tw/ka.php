@@ -132,5 +132,6 @@ return array(
     'indicator sales rate'=>'個人年度指標',
     'indicator group'=>'團隊年度指標',
     'indicator group rate'=>'團隊年度指標',
+    'city'=>'城市',
 );
 ?>
