@@ -139,7 +139,7 @@ class KAAreaForm extends CFormModel
     }
 
 	public static function getCityListForArr($arr=array()){
-	    $selectSql = empty($arr)?0:$arr;
+        $arr = empty($arr)?0:$arr;
 	    $selectSql = is_array($arr)?implode(",",$arr):$arr;
 	    $list = array();
         $rows = Yii::app()->db->createCommand()->select("pro_name,id")->from("sal_ka_area")
