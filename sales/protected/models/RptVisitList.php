@@ -259,12 +259,33 @@ class RptVisitList extends CReport {
 
 	public function genReport() {
 		$this->init();
-		$this->retrieveData();
 		$this->title = $this->getReportName();
 		$this->subtitle = '';
 		$output = $this->exportExcel();
 		return $output;
 	}
+
+    protected function exportExcel() {
+        $this->excel = new ExcelToolEx();
+        $this->excel->start();
+        $this->excel->end();
+
+        $this->rpt_header = $this->header_structure();
+        $this->rpt_detail = $this->report_structure();
+        $this->rpt_fields = $this->fields();
+        $this->rpt_groups = $this->groups();
+
+        $this->excel->newFile();
+        if (!empty($this->sheetname)) $this->excel->getActiveSheet()->setTitle($this->sheetname);
+        $this->excel->setReportDefaultFormat();
+        $this->printHeader();
+        $this->retrieveData();
+        //$this->printDetail();
+        $outstring = $this->excel->getOutput();
+
+        $this->excel->end();
+        return $outstring;
+    }
 	
 	protected function init() {
 		$this->readAll = $this->isReadAll($this->criteria['UID']);
@@ -363,6 +384,7 @@ echo "total:{$totalRow}\n";
         $sqlRow= $sql." LIMIT {$startNum},$pageMax";
         $rows = Yii::app()->db->createCommand($sqlRow)->queryAll();
         if (count($rows) > 0) {
+            $this->data=array();
             foreach ($rows as $row) {
                 $temp = $this->initTemp();
                 if($row['shift']=='Y'){
@@ -414,6 +436,7 @@ echo "total:{$totalRow}\n";
                 $this->data[] = $temp;
             }
         }
+        $this->printDetail();
 
         if($startNum+$pageMax<$totalRow){
             $page++;
