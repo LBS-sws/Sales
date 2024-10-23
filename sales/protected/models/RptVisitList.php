@@ -366,7 +366,7 @@ class RptVisitList extends CReport {
                 $clause.= " and (a.shift<>'Z' or a.shift is null) ";
             }
         }
-		$order = $this->readAll	? " order by a.visit_dt desc, f.code" : " order by a.visit_dt desc, b.name, f.code";
+		$order = $this->readAll	? " order by a.visit_dt desc, f.code,a.id desc" : " order by a.visit_dt desc, b.name, f.code,a.id desc";
 
         $sqlTotal = $sql2.$clause;
         $totalRow = Yii::app()->db->createCommand($sqlTotal)->queryScalar();
@@ -379,6 +379,9 @@ echo "total:{$totalRow}\n";
 	}
 
 	private function getDateForPage($sql,$totalRow,$page=0){
+	    if($page>5){//大于1W条不执行
+	        return true;
+        }
         $pageMax = self::$pageCount;//最大数量
         $startNum = $page*$pageMax;
         $sqlRow= $sql." LIMIT {$startNum},$pageMax";
@@ -440,8 +443,9 @@ echo "total:{$totalRow}\n";
 
         if($startNum+$pageMax<$totalRow){
             $page++;
-            $this->getDateForPage($sql,$totalRow,$page);
+             return $this->getDateForPage($sql,$totalRow,$page);
         }
+        return true;
     }
 
 	public function getReportName() {
