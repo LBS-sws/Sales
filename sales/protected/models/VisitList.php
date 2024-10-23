@@ -399,6 +399,7 @@ class VisitList extends CListPageModel
 					'RPT_ID'=>'RptVisitList',
 					'RPT_NAME'=>$rptdesc,
 					'CITY'=>Yii::app()->user->city(),
+					'CITY_ALLOW'=>Yii::app()->user->city_allow(),
 					'LANGUAGE'=>Yii::app()->language,
 					'CITY_NAME'=>Yii::app()->user->city_name(),
 					'CRITERIA'=>json_encode($criteria),

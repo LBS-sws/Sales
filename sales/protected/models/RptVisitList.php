@@ -3,6 +3,8 @@ class RptVisitList extends CReport {
 	protected $readAll = false;
 	protected $shift=null;
 	protected $dateRangeValue = '0';
+
+	public static $pageCount = 2000;//最大数量
 	
 	protected function fields() {
 		$field1 = array(
@@ -279,10 +281,14 @@ class RptVisitList extends CReport {
 	public function retrieveData() {
 		$suffix = Yii::app()->params['envSuffix'];
 		$uid = $this->criteria['UID'];
-		
-		$city = $this->criteria['CITY'];
-		$citylist = City::model()->getDescendantList($city);
-		$citylist .= (empty($citylist) ? '' : ',')."'$city'";
+
+		if(isset($this->criteria['CITY_ALLOW'])){
+            $citylist = $this->criteria['CITY_ALLOW'];
+        }else{
+            $city = $this->criteria['CITY'];
+            $citylist = City::model()->getDescendantList($city);
+            $citylist .= (empty($citylist) ? '' : ',')."'$city'";
+        }
 
 		$sql = "select a.*, b.name as city_name, concat(f.code,' - ',f.name) as staff,  
 				d.name as visit_type_name, g.name as cust_type_name, g.type_group as cust_type_group,
@@ -297,7 +303,21 @@ class RptVisitList extends CReport {
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
 				where a.city in ($citylist)
 			";
-		if (!$this->readAll) $sql .= " and a.username='$uid' ";
+
+		$sql2 = "select count(a.id) from sal_visit a 
+				inner join hr$suffix.hr_binding c on a.username = c.user_id
+				inner join hr$suffix.hr_employee f on c.employee_id = f.id
+				inner join sal_visit_type d on a.visit_type = d.id
+				inner join sal_cust_type g on a.cust_type = g.id
+				inner join sal_cust_district h on a.district = h.id
+				left outer join security$suffix.sec_city b on a.city=b.code
+				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
+				where a.city in ($citylist)
+			";
+		if (!$this->readAll){
+		    $sql .= " and a.username='$uid' ";
+            $sql2 .= " and a.username='$uid' ";
+        }
 			
 		$clause = "";
 		$static = $this->staticSearchColumns;
@@ -326,47 +346,60 @@ class RptVisitList extends CReport {
             }
         }
 		$order = $this->readAll	? " order by a.visit_dt desc, f.code" : " order by a.visit_dt desc, b.name, f.code";
-		$sql = $sql.$clause.$order;
 
-		$rows = Yii::app()->db->createCommand($sql)->queryAll();
-		if (count($rows) > 0) {
-			foreach ($rows as $row) {
-				$temp = $this->initTemp();
+        $sqlTotal = $sql2.$clause;
+        $totalRow = Yii::app()->db->createCommand($sqlTotal)->queryScalar();
+echo "total:{$totalRow}\n";
+        $sql = $sql.$clause.$order;
+        ini_set('memory_limit', '256M');
+        $this->getDateForPage($sql,$totalRow,0);
+		
+		return true;
+	}
+
+	private function getDateForPage($sql,$totalRow,$page=0){
+        $pageMax = self::$pageCount;//最大数量
+        $startNum = $page*$pageMax;
+        $sqlRow= $sql." LIMIT {$startNum},$pageMax";
+        $rows = Yii::app()->db->createCommand($sqlRow)->queryAll();
+        if (count($rows) > 0) {
+            foreach ($rows as $row) {
+                $temp = $this->initTemp();
                 if($row['shift']=='Y'){
                     $row['shift']="(旧)";
                 }
                 if($row['shift']=='Z'){
                     $row['shift']="(转)";
                 }
-				$temp['id'] = $row['id'];
-				$temp['visit_dt'] = General::toDate($row['visit_dt']);
-				$temp['lcd'] = General::toDate($row['lcd']);
-				$temp['username'] = $row['username'];
-				$stf = $this->getStaffInfo($row['username']);
-				$temp['staff'] = $stf['staff']. $row['shift'];
-				$temp['post_name'] = $stf['post_name'];
-				$temp['dept_name'] = $stf['dept_name'];
-				$temp['district'] = $row['district_name'];
-				$temp['street'] = $row['street'];
-				$temp['city'] = $row['city'];
-				$temp['city_name'] = $row['city_name'];
-				$temp['cust_name'] = $row['cust_name'];
-				$temp['cust_vip'] = $row['cust_vip'];
-				$temp['cust_alt_name'] = $row['cust_alt_name'];
-				$temp['cust_person'] = $row['cust_person'];
-				$temp['cust_person_role'] = $row['cust_person_role'];
-				$temp['cust_tel'] = $row['cust_tel'];
-				$temp['visit_type'] = $row['visit_type_name'];
-				$temp['visit_obj'] = $row['visit_obj_name'];
-				$temp['cust_type'] = $row['cust_type_name'];
-				$temp['cust_type_group'] = $row['cust_type_group']==2?Yii::t("sales","Non-catering"):Yii::t("sales","Catering");
-				$temp['remarks'] = $row['remarks'];
+                $temp['id'] = $row['id'];
+                $temp['visit_dt'] = General::toDate($row['visit_dt']);
+                $temp['lcd'] = General::toDate($row['lcd']);
+                $temp['username'] = $row['username'];
+                $stf = $this->getStaffInfo($row['username']);
+                $temp['staff'] = $stf['staff']. $row['shift'];
+                $temp['post_name'] = $stf['post_name'];
+                $temp['dept_name'] = $stf['dept_name'];
+                $temp['district'] = $row['district_name'];
+                $temp['street'] = $row['street'];
+                $temp['city'] = $row['city'];
+                $temp['city_name'] = $row['city_name'];
+                $temp['cust_name'] = $row['cust_name'];
+                $temp['cust_vip'] = $row['cust_vip'];
+                $temp['cust_alt_name'] = $row['cust_alt_name'];
+                $temp['cust_person'] = $row['cust_person'];
+                $temp['cust_person_role'] = $row['cust_person_role'];
+                $temp['cust_tel'] = $row['cust_tel'];
+                $temp['visit_type'] = $row['visit_type_name'];
+                $temp['visit_obj'] = $row['visit_obj_name'];
+                $temp['cust_type'] = $row['cust_type_name'];
+                $temp['cust_type_group'] = $row['cust_type_group']==2?Yii::t("sales","Non-catering"):Yii::t("sales","Catering");
+                $temp['remarks'] = $row['remarks'];
 
-				$sqld = "select field_id, field_value from sal_visit_info where visit_id=".$row['id'];
-				$lines = Yii::app()->db->createCommand($sqld)->queryAll();
-				foreach ($lines as $line) {
+                $sqld = "select field_id, field_value from sal_visit_info where visit_id=".$row['id'];
+                $lines = Yii::app()->db->createCommand($sqld)->queryAll();
+                foreach ($lines as $line) {
                     //svc_H1,svc_G1
-				    switch ($line['field_id']){
+                    switch ($line['field_id']){
                         case "svc_H1"://蔚诺空气业务 類別
                             $temp[$line['field_id']] = VisitForm::getTypeListForH($line['field_value'],true);
                             break;
@@ -376,14 +409,17 @@ class RptVisitList extends CReport {
                             else
                                 $temp[$line['field_id']] = $line['field_value']=='Y' ? 'Y' : '';
                     }
-				}
-				
-				$this->data[] = $temp;
-			}
-		}
-		
-		return true;
-	}
+                }
+
+                $this->data[] = $temp;
+            }
+        }
+
+        if($startNum+$pageMax<$totalRow){
+            $page++;
+            $this->getDateForPage($sql,$totalRow,$page);
+        }
+    }
 
 	public function getReportName() {
 		$city_name = isset($this->criteria) ? ' - '.General::getCityName($this->criteria['CITY']) : '';
