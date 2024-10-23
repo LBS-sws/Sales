@@ -19,6 +19,7 @@ class JobQueueCommand extends CConsoleCommand {
 		
 		if (($id!=0) && !empty($param) && $this->markStatus($id, $ts, 'I')) {
 			if (isset($param['LANGUAGE'])) Yii::app()->language = $param['LANGUAGE'];
+			$param['QUEUE_ID'] = $id;
 			$param['UID'] = $uid;
 			$param['REQ_DT'] = $row['req_dt'];
 			$param['RPT_DESC'] = $row['rpt_desc'];

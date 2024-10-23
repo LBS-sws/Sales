@@ -4,7 +4,7 @@ class RptVisitList extends CReport {
 	protected $shift=null;
 	protected $dateRangeValue = '0';
 
-	public static $pageCount = 2000;//最大数量
+	public static $pageCount = 1000;//最大数量
 	
 	protected function fields() {
 		$field1 = array(
@@ -373,14 +373,52 @@ class RptVisitList extends CReport {
 echo "total:{$totalRow}\n";
         $sql = $sql.$clause.$order;
         ini_set('memory_limit', '256M');
-        $this->getDateForPage($sql,$totalRow,0);
+        $pageThis = isset($this->criteria['PAGE_NUM'])?$this->criteria['PAGE_NUM']:0;
+        $this->getDateForPage($sql,$totalRow,$pageThis,$pageThis);
 		
 		return true;
 	}
 
-	private function getDateForPage($sql,$totalRow,$page=0){
-	    if($page>5){//大于1W条不执行
-	        return true;
+	private function addQueueRpt($page){
+        if(isset($this->criteria['QUEUE_ID'])){
+            $id = $this->criteria['QUEUE_ID'];
+            $row = Yii::app()->db->createCommand()->select("*")->from("sal_queue")
+                ->where("id=:id",array(":id"=>$id))->queryRow();
+            if($row){
+                $list = $row;
+                unset($list["id"]);
+                $list["rpt_desc"].="_续";
+                $list["status"]="P";
+                $list["req_dt"]=date_format(date_create(""),"Y/m/d H:i:s");
+                $list["fin_dt"]=null;
+                Yii::app()->db->createCommand()->insert("sal_queue",$list);
+                $addID = Yii::app()->db->getLastInsertID();
+                Yii::app()->db->createCommand()->insert("sal_queue_param",array(
+                    "queue_id"=>$addID,
+                    "param_field"=>"PAGE_NUM",
+                    "param_value"=>$page,
+                ));
+                $infoRows = Yii::app()->db->createCommand()->select("*")->from("sal_queue_param")
+                    ->where("queue_id=:id",array(":id"=>$id))->queryAll();
+                if($infoRows){
+                    foreach ($infoRows as $infoRow){
+                        $infoList = $infoRow;
+                        unset($infoList["id"]);
+                        $infoList["queue_id"] = $addID;
+                        if($infoList["param_field"]=="RPT_NAME"){
+                            $infoList["param_value"].="_续";
+                        }
+                        Yii::app()->db->createCommand()->insert("sal_queue_param",$infoList);
+                    }
+                }
+            }
+        }
+    }
+
+	private function getDateForPage($sql,$totalRow,$page=0,$startPage=0){
+	    if($page-$startPage>3){//执行3次后，数据量太大，新增一个
+            $this->addQueueRpt($page);
+            return true;
         }
         $pageMax = self::$pageCount;//最大数量
         $startNum = $page*$pageMax;
@@ -443,13 +481,14 @@ echo "total:{$totalRow}\n";
 
         if($startNum+$pageMax<$totalRow){
             $page++;
-             return $this->getDateForPage($sql,$totalRow,$page);
+             return $this->getDateForPage($sql,$totalRow,$page,$startPage);
         }
         return true;
     }
 
 	public function getReportName() {
-		$city_name = isset($this->criteria) ? ' - '.General::getCityName($this->criteria['CITY']) : '';
+		//$city_name = isset($this->criteria) ? ' - '.General::getCityName($this->criteria['CITY']) : '';
+		$city_name = '';
 		return (isset($this->criteria) ? Yii::t('report',$this->criteria['RPT_NAME']) : Yii::t('report','Nil')).$city_name;
 	}
 	
