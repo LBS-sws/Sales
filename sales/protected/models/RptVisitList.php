@@ -4,7 +4,7 @@ class RptVisitList extends CReport {
 	protected $shift=null;
 	protected $dateRangeValue = '0';
 
-	public static $pageCount = 1000;//最大数量
+	public static $pageCount = 500;//最大数量:500*4
 	
 	protected function fields() {
 		$field1 = array(
@@ -379,15 +379,28 @@ echo "total:{$totalRow}\n";
 		return true;
 	}
 
+	private function rptDescNum($str){
+        if (strpos($str,'_续')!==false){
+            $numArr = explode("_续",$str);
+            $num = count($numArr)==2?$numArr[1]:0;
+            $num = empty($num)?1:$num;
+            $num++;
+            return "销售拜访报表_续".$num;
+        }else{
+            return "销售拜访报表_续";
+        }
+    }
+
 	private function addQueueRpt($page){
         if(isset($this->criteria['QUEUE_ID'])){
             $id = $this->criteria['QUEUE_ID'];
             $row = Yii::app()->db->createCommand()->select("*")->from("sal_queue")
                 ->where("id=:id",array(":id"=>$id))->queryRow();
             if($row){
+                $title = $this->rptDescNum($row["rpt_desc"]);
                 $list = $row;
                 unset($list["id"]);
-                $list["rpt_desc"].="_续";
+                $list["rpt_desc"]=$title;
                 $list["status"]="P";
                 $list["req_dt"]=date_format(date_create(""),"Y/m/d H:i:s");
                 $list["fin_dt"]=null;
@@ -406,7 +419,7 @@ echo "total:{$totalRow}\n";
                         unset($infoList["id"]);
                         $infoList["queue_id"] = $addID;
                         if($infoList["param_field"]=="RPT_NAME"){
-                            $infoList["param_value"].="_续";
+                            $infoList["param_value"]=$title;
                         }
                         Yii::app()->db->createCommand()->insert("sal_queue_param",$infoList);
                     }
