@@ -9,6 +9,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 'layout'=>TbHtml::FORM_LAYOUT_HORIZONTAL,
 )); ?>
 <style>
+    .table{ min-width: 1000px;}
     .media_table,.media_remark,.media_text {
         display: block;
         width: 100%;
@@ -16,7 +17,7 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
     .media_remark,.media_text{ padding: 0px 15px;}
     .media_text>p{ margin: 0px;}
     @media (min-width: 768px){
-        .col-sm-1.control-label {
+        .col-lg-1.control-label {
             padding-left: 0px;
             padding-right: 0px;
             white-space: nowrap;
@@ -112,21 +113,21 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
             <?php $this->renderPartial('//kABot/shiftForm',array("model"=>$model)); ?>
 
             <div class="form-group">
-                <?php echo $form->labelEx($model,'apply_date',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'apply_date',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->textField($model, 'apply_date',
                         array('readonly'=>($model->scenario!='new'),'autocomplete'=>'off','prepend'=>'<span class="fa fa-calendar"></span>','id'=>'apply_date')
                     ); ?>
                 </div>
-                <?php echo $form->labelEx($model,'kam_id',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'kam_id',array('class'=>"col-lg-1 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->textField($model, 'kam_name',
                         array('readonly'=>(true))
                     ); ?>
                 </div>
                 <?php if ($model->scenario!='new'): ?>
-                <?php echo $form->labelEx($model,'customer_no',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'customer_no',array('class'=>"col-lg-1 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->textField($model, 'customer_no',
                         array('readonly'=>(true))
                     ); ?>
@@ -134,8 +135,8 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 <?php endif ?>
             </div>
             <div class="form-group">
-                <?php echo $form->labelEx($model,'customer_name',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-7">
+                <?php echo $form->labelEx($model,'customer_name',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-7">
                     <div class="btn-group" style="width: 100%">
                         <?php echo $form->textField($model, 'customer_name', array('maxlength'=>250,'id'=>'customer_name','autocomplete'=>'off','readonly'=>($model->scenario=='view'))); ?>
                         <ul class="dropdown-menu" id="customer_name_menu" style="width: 100%">
@@ -147,68 +148,68 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 			<div class="bat_phone_div_click text-center"><span>展开</span></div>
 			<div class="bat_phone_div" style="display:none;">
 				<div class="form-group">
-					<?php echo $form->labelEx($model,'head_city_id',array('class'=>"col-sm-2 control-label")); ?>
-					<div class="col-sm-2">
+					<?php echo $form->labelEx($model,'head_city_id',array('class'=>"col-lg-2 control-label")); ?>
+					<div class="col-lg-2">
 						<?php echo $form->dropDownList($model, 'head_city_id',KAAreaForm::getCityListForId($model->head_city_id),
 							array('readonly'=>($model->scenario=='view'),'class'=>'changeCity')
 						); ?>
 					</div>
-					<?php echo $form->labelEx($model,'talk_city_id',array('class'=>"col-sm-1 control-label")); ?>
-					<div class="col-sm-2">
+					<?php echo $form->labelEx($model,'talk_city_id',array('class'=>"col-lg-1 control-label")); ?>
+					<div class="col-lg-2">
 						<?php echo $form->dropDownList($model, 'talk_city_id',KAAreaForm::getCityListForArr($model->talk_city_id),
 							array('readonly'=>($model->scenario=='view'),'class'=>'changeCity select2','id'=>'talk_city_id','multiple'=>'multiple')
 						); ?>
 					</div>
-					<?php echo $form->labelEx($model,'area_id',array('class'=>"col-sm-1 control-label")); ?>
-					<div class="col-sm-2">
+					<?php echo $form->labelEx($model,'area_id',array('class'=>"col-lg-1 control-label")); ?>
+					<div class="col-lg-2">
 						<?php echo $form->dropDownList($model, 'area_id',KAAreaForm::getCityListForId($model->area_id),
 							array('readonly'=>($model->scenario=='view'),'class'=>'changeCity')
 						); ?>
 					</div>
 				</div>
 				<div class="form-group">
-					<?php echo $form->labelEx($model,'work_user',array('class'=>"col-sm-2 control-label")); ?>
-					<div class="col-sm-2">
+					<?php echo $form->labelEx($model,'work_user',array('class'=>"col-lg-2 control-label")); ?>
+					<div class="col-lg-2">
 						<?php echo $form->textField($model, 'work_user',
 							array('readonly'=>($model->scenario=='view'))
 						); ?>
 					</div>
-					<?php echo $form->labelEx($model,'work_phone',array('class'=>"col-sm-1 control-label")); ?>
-					<div class="col-sm-2">
+					<?php echo $form->labelEx($model,'work_phone',array('class'=>"col-lg-1 control-label")); ?>
+					<div class="col-lg-2">
 						<?php echo $form->textField($model, 'work_phone',
 							array('readonly'=>($model->scenario=='view'))
 						); ?>
 					</div>
-					<?php echo $form->labelEx($model,'work_email',array('class'=>"col-sm-1 control-label")); ?>
-					<div class="col-sm-2">
+					<?php echo $form->labelEx($model,'work_email',array('class'=>"col-lg-1 control-label")); ?>
+					<div class="col-lg-2">
 						<?php echo $form->textField($model, 'work_email',
 							array('readonly'=>($model->scenario=='view'))
 						); ?>
 					</div>
 				</div>
 				<div class="form-group">
-					<?php echo $form->labelEx($model,'contact_user',array('class'=>"col-sm-2 control-label")); ?>
-					<div class="col-sm-2">
+					<?php echo $form->labelEx($model,'contact_user',array('class'=>"col-lg-2 control-label")); ?>
+					<div class="col-lg-2">
 						<?php echo $form->textField($model, 'contact_user',
 							array('readonly'=>($model->scenario=='view'))
 						); ?>
 					</div>
-					<?php echo $form->labelEx($model,'contact_phone',array('class'=>"col-sm-1 control-label")); ?>
-					<div class="col-sm-2">
+					<?php echo $form->labelEx($model,'contact_phone',array('class'=>"col-lg-1 control-label")); ?>
+					<div class="col-lg-2">
 						<?php echo $form->textField($model, 'contact_phone',
 							array('readonly'=>($model->scenario=='view'))
 						); ?>
 					</div>
-					<?php echo $form->labelEx($model,'contact_email',array('class'=>"col-sm-1 control-label")); ?>
-					<div class="col-sm-2">
+					<?php echo $form->labelEx($model,'contact_email',array('class'=>"col-lg-1 control-label")); ?>
+					<div class="col-lg-2">
 						<?php echo $form->textField($model, 'contact_email',
 							array('readonly'=>($model->scenario=='view'))
 						); ?>
 					</div>
 				</div>
 				<div class="form-group">
-					<?php echo $form->labelEx($model,'contact_adr',array('class'=>"col-sm-2 control-label")); ?>
-					<div class="col-sm-7">
+					<?php echo $form->labelEx($model,'contact_adr',array('class'=>"col-lg-2 control-label")); ?>
+					<div class="col-lg-7">
 						<?php echo $form->textField($model, 'contact_adr',
 							array('readonly'=>($model->scenario=='view'))
 						); ?>
@@ -216,22 +217,22 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
 				</div>
 			</div>
             <div class="form-group">
-                <?php echo $form->labelEx($model,'source_id',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'source_id',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->dropDownList($model, 'source_id',KASourceForm::getSourceListForId($model->source_id),
                         array('readonly'=>($model->scenario=='view'))
                     ); ?>
                 </div>
-                <?php echo $form->labelEx($model,'source_text',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'source_text',array('class'=>"col-lg-1 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->dropDownList($model, 'source_text',KASraForm::getSourceListForId($model->source_text),
                         array('readonly'=>($model->scenario=='view'))
                     ); ?>
                 </div>
             </div>
             <div class="form-group">
-                <?php echo $form->labelEx($model,'class_id',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'class_id',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->dropDownList($model, 'class_id',KAClassForm::getClassListForId($model->class_id),
                         array('readonly'=>($model->scenario=='view'),"id"=>"class_id")
                     ); ?>
@@ -243,50 +244,50 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                     echo $form->textField($model, 'class_other',$classStyle);
                     ?>
                 </div>
-                <?php echo $form->labelEx($model,'level_id',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'level_id',array('class'=>"col-lg-1 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->dropDownList($model, 'level_id',KALevelForm::getLevelListForId($model->level_id,"RKA"),
                         array('readonly'=>($model->scenario=='view'),"id"=>"level_id")
                     ); ?>
                 </div>
             </div>
             <div class="form-group">
-                <?php echo $form->labelEx($model,'busine_id',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-7">
+                <?php echo $form->labelEx($model,'busine_id',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-7">
                     <?php echo $form->dropDownList($model, 'busine_id',KABusineForm::getBusineListForArr($model->busine_id),
                         array('readonly'=>($model->scenario=='view'),'id'=>'busine_id','class'=>'select2','multiple'=>'multiple')
                     ); ?>
                 </div>
             </div>
             <div class="form-group">
-                <?php echo $form->labelEx($model,'link_id',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-4">
+                <?php echo $form->labelEx($model,'link_id',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-4">
                     <?php echo $form->dropDownList($model, 'link_id',KALinkForm::getLinkListForId($model->link_id),
                         array('readonly'=>($model->scenario=='view'),'id'=>'link_id')
                     ); ?>
                 </div>
-                <?php echo $form->labelEx($model,'support_user',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'support_user',array('class'=>"col-lg-1 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->dropDownList($model, 'support_user',RABotForm::getSupportUserList($model->talk_city_id,$model->support_user),
                         array('readonly'=>($model->scenario=='view'),'id'=>'support_user')
                     ); ?>
                 </div>
             </div>
             <div class="form-group">
-                <?php echo $form->labelEx($model,'available_date',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'available_date',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->textField($model, 'available_date',
                         array('readonly'=>($model->scenario=='view'),'autocomplete'=>'off','id'=>'available_date','prepend'=>'<span class="fa fa-calendar"></span>')
                     ); ?>
                 </div>
-                <?php echo $form->labelEx($model,'available_amt',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'available_amt',array('class'=>"col-lg-1 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->numberField($model, 'available_amt',
                         array('readonly'=>($model->scenario=='view'),'id'=>'available_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
                 </div>
-                <?php echo $form->labelEx($model,'sign_odds',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'sign_odds',array('class'=>"col-lg-1 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->dropDownList($model, 'sign_odds',RABotForm::getSignOddsListForId(),
                         array('readonly'=>($model->scenario=='view'),'id'=>'sign_odds')
                     ); ?>
@@ -294,20 +295,20 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
             </div>
 
             <div class="form-group">
-                <?php echo $form->labelEx($model,'sign_date',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'sign_date',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->textField($model, 'sign_date',
                         array('readonly'=>($model->scenario=='view'),'autocomplete'=>'off','id'=>'sign_date','prepend'=>'<span class="fa fa-calendar"></span>')
                     ); ?>
                 </div>
-                <?php echo $form->labelEx($model,'sign_month',array('class'=>"col-sm-1 control-label")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'sign_month',array('class'=>"col-lg-1 control-label")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->dropDownList($model, 'sign_month',RABotForm::getSignMonthListForId(),
                         array('readonly'=>($model->scenario=='view'),'id'=>'sign_month')
                     ); ?>
                 </div>
-                <?php echo $form->labelEx($model,'sum_amt',array('class'=>"col-sm-1 control-label text-red")); ?>
-                <div class="col-sm-2">
+                <?php echo $form->labelEx($model,'sum_amt',array('class'=>"col-lg-1 control-label text-red")); ?>
+                <div class="col-lg-2">
                     <?php echo $form->numberField($model, 'sum_amt',
                         array('readonly'=>(true),'id'=>'sum_amt','prepend'=>'<span class="fa fa-money"></span>')
                     ); ?>
@@ -333,8 +334,8 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
             </div>
 
             <div class="form-group">
-                <?php echo $form->labelEx($model,'remark',array('class'=>"col-sm-2 control-label")); ?>
-                <div class="col-sm-8">
+                <?php echo $form->labelEx($model,'remark',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-8">
                     <?php echo $form->textArea($model, 'remark',
                         array('readonly'=>($model->scenario=='view'),'rows'=>4)
                     ); ?>
