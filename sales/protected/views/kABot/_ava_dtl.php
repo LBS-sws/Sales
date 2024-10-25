@@ -10,8 +10,8 @@
 		); ?>
 	</td>
 	<td>
-		<?php echo TbHtml::textField($this->getFieldName('ava_num'),  $this->record['ava_num'],
-								array('disabled'=>$this->model->scenario=='view','autocomplete'=>'off')
+		<?php echo TbHtml::numberField($this->getFieldName('ava_num'),  $this->record['ava_num'],
+								array('disabled'=>$this->model->scenario=='view','class'=>'change_ava_num','autocomplete'=>'off')
 		); ?>
 	</td>
 	<td>

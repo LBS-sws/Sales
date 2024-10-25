@@ -307,6 +307,21 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                         array('readonly'=>($model->scenario=='view'),'id'=>'sign_month')
                     ); ?>
                 </div>
+                <?php echo $form->labelEx($model,'sign_end_date',array('class'=>"col-lg-1 control-label")); ?>
+                <div class="col-lg-2">
+                    <?php echo $form->textField($model, 'sign_end_date',
+                        array('readonly'=>($model->scenario=='view'),'id'=>'sign_end_date','autocomplete'=>'off','prepend'=>'<span class="fa fa-calendar"></span>')
+                    ); ?>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'ava_sum',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-2">
+                    <?php echo $form->numberField($model, 'ava_sum',
+                        array('readonly'=>(true),'id'=>'ava_sum','autocomplete'=>'off')
+                    ); ?>
+                </div>
                 <?php echo $form->labelEx($model,'sum_amt',array('class'=>"col-lg-1 control-label text-red")); ?>
                 <div class="col-lg-2">
                     <?php echo $form->numberField($model, 'sum_amt',
@@ -440,15 +455,41 @@ $('#class_id').change(function(){
     }
 });
 
+$('#sign_month,#sign_date').change(function(){
+    var sign_date = $('#sign_date').val();
+    var sign_month = $('#sign_month').val();
+    if(sign_date!=''&&sign_month!=''){
+        var list = sign_date.split('/');
+        if(list.length==3){
+            var year = parseInt(list[0],10);
+            year+=parseInt(sign_month,10);
+            var sign_end_date = ''+year+'/'+list[1]+'/'+list[2];
+            $('#sign_end_date').val(sign_end_date);
+        }
+    }
+});
+$('#tblDetail_ava').on('change','.change_ava_num',function(){
+    var ava_sum=0;
+    $('#tblDetail_ava .change_ava_num').each(function(){
+        if($(this).val()!=''){
+            ava_sum+=parseInt($(this).val(),10);
+        }
+    });
+    ava_sum = ava_sum==0?'':ava_sum;
+    $('#ava_sum').val(ava_sum);
+});
+
 $('#link_id').change(function(){
     if($(this).children('option:selected').text().indexOf('100%')>-1){
         $('#ava_box').removeClass('hide');
         $('#sign_date').prop('readonly','');
+        $('#sign_end_date').prop('readonly','');
         $('#sign_month').prop('disabled','');
         $('#sign_odds').val(100);
     }else{
         $('#ava_box').addClass('hide');
         $('#sign_date').val('').prop('readonly','readonly');
+        $('#sign_end_date').val('').prop('readonly','readonly');
         $('#sign_month').val('').prop('disabled','disabled');
         if($('#sign_odds').val()==100){
             $('#sign_odds').val('');
@@ -586,7 +627,7 @@ EOF;
     Yii::app()->clientScript->registerScript('addRow',$js,CClientScript::POS_READY);
 
     $dateList = array(
-        'sign_date,.info_date,#available_date',
+        'sign_date,.info_date,#available_date,#sign_end_date',
     );
     if($model->scenario=='new'){
         $dateList[]="apply_date";

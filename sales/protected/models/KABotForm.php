@@ -28,9 +28,11 @@ class KABotForm extends CFormModel
 	public $quarter_amt;
 	public $month_amt;
 	public $sign_date;
+	public $sign_end_date;
 	public $sign_month;
 	public $sign_amt;
 	public $sum_amt;
+	public $ava_sum;//门店总数量
 	public $available_date;
 	public $available_amt;
 	public $remark;
@@ -131,6 +133,7 @@ class KABotForm extends CFormModel
             'quarter_amt'=>Yii::t('ka','quarter amt'),
             'year_amt'=>Yii::t('ka','year amt'),
             'sign_date'=>Yii::t('ka','sign date'),
+            'sign_end_date'=>Yii::t('ka','sign end date'),
             'sign_month'=>Yii::t('ka','sign month'),
             'sign_amt'=>Yii::t('ka','sign amt'),
             'sum_amt'=>Yii::t('ka','sum amt'),
@@ -139,6 +142,7 @@ class KABotForm extends CFormModel
             'remark'=>Yii::t('ka','remark'),
             'info_date'=>Yii::t('ka','info date'),
             'info_text'=>Yii::t('ka','info text'),
+            'ava_sum'=>Yii::t('ka','ava sum'),
 
             'contact_adr'=>Yii::t('ka','contact address'),
             'work_user'=>Yii::t('ka','work user'),
@@ -166,7 +170,7 @@ class KABotForm extends CFormModel
                 area_id,level_id,class_id,busine_id,link_id,support_user,sign_odds,city,
                 available_date,available_amt,avaInfo,
                 contact_adr,work_user,work_phone,work_email,class_other,
-                sign_date,sign_month,sign_amt,sum_amt,remark','safe'),
+                sign_date,sign_end_date,sign_month,sign_amt,sum_amt,ava_sum,remark','safe'),
             array('apply_date,work_user,work_phone,contact_adr,available_date,customer_name,kam_id,link_id
             ,head_city_id,talk_city_id,area_id,source_id,source_text,available_amt,sign_odds
             ,class_id,level_id','required'),
@@ -272,6 +276,7 @@ class KABotForm extends CFormModel
         if($rowKa){
             $this->addError($attribute, "客户名称不能重复：".$rowKa["customer_name"]."({$rowKa["customer_no"]})");
         }
+        /*
         $rowRa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
             ->from("sal_ra_bot a")
             ->where("a.search_name=:name and a.shift_bool=0 and id!=:id",array(":name"=>$group,":id"=>$ra_id))
@@ -279,6 +284,7 @@ class KABotForm extends CFormModel
         if($rowRa){
             $this->addError($attribute, "客户名称不能重复：".$rowRa["customer_name"]."({$rowRa["customer_no"]})");
         }
+        */
         $rowCa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
             ->from("sal_ca_bot a")
             ->where("a.search_name=:name and a.shift_bool=0 and id!=:id",array(":name"=>$group,":id"=>$ca_id))
@@ -330,13 +336,16 @@ class KABotForm extends CFormModel
         //$this->avaInfo = $list;
 	    if($model->rate_num==100){
 	        if(empty($this->sign_date)){
-                $this->addError($attribute, "合同签约日期不能为空");
+                $this->addError($attribute, Yii::t('ka','sign date')."不能为空");
+            }
+	        if(empty($this->sign_end_date)){
+                $this->addError($attribute, Yii::t('ka','sign end date')."不能为空");
             }
 	        if(empty($this->sign_month)){
-                $this->addError($attribute, "合同周期(年)不能为空");
+                $this->addError($attribute, Yii::t('ka','sign month')."不能为空");
             }
 	        if(empty($emptyList)){
-                $this->addError($attribute, "签约详情不能为空");
+                $this->addError($attribute, Yii::t('ka','sign end date')."签约详情不能为空");
             }else{
 	            $endAvaList = end($emptyList);
                 if(!isset($endAvaList["ava_rate"])||$endAvaList["ava_rate"]<=80){
@@ -349,6 +358,7 @@ class KABotForm extends CFormModel
             $this->sign_odds=100;
         }else{
 	        $this->sign_date=null;
+	        $this->sign_end_date=null;
 	        $this->sign_month=null;
 	        if(is_numeric($this->sign_odds)&&$this->sign_odds==100){
                 $this->sign_odds=null;
@@ -398,8 +408,8 @@ class KABotForm extends CFormModel
             "contact_email"=>1,"source_text"=>1,"source_id"=>1,"shift_bool"=>1,
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"available_amt"=>3,
-            "sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
-            "contact_adr"=>1,
+            "sign_date"=>2,"sign_end_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
+            "contact_adr"=>1,"ava_sum"=>1,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
 		if ($row!==false) {
@@ -477,8 +487,8 @@ class KABotForm extends CFormModel
             "contact_email"=>1,"source_text"=>1,"source_id"=>1,
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,
-            "available_amt"=>3,"available_date"=>2,"sign_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
-            "contact_adr"=>1,
+            "available_amt"=>3,"available_date"=>2,"sign_date"=>2,"sign_end_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
+            "contact_adr"=>1,"ava_sum"=>1,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
 		if ($row!==false) {
@@ -560,8 +570,8 @@ class KABotForm extends CFormModel
         return array("apply_date","customer_name","head_city_id","talk_city_id","contact_user",
             "contact_phone","contact_email","source_text","source_id","area_id",
             "level_id","class_id","busine_id","link_id","available_amt","available_date","support_user","sign_odds",
-            "sign_date","sign_month","sign_amt","sum_amt",
-            "contact_adr",
+            "sign_date","sign_end_date","sign_month","sign_amt","sum_amt",
+            "contact_adr","ava_sum",
             "work_user","work_phone","work_email","class_other"
         );
     }
@@ -897,9 +907,9 @@ class KABotForm extends CFormModel
             "contact_email"=>1,"source_text"=>1,"source_id"=>3,
             "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>4,"link_id"=>3,
             "support_user"=>3,"sign_odds"=>3,"remark"=>1,
-            "available_amt"=>3,"available_date"=>2,"sign_date"=>2,"sign_month"=>3,"sign_amt"=>3,"sum_amt"=>3,
+            "available_amt"=>3,"available_date"=>2,"sign_date"=>2,"sign_end_date"=>2,"sign_month"=>3,"sign_amt"=>3,"sum_amt"=>3,
 
-            "contact_adr"=>1,"ava_show_date"=>1,
+            "contact_adr"=>1,"ava_show_date"=>1,"ava_sum"=>3,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
         foreach ($arr as $key=>$type){
@@ -1180,11 +1190,13 @@ class KABotForm extends CFormModel
                 ->where("a.id!='{$id}' and a.shift_bool=0 and (a.search_name like '%$group%')")
                 ->queryAll();
             $recordsKa = $recordsKa?$recordsKa:array();
+            /*
             $recordsRa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
                 ->from("sal_ra_bot a")
                 ->where("a.id!='{$id}' and a.shift_bool=0 and (a.search_name like '%$group%')")
                 ->queryAll();
-            $recordsRa = $recordsRa?$recordsRa:array();
+            */
+            $recordsRa = array();
             $recordsCa = Yii::app()->db->createCommand()->select('a.customer_no,a.customer_name,a.kam_id')
                 ->from("sal_ca_bot a")
                 ->where("a.id!='{$id}' and a.shift_bool=0 and (a.search_name like '%$group%')")

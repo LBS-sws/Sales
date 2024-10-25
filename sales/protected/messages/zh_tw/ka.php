@@ -35,7 +35,8 @@ return array(
     'month amt'=>"可簽約金額(月)",
     'quarter amt'=>"可簽約金額(季)",
     'year amt'=>"可簽約金額(年)",
-    'sign date'=>"合同簽約日期",
+    'sign date'=>"合約開始日期",
+    'sign end date'=>"合約結束日期",
     'sign month'=>"合同周期(年)",
     'sign amt'=>"簽約合同總金額",
     'sum amt'=>"合同累計金額",
@@ -133,5 +134,6 @@ return array(
     'indicator group'=>'團隊年度指標',
     'indicator group rate'=>'團隊年度指標',
     'city'=>'城市',
+    'ava sum'=>'合同累積門店',
 );
 ?>
