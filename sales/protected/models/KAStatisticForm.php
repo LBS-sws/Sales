@@ -99,7 +99,7 @@ class KAStatisticForm extends CFormModel
             ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
             ->where($whereSql)
             ->group("h.id,h.code,h.name,h.city")
-            ->order("h.city")
+            ->order("h.city,h.id")
             ->queryAll();
         return $rows?$rows:array();
     }
