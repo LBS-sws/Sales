@@ -395,14 +395,17 @@ class KAStatisticForm extends CFormModel
         $kaGroupList = $this->getKASalesGroup();//KA分组
         $kaIDXList = $this->getKAIndicatorList($this->start_date);//KA个人指标金额
         $renewalList = $this->getAmtNumForRenewal();//获取续约金额及数量
+        $data=array("group"=>array(),"staff"=>array());//排序，分组的员工置顶
         foreach ($kaManList as $row){
             $temp = $this->getTemp();
             $ka_id = $row["id"];
             $city = $row["city"];
             if(key_exists($ka_id,$kaGroupList)){
+                $keyStr = "group";
                 $group_id = $kaGroupList[$ka_id]["group_id"];
                 $temp["group_name"] = $kaGroupList[$ka_id]["group_name"];
             }else{
+                $keyStr = "staff";
                 $group_id = $city."_".$ka_id;
             }
             $temp["employee_id"] = $ka_id;
@@ -414,7 +417,13 @@ class KAStatisticForm extends CFormModel
             $this->addTempForList($temp,$kaIDXList,$ka_id);
             $this->addTempForList($temp,$renewalList,$ka_id);
 
-            $this->data[$group_id][$ka_id] = $temp;
+            $data[$keyStr][$group_id][$ka_id] = $temp;
+        }
+        $this->data = $data["group"];
+        if(!empty($data["staff"])){
+            foreach ($data["staff"] as $key=>$row){
+                $this->data[$key]=$row;
+            }
         }
 
         $session = Yii::app()->session;
