@@ -84,6 +84,7 @@ class KAStatisticForm extends CFormModel
         $table_pre = $this->table_pre;
         $city_allow = Yii::app()->user->city_allow();
         $whereSql = "a.id>0 ";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
@@ -94,11 +95,11 @@ class KAStatisticForm extends CFormModel
             $whereSql.= " and a.kam_id in ({$idSQL})";
         }
         $rows = Yii::app()->db->createCommand()
-            ->select("h.id,h.code,h.name,h.city")
+            ->select("h.id,h.code,h.name,h.city,h.entry_time")
             ->from("sal{$table_pre}bot a")
             ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
             ->where($whereSql)
-            ->group("h.id,h.code,h.name,h.city")
+            ->group("h.id,h.code,h.name,h.city,h.entry_time")
             ->order("h.city,h.id")
             ->queryAll();
         return $rows?$rows:array();
@@ -118,6 +119,7 @@ class KAStatisticForm extends CFormModel
         $startDate = date("Y-m-d",strtotime($this->start_date));
         $endDate = date("Y-m-d",strtotime($this->start_date." + 3 months - 1 days"));
         $whereSql = "a.available_date BETWEEN '{$startDate}' and '{$endDate}' ";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
         $city_allow = Yii::app()->user->city_allow();
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
@@ -154,6 +156,7 @@ class KAStatisticForm extends CFormModel
         //本月、未來90天需要添加溝通100%的金額
         $searchDate = date("Y/m",strtotime($this->start_date));
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}' and b.rate_num=100 and f.ava_rate>50";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
@@ -213,6 +216,7 @@ class KAStatisticForm extends CFormModel
             "mtd_amt"=>0,
         );
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}' and b.rate_num=100";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
         $city_allow = Yii::app()->user->city_allow();
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
@@ -277,6 +281,7 @@ class KAStatisticForm extends CFormModel
             "sign_this_amt"=>0,//本月金额
         );
         $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
@@ -329,7 +334,7 @@ class KAStatisticForm extends CFormModel
     public function getKASalesGroup(){
         $suffix = Yii::app()->params['envSuffix'];
         $groupList = array();
-        $rows = Yii::app()->db->createCommand()->select("a.employee_id,a.group_id")
+        $rows = Yii::app()->db->createCommand()->select("a.employee_id,a.group_id,b.group_name")
             ->from("hr{$suffix}.hr_group_staff a")
             ->leftJoin("hr{$suffix}.hr_group b","a.group_id=b.id")
             ->where("b.group_code='KAGROUP'")
@@ -337,7 +342,7 @@ class KAStatisticForm extends CFormModel
             ->queryAll();
         if($rows){
             foreach ($rows as $row){
-                $groupList[$row["employee_id"]] = $row["group_id"];
+                $groupList[$row["employee_id"]] = $row;
             }
         }
         return $groupList;
@@ -357,6 +362,30 @@ class KAStatisticForm extends CFormModel
         return $list;
     }
 
+    public function getAmtNumForRenewal()
+    {
+        $table_pre = $this->table_pre;
+        $list = array();
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.bot_id,b.kam_id,sum(a.renewal_amt) as renewal_total_amt")
+            ->from("sal{$table_pre}bot_renewal a")
+            ->leftJoin("sal{$table_pre}bot b","a.bot_id=b.id")
+            ->where("DATE_FORMAT(a.renewal_date,'%Y')='{$this->search_year}'")
+            ->group("a.bot_id,b.kam_id")
+            ->queryAll();
+        if ($rows) {
+            foreach ($rows as $row){
+                $kamID = "".$row["kam_id"];
+                if(!key_exists($kamID,$list)){
+                    $list[$kamID]=array("renewal_total_amt"=>0,"renewal_total_sum"=>0);
+                }
+                $list[$kamID]["renewal_total_sum"]++;
+                $list[$kamID]["renewal_total_amt"]+= $row["renewal_total_amt"];
+            }
+        }
+        return $list;
+    }
+
     public function retrieveData() {
         $this->data=array();
         $listVQS = $this->getAmtNumForVQS();//获取拜访、报价、本月的金额及数量
@@ -365,21 +394,25 @@ class KAStatisticForm extends CFormModel
         $kaManList = $this->getKaManForKaBot();//KA所有员工
         $kaGroupList = $this->getKASalesGroup();//KA分组
         $kaIDXList = $this->getKAIndicatorList($this->start_date);//KA个人指标金额
+        $renewalList = $this->getAmtNumForRenewal();//获取续约金额及数量
         foreach ($kaManList as $row){
             $temp = $this->getTemp();
             $ka_id = $row["id"];
             $city = $row["city"];
             if(key_exists($ka_id,$kaGroupList)){
-                $group_id = $kaGroupList[$ka_id];
+                $group_id = $kaGroupList[$ka_id]["group_id"];
+                $temp["group_name"] = $kaGroupList[$ka_id]["group_name"];
             }else{
                 $group_id = $city."_".$ka_id;
             }
             $temp["employee_id"] = $ka_id;
+            $temp["entry_date"] = General::toDate($row["entry_time"]);
             $temp["kam_name"] = $row["name"]." ({$row["code"]})";
             $this->addTempForList($temp,$listVQS,$ka_id);
             $this->addTempForList($temp,$list90,$ka_id);
             $this->addTempForList($temp,$listYM,$ka_id);
             $this->addTempForList($temp,$kaIDXList,$ka_id);
+            $this->addTempForList($temp,$renewalList,$ka_id);
 
             $this->data[$group_id][$ka_id] = $temp;
         }
@@ -401,29 +434,42 @@ class KAStatisticForm extends CFormModel
 
     protected function getTemp(){
         return array(
+            "group_name"=>"独立组",//员工分组
             "employee_id"=>"",//KA_id
             "kam_name"=>"",//KA名称
+            "entry_date"=>"",//入职日期
             "visit_num"=>0,//拜访数量
             "visit_amt"=>0,//拜访金额
             "quota_num"=>0,//报价数量
             "quota_amt"=>0,//报价金额
-            "quota_rate"=>"",//转化率（报价金额/拜访金额）
-            "sign_90_num"=>0,//未来90天数量
-            "sign_90_amt"=>0,//未来90天金额
+            "qv_num_rate"=>"",//转化率（报价数量/拜访数量）
+            "qv_amt_rate"=>"",//转化率（报价金额/拜访金额）
+            "sq_num_rate"=>"",//转化率（签约数量/报价数量）
+            "sq_amt_rate"=>"",//转化率（签约金额/报价金额）
+            "sv_num_rate"=>"",//转化率（签约数量/拜访数量）
+            "sv_amt_rate"=>"",//转化率（签约金额/拜访金额）
+
             "sign_this_num"=>0,//本月数量
             "sign_this_amt"=>0,//本月金额
+            "sign_90_num"=>0,//未来90天数量
+            "sign_90_amt"=>0,//未来90天金额
             "this_rate"=>"",//90天转化率（本月金额/90天金额）
-            "ytd_num"=>0,//ytd数量
-            "ytd_amt"=>0,//ytd金额
-            "ytd_amt_rate"=>"",//金额转化率（ytd_amt/拜访金额）
-            "ytd_num_rate"=>"",//数量转化率（ytd_num/拜访数量）
+
             "mtd_num"=>0,//mtd数量
             "mtd_amt"=>0,//mtd金额
+            "mtd_idx"=>0,//MTD指标
+            "mtd_idx_rate"=>0,//MTD达成率（签约/指标）
+
+            "ytd_num"=>0,//ytd数量
+            "ytd_amt"=>0,//ytd金额
             "idx_sales_money"=>0,//个人指标金额
-            "idx_sales_rate"=>"",//个人指标金额
+            "idx_sales_rate"=>"",//个人指标比例
+
             "group_amt"=>0,//团队金额
             "idx_group_money"=>0,//团队指标金额
-            "idx_group_rate"=>"",//团队指标金额
+            "idx_group_rate"=>"",//团队指标比例
+            "renewal_total_sum"=>"",//续约数量
+            "renewal_total_amt"=>"",//续约金额
         );
     }
 
@@ -437,22 +483,24 @@ class KAStatisticForm extends CFormModel
         return $rate;
     }
 
+    public static function getRateForCompute($num,$sum){
+        $rate = empty($sum)?0:$num/$sum;
+        return self::getRateForNumber($rate);
+    }
+
     protected function resetTdRow(&$list,$bool=false){
-        $list["quota_rate"]=empty($list["visit_amt"])?0:($list["quota_amt"]/$list["visit_amt"]);
-        $list["quota_rate"] = self::getRateForNumber($list["quota_rate"]);
-        $list["this_rate"]=empty($list["sign_90_amt"])?0:($list["sign_this_amt"]/$list["sign_90_amt"]);
-        $list["this_rate"] = self::getRateForNumber($list["this_rate"]);
-        $list["ytd_amt_rate"]=empty($list["visit_amt"])?0:($list["ytd_amt"]/$list["visit_amt"]);
-        $list["ytd_amt_rate"] = self::getRateForNumber($list["ytd_amt_rate"]);
-        $list["ytd_num_rate"]=empty($list["visit_num"])?0:($list["ytd_num"]/$list["visit_num"]);
-        $list["ytd_num_rate"] = self::getRateForNumber($list["ytd_num_rate"]);
-        if($this->table_pre=="_ka_"){
-            $list["idx_sales_money"] = key_exists("idx_sales_money",$list)?$list["idx_sales_money"]:0;
-            $list["idx_sales_rate"]=empty($list["idx_sales_money"])?0:round($list["ytd_amt"]/$list["idx_sales_money"],2);
-            $list["idx_sales_rate"] = self::getRateForNumber($list["idx_sales_rate"]);
-            $list["idx_group_money"]=$list["idx_sales_money"];
-            $list["idx_group_rate"]=$list["idx_sales_rate"];
-        }
+        $list["qv_num_rate"] = self::getRateForCompute($list["quota_num"],$list["visit_num"]);
+        $list["qv_amt_rate"] = self::getRateForCompute($list["quota_amt"],$list["visit_amt"]);
+        $list["sq_num_rate"] = self::getRateForCompute($list["ytd_num"],$list["quota_num"]);
+        $list["sq_amt_rate"] = self::getRateForCompute($list["ytd_amt"],$list["quota_amt"]);
+        $list["sv_num_rate"] = self::getRateForCompute($list["ytd_num"],$list["visit_num"]);
+        $list["sv_amt_rate"] = self::getRateForCompute($list["ytd_amt"],$list["visit_amt"]);
+        $list["this_rate"] = self::getRateForCompute($list["sign_this_amt"],$list["sign_90_amt"]);
+
+        $list["mtd_idx"]=empty($list["idx_sales_money"])?0:round($list["idx_sales_money"]/12,2);
+        $list["mtd_idx_rate"]=self::getRateForCompute($list["mtd_amt"],$list["mtd_idx"]);
+        $list["idx_sales_rate"]=self::getRateForCompute($list["ytd_amt"],$list["idx_sales_money"]);
+        //$list["idx_group_rate"]=self::getRateForCompute($list["group_amt"],$list["idx_group_money"]);
     }
 
     //顯示提成表的表格內容
@@ -467,8 +515,23 @@ class KAStatisticForm extends CFormModel
 
     protected function getTopArr(){
         $topList=array(
-            array("name"=>Yii::t("ka","KAM"),"background"=>"#305496","color"=>"#ffffff","rowspan"=>3),//ka销售
-            array("name"=>Yii::t("ka","Total data"),"background"=>"#305496","color"=>"#ffffff",//全部数据
+            array("name"=>Yii::t("ka","KAM"),"background"=>"#305496","color"=>"#ffffff",
+                "colspan"=>array(
+                    array(
+                        "name"=>Yii::t("ka","group"),//分组
+                        "rowspan"=>2
+                    ),
+                    array(
+                        "name"=>Yii::t("ka","KAM sale"),//KAM
+                        "rowspan"=>2
+                    ),
+                    array(
+                        "name"=>Yii::t("ka","entry date"),//入职日期
+                        "rowspan"=>2
+                    )
+                )
+            ),//ka销售
+            array("name"=>Yii::t("ka","YTD Potential Data"),"background"=>"#305496","color"=>"#ffffff",//YTD潜客转化数据
                 "colspan"=>array(
                     array(
                         "name"=>Yii::t("ka","Visiting stage"),//拜访阶段
@@ -485,89 +548,101 @@ class KAStatisticForm extends CFormModel
                         )
                     ),
                     array(
-                        "name"=>Yii::t("ka","Conversion rate"),//转化率
+                        "name"=>Yii::t("ka","YTD QV rate"),//YTD拜访-报价转化
                         "colspan"=>array(
-                            array("name"=>Yii::t("ka","Quotation/Visit")),//报价/拜访
+                            array("name"=>Yii::t("ka","quantity").":".Yii::t("ka","Quotation/Visit")),//数量：报价/拜访
+                            array("name"=>Yii::t("ka","amt").":".Yii::t("ka","Quotation/Visit")),//金额：报价/拜访
+                        )
+                    ),
+                    array(
+                        "name"=>Yii::t("ka","YTD SQ rate"),//YTD报价-签约转化
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","quantity").":".Yii::t("ka","Sign/Quotation")),//数量：签约/报价
+                            array("name"=>Yii::t("ka","amt").":".Yii::t("ka","Sign/Quotation")),//金额：签约/报价
+                        )
+                    ),
+                    array(
+                        "name"=>Yii::t("ka","YTD SV rate"),//YTD拜访-签约转化
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","quantity").":".Yii::t("ka","Sign/Visit")),//数量：签约/拜访
+                            array("name"=>Yii::t("ka","amt").":".Yii::t("ka","Sign/Visit")),//金额：签约/拜访
                         )
                     ),
                 )
-            ),//全部数据
-            array("name"=>Yii::t("ka","amount for next 90 days"),"background"=>"#2A6BA4","color"=>"#ffffff",//未来90天加权报价金额
+            ),//YTD潜客转化数据
+            array("name"=>Yii::t("ka","YTD Potential predict"),"background"=>"#2A6BA4","color"=>"#ffffff",//未来90天加权报价金额
                 "colspan"=>array(
                     array(
-                        "name"=>$this->search_month.Yii::t("ka"," month"),//月份
+                        "name"=>$this->search_month.Yii::t("ka"," month predict"),//月份预估
                         "colspan"=>array(
                             array("name"=>Yii::t("ka","quantity")),//数量
                             array("name"=>Yii::t("ka","Contract amt")),//合同金额
+                        )
+                    ),
+                    array(
+                        "name"=>Yii::t("ka","predict for next 90 days"),//未来90天预估
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","quantity")),//数量
+                            array("name"=>Yii::t("ka","Contract amt")),//合同金额
+                        )
+                    ),
+                    array(
+                        "name"=>Yii::t("ka","success for next 90 days"),//未来90天达成
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","(Actual Sign this month/90 day weighted)")),//（本月签约/90天加权）
                         )
                     )
                 )
-            ),//未来90天加权报价金额
-            array("name"=>Yii::t("ka","amount for this month"),"background"=>"#2A6BA4","color"=>"#ffffff",//本月可实现销售金额
+            ),//QTD潜客预估
+            array("name"=>Yii::t("ka","MTD personal data"),"background"=>"#4472C4","color"=>"#ffffff",//每月KA销售业绩
                 "colspan"=>array(
                     array(
-                        "name"=>$this->search_month.Yii::t("ka"," month"),//月份
+                        "name"=>$this->ka_month.Yii::t("ka"," month success"),//月份达成
                         "colspan"=>array(
-                            array("name"=>Yii::t("ka","quantity")),//数量
-                            array("name"=>Yii::t("ka","Contract amt")),//合同金额
-                        )
-                    )
-                )
-            ),//本月可实现销售金额
-            array("name"=>Yii::t("ka","90 Day rate"),"background"=>"#2A6BA4","color"=>"#ffffff",//90天转化率
-                "colspan"=>array(
-                    array(
-                        "name"=>$this->search_month.Yii::t("ka"," month"),//月份
-                        "colspan"=>array(
-                            array("name"=>Yii::t("ka","(Actual transactions this month/90 day weighted)")),//（本月实际成交/90天加权）
-                        )
-                    ),
-                    /*
-                    array(
-                        "name"=>Yii::t("ka","(Actual transactions this month/90 day weighted)"),//（本月实际成交/90天加权）
-                        "rowspan"=>2
-                    )
-                    */
-                )
-            ),//90天转化率
-            array("name"=>Yii::t("ka","Sales performance"),"background"=>"#4472C4","color"=>"#ffffff",//每月KA销售业绩
-                "colspan"=>array(
-                    array(
-                        "name"=>Yii::t("ka","YTD"),//YTD
-                        "colspan"=>array(
-                            array("name"=>Yii::t("ka","quantity")),//数量
-                            array("name"=>Yii::t("ka","Contract amt")),//合同金额
-                        )
-                    ),
-                    array(
-                        "name"=>Yii::t("ka","YTD rate"),//YTD转化率
-                        "colspan"=>array(
-                            array("name"=>Yii::t("ka","YTD amt rate")),//金额转化（成交金额/拜访阶段金额）
-                            array("name"=>Yii::t("ka","YTD num rate")),//数量转化（成交数量/拜访数量）
-                        )
-                    ),
-                    array(
-                        "name"=>$this->ka_month.Yii::t("ka","Month MTD"),//5月MTD
-                        "colspan"=>array(
-                            array("name"=>Yii::t("ka","quantity")),//数量
-                            array("name"=>Yii::t("ka","Contract amt")),//合同金额
+                            array("name"=>Yii::t("ka","MTD Sign")),//MTD签约
+                            array("name"=>Yii::t("ka","MTD Indicator")),//MTD指标
+                            array("name"=>Yii::t("ka","MTD rate(sign/indicator)")),//MTD达成率（签约/指标）
+                            array("name"=>Yii::t("ka","Sign total")),//签约数量
                         )
                     ),
                 )
-            ),//每月KA销售业绩
+            ),//MTD个人达成数据
+            array("name"=>Yii::t("ka","YTD personal data"),"background"=>"#4472C4","color"=>"#ffffff",//每月KA销售业绩
+                "colspan"=>array(
+                    array(
+                        "name"=>$this->search_year.Yii::t("ka"," success"),//年份达成
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","YTD Sign total")),//YTD签约数量
+                            array("name"=>Yii::t("ka","YTD Sign amt")),//YTD签约金额
+                            array("name"=>Yii::t("ka","YTD Indicator")),//YTD指标
+                            array("name"=>Yii::t("ka","YTD rate(sign/indicator)")),//YTD达成率（签约/指标）
+                        )
+                    ),
+                )
+            ),//YTD个人达成数据
         );
-        if($this->table_pre=="_ka_"){
-
-            //个人年度指标
-            $topList[]=array("name"=>Yii::t("ka","indicator sales"),"background"=>"#4472C4","color"=>"#ffffff","rowspan"=>3);
-            //个人达成率
-            $topList[]=array("name"=>Yii::t("ka","indicator sales rate"),"background"=>"#4472C4","color"=>"#ffffff","rowspan"=>3);
-            //团队年度指标
-            $topList[]=array("name"=>Yii::t("ka","indicator group"),"background"=>"#4472C4","color"=>"#ffffff","rowspan"=>3);
-            //团队达成率
-            $topList[]=array("name"=>Yii::t("ka","indicator group rate"),"background"=>"#4472C4","color"=>"#ffffff","rowspan"=>3);
-
-        }
+        $topList[]=array("name"=>Yii::t("ka","YTD group data"),"background"=>"#4472C4","color"=>"#ffffff",
+            "colspan"=>array(
+                array(
+                    "name"=>$this->search_year.Yii::t("ka"," success"),//2024达成
+                    "colspan"=>array(
+                        array("name"=>Yii::t("ka","YTD Indicator")),//YTD指标
+                        array("name"=>Yii::t("ka","YTD rate")),//YTD达成率
+                    )
+                )
+            )
+        );//YTD团队数据
+        $topList[]=array("name"=>Yii::t("ka","YTD for renewal"),"background"=>"#2A6BA4","color"=>"#ffffff",//本月可实现销售金额
+                "colspan"=>array(
+                    array(
+                        "name"=>$this->search_year.Yii::t("ka"," renewal"),//年份
+                        "colspan"=>array(
+                            array("name"=>Yii::t("ka","quantity")),//数量
+                            array("name"=>Yii::t("ka","amt")),//金额
+                        )
+                    )
+                )
+            );//YTD续约数据
         return $topList;
     }
 
@@ -614,7 +689,7 @@ class KAStatisticForm extends CFormModel
             }else{
                 $this->th_sum++;
             }
-            $colNum = empty($colNum)?1:$colNum;
+            $colNum = empty($colNum)?count($colList):$colNum;
             $trOne.="<th style='{$style}' colspan='{$colNum}'";
             if(key_exists("rowspan",$list)){
                 $trOne.=" rowspan='{$list["rowspan"]}'";
@@ -635,7 +710,9 @@ class KAStatisticForm extends CFormModel
         $html="<tr>";
         for($i=0;$i<$this->th_sum;$i++){
             if($i==0){
-                $width = 120;
+                $width = 110;
+            }elseif($i>=7&&$i<=12){
+                $width=110;
             }else{
                 $width=90;
             }
@@ -658,16 +735,14 @@ class KAStatisticForm extends CFormModel
     //获取td对应的键名
     protected function getDataAllKeyStr(){
         $bodyKey = array(
-            "kam_name","visit_num","visit_amt","quota_num","quota_amt","quota_rate",
-            "sign_90_num","sign_90_amt","sign_this_num","sign_this_amt","this_rate",
-            "ytd_num","ytd_amt","ytd_amt_rate","ytd_num_rate","mtd_num","mtd_amt"
+            "group_name","kam_name","entry_date","visit_num","visit_amt","quota_num","quota_amt",
+            "qv_num_rate","qv_amt_rate","sq_num_rate","sq_amt_rate","sv_num_rate","sv_amt_rate",
+            "sign_this_num","sign_this_amt","sign_90_num","sign_90_amt","this_rate",
+            "mtd_amt","mtd_idx","mtd_idx_rate","mtd_num",
+            "ytd_num","ytd_amt","idx_sales_money","idx_sales_rate",
+            "idx_group_money","idx_group_rate",
+            "renewal_total_sum","renewal_total_amt"
         );
-        if($this->table_pre=="_ka_"){
-            $bodyKey[]="idx_sales_money";
-            $bodyKey[]="idx_sales_rate";
-            $bodyKey[]="idx_group_money";
-            $bodyKey[]="idx_group_rate";
-        }
         return $bodyKey;
     }
 
@@ -704,6 +779,7 @@ class KAStatisticForm extends CFormModel
                     $html.="<tr>";
                     foreach ($bodyKey as $keyStr){
                         if(in_array($keyStr,array("idx_group_money","idx_group_rate"))){
+                            $this->downJsonText["excel"][$city][$staff_id][$keyStr]=0;
                             $html.=($keyStr=="idx_group_money"&&$staff_id==$id)?":groupMoneyHtml:":"";
                             continue;
                         }
@@ -739,12 +815,16 @@ class KAStatisticForm extends CFormModel
                     $groupHtml="<td rowspan='{$rowspan}'>".$regionRow["idx_group_money"]."</td>";
                     $groupHtml.="<td rowspan='{$rowspan}'>".$regionRow["idx_group_rate"]."</td>";
                     $html=str_replace(":groupMoneyHtml:", $groupHtml, $html);
-                    $this->downJsonText["excel"][$city][$staff_id][]=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_money"]);
-                    $this->downJsonText["excel"][$city][$staff_id][]=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_rate"]);
+                    $this->downJsonText["excel"][$city][$staff_id]['idx_group_money']=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_money"]);
+                    $this->downJsonText["excel"][$city][$staff_id]['idx_group_rate']=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_rate"]);
                 }
             }
             //所有汇总
             $allRow["city"]="_ALL";
+            $allRow["group_name"]="";
+            $allRow["entry_date"]="";
+            $allRow["idx_group_money"]="";
+            $allRow["idx_group_rate"]="";
             $allRow["kam_name"]=Yii::t("ka","all total");
             $html.=$this->printTableTr($allRow,$bodyKey);
             $html.="<tr class='tr-end'><td colspan='{$this->th_sum}'>&nbsp;</td></tr>";
@@ -807,6 +887,7 @@ class KAStatisticForm extends CFormModel
         $this->ka_year = $this->search_year;
         $suffix = Yii::app()->params['envSuffix'];
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}'";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= "";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
@@ -878,7 +959,7 @@ class KAStatisticForm extends CFormModel
         $this->validateDate("","");
         $headList = $this->getTopArr();
         $excel = new DownKAExcel();
-        $excel->colTwo=1;
+        $excel->colTwo=0;
         $excel->SetHeaderTitle(Yii::t("app","KA Statistic"));
         $excel->SetHeaderString($this->start_date." ~ ".$this->end_date);
         $excel->init();
@@ -939,10 +1020,11 @@ class KAStatisticForm extends CFormModel
         return array(
             "visit_num"=>Yii::t("ka","Visiting stage"),//拜访阶段
             "quota_num"=>Yii::t("ka","Quotation stage"),//报价阶段
-            "sign_90_num"=>Yii::t("ka","amount for next 90 days"),//未来90天加权报价金额
-            "sign_this_num"=>Yii::t("ka","amount for this month"),//本月可实现销售金额
+            "sign_90_num"=>Yii::t("ka","predict for next 90 days"),//未来90天加权报价金额
+            "sign_this_num"=>$this->search_month.Yii::t("ka"," month predict"),//本月可实现销售金额
             "ytd_num"=>Yii::t("ka","YTD"),//YTD
             "mtd_num"=>$this->search_month.Yii::t("ka","Month MTD"),//月MTD
+            "renewal_total_sum"=>$this->search_year.Yii::t("ka"," renewal"),//续约
         );
     }
 
@@ -953,6 +1035,7 @@ class KAStatisticForm extends CFormModel
         $startDate = date("Y-m-d",strtotime($this->start_date));
         $endDate = date("Y-m-d",strtotime($this->start_date." + 3 months - 1 days"));
         $whereSql = "a.available_date BETWEEN '{$startDate}' and '{$endDate}' ";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num<100 and a.sign_odds>50 and a.sign_odds<100 ";
 
         $amtSql = "IFNULL(a.available_amt,0)";
@@ -969,6 +1052,7 @@ class KAStatisticForm extends CFormModel
 
         //需要加上沟通100%的数据
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}'";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100 and f.ava_rate>50";
 
         $amtSql = "IFNULL(f.ava_amt,0)";
@@ -994,6 +1078,7 @@ class KAStatisticForm extends CFormModel
         $searchDate = date("Y/m",strtotime($this->start_date));
         $whereSql = "DATE_FORMAT(a.available_date,'%Y/%m')='{$searchDate}' and g.rate_num<100 and a.sign_odds>80 and a.sign_odds<100 ";
         $whereSql.= " and a.kam_id='{$this->employee_id}'";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
 
         $amtSql = "IFNULL(a.available_amt,0)";
         //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
@@ -1009,6 +1094,7 @@ class KAStatisticForm extends CFormModel
 
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='{$searchDate}'";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100 and f.ava_rate>50";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
 
         $amtSql = "IFNULL(f.ava_amt,0)";
         $selectText="a.id,a.kam_id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,
@@ -1032,6 +1118,7 @@ class KAStatisticForm extends CFormModel
         $table_pre = $this->table_pre;
         $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
         $whereSql.= " and a.kam_id='{$this->employee_id}'";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
         $searchDate = $this->start_date;
 
         $amtSql = "IFNULL(a.available_amt,0)";
@@ -1052,6 +1139,7 @@ class KAStatisticForm extends CFormModel
         $table_pre = $this->table_pre;
         $whereSql = "DATE_FORMAT(a.available_date,'%Y')='{$this->ka_year}'";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num>=30";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
 
         $amtSql = "IFNULL(a.available_amt,0)";
         //$dateIFSql = "a.available_date<='{$this->end_date}' and IFNULL(a.available_date,a.apply_date)>='{$this->start_date}'";
@@ -1071,6 +1159,7 @@ class KAStatisticForm extends CFormModel
         $table_pre = $this->table_pre;
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}'";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
 
         $amtSql = "IFNULL(f.ava_fact_amt,0)";
         $selectText="a.id,a.kam_id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,
@@ -1088,11 +1177,24 @@ class KAStatisticForm extends CFormModel
         return $this->staticTableBodyThree($rows);
     }
 
+    public function renewal_total_sum_table(){
+        $table_pre = $this->table_pre;
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.*,b.customer_no,b.customer_name")
+            ->from("sal{$table_pre}bot_renewal a")
+            ->leftJoin("sal{$table_pre}bot b","a.bot_id=b.id")
+            ->where("DATE_FORMAT(a.renewal_date,'%Y')='{$this->search_year}' and b.kam_id='{$this->employee_id}'")
+            ->order("a.bot_id,a.renewal_date desc")
+            ->queryAll();
+        return $this->staticTableBodyRenewal($rows);
+    }
+
     protected function getBotAvaAmt($row,$type="year"){
         $table_pre = $this->table_pre;
         $amt = 0;
         if (isset($row["id"])){
             $whereSql = "a.bot_id='{$row['id']}'";
+            $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
             if($type=="month"){
                 $searchDate = date("Y/m",strtotime($this->start_date));
                 $whereSql.=" and DATE_FORMAT(a.ava_date,'%Y/%m')='{$searchDate}'";
@@ -1114,6 +1216,7 @@ class KAStatisticForm extends CFormModel
         $searchDate = date("Y/m",strtotime($this->start_date));
         $whereSql = "DATE_FORMAT(f.ava_date,'%Y/%m')='$searchDate'";
         $whereSql.= " and a.kam_id='{$this->employee_id}' and g.rate_num=100";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
 
         $amtSql = "IFNULL(f.ava_fact_amt,0)";
         $selectText="a.id,a.kam_id,a.sign_odds,a.available_date,a.apply_date,a.customer_no,
@@ -1133,7 +1236,7 @@ class KAStatisticForm extends CFormModel
 
     protected function staticTableBody($rows){
         $urlName = ":".get_class($this);
-        $urlName = (strpos($urlName,':KA')!==false)?"kABot":"rABot";
+        $urlName = (strpos($urlName,':KA')!==false)?"kABot":"cABot";
         $html = "<thead>";
         $html.="<tr>";
         $html.="<th width='120px'>预估可成交日期</th>";
@@ -1181,7 +1284,7 @@ class KAStatisticForm extends CFormModel
     //未来90天加权报价金额
     protected function staticTableBodyTwo($rows){
         $urlName = ":".get_class($this);
-        $urlName = (strpos($urlName,':KA')!==false)?"kABot":"rABot";
+        $urlName = (strpos($urlName,':KA')!==false)?"kABot":"cABot";
         $html = "<thead>";
         $html.="<tr>";
         $html.="<th width='120px'>预估可成交日期</th>";
@@ -1234,7 +1337,7 @@ class KAStatisticForm extends CFormModel
     //YTD、MTD
     protected function staticTableBodyThree($rows){
         $urlName = ":".get_class($this);
-        $urlName = (strpos($urlName,':KA')!==false)?"kABot":"rABot";
+        $urlName = (strpos($urlName,':KA')!==false)?"kABot":"cABot";
         $html = "<thead>";
         $html.="<tr>";
         $html.="<th width='120px'>预估可成交日期</th>";
@@ -1274,6 +1377,54 @@ class KAStatisticForm extends CFormModel
             $html.="<tr><td colspan='8' class='text-right text-danger'>&nbsp;</td></tr>";
         }else{
             $html.="<tr><td colspan='8'>无</td></tr>";
+        }
+        $html.= "</tbody>";
+        return $html;
+    }
+
+    //续约
+    protected function staticTableBodyRenewal($rows){
+        $urlName = ":".get_class($this);
+        $urlName = (strpos($urlName,':KA')!==false)?"kABot":"cABot";
+        $html = "<thead>";
+        $html.="<tr>";
+        $html.="<th width='110px'>客户编号</th>";
+        $html.="<th>客户公司</th>";
+        $html.="<th width='95px'>续约日期</th>";
+        $html.="<th width='110px'>续约门店数量</th>";
+        $html.="<th width='95px'>续约城市</th>";
+        $html.="<th width='95px'>续约金额</th>";
+        $html.="<th width='1px'></th>";
+        $html.="</tr>";
+        $html.= "</thead><tbody>";
+        if($rows){
+            $botList=array();
+            $sumNum=0;
+            $sumAmt=0;
+            foreach ($rows as $row){
+                if(!in_array($row['bot_id'],$botList)){
+                    $botList[]=$row['bot_id'];
+                    $sumNum++;
+                }
+                $row['renewal_amt'] = floatval($row['renewal_amt']);
+                $sumAmt+=$row['renewal_amt'];
+                $link = self::drawEditButton('KA01',"{$urlName}/view", "{$urlName}/view", array('index'=>$row['bot_id']));
+                $html.="<tr data-id='{$row["id"]}'>";
+                $html.="<td>".$row['customer_no']."</td>";
+                $html.="<td>".$row['customer_name']."</td>";
+                $html.="<td>".General::toDate($row['renewal_date'])."</td>";
+                $html.="<td>".$row['renewal_num']."</td>";
+                $html.="<td>".$row['renewal_city']."</td>";
+                $html.="<td class='text-right'>".round($row['renewal_amt'],2)."</td>";
+                $html.="<td>".$link."</td>";
+                $html.="</tr>";
+            }
+            $html.="<tr>";
+            $html.="<td colspan='2' class='text-right'>总数量:</td><td colspan='1'>{$sumNum}</td>";
+            $html.="<td colspan='2' class='text-right'>总金额:</td><td colspan='2'>{$sumAmt}</td>";
+            $html.="</tr>";
+        }else{
+            $html.="<tr><td colspan='7'>无</td></tr>";
         }
         $html.= "</tbody>";
         return $html;

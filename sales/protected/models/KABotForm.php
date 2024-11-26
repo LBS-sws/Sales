@@ -57,6 +57,10 @@ class KABotForm extends CFormModel
     public $employee_name;
     public $espe_type=0;//修改重要数据时，改成1
 
+    public $renewal_total_amt;//续约累积金额
+    public $renewal_sum;//续约累积门店
+    public $contract_type=1;//合约类型：1：新增合约 2：续约合约 1,2：新增，续约合约
+
     public $detail = array(
         array('id'=>0,
             'bot_id'=>0,
@@ -76,6 +80,18 @@ class KABotForm extends CFormModel
             'ava_rate'=>'',//签约概率
             'ava_note'=>'',//備註
             'ava_fact_amt'=>'',//实际成交金额
+            'uflag'=>'N',
+        ),
+    );
+
+    public $avaRenewal = array(
+        array('id'=>0,
+            'bot_id'=>0,
+            'renewal_date'=>'',//续约日期
+            'renewal_num'=>'',//门店数量
+            'renewal_city'=>'',//城市
+            'renewal_note'=>'',//備註
+            'renewal_amt'=>'',//实际成交金额
             'uflag'=>'N',
         ),
     );
@@ -156,6 +172,14 @@ class KABotForm extends CFormModel
             'ava_city'=>Yii::t('ka','ava city'),
             'ava_note'=>Yii::t('ka','ava note'),
             'ava_fact_amt'=>Yii::t('ka','ava fact amt'),
+
+            'renewal_date'=>Yii::t('ka','renewal date'),
+            'renewal_num'=>Yii::t('ka','renewal num'),
+            'renewal_city'=>Yii::t('ka','renewal city'),
+            'renewal_note'=>Yii::t('ka','renewal note'),
+            'renewal_amt'=>Yii::t('ka','renewal amt'),
+            'renewal_total_amt'=>Yii::t('ka','renewal total amt'),
+            'renewal_sum'=>Yii::t('ka','renewal total num'),
 		);
 	}
 
@@ -167,8 +191,8 @@ class KABotForm extends CFormModel
 		return array(
             array('id,apply_date,customer_no,customer_name,kam_id,head_city_id,talk_city_id,
                 contact_user,contact_phone,contact_email,source_text,source_id,
-                area_id,level_id,class_id,busine_id,link_id,support_user,sign_odds,city,
-                available_date,available_amt,avaInfo,
+                area_id,level_id,class_id,busine_id,link_id,support_user,sign_odds,city,order_type,
+                available_date,available_amt,avaInfo,avaRenewal,renewal_sum,renewal_total_amt,
                 contact_adr,work_user,work_phone,work_email,class_other,
                 sign_date,sign_end_date,sign_month,sign_amt,sum_amt,ava_sum,remark','safe'),
             array('apply_date,work_user,work_phone,contact_adr,available_date,customer_name,kam_id,link_id
@@ -316,8 +340,12 @@ class KABotForm extends CFormModel
         }
         $list = array();
         $emptyList = array();
+        $emptyTwoList = array();
         $avaDateList = array();
         $avaDateBool = false;//判断月份是否重复
+        $renewalList = array();
+        $renewalDateList = array();
+        $renewalDateBool = false;//判断月份是否重复
         if(!empty($this->avaInfo)){
             foreach ($this->avaInfo as &$row){
                 if(!empty($row["ava_date"])){
@@ -333,6 +361,21 @@ class KABotForm extends CFormModel
                 }
             }
         }
+        if(!empty($this->avaRenewal)){
+            foreach ($this->avaRenewal as &$row){
+                if(!empty($row["renewal_date"])){
+                    $renewalList[]=$row;
+                    $row["uflag"] = $model->rate_num==100?$row["uflag"]:"D";//如果沟通不是100，则没有详情
+                    if($row["uflag"]!="D"){
+                        $emptyTwoList[]=$row;
+                        if(!$renewalDateBool&&in_array($row["renewal_date"],$renewalDateList)){
+                            $renewalDateBool = true;
+                        }
+                        $renewalDateList[]=$row["renewal_date"];
+                    }
+                }
+            }
+        }
         //$this->avaInfo = $list;
 	    if($model->rate_num==100){
 	        if(empty($this->sign_date)){
@@ -344,19 +387,30 @@ class KABotForm extends CFormModel
 	        if(empty($this->sign_month)){
                 $this->addError($attribute, Yii::t('ka','sign month')."不能为空");
             }
-	        if(empty($emptyList)){
-                $this->addError($attribute, Yii::t('ka','sign end date')."签约详情不能为空");
-            }else{
+	        if(empty($emptyList)&&empty($emptyTwoList)){
+                $this->addError($attribute, Yii::t('ka','sign end date')."新增列表或续约列表至少填写一项");
+            }elseif(!empty($emptyList)){
 	            $endAvaList = end($emptyList);
                 if(!isset($endAvaList["ava_rate"])||$endAvaList["ava_rate"]<=80){
                     $this->addError($attribute, "签约详情第一条的签约概率必须大于80");
                 }
             }
             if($avaDateBool){
-                $this->addError($attribute, "签约详情的月份不能重复");
+                $this->addError($attribute, "新增详情的月份不能重复");
+            }
+            if($renewalDateBool){
+                $this->addError($attribute, "续约详情的月份不能重复");
             }
             $this->sign_odds=100;
+            if(!empty($emptyList)&&!empty($emptyList)){
+                $this->contract_type='1,2';
+            }elseif (!empty($emptyList)){
+                $this->contract_type=1;
+            }else{
+                $this->contract_type=2;
+            }
         }else{
+	        $this->contract_type=1;
 	        $this->sign_date=null;
 	        $this->sign_end_date=null;
 	        $this->sign_month=null;
@@ -409,7 +463,7 @@ class KABotForm extends CFormModel
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,"available_amt"=>3,
             "sign_date"=>2,"sign_end_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
-            "contact_adr"=>1,"ava_sum"=>1,
+            "contact_adr"=>1,"ava_sum"=>1,"contract_type"=>1,"renewal_total_amt"=>3,"renewal_sum"=>3,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
 		if ($row!==false) {
@@ -471,6 +525,23 @@ class KABotForm extends CFormModel
                     $this->avaInfo[] = $temp;
                 }
             }
+            $sql = "select * from sal{$table_pre}bot_renewal where bot_id=".$index." order by renewal_date desc";
+            $renewalRows = Yii::app()->db->createCommand($sql)->queryAll();
+            if($renewalRows){
+                $this->avaRenewal=array();
+                foreach ($renewalRows as $renewalRow){
+                    $temp = array();
+                    $temp["id"] = $renewalRow["id"];
+                    $temp["bot_id"] = $renewalRow["bot_id"];
+                    $temp["renewal_date"] = date("Y/m",strtotime($renewalRow["renewal_date"]));
+                    $temp["renewal_num"] = $renewalRow["renewal_num"];
+                    $temp["renewal_city"] = $renewalRow["renewal_city"];
+                    $temp["renewal_note"] = $renewalRow["renewal_note"];
+                    $temp["renewal_amt"] = !empty($renewalRow["renewal_amt"])?floatval($renewalRow["renewal_amt"]):null;
+                    $temp['uflag'] = 'N';
+                    $this->avaRenewal[] = $temp;
+                }
+            }
             return true;
 		}else{
 		    return false;
@@ -488,7 +559,7 @@ class KABotForm extends CFormModel
             "area_id"=>1,"level_id"=>1,"class_id"=>1,"busine_id"=>4,"link_id"=>1,
             "support_user"=>3,"sign_odds"=>1,"city"=>1,"remark"=>1,
             "available_amt"=>3,"available_date"=>2,"sign_date"=>2,"sign_end_date"=>2,"sign_month"=>1,"sign_amt"=>3,"sum_amt"=>3,
-            "contact_adr"=>1,"ava_sum"=>1,
+            "contact_adr"=>1,"ava_sum"=>1,"contract_type"=>1,"renewal_total_amt"=>3,"renewal_sum"=>3,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
 		if ($row!==false) {
@@ -545,6 +616,7 @@ class KABotForm extends CFormModel
 			$this->save($connection);
             $this->saveDetail($connection);
             $this->saveAvaInfo($connection);
+            $this->saveRenewalInfo($connection);
             $this->updateDocman($connection,$this->file_key);
 			$transaction->commit();
 		}
@@ -571,7 +643,7 @@ class KABotForm extends CFormModel
             "contact_phone","contact_email","source_text","source_id","area_id",
             "level_id","class_id","busine_id","link_id","available_amt","available_date","support_user","sign_odds",
             "sign_date","sign_end_date","sign_month","sign_amt","sum_amt",
-            "contact_adr","ava_sum",
+            "contact_adr","ava_sum","contract_type","renewal_sum","renewal_total_amt",
             "work_user","work_phone","work_email","class_other"
         );
     }
@@ -605,6 +677,9 @@ class KABotForm extends CFormModel
                 break;
             case "support_user":
                 $value = KABotForm::getEmployeeNameForId($value);
+                break;
+            case "contract_type":
+                $value = KABotForm::getContractTypeListForId($value,true);
                 break;
         }
         return $value;
@@ -646,6 +721,7 @@ class KABotForm extends CFormModel
                 }
                 $this->getHistoryDetail($list["update_html"]);
                 $this->getHistoryAvaInfo($list["update_html"]);
+                $this->getHistoryRenewalInfo($list["update_html"]);
                 if(!empty($list["update_html"])){
                     $list["update_html"] = implode("<br/>",$list["update_html"]);
                     $list["espe_type"] = $this->espe_type;
@@ -786,6 +862,39 @@ class KABotForm extends CFormModel
         return $list;
     }
 
+    protected function getHistoryRenewalInfo(&$list){
+        $maxDate = $this->available_date;
+        $className = get_class($this);
+        if(isset($_POST[$className]['avaRenewal'])){
+            foreach ($_POST[$className]['avaRenewal'] as $row) {
+                if(empty($row['renewal_date'])){
+                    continue;
+                }
+                $row['renewal_date']=str_replace("-","/",$row['renewal_date']);
+                $row['renewal_date'] = explode("/",$row['renewal_date']);
+                if(count($row['renewal_date'])==2){
+                    $row['renewal_date'][]="01";
+                }
+                $row['renewal_date']=implode("/",$row['renewal_date']);
+                if(in_array($row['uflag'],array("N","Y"))&&strtotime($row['renewal_date'])>=strtotime($maxDate)){
+                    $maxDate = $row["renewal_date"];
+                }
+                switch ($row['uflag']){
+                    case "Y"://修改
+                        if(!empty($row['id'])){
+                            $list[]="<span>修改了续约列表：".$row['renewal_date']."</span>";
+                        }
+                        break;
+                    case "D"://刪除
+                        $list[]="<span>删除了续约列表：".$row['renewal_date']."</span>";
+                        break;
+                }
+            }
+        }
+        $this->ava_show_date = $maxDate;
+        return $list;
+    }
+
     protected function saveAvaInfo(&$connection)
     {
         $table_pre = $this->table_pre;
@@ -894,6 +1003,104 @@ class KABotForm extends CFormModel
         return true;
     }
 
+    protected function saveRenewalInfo(&$connection)
+    {
+        $table_pre = $this->table_pre;
+        $uid = Yii::app()->user->id;
+        $className = get_class($this);
+        if(isset($this->avaRenewal)){
+            foreach ($this->avaRenewal as $row) {
+                if(empty($row["renewal_date"])){
+                    continue;
+                }
+                $sql = '';
+                switch ($this->scenario) {
+                    case 'delete':
+                        $sql = "delete from sal{$table_pre}bot_renewal where bot_id = :bot_id";
+                        break;
+                    case 'new':
+                        if ($row['uflag']=='Y') {
+                            $sql = "insert into sal{$table_pre}bot_renewal(
+									bot_id, renewal_date, renewal_num, renewal_city, renewal_note, renewal_amt,lcu
+								) values (
+									:bot_id,:renewal_date,:renewal_num,:renewal_city,:renewal_note,:renewal_amt,:lcu
+								)";
+                        }
+                        break;
+                    case 'edit':
+                        switch ($row['uflag']) {
+                            case 'D':
+                                $sql = "delete from sal{$table_pre}bot_renewal where id = :id";
+                                break;
+                            case 'Y':
+                                $sql = ($row['id']==0)
+                                    ?
+                                    "insert into sal{$table_pre}bot_renewal(
+                                        bot_id, renewal_date, renewal_num, renewal_city, renewal_note, renewal_amt,lcu
+                                    ) values (
+                                        :bot_id,:renewal_date,:renewal_num,:renewal_city,:renewal_note,:renewal_amt,:lcu
+									)"
+                                    :
+                                    "update sal{$table_pre}bot_renewal set
+										renewal_date = :renewal_date, 
+										renewal_num = :renewal_num,
+										renewal_city = :renewal_city,
+										renewal_note = :renewal_note,
+										renewal_amt = :renewal_amt,
+										luu = :luu 
+									where id = :id
+									";
+                                break;
+                        }
+                        break;
+                }
+
+                if ($sql != '') {
+//                print_r('<pre>');
+//                print_r($sql);exit();
+                    $command=$connection->createCommand($sql);
+                    if (strpos($sql,':id')!==false)
+                        $command->bindParam(':id',$row['id'],PDO::PARAM_INT);
+                    if (strpos($sql,':bot_id')!==false)
+                        $command->bindParam(':bot_id',$this->id,PDO::PARAM_INT);
+                    if (strpos($sql,':renewal_date')!==false){
+                        if(empty($row['renewal_date'])){
+                            $row['renewal_date']=null;
+                        }else{
+                            $row['renewal_date']=str_replace("-","/",$row['renewal_date']);
+                            $row['renewal_date'] = explode("/",$row['renewal_date']);
+                            if(count($row['renewal_date'])==2){
+                                $row['renewal_date'][]="01";
+                            }
+                            $row['renewal_date']=implode("/",$row['renewal_date']);
+                        }
+                        $command->bindParam(':renewal_date',$row['renewal_date'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':renewal_amt')!==false){
+                        $row['renewal_amt']=empty($row['renewal_amt'])?null:$row['renewal_amt'];
+                        $command->bindParam(':renewal_amt',$row['renewal_amt'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':renewal_num')!==false){
+                        $row['renewal_num']=empty($row['renewal_num'])?null:$row['renewal_num'];
+                        $command->bindParam(':renewal_num',$row['renewal_num'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':renewal_city')!==false){
+                        $row['renewal_city']=empty($row['renewal_city'])?null:$row['renewal_city'];
+                        $command->bindParam(':renewal_city',$row['renewal_city'],PDO::PARAM_STR);
+                    }
+                    if (strpos($sql,':renewal_note')!==false)
+                        $command->bindParam(':renewal_note',$row['renewal_note'],PDO::PARAM_STR);
+                    if (strpos($sql,':luu')!==false)
+                        $command->bindParam(':luu',$uid,PDO::PARAM_STR);
+                    if (strpos($sql,':lcu')!==false)
+                        $command->bindParam(':lcu',$uid,PDO::PARAM_STR);
+                    $command->execute();
+                }
+            }
+        }
+        return true;
+    }
+
 	protected function save(&$connection)
 	{
         $table_pre = $this->table_pre;
@@ -908,7 +1115,7 @@ class KABotForm extends CFormModel
             "area_id"=>3,"level_id"=>3,"class_id"=>3,"busine_id"=>4,"link_id"=>3,
             "support_user"=>3,"sign_odds"=>3,"remark"=>1,
             "available_amt"=>3,"available_date"=>2,"sign_date"=>2,"sign_end_date"=>2,"sign_month"=>3,"sign_amt"=>3,"sum_amt"=>3,
-
+            "contract_type"=>1,"renewal_total_amt"=>3,"renewal_sum"=>3,
             "contact_adr"=>1,"ava_show_date"=>1,"ava_sum"=>3,
             "work_user"=>1,"work_phone"=>1,"work_email"=>1,"class_other"=>1,
         );
@@ -1050,6 +1257,28 @@ class KABotForm extends CFormModel
             }else{
 	            return $id;
             }
+        }
+	    return $list;
+    }
+
+	public static function getContractTypeListForId($ids="",$bool=false){
+	    $list = array(
+	        "1"=>"新增合约",
+	        "2"=>"续约合约"
+        );
+	    if($bool){
+            $ids="".$ids;
+            $idList = explode(",",$ids);
+            $returnList = array();
+            foreach ($idList as $id){
+                $id = "".$id;
+                if(key_exists($id,$list)){
+                    $returnList[]=$list[$id];
+                }else{
+                    $returnList[]=$id;
+                }
+            }
+            return implode("、",$returnList);
         }
 	    return $list;
     }
@@ -1258,6 +1487,7 @@ class KABotForm extends CFormModel
         $historyArr = implode("<br/>",$historyArr);
         $copyTable = array(
             array("from_table"=>"sal{$this->table_pre}bot_ava","to_table"=>"sal{$shift_to_tab}bot_ava"),
+            array("from_table"=>"sal{$this->table_pre}bot_renewal","to_table"=>"sal{$shift_to_tab}bot_renewal"),
             array("from_table"=>"sal{$this->table_pre}bot_history","to_table"=>"sal{$shift_to_tab}bot_history"),
             array("from_table"=>"sal{$this->table_pre}bot_info","to_table"=>"sal{$shift_to_tab}bot_info"),
         );

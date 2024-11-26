@@ -110,19 +110,26 @@ class DownKAExcel{
                     $twoStr = $this->getColumn($colOne);
                     if(key_exists("colspan",$list)){
                         foreach ($list["colspan"] as $col){
-                            $startStr = $this->getColumn($colOne);
                             $threeCol=key_exists("colspan",$col)?$col['colspan']:array();
                             $this->objPHPExcel->getActiveSheet()
                                 ->setCellValueByColumnAndRow($colOne, $this->current_row+1, $col["name"]);
-                            foreach ($threeCol as $three){
+                            if(!empty($threeCol)){
+                                $startStr = $this->getColumn($colOne);
+                                foreach ($threeCol as $three){
+                                    $this->objPHPExcel->getActiveSheet()
+                                        ->setCellValueByColumnAndRow($colOne, $this->current_row+2, $three["name"]);
+                                    $colOne++;
+                                    $this->th_num++;
+                                }
+                                $endStr = $this->getColumn($colOne-1);
                                 $this->objPHPExcel->getActiveSheet()
-                                    ->setCellValueByColumnAndRow($colOne, $this->current_row+2, $three["name"]);
+                                    ->mergeCells($startStr.($this->current_row+1).':'.$endStr.($this->current_row+1));
+                            }else{
+                                $startStr = $this->getColumn($colOne);
+                                $this->objPHPExcel->getActiveSheet()
+                                    ->mergeCells($startStr.($this->current_row+1).':'.$startStr.($this->current_row+2));
                                 $colOne++;
-                                $this->th_num++;
                             }
-                            $endStr = $this->getColumn($colOne-1);
-                            $this->objPHPExcel->getActiveSheet()
-                                ->mergeCells($startStr.($this->current_row+1).':'.$endStr.($this->current_row+1));
                         }
                     }else{
                         $colOne++;

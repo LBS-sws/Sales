@@ -330,6 +330,21 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                 </div>
             </div>
 
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'renewal_sum',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-2">
+                    <?php echo $form->numberField($model, 'renewal_sum',
+                        array('readonly'=>(true),'id'=>'renewal_sum','autocomplete'=>'off')
+                    ); ?>
+                </div>
+                <?php echo $form->labelEx($model,'renewal_total_amt',array('class'=>"col-lg-1 control-label text-red")); ?>
+                <div class="col-lg-2">
+                    <?php echo $form->numberField($model, 'renewal_total_amt',
+                        array('readonly'=>(true),'id'=>'renewal_total_amt','prepend'=>'<span class="fa fa-money"></span>')
+                    ); ?>
+                </div>
+            </div>
+
             <div id="ava_box" class="box changeTable <?php echo KALinkForm::getLinkRateNumForId($model->link_id)!==100?"hide":"";?>">
                 <div class="box-body table-responsive">
                     <div class="col-lg-12">
@@ -341,6 +356,24 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
                                 'expr_id'=>'ava',
                                 'viewhdr'=>'//cABot/_ava_hdr',
                                 'viewdtl'=>'//cABot/_ava_dtl',
+                            ));
+                            ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="renewal_box" class="box changeTable <?php echo KALinkForm::getLinkRateNumForId($model->link_id)!==100?"hide":"";?>">
+                <div class="box-body table-responsive">
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <?php
+                            $this->widget('ext.layout.TableView2Widget', array(
+                                'model'=>$model,
+                                'attribute'=>'avaRenewal',
+                                'expr_id'=>'renewal',
+                                'viewhdr'=>'//cABot/_renewal_hdr',
+                                'viewdtl'=>'//cABot/_renewal_dtl',
                             ));
                             ?>
                         </div>
@@ -478,16 +511,28 @@ $('#tblDetail_ava').on('change','.change_ava_num',function(){
     ava_sum = ava_sum==0?'':ava_sum;
     $('#ava_sum').val(ava_sum);
 });
+$('#tblDetail_renewal').on('change','.changeRenewalNum',function(){
+    var ava_sum=0;
+    $('#tblDetail_renewal .changeRenewalNum').each(function(){
+        if($(this).val()!=''){
+            ava_sum+=parseInt($(this).val(),10);
+        }
+    });
+    ava_sum = ava_sum==0?'':ava_sum;
+    $('#renewal_sum').val(ava_sum);
+});
 
 $('#link_id').change(function(){
     if($(this).children('option:selected').text().indexOf('100%')>-1){
         $('#ava_box').removeClass('hide');
+        $('#renewal_box').removeClass('hide');
         $('#sign_date').prop('readonly','');
         $('#sign_end_date').prop('readonly','');
         $('#sign_month').prop('disabled','');
         $('#sign_odds').val(100);
     }else{
         $('#ava_box').addClass('hide');
+        $('#renewal_box').addClass('hide');
         $('#sign_date').val('').prop('readonly','readonly');
         $('#sign_end_date').val('').prop('readonly','readonly');
         $('#sign_month').val('').prop('disabled','disabled');
@@ -534,7 +579,16 @@ $('body').on('click',function(){
         });
         $('#sum_amt').val(sum_amt);
     });
-    
+
+    $('body').delegate('.changeRenewalAmt','change keyup',function(){
+        var sum_amt=0;
+        $('.changeRenewalAmt').each(function(){
+            var amt=$(this).val();
+            amt = amt==''?0:parseFloat(amt);
+            sum_amt+=amt;
+        });
+        $('#renewal_total_amt').val(sum_amt);
+    });
     
     $('#talk_city_id').on('change',function(){
         $.ajax({
@@ -608,6 +662,10 @@ $('.btnAddRow').on('click',function() {
 			    $(this).attr('value','');
 			    $(this).datepicker({autoclose: true,language: '$language', format: 'yyyy/mm',maxViewMode:2,minViewMode:1});
 			}
+			if (id.indexOf('_renewal_date') != -1){
+			    $(this).attr('value','');
+			    $(this).datepicker({autoclose: true,language: '$language', format: 'yyyy/mm',maxViewMode:2,minViewMode:1});
+			}
 			if (id.indexOf('_info_text') != -1) $(this).val('');
 			if (id.indexOf('_ava_amt') != -1) $(this).val('');
 			if (id.indexOf('_ava_rate') != -1) $(this).val('');
@@ -634,7 +692,7 @@ EOF;
     }
     $js = Script::genDatePicker($dateList);
     $js.="
-		$('.ava_date').datepicker({autoclose: true,language: '$language', format: 'yyyy/mm',maxViewMode:2,minViewMode:1});
+		$('.ava_date,.renewal_date').datepicker({autoclose: true,language: '$language', format: 'yyyy/mm',maxViewMode:2,minViewMode:1});
 	";
     Yii::app()->clientScript->registerScript('datePick',$js,CClientScript::POS_READY);
 }

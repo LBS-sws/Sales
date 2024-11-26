@@ -123,7 +123,7 @@ $this->pageTitle=Yii::app()->name . ' - RA Statistic Form';
 $ajaxUrl = Yii::app()->createUrl('cAStatistic/ajaxDetail');
 $js = "
 $('.td_detail').on('click',function(){
-    var employee_name = $(this).parent('tr').children('td').eq(0).text();
+    var employee_name = $(this).parent('tr').children('td[data-type=\"kam_name\"]').eq(0).text();
     $('#detailDialog').find('.modal-title').text($(this).data('title')+' - '+employee_name);
     $('#detailDialog').find('.modal-body').html('<p>加载中....</p>');
     $('#detailDialog').modal('show');

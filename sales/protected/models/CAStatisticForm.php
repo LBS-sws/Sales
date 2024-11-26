@@ -11,17 +11,29 @@ class CAStatisticForm extends KAStatisticForm
         $list90 = $this->getAmtNumFor90();//获取未来90天的金额及数量
         $listYM = $this->getAmtNumForYM();//获取YTD、MTD的金额及数量
         $kaManList = $this->getKaManForKaBot();//KA所有员工
+        $kaGroupList = $this->getKASalesGroup();//KA分组
+        $kaIDXList = $this->getKAIndicatorList($this->start_date);//KA个人指标金额
+        $renewalList = $this->getAmtNumForRenewal();//获取续约金额及数量
         foreach ($kaManList as $row){
             $temp = $this->getTemp();
             $ka_id = $row["id"];
             $city = $row["city"];
+            if(key_exists($ka_id,$kaGroupList)){
+                $group_id = $kaGroupList[$ka_id]["group_id"];
+                $temp["group_name"] = $kaGroupList[$ka_id]["group_name"];
+            }else{
+                $group_id = $city."_".$ka_id;
+            }
             $temp["employee_id"] = $ka_id;
+            $temp["entry_date"] = General::toDate($row["entry_time"]);
             $temp["kam_name"] = $row["name"]." ({$row["code"]})";
             $this->addTempForList($temp,$listVQS,$ka_id);
             $this->addTempForList($temp,$list90,$ka_id);
             $this->addTempForList($temp,$listYM,$ka_id);
+            $this->addTempForList($temp,$kaIDXList,$ka_id);
+            $this->addTempForList($temp,$renewalList,$ka_id);
 
-            $this->data[$city][$ka_id] = $temp;
+            $this->data[$group_id][$ka_id] = $temp;
         }
 
         $session = Yii::app()->session;
