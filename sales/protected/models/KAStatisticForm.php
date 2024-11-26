@@ -468,8 +468,8 @@ class KAStatisticForm extends CFormModel
             "group_amt"=>0,//团队金额
             "idx_group_money"=>0,//团队指标金额
             "idx_group_rate"=>"",//团队指标比例
-            "renewal_total_sum"=>"",//续约数量
-            "renewal_total_amt"=>"",//续约金额
+            "renewal_total_sum"=>0,//续约数量
+            "renewal_total_amt"=>0,//续约金额
         );
     }
 
