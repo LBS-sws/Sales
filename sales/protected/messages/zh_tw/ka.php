@@ -115,7 +115,7 @@ return array(
     'YTD num rate'=>'數量轉化（成交數量/拜訪數量）',
     'ava num'=>'門店數量',
     'ava city'=>'城市',
-    'ava note'=>'備註(<span style="color:red;">請備註減少門店總數和金額詳情等內容</span>)',
+    'ava note'=>'備註(<span style="color:red;">請備註門店總數和金額詳情等內容</span>)',
     '(Actual transactions this month/90 day weighted)'=>'（本月實際成交/90天加權）',
 
     'YTD Rpt'=>'YTD報表',
