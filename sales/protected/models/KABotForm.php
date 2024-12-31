@@ -731,6 +731,11 @@ class KABotForm extends CFormModel
                     $connection->createCommand()->insert("sal{$table_pre}bot_history", $list);
                 }
                 break;
+            case "new":
+                $uid = Yii::app()->user->id;
+                $list=array("bot_id"=>$this->id,"lcu"=>$uid,"update_type"=>0,"update_html"=>array());
+                $this->getHistoryAvaInfo($list);
+                break;
         }
     }
 
@@ -863,7 +868,6 @@ class KABotForm extends CFormModel
     }
 
     protected function getHistoryRenewalInfo(&$list){
-        $maxDate = $this->available_date;
         $className = get_class($this);
         if(isset($_POST[$className]['avaRenewal'])){
             foreach ($_POST[$className]['avaRenewal'] as $row) {
@@ -876,9 +880,6 @@ class KABotForm extends CFormModel
                     $row['renewal_date'][]="01";
                 }
                 $row['renewal_date']=implode("/",$row['renewal_date']);
-                if(in_array($row['uflag'],array("N","Y"))&&strtotime($row['renewal_date'])>=strtotime($maxDate)){
-                    $maxDate = $row["renewal_date"];
-                }
                 switch ($row['uflag']){
                     case "Y"://修改
                         if(!empty($row['id'])){
@@ -891,7 +892,6 @@ class KABotForm extends CFormModel
                 }
             }
         }
-        $this->ava_show_date = $maxDate;
         return $list;
     }
 
