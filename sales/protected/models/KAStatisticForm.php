@@ -80,13 +80,14 @@ class KAStatisticForm extends CFormModel
 
     //获取KA所有员工
     protected function getKaManForKaBot(){
+	    $maxYear = $this->search_year;
         $suffix = Yii::app()->params['envSuffix'];
         $table_pre = $this->table_pre;
         $city_allow = Yii::app()->user->city_allow();
         $whereSql = "a.id>0 ";
         $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
         if(Yii::app()->user->validFunction($this->function_id)){
-            $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+            $whereSql.= " and (h.staff_status=0 or (h.staff_status=-1 and DATE_FORMAT(h.leave_time,'%Y')>={$maxYear}))";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
             $whereSql.= " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
