@@ -112,6 +112,7 @@ class IntegralForm extends CFormModel
             $exprSql = " and ((a.status in('A','C') and f.rpt_cat<>'INV') or (a.status='N'))";
             $IDExprSql = " and (((a.status='A' or (a.status = 'C' and a.ctrt_period>=12)) and f.rpt_cat<>'INV') or (a.status='N'))";
             $selectSql = "a.*,g.score_bool,
+            CONCAT(h.code,h.name) as company_name_str,
             f.rpt_cat,f.description,b.cust_type_name as cust_type_name_name,b.conditions,b.fraction,b.toplimit";
             //所有需要計算的客戶服務(客戶服務)
             $serviceRows = Yii::app()->db->createCommand()
@@ -120,6 +121,7 @@ class IntegralForm extends CFormModel
                 ->leftJoin("swoper$suffix.swo_customer_type_twoname b","a.cust_type_name=b.id")
                 ->leftJoin("swoper$suffix.swo_customer_type f","a.cust_type=f.id")
                 ->leftJoin("swoper$suffix.swo_nature_type g","a.nature_type_two=g.id")
+                ->leftJoin("swoper$suffix.swo_company h","a.company_id=h.id")
                 ->where("a.status_dt BETWEEN '$startDate' and '$endDate' and a.salesman_id='$this->employee_id' $exprSql")->queryAll();
             $serviceRows=$serviceRows?$serviceRows:array();
             //所有需要計算的客戶服務(ID客戶服務)
@@ -129,6 +131,7 @@ class IntegralForm extends CFormModel
                 ->leftJoin("swoper$suffix.swo_customer_type_info b","a.cust_type_name=b.id")
                 ->leftJoin("swoper$suffix.swo_customer_type_id f","a.cust_type=f.id")
                 ->leftJoin("swoper$suffix.swo_nature_type g","a.nature_type_two=g.id")
+                ->leftJoin("swoper$suffix.swo_company h","a.company_id=h.id")
                 ->where("a.status_dt BETWEEN '$startDate' and '$endDate' and a.salesman_id='$this->employee_id' $IDExprSql")->queryAll();
             $serviceRowsID=$serviceRowsID?$serviceRowsID:array();
             $serviceRows = array_merge($serviceRows,$serviceRowsID);
@@ -1360,6 +1363,9 @@ class IntegralForm extends CFormModel
     protected function setExcelRowForTwo(&$o,$rows,$objActSheet){
         if(!empty($rows)){
             foreach ($rows as $list){
+                if(isset($list['company_name_str'])){
+                    $list['company_name'] = $list['company_name_str'];
+                }
                 $expr_num = key_exists("expr_num",$list)?$list["expr_num"]:"";
                 $integral_num = key_exists("integralNum",$list)?$list["integralNum"]:"";
                 $o++;

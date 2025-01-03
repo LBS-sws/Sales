@@ -151,7 +151,7 @@ class IntegralController extends Controller
     {
         $model = new IntegralForm('new');
         $model->retrieveDataNew($index);
-        $model->downExNew($model);
+        $model->downExNew();
     }
 	
 	public static function allowReadWrite() {
