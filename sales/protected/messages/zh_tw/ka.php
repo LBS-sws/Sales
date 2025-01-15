@@ -175,5 +175,6 @@ return array(
     'YTD group data'=>'YTD團隊數據',
     'YTD rate'=>'YTD達成率',
     'YTD Group Amt'=>'YTD團隊金額',
+    'QTD Next month predict'=>'次月預估',
 );
 ?>

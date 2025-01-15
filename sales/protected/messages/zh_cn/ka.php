@@ -110,7 +110,7 @@ return array(
     'available date'=>'预估可成交日期',
     'Conversion rate'=>'转化率',
     '90 Day rate'=>'90天转化率',
-    'YTD rate'=>'YTD转化率',
+    //'YTD rate'=>'YTD转化率',
     'YTD amt rate'=>'金额转化（成交金额/拜访阶段金额）',
     'YTD num rate'=>'数量转化（成交数量/拜访数量）',
     'ava num'=>'门店数量',
@@ -175,5 +175,6 @@ return array(
     'YTD group data'=>'YTD团队数据',
     'YTD rate'=>'YTD达成率',
     'YTD Group Amt'=>'YTD团队金额',
+    'QTD Next month predict'=>'次月预估',
 );
 ?>
