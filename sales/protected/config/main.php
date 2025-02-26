@@ -78,10 +78,10 @@ return array(
 		// uncomment the following to use a MySQL database
 		'db'=>array(
 			'class'=>'CDbConnection',
-  	     	         'connectionString' => 'mysql:host=localhost;dbname=salesdev',
+  	     	         'connectionString' => 'mysql:host=59.37.134.206;dbname=sales',
 			'emulatePrepare' => true,
-            'username' => 'swuser',
-            'password' => 'swisher168',
+            'username' => 'root',
+            'password' => 'rXfs7XmG7B4H7xfi',
             'charset' => 'utf8',
         ),
 
@@ -148,7 +148,7 @@ return array(
 		'version'=>'1.0.0',
 		'docmanPath'=>'/docman/upload/sal/uat',
 		'systemId'=>'sal',
-		'envSuffix'=>'dev',
+		'envSuffix'=>'',
 //		'onesignal'=>'d619380e-fa8e-462c-be6d-8be2f5a4563b',		// production
 		'onesignal'=>'3183638f-c26a-409c-a80a-00736ae8a772',
 		'appname'=>'LBS DMS (UAT)',

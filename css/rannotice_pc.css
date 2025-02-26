@@ -1,0 +1,68 @@
+#divtest{
+    height:750px;
+    background-image: url("../images/rank/ph_b.jpg");
+    background-size: 100% 100%;/*按比例缩放*/
+    background-repeat: no-repeat;/*还有repeat-x,y等*/
+    font-size: 18px;
+    font-weight: 600;
+}
+#one{
+    position: absolute;
+    top: 35%;
+    left: 40%;
+}
+#one .level_img{
+    width: 120px;
+}
+#two{
+    position: absolute;
+    top: 43%;
+    left: 10%;
+}
+#two .level_img{
+    width: 100px;
+}
+.city span{
+    padding-right: 10px;
+}
+.level{
+    margin: 5px 10px 0px 0px;
+    text-align: center;
+}
+
+#three{
+    position: absolute;
+    top: 43%;
+    right: 8%;
+}
+#three .level_img{
+    width: 100px;
+}
+#four{
+    position: absolute;
+    top: 77%;
+    left: 40%;
+}
+#five{
+    position: absolute;
+    top: 87%;
+    left: 40%;
+}
+.hg_01{
+    position: absolute;
+    width: 80px;
+    top: -33px;
+    left: 20px;
+}
+.hg_02{
+    position: absolute;
+    width: 66px;
+    top: -30px;
+    left: 17px;
+}
+.hg_03{
+    position: absolute;
+    width: 67px;
+    top: -30px;
+    left: 17px;
+}
