@@ -176,5 +176,9 @@ return array(
     'YTD rate'=>'YTD达成率',
     'YTD Group Amt'=>'YTD团队金额',
     'QTD Next month predict'=>'次月预估',
+    'YTD All Indicator'=>'YTD因设指标',
+    'YTD All rate'=>'YTD因设达成率',
+    'YTD Now Indicator'=>'YTD现有指标',
+    'YTD Now rate'=>'YTD现有达成率',
 );
 ?>

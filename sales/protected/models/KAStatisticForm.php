@@ -82,23 +82,25 @@ class KAStatisticForm extends CFormModel
     protected function getKaManForKaBot(){
 	    $maxYear = $this->search_year;
         $suffix = Yii::app()->params['envSuffix'];
+        $systemId = Yii::app()->params['systemId'];
         $table_pre = $this->table_pre;
         $city_allow = Yii::app()->user->city_allow();
-        $whereSql = "a.id>0 ";
-        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
+        $str = $table_pre=="_ka_"?"KA01":($table_pre=="_ra_"?"RA01":"CA01");
+        $whereSql = "f.a_read_write like '%{$str}%'";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= " and (h.staff_status!=-1 or (h.staff_status=-1 and DATE_FORMAT(h.leave_time,'%Y')>={$maxYear}))";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql.= " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
+            $whereSql.= " and (h.id in ({$idSQL}) or h.id in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql.= " and a.kam_id in ({$idSQL})";
+            $whereSql.= " and h.id in ({$idSQL})";
         }
         $rows = Yii::app()->db->createCommand()
             ->select("h.id,h.code,h.name,h.city,h.entry_time,h.table_type")
-            ->from("sal{$table_pre}bot a")
-            ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
+            ->from("hr{$suffix}.hr_binding a")
+            ->leftJoin("hr{$suffix}.hr_employee h","a.employee_id=h.id")
+            ->leftJoin("security{$suffix}.sec_user_access f","f.username=a.user_id and f.system_id='{$systemId}'")
             ->where($whereSql)
             ->group("h.id,h.code,h.name,h.city,h.entry_time,h.table_type")
             ->order("h.table_type asc,h.city,h.id")
@@ -563,6 +565,8 @@ class KAStatisticForm extends CFormModel
             "group_amt"=>0,//团队金额
             "idx_group_money"=>0,//团队指标金额
             "idx_group_rate"=>"",//团队指标比例
+            "ytd_group_money"=>0,//YTD现有指标
+            "ytd_group_rate"=>"",//YTD现有达成率
             "renewal_total_sum"=>0,//续约数量
             "renewal_total_amt"=>0,//续约金额
         );
@@ -728,8 +732,10 @@ class KAStatisticForm extends CFormModel
                 array(
                     "name"=>$this->search_year.Yii::t("ka"," success"),//2024达成
                     "colspan"=>array(
-                        array("name"=>Yii::t("ka","YTD Indicator")),//YTD指标
-                        array("name"=>Yii::t("ka","YTD rate")),//YTD达成率
+                        array("name"=>Yii::t("ka","YTD All Indicator")),//YTD指标
+                        array("name"=>Yii::t("ka","YTD All rate")),//YTD达成率
+                        array("name"=>Yii::t("ka","YTD Now Indicator")),//YTD指标
+                        array("name"=>Yii::t("ka","YTD Now rate")),//YTD达成率
                     )
                 )
             )
@@ -842,7 +848,7 @@ class KAStatisticForm extends CFormModel
             "sign_this_num","sign_this_amt","sign_next_num","sign_next_amt","sign_90_num","sign_90_amt","this_rate",
             "mtd_amt","mtd_idx","mtd_idx_rate","mtd_num",
             "ytd_num","ytd_amt","idx_sales_money","idx_sales_rate",
-            "idx_group_money","idx_group_rate",
+            "idx_group_money","idx_group_rate","ytd_group_money","ytd_group_rate",
             "renewal_total_sum","renewal_total_amt"
         );
         return $bodyKey;
@@ -874,13 +880,13 @@ class KAStatisticForm extends CFormModel
                 $currentRow = $row;
                 $staff_id=array_shift($currentRow)["employee_id"];
                 $rowspan = count($row);
-                $regionRow = ["idx_group_money"=>0,"group_amt"=>0];//分组汇总
+                $regionRow = ["idx_group_money"=>0,"ytd_group_money"=>0,"group_amt"=>0];//分组汇总
                 foreach ($row as $list){
                     $id = $list["employee_id"];
                     $this->resetTdRow($list);
                     $html.="<tr>";
                     foreach ($bodyKey as $keyStr){
-                        if(in_array($keyStr,array("idx_group_money","idx_group_rate"))){
+                        if(in_array($keyStr,array("idx_group_money","idx_group_rate","ytd_group_money","ytd_group_rate"))){
                             $this->downJsonText["excel"][$city][$staff_id][$keyStr]=0;
                             $html.=($keyStr=="idx_group_money"&&$staff_id==$id)?":groupMoneyHtml:":"";
                             continue;
@@ -891,6 +897,9 @@ class KAStatisticForm extends CFormModel
                         }
                         if($keyStr=="idx_sales_money"){
                             $regionRow["idx_group_money"]+=is_numeric($text)?floatval($text):0;
+                            if(isset($list["ytd_amt"])&&!empty($list["ytd_amt"])){
+                                $regionRow["ytd_group_money"]+=is_numeric($text)?floatval($text):0;
+                            }
                         }
                         if(!key_exists($keyStr,$allRow)){
                             $allRow[$keyStr]=0;
@@ -914,11 +923,17 @@ class KAStatisticForm extends CFormModel
                 if(in_array("idx_group_money",$bodyKey)){
                     $regionRow["idx_group_rate"] = empty($regionRow["idx_group_money"])?0:($regionRow["group_amt"]/$regionRow["idx_group_money"]);
                     $regionRow["idx_group_rate"] = self::getRateForNumber($regionRow["idx_group_rate"]);
+                    $regionRow["ytd_group_rate"] = empty($regionRow["ytd_group_money"])?0:($regionRow["group_amt"]/$regionRow["ytd_group_money"]);
+                    $regionRow["ytd_group_rate"] = self::getRateForNumber($regionRow["ytd_group_rate"]);
                     $groupHtml="<td rowspan='{$rowspan}'>".$regionRow["idx_group_money"]."</td>";
                     $groupHtml.="<td rowspan='{$rowspan}'>".$regionRow["idx_group_rate"]."</td>";
+                    $groupHtml.="<td rowspan='{$rowspan}'>".$regionRow["ytd_group_money"]."</td>";
+                    $groupHtml.="<td rowspan='{$rowspan}'>".$regionRow["ytd_group_rate"]."</td>";
                     $html=str_replace(":groupMoneyHtml:", $groupHtml, $html);
                     $this->downJsonText["excel"][$city][$staff_id]['idx_group_money']=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_money"]);
                     $this->downJsonText["excel"][$city][$staff_id]['idx_group_rate']=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_rate"]);
+                    $this->downJsonText["excel"][$city][$staff_id]['ytd_group_money']=array("groupLen"=>$rowspan,"text"=>$regionRow["ytd_group_money"]);
+                    $this->downJsonText["excel"][$city][$staff_id]['ytd_group_rate']=array("groupLen"=>$rowspan,"text"=>$regionRow["ytd_group_rate"]);
                 }
             }
             //所有汇总

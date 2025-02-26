@@ -176,5 +176,9 @@ return array(
     'YTD rate'=>'YTD達成率',
     'YTD Group Amt'=>'YTD團隊金額',
     'QTD Next month predict'=>'次月預估',
+    'YTD All Indicator'=>'YTD因設指標',
+    'YTD All rate'=>'YTD因設達成率',
+    'YTD Now Indicator'=>'YTD現有指標',
+    'YTD Now rate'=>'YTD現有達成率',
 );
 ?>
