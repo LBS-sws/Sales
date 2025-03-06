@@ -588,6 +588,10 @@ class KAStatisticForm extends CFormModel
     }
 
     protected function resetTdRow(&$list,$bool=false){
+        if($bool){
+            $list["idx_group_rate"]=self::getRateForCompute($list["ytd_amt"],$list["idx_sales_money"]);
+            $list["ytd_group_rate"]=self::getRateForCompute($list["ytd_amt"],$list["ytd_group_money"]);
+        }
         $list["qv_num_rate"] = self::getRateForCompute($list["quota_num"],$list["visit_num"]);
         $list["qv_amt_rate"] = self::getRateForCompute($list["quota_amt"],$list["visit_amt"]);
         $list["sq_num_rate"] = self::getRateForCompute($list["ytd_num"],$list["quota_num"]);
@@ -875,7 +879,7 @@ class KAStatisticForm extends CFormModel
         $clickTdList = $this->getClickTdList();
         $html="";
         if(!empty($data)){
-            $allRow = [];//总计(所有地区)
+            $allRow = ["idx_group_money"=>0,"ytd_group_money"=>0];//总计(所有地区)
             foreach ($data as $city=>$row){
                 $currentRow = $row;
                 $staff_id=array_shift($currentRow)["employee_id"];
@@ -921,6 +925,9 @@ class KAStatisticForm extends CFormModel
                 }
 
                 if(in_array("idx_group_money",$bodyKey)){
+                    $allRow["idx_group_money"]+=is_numeric($regionRow["idx_group_money"])?floatval($regionRow["idx_group_money"]):0;
+                    $allRow["ytd_group_money"]+=is_numeric($regionRow["ytd_group_money"])?floatval($regionRow["ytd_group_money"]):0;
+
                     $regionRow["idx_group_rate"] = empty($regionRow["idx_group_money"])?0:($regionRow["group_amt"]/$regionRow["idx_group_money"]);
                     $regionRow["idx_group_rate"] = self::getRateForNumber($regionRow["idx_group_rate"]);
                     $regionRow["ytd_group_rate"] = empty($regionRow["ytd_group_money"])?0:($regionRow["group_amt"]/$regionRow["ytd_group_money"]);
@@ -940,7 +947,6 @@ class KAStatisticForm extends CFormModel
             $allRow["city"]="_ALL";
             $allRow["group_name"]="";
             $allRow["entry_date"]="";
-            $allRow["idx_group_money"]="";
             $allRow["idx_group_rate"]="";
             $allRow["kam_name"]=Yii::t("ka","all total");
             $html.=$this->printTableTr($allRow,$bodyKey);
