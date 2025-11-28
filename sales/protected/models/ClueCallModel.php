@@ -91,12 +91,14 @@ class ClueCallModel
             case "endEvent";//流程结束时
                 $this->historyArr["history_html"][]="<span>流程结束</span>";
                 $this->historyArr["history_type"]=10;
+                /*
                 $row = Yii::app()->db->createCommand()->select("id")
                     ->from("sales{$suffix}.sal_contract_history")
                     ->where("table_type=9 and table_id=:id and history_type=10",array(":id"=>$data["id"]))->queryRow();
                 if($row){
                     return array("bool"=>false,"error"=>"该呼叫已生效，无法重新生效");
                 }
+                */
                 $data["call_status"] = 30;
                 break;
             default:
@@ -316,6 +318,9 @@ class ClueCallModel
                     "invoice_amount"=>$amt,//发票金额
                     "detail_json"=>json_encode($detail_json,JSON_UNESCAPED_UNICODE),//
                 ),"id=".$virRow["id"]);
+                //生成销售拜访
+                $this->addHistoryBy10($saveData,$virRow["id"],$fre_list);
+
                 //生成频次数据
                 Yii::app()->db->createCommand()->delete("sales{$suffix}.sal_contract_vir_week","vir_id={$virRow["id"]}");//全部清空
                 foreach ($fre_list as $freArr){
@@ -343,6 +348,137 @@ class ClueCallModel
         }
     }
 
+    //生成销售拜访
+    protected function addHistoryBy10($saveData,$vir_id,$fre_list){
+        $suffix = Yii::app()->params['envSuffix'];
+        $virRow = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract_virtual")
+            ->where("id=".$vir_id)->queryRow();
+        //KA项目生成成交记录
+        $clue_service_id = $virRow["clue_service_id"];
+        $serviceRow = Yii::app()->db->createCommand()
+            ->select("a.*,b.*")
+            ->from("sales{$suffix}.sal_clue_service a")
+            ->leftJoin("sales{$suffix}.sal_clue b","a.clue_id=b.id")
+            ->where("a.id=:id",array(":id"=>$clue_service_id))->queryRow();
+        if($serviceRow){
+            if($serviceRow["clue_type"]==2){//增加KA签单
+                $this->serviceKAQian($clue_service_id,$virRow,$serviceRow,$fre_list);
+            }else{//增加KA签单
+                $this->serviceVisitQian($saveData,$virRow,$serviceRow);
+            }
+        }
+    }
+
+    //增加KA签单
+    protected function serviceKAQian($clue_service_id,$virRow,$serviceRow,$fre_list){
+        $suffix = Yii::app()->params['envSuffix'];
+        $kaRow = Yii::app()->db->createCommand()->select("id")->from("sales{$suffix}.sal_ka_bot")
+            ->where("id=:id",array(":id"=>$serviceRow["ka_id"]))->queryRow();
+        if($kaRow){
+            $link_id = Yii::app()->db->createCommand()->select("id")->from("sales{$suffix}.sal_ka_link")
+                ->order("rate_num desc")->queryRow();
+            $sign_month = intval($virRow["cont_month_len"]/12);
+            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_ka_bot",array(
+                "sign_date"=>$virRow["cont_start_dt"],
+                "sign_end_date"=>$virRow["cont_end_dt"],
+                "sign_month"=>$sign_month,
+                "link_id"=>$link_id?$link_id["id"]:0,
+                "sign_odds"=>100,
+            ),"id=:id",array(":id"=>$kaRow["id"]));
+            Yii::app()->db->createCommand()->insert("sal_ka_bot_ava",array(
+                "bot_id"=>$kaRow["id"],
+                "ava_date"=>date("Y-m-01",strtotime($virRow["cont_start_dt"])),
+                "ava_fact_amt"=>$virRow["year_amt"],
+                "ava_amt"=>$virRow["year_amt"],
+                "ava_num"=>1,
+                "ava_note"=>"CRM呼叫生成",
+                "ava_rate"=>90,
+            ));
+            $ka_ava_id = Yii::app()->db->getLastInsertID();
+            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_clue_service",array(
+                "ka_ava_id"=>$ka_ava_id
+            ),"id=".$clue_service_id);
+            $this->computeKABotStoreAndAmt($kaRow["id"]);
+        }
+    }
+
+    protected function serviceVisitQian($saveData,$virRow,$serviceRow){
+        $suffix = Yii::app()->params['envSuffix'];
+        $username = CGetName::getUserNameByEmployeeID($virRow['sales_id']);
+        if(!CGetName::getUserNameHasAccess($username,"HK01")) {//有销售拜访的读写权限
+            return false;
+        }
+        $virProRows = Yii::app()->db->createCommand()->select("*")
+            ->from("sales{$suffix}.sal_contpro_virtual")
+            ->where("pro_vir_type=3 and call_id=:call_id and vir_id=:vir_id",array(
+                ":call_id"=>$saveData["contCallRow"]["id"],
+                ":vir_id"=>$virRow["id"],
+            ))->queryAll();
+        $storeRow = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_clue_store")
+            ->where("id=:id",array(":id"=>$virRow["clue_store_id"]))->queryRow();
+        if($virProRows){
+            foreach ($virProRows as $virProRow){
+                $virProRow['month_amt'] = floatval($virProRow['month_amt']);
+                $visit_info_text="{$virProRow['month_amt']}({$virProRow["busine_id_text"]})";
+                Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_visit",array(
+                    "username"=>$username,
+                    "visit_dt"=>$virProRow["cont_start_dt"],
+                    "visit_type"=>$serviceRow["visit_type"],
+                    "visit_obj"=>'["10"]',
+                    "visit_obj_name"=>"签单",
+                    "quotation"=>"是",
+                    "visit_info_text"=>$visit_info_text,
+                    "service_type"=>$serviceRow["service_type"],//json
+                    "cust_type"=>$storeRow["cust_class"],
+                    "cust_name"=>$storeRow["store_name"],
+                    "cust_person"=>$storeRow["cust_person"],
+                    "cust_tel"=>$storeRow["cust_tel"],
+                    "district"=>CGetName::getVisitDistrictIDByNalID($storeRow["district"],$storeRow["city"]),
+                    //"street"=>$sseRow["street"],
+                    "remarks"=>"CRM呼叫生成",
+                    "sign_odds"=>100,
+                    "city"=>$storeRow["city"],
+                    "total_amt"=>$virProRow['month_amt'],
+                    "busine_id"=>$virProRow["busine_id"],
+                    "busine_id_text"=>$virProRow["busine_id_text"],
+                    "lcu"=>$username,
+                    "status"=>'N',
+                    "status_dt"=>null,
+                ));
+                $visitId = Yii::app()->db->getLastInsertID();
+                Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_clue_flow",array(
+                    "clue_id"=>$serviceRow["clue_id"],
+                    "clue_type"=>$serviceRow["clue_type"],
+                    "clue_service_id"=>$virRow["clue_service_id"],
+                    "visit_date"=>$virProRow["cont_start_dt"],
+                    "create_staff"=>$virRow['sales_id'],
+                    "update_bool"=>4,
+                    "rpt_bool"=>empty($serviceRow["rpt_amt"])?0:1,
+                    "lbs_main"=>$serviceRow["lbs_main"],
+                    "predict_date"=>$serviceRow["predict_date"],
+                    "predict_amt"=>$serviceRow["predict_amt"],
+                    "sign_odds"=>100,
+                    "visit_text"=>"CRM呼叫生成",
+                    "visit_obj"=>'10',
+                    "visit_obj_text"=>"签单",
+                    "table_id"=>$visitId,
+                    "lcu"=>$username,
+                ));
+                $detailJson = json_decode($virProRow["detail_json"],true);
+                if(is_array($detailJson)){
+                    foreach ($detailJson as $field_id=>$field_value){
+                        Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_visit_info",array(
+                            "field_id"=>$field_id,
+                            "field_value"=>$field_value,
+                            "visit_id"=>$visitId,
+                            "lcu"=>$username,
+                        ));
+                    }
+                }
+            }
+        }
+    }
+
     public function sendContractVirForU($saveData){
         $uVirModel = new CurlNotesByVirPro();
         $uVirModel->pro_type="A";
@@ -358,6 +494,19 @@ class ClueCallModel
             Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract_vir_info",array(
                 "field_value"=>$field_value,
             ),"id=".$virInfoRow["id"]);
+        }
+    }
+
+    public static function computeKABotStoreAndAmt($ka_id){
+        $suffix = Yii::app()->params['envSuffix'];
+        $sumRow = Yii::app()->db->createCommand()->select("sum(ava_num) as store_sum,sum(ava_fact_amt) as amt_sum")
+            ->from("sales{$suffix}.sal_ka_bot_ava")
+            ->where("bot_id=:id",array(":id"=>$ka_id))->queryRow();
+        if($sumRow){
+            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_ka_bot",array(
+                "ava_sum"=>empty($sumRow["store_sum"])?null:floatval($sumRow["store_sum"]),
+                "sum_amt"=>empty($sumRow["amt_sum"])?null:floatval($sumRow["amt_sum"]),
+            ),"id=".$ka_id);
         }
     }
 }
