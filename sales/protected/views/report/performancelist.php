@@ -57,18 +57,39 @@ $this->pageTitle=Yii::app()->name . ' - performance Form';
                     <td style="width: 9%;"><h4><b><?php echo Yii::t('report','office name');?></b></h4></td>
                     <td style="width: 9%;"><h4><b><?php echo Yii::t('report','singular');?></b></h4></td>
                     <td style="width: 9%;"><h4><b><?php echo Yii::t('report','fuwumoney');?></b></h4></td>
-                    <td style="background-color: #9acfea;width: 9%;text-align: center;" colspan="2"><h4><b><?php echo Yii::t('report','qingjie');?></b></h4></td><td style="background-color: #9acfea;width: 9%;text-align: center;" colspan="2"><h4><b><?php echo Yii::t('report','jiqi');?></b></h4></td><td style="background-color: #9acfea;width: 9%;text-align: center;" colspan="2"><h4><b><?php echo Yii::t('report','miechong');?></b></h4></td><td style="background-color: #9acfea;width: 9%;text-align: center;" colspan="2"><h4><b><?php echo Yii::t('report','piaoyingxiang');?></b></h4></td><td style="background-color: #9acfea;width: 9%;text-align: center;" colspan="2"><h4><b>	<?php echo Yii::t('report','jiaquan');?></b></h4></td><td style="background-color: #9acfea;width: 9%;text-align: center;" colspan="2"><h4><b><?php echo Yii::t('report','zhiping');?></b></h4></td><td style="background-color: #9acfea;width: 9%;text-align: center;" colspan="2"><h4><b><?php echo Yii::t('report','shoumai');?></b></h4></td>
+                    <?php
+                    $classList = CGetName::getSetMenuTypeList("serviceTypeClass");
+                    foreach ($classList as $set_id=>$set_name){
+                        echo '<td style="background-color: #9acfea;width: 9%;text-align: center;" colspan="2"><h4><b>'.$set_name.'</b></h4></td>';
+                    }
+                    ?>
                 </tr>
                 <?php if(!empty($sum)){?>
                 <tr >
-                    <td colspan="4" ><h4><b><?php echo Yii::t('report','money/sum');?></b></h4></td>  <td><h4><b><?php echo $sum['singular'];?></b></h4></td> <td><h4><b><?php echo $sum['money'];?></b></h4></td> <td style="background-color: #9acfea"><h4><b><?php echo $sum['svc_A7'];?></b></h4></td><td style="background-color: #9acfea;width: 4%;"><h4><b><?php echo $sum['svc_A7s'];?></b></h4></td> <td style="background-color: #9acfea;"><h4><b><?php echo $sum['svc_B6'];?></b></h4></td> <td style="background-color: #9acfea;width: 4%;"><h4><b><?php echo $sum['svc_B6s'];?></b></h4></td> <td style="background-color: #9acfea"><h4><b><?php echo $sum['svc_C7'];?></b></h4></td> <td style="background-color: #9acfea;width: 4%;"><h4><b><?php echo $sum['svc_C7s'];?></b></h4></td> <td style="background-color: #9acfea"><h4><b><?php echo $sum['svc_D6'];?></b></h4></td> <td style="background-color: #9acfea;width: 4%;"><h4><b><?php echo $sum['svc_D6s'];?></b></h4></td> <td style="background-color: #9acfea"><h4><b><?php echo $sum['svc_E7'];?></b></h4></td><td style="background-color: #9acfea;width: 4%;"><h4><b><?php echo $sum['svc_E7s'];?></b></h4></td> <td style="background-color: #9acfea"><h4><b><?php echo $sum['svc_F4'];?></b></h4></td> <td style="background-color: #9acfea;width: 4%;"><h4><b><?php echo $sum['svc_F4s'];?></b></h4></td> <td style="background-color: #9acfea"><h4><b><?php echo $sum['svc_G3'];?></b></h4></td><td style="background-color: #9acfea;width: 4%;"><h4><b><?php echo $sum['svc_G3s'];?></b></h4></td>
+                    <td colspan="4" ><h4><b><?php echo Yii::t('report','money/sum');?></b></h4></td>  <td><h4><b><?php echo $sum['singular'];?></b></h4></td> <td><h4><b><?php echo $sum['money'];?></b></h4></td>
+
+                    <?php
+                    foreach ($classList as $set_id=>$set_name){
+                        echo '<td style="background-color: #9acfea"><h4><b>'.$sum["amt_".$set_id].'</b></h4></td><td style="background-color: #9acfea;width: 4%;"><h4>'.$sum["sum_".$set_id].'</b></h4></td>';
+                    }
+                    ?>
                 </tr>
                 <?php }?>
-                <?php if(!empty($array)){ foreach ($array as $a){ ?>
-                <tr>
-                    <td><?php echo $a['names'];?></td> <td><?php echo $a['dept_name'];?></td> <td><?php echo $a['cityname'];?></td> <td><?php echo $a['office_name'];?></td> <td><?php echo $a['singular'];?></td> <td><?php echo $a['money'];?></td> <td style="background-color: #9acfea"><?php echo $a['svc_A7'];?></td><td style="background-color: #9acfea;width: 4%;"><?php echo $a['svc_A7s'];?></td> <td style="background-color: #9acfea;"><?php echo $a['svc_B6'];?></td> <td style="background-color: #9acfea;width: 4%;"><?php echo $a['svc_B6s'];?></td> <td style="background-color: #9acfea"><?php echo $a['svc_C7'];?></td> <td style="background-color: #9acfea;width: 4%;"><?php echo $a['svc_C7s'];?></td> <td style="background-color: #9acfea"><?php echo $a['svc_D6'];?></td> <td style="background-color: #9acfea;width: 4%;"><?php echo $a['svc_D6s'];?></td> <td style="background-color: #9acfea"><?php echo $a['svc_E7'];?></td><td style="background-color: #9acfea;width: 4%;"><?php echo $a['svc_E7s'];?></td> <td style="background-color: #9acfea"><?php echo $a['svc_F4'];?></td> <td style="background-color: #9acfea;width: 4%;"><?php echo $a['svc_F4s'];?></td> <td style="background-color: #9acfea"><?php echo $a['svc_G3'];?></td><td style="background-color: #9acfea;width: 4%;"><?php echo $a['svc_G3s'];?></td>
-                </tr>
-                <?php }}?>
+                <?php
+                if(!empty($array)){
+                    foreach ($array as $a) {
+                        echo "<tr>";
+                        echo '<td>'.$a['names'].'</td> <td>'.$a['dept_name'].'</td> <td>'.$a['cityname'].'</td> <td>'.$a['office_name'].'</td> <td>'.$a['singular'].'</td> <td>'.$a['money'].'</td>';
+
+                        foreach ($classList as $set_id=>$set_name){
+                            echo '<td>'.$a["amt_".$set_id].'</td>';
+                            echo '<td>'.$a["sum_".$set_id].'</td>';
+                        }
+                        echo "</tr>";
+                    }
+                }
+
+                ?>
               </tbody>
             </table>
 

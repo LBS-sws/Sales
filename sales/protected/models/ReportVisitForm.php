@@ -3,42 +3,46 @@
 
 class ReportVisitForm extends CReportForm
 {
-	public $staffs;
-	public $staffs_desc;
-	
-	protected function labelsEx() {
-		return array(
-			'staffs'=>Yii::t('report','Staffs'),
+    public $staffs;
+    public $staffs_desc;
+
+    protected $allQ;//所有年金额（不包含维诺）
+    protected $minQ;//所有年金额（不包含维诺、纸品、一次性售卖）
+    protected $classBySvcList=array();
+
+    protected function labelsEx() {
+        return array(
+            'staffs'=>Yii::t('report','Staffs'),
             'start date'=>Yii::t('report','Start Date'),
             'end date'=>Yii::t('report','End Date'),
             'city'=>Yii::t('report','City'),
             'sort'=>Yii::t('report','Sort'),
             'sale'=>Yii::t('report','Sale'),
             'bumen'=>Yii::t('report','Bumen'),
-			);
-	}
-	
-	protected function rulesEx() {
+        );
+    }
+
+    protected function rulesEx() {
         return array(
             array('staffs, staffs_desc','safe'),
         );
-	}
-	
-	protected function queueItemEx() {
-		return array(
-				'STAFFS'=>$this->staffs,
-				'STAFFSDESC'=>$this->staffs_desc,
-			);
-	}
-	
-	public function init() {
-		$this->id = 'RptFive';
-		$this->name = Yii::t('app','Five Steps');
-		$this->format = 'EXCEL';
-		$this->city = "";
+    }
+
+    protected function queueItemEx() {
+        return array(
+            'STAFFS'=>$this->staffs,
+            'STAFFSDESC'=>$this->staffs_desc,
+        );
+    }
+
+    public function init() {
+        $this->id = 'RptFive';
+        $this->name = Yii::t('app','Five Steps');
+        $this->format = 'EXCEL';
+        $this->city = "";
         $this->cityname ="";
-		$this->fields = 'start_dt,end_dt,staffs,staffs_desc';
-		$this->start_dt = date('Y/m/01', strtotime(date("Y/m/d")));
+        $this->fields = 'start_dt,end_dt,staffs,staffs_desc';
+        $this->start_dt = date('Y/m/01', strtotime(date("Y/m/d")));
         $this->end_dt = date("Y/m/d");
         $this->staffs = '';
         $this->bumen = '';
@@ -46,10 +50,34 @@ class ReportVisitForm extends CReportForm
         $this->sale = '';
         $this->all = '';
         $this->one = '';
-		$this->staffs_desc = Yii::t('misc','All');
-	}
+        $this->staffs_desc = Yii::t('misc','All');
 
-	public function city(){
+        $infoRows = Yii::app()->db->createCommand()->select("a.id_char,b.class_id")
+            ->from("sal_service_type_info a")
+            ->leftJoin("sal_service_type b","a.type_id=b.id")
+            ->where("a.input_type='yearAmount' and b.class_id is not null")->queryAll();//不需要蔚诺空气业务
+        $minQ=array();
+        $allQ=array();
+        $classBySvcList=array();
+        if($infoRows){
+            foreach ($infoRows as $infoRow){
+                $keyStr="".$infoRow["class_id"];
+                if(!key_exists($keyStr,$classBySvcList)){
+                    $classBySvcList[$keyStr]=array();
+                }
+                $classBySvcList[$keyStr][]="svc_".$infoRow["id_char"];
+                $allQ[]="svc_".$infoRow["id_char"];
+                if(!in_array($keyStr,array(6,7))){//纸品（6），一次性售卖（7）
+                    $minQ[]="svc_".$infoRow["id_char"];
+                }
+            }
+        }
+        $this->allQ = "'".implode("','",$allQ)."'";
+        $this->minQ = "'".implode("','",$minQ)."'";
+        $this->classBySvcList = $classBySvcList;
+    }
+
+    public function city(){
         $suffix = Yii::app()->params['envSuffix'];
         $model = new City();
         $city_allow=Yii::app()->user->city_allow();
@@ -158,13 +186,13 @@ class ReportVisitForm extends CReportForm
         $sql = "select a.name,d.username from hr$suffix.hr_employee a, hr$suffix.hr_binding b, security$suffix.sec_user_access c,security$suffix.sec_user d 
         where a.id=b.employee_id and b.user_id=c.username and c.system_id='sal' and c.a_read_write like '%HK01%' and c.username=d.username {$dateSql} and d.city in ($city_allow)";
         $records = Yii::app()->db->createCommand($sql)->queryAll();
-       // print_r('<pre>');
+        // print_r('<pre>');
         //print_r($records);
         return $records;
     }
 
     public function fenxi($model){
-	    $start_dt=str_replace("/","-",$model['start_dt']);
+        $start_dt=str_replace("/","-",$model['start_dt']);
         $end_dt=str_replace("/","-",$model['end_dt']);
         $suffix = Yii::app()->params['envSuffix'];
         $city=$model['city'];
@@ -311,6 +339,7 @@ class ReportVisitForm extends CReportForm
                 $arr['address']=$record;
                 $arr['money']=$meney;
                 $arr['name']=$v;
+                $arr['nameType']="sale";
                 $att[]=$arr;
 
             }
@@ -381,6 +410,7 @@ class ReportVisitForm extends CReportForm
                 $arr['address']=$record;
                 $arr['money']=$meney;
                 $arr['name']=$v['name'];
+                $arr['nameType']="city";
                 $att[]=$arr;
 
             }
@@ -389,7 +419,7 @@ class ReportVisitForm extends CReportForm
 
         //foreach ()
 //        print_r('<pre/>');
-      //  print_r($records);
+        //  print_r($records);
         return $att;
     }
 
@@ -779,41 +809,21 @@ class ReportVisitForm extends CReportForm
     }
 
     public function shul($sum,$records,$name,$names){
-	    $all=0;
+        $all=0;
         $sum_arr=array();
         $sum=array();
         for($i=0;$i<count($records);$i++){
-            if(strpos($records[$i][$name],$names)!==false&&(strpos($records[$i]['visit_obj_name'],'签单')!==false||strpos($records[$i]['visit_obj_name'],'续约')!==false)){
-                $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7') and field_value>'0' and visit_id='".$records[$i]['id']."'";
+            if(strpos($records[$i][$name],$names)!==false&&(strpos($records[$i]['visit_obj_name'],'签单')!==false)){
+                $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ({$this->allQ}) and field_value>'0' and visit_id='".$records[$i]['id']."'";
                 $model = Yii::app()->db->createCommand($sqlid)->queryRow();
-                $sum_arr[]=$model['sum'];
-                $sql="select * from sal_visit_info where visit_id = '".$records[$i]['id']."'";
-                $rows = Yii::app()->db->createCommand($sql)->queryAll();
-                foreach ($rows as $v){
-                    $arr[$v['field_id']]=$v['field_value'];
+                if($model){
+                    $sum_arr[]=$model['sum'];
                 }
-                if(empty($arr['svc_A7'])){
-                    $arr['svc_A7']=0;
+                $sql="select sum(field_value) as money_amt from sal_visit_info where field_id in ({$this->minQ}) and field_value>'0' and visit_id = '".$records[$i]['id']."'";
+                $row = Yii::app()->db->createCommand($sql)->queryRow();
+                if($row){
+                    $sum[]=$row["money_amt"];
                 }
-                if(empty($arr['svc_B6'])){
-                    $arr['svc_B6']=0;
-                }
-                if(empty($arr['svc_C7'])){
-                    $arr['svc_C7']=0;
-                }
-                if(empty($arr['svc_D6'])){
-                    $arr['svc_D6']=0;
-                }
-                if(empty($arr['svc_E7'])){
-                    $arr['svc_E7']=0;
-                }
-                if(empty($arr['svc_F4'])){
-                    $arr['svc_F4']=0;
-                }
-                if(empty($arr['svc_G3'])){
-                    $arr['svc_G3']=0;
-                }
-                $sum[]=$arr['svc_A7']+$arr['svc_B6']+$arr['svc_C7']+$arr['svc_D6']+$arr['svc_E7']+$arr['svc_F4']+$arr['svc_G3'];
             }
             if(strpos($records[$i][$name],$names)!==false){
                 $all=$all+1;
@@ -834,41 +844,21 @@ class ReportVisitForm extends CReportForm
     }
 
     public function shuls($sum,$records,$name,$names){
-	    $all=0;
+        $all=0;
         $sum_arr=array();
         $sum=array();
         for($i=0;$i<count($records);$i++){
-            if(strpos($records[$i][$name],$names)!==false&&(strpos($records[$i]['visit_obj_name'],'签单')!==false||strpos($records[$i]['visit_obj_name'],'续约')!==false)){
-                $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7') and field_value>'0' and visit_id='".$records[$i]['id']."'";
+            if(strpos($records[$i][$name],$names)!==false&&(strpos($records[$i]['visit_obj_name'],'签单')!==false)){
+                $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ({$this->allQ}) and field_value>'0' and visit_id='".$records[$i]['id']."'";
                 $model = Yii::app()->db->createCommand($sqlid)->queryRow();
-                $sum_arr[]=$model['sum'];
-                $sql="select * from sal_visit_info where visit_id = '".$records[$i]['id']."'";
-                $rows = Yii::app()->db->createCommand($sql)->queryAll();
-                foreach ($rows as $v){
-                    $arr[$v['field_id']]=$v['field_value'];
+                if($model){
+                    $sum_arr[]=$model['sum'];
                 }
-                if(empty($arr['svc_A7'])){
-                    $arr['svc_A7']=0;
+                $sql="select sum(field_value) as money_amt from sal_visit_info where field_id in ({$this->minQ}) and field_value>'0' and visit_id = '".$records[$i]['id']."'";
+                $row = Yii::app()->db->createCommand($sql)->queryRow();
+                if($row){
+                    $sum[]=$row["money_amt"];
                 }
-                if(empty($arr['svc_B6'])){
-                    $arr['svc_B6']=0;
-                }
-                if(empty($arr['svc_C7'])){
-                    $arr['svc_C7']=0;
-                }
-                if(empty($arr['svc_D6'])){
-                    $arr['svc_D6']=0;
-                }
-                if(empty($arr['svc_E7'])){
-                    $arr['svc_E7']=0;
-                }
-                if(empty($arr['svc_F4'])){
-                    $arr['svc_F4']=0;
-                }
-                if(empty($arr['svc_G3'])){
-                    $arr['svc_G3']=0;
-                }
-                $sum[]=$arr['svc_A7']+$arr['svc_B6']+$arr['svc_C7']+$arr['svc_D6']+$arr['svc_E7']+$arr['svc_F4']+$arr['svc_G3'];
             }
             if(strpos($records[$i][$name],$names)!==false){
                 $all=$all+1;
@@ -895,43 +885,17 @@ class ReportVisitForm extends CReportForm
         $a=0;
         $sum_arr=array();
         for($i=0;$i<count($records);$i++){
-	        if(strpos($records[$i]['visit_obj_name'],'签单')!==false){
-                // 签单数量
-                $sqlid_sum="select count(visit_id) as sum from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and field_value>'0' and visit_id='".$records[$i]['id']."'";
-                $moder_sum = Yii::app()->db->createCommand($sqlid_sum)->queryRow();
-                //签单金额
-//                $sqlid="select sum(convert(field_value, decimal(12,2))) as money  from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7') and field_value>'0' and visit_id='".$records[$i]['id']."'";
-//                $model_money = Yii::app()->db->createCommand($sqlid)->queryRow();
-
-                $sum_arr[]=$moder_sum['sum'];
-	            $sql="select * from sal_visit_info where visit_id = '".$records[$i]['id']."'";
-                $rows = Yii::app()->db->createCommand($sql)->queryAll();
-               foreach ($rows as $v){
-                   $arr[$v['field_id']]=$v['field_value'];
-               }
-                if(empty($arr['svc_A7'])){
-                    $arr['svc_A7']=0;
+            if(strpos($records[$i]['visit_obj_name'],'签单')!==false){
+                $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ({$this->allQ}) and field_value>'0' and visit_id='".$records[$i]['id']."'";
+                $model = Yii::app()->db->createCommand($sqlid)->queryRow();
+                if($model){
+                    $sum_arr[]=$model['sum'];
                 }
-                if(empty($arr['svc_B6'])){
-                    $arr['svc_B6']=0;
+                $sql="select sum(field_value) as money_amt from sal_visit_info where field_id in ({$this->minQ}) and field_value>'0' and visit_id = '".$records[$i]['id']."'";
+                $row = Yii::app()->db->createCommand($sql)->queryRow();
+                if($row){
+                    $sum[]=$row["money_amt"];
                 }
-                if(empty($arr['svc_C7'])){
-                    $arr['svc_C7']=0;
-                }
-                if(empty($arr['svc_D6'])){
-                    $arr['svc_D6']=0;
-                }
-                if(empty($arr['svc_E7'])){
-                    $arr['svc_E7']=0;
-                }
-                if(empty($arr['svc_F4'])){
-                    $arr['svc_F4']=0;
-                }
-                if(empty($arr['svc_G3'])){
-                    $arr['svc_G3']=0;
-                }
-                $sum[]=$arr['svc_A7']+$arr['svc_B6']+$arr['svc_C7']+$arr['svc_D6']+$arr['svc_E7'];//+$arr['svc_F4']+$arr['svc_G3']
-
             }
         }
         if(!empty($sum)){
@@ -999,6 +963,7 @@ class ReportVisitForm extends CReportForm
         $objPHPExcel = $objReader->load($path);
 //        print_r("<pre>");
 //        print_r($model);
+        $countExcelList=array();
         $optionList = array(
             array("name"=>"拜访类型",'value'=>"visit"),
             array("name"=>"拜访目的",'value'=>"obj"),
@@ -1092,6 +1057,34 @@ class ReportVisitForm extends CReportForm
                                 ->setCellValueByColumnAndRow($num+3, $i13, $dataList[1]);
                             $objPHPExcel->getActiveSheet()
                                 ->setCellValueByColumnAndRow($num+4, $i13, $dataList[2]);
+
+                            if($arr["nameType"]=='sale'){
+                                if(!key_exists($arr['name'],$countExcelList)){
+                                    $staffList = self::getEmployeeListForName($arr['name']);
+                                    $staffList = $staffList?$staffList:array("city_name"=>'',"entry_time"=>'');
+                                    $countExcelList[$arr['name']]=array(
+                                        "name"=>$arr['name'],//销售姓名
+                                        "city"=>$staffList['city_name'],//所属地区
+                                        "entryTime"=>$staffList['entry_time'],//销售入职时间
+                                        "moSum"=>0,//陌拜数量
+                                        "moNum"=>0,//陌拜签单量
+                                        "moAmt"=>0,//陌拜金额
+                                        "keSum"=>0,//转介绍数量
+                                        "keNum"=>0,//转介绍签单量
+                                        "keAmt"=>0,//转介绍金额
+                                    );
+                                }
+                                if($arr[$itemName][$numKey]['name']=="陌拜"){
+                                    $countExcelList[$arr['name']]["moSum"]+=empty($dataList[0])||!is_numeric($dataList[0])?0:$dataList[0];
+                                    $countExcelList[$arr['name']]["moNum"]+=empty($dataList[1])||!is_numeric($dataList[1])?0:$dataList[1];
+                                    $countExcelList[$arr['name']]["moAmt"]+=empty($dataList[2])||!is_numeric($dataList[2])?0:$dataList[2];
+                                }
+                                if($arr[$itemName][$numKey]['name']=="客户资源"){
+                                    $countExcelList[$arr['name']]["keSum"]+=empty($dataList[0])||!is_numeric($dataList[0])?0:$dataList[0];
+                                    $countExcelList[$arr['name']]["keNum"]+=empty($dataList[1])||!is_numeric($dataList[1])?0:$dataList[1];
+                                    $countExcelList[$arr['name']]["keAmt"]+=empty($dataList[2])||!is_numeric($dataList[2])?0:$dataList[2];
+                                }
+                            }
                         }
                     }
                     $objPHPExcel->getActiveSheet()->mergeCells('A'.$a.':A'.$i13);
@@ -1108,6 +1101,28 @@ class ReportVisitForm extends CReportForm
                 );
                 $objPHPExcel->getActiveSheet()->getStyle('A'.$ex.':AC'.($i13-1))->applyFromArray($styleArray);
                 $i=$i13+2;
+            }
+        }
+
+        //增加汇总页
+        if(!empty($countExcelList)){
+            $sheetIndex = $objPHPExcel->getActiveSheetIndex();
+            $sheetIndex++;
+            $objPHPExcel->createSheet();
+            $objPHPExcel->setActiveSheetIndex($sheetIndex);
+            $objPHPExcel->getActiveSheet()->setTitle("汇总");
+            $countRow=1;
+            $titleList = array("销售姓名","所属地区","销售入职时间","陌拜数量","陌拜签单量","陌拜金额","转介绍数量","转介绍签单量","转介绍金额");
+            $bodyList = array("name","city","entryTime","moSum","moNum","moAmt","keSum","keNum","keAmt");
+            foreach ($titleList as $key=>$name){
+                $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow($key, $countRow, $name);
+            }
+            foreach ($countExcelList as $row){
+                $countRow++;
+                foreach ($bodyList as $countCol=>$keyStr){
+                    $name = key_exists($keyStr,$row)?$row[$keyStr]:"";
+                    $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow($countCol, $countRow, $name);
+                }
             }
         }
 
@@ -1128,6 +1143,17 @@ class ReportVisitForm extends CReportForm
         header('Content-Disposition:attachment;filename="'.$str.'"');
         header("Content-Transfer-Encoding:binary");
         echo $output;
+    }
+
+    public static function getEmployeeListForName($name){
+        $suffix = Yii::app()->params['envSuffix'];
+        $row = Yii::app()->db->createCommand()->select("a.*,b.name as city_name")
+            ->from("hr{$suffix}.hr_employee a")
+            ->leftJoin("security{$suffix}.sec_city b","a.city=b.code")
+            ->where("a.name=:name",array(":name"=>$name))
+            ->order("staff_status desc,id desc")
+            ->queryRow();
+        return $row;
     }
 
     public function retrieveData($model){
@@ -1224,12 +1250,14 @@ class ReportVisitForm extends CReportForm
         $end_dt=str_replace("/","-",$model['end_dt']);
         $suffix = Yii::app()->params['envSuffix'];
         $models=array();
+        $classList = CGetName::getSetMenuTypeList("serviceTypeClass");
+        $classBySvcList = $this->classBySvcList;
         foreach ($model['sale'] as $code=>$peoples){
             $sum_arr=array();
             $people=array();
             $sql = "select a.city, a.username, sum(convert(b.field_value, decimal(12,2))) as money 
 				from sal_visit a force index (idx_visit_02), sal_visit_info b   
-				where a.id=b.visit_id and b.field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7') 
+				where a.id=b.visit_id and b.field_id in ({$this->minQ}) 
 				and a.visit_dt >= '$start_dt'and a.visit_dt <= '$end_dt' and  a.visit_obj like '%10%' and a.username ='$peoples' 
 				group by a.city, a.username 
 			";
@@ -1237,7 +1265,7 @@ class ReportVisitForm extends CReportForm
             if(empty($records[0]['money'])){
                 $people['money']=0;
             }else{
-                $people['money']=$records[0]['money'];
+                $people['money']=floatval($records[0]['money']);
             }
 //            print_r('<pre/>');
 //            print_r($records);
@@ -1259,7 +1287,7 @@ class ReportVisitForm extends CReportForm
             $sql_rank="select now_score  from sal_rank where username='".$peoples."'  and  month >= '$start_dt1' and month <= '$end_dt1' order by month desc";//add order by desc
             $rank = Yii::app()->db->createCommand($sql_rank)->queryRow();
             foreach ($arr as $id){//svc_H6(蔚諾服務的金額)
-                $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and field_value>'0' and visit_id='".$id['id']."'";
+                $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ({$this->allQ}) and field_value>'0' and visit_id='".$id['id']."'";
                 $sum = Yii::app()->db->createCommand($sqlid)->queryRow();
                 $sum_arr[]=$sum['sum'];
             }
@@ -1279,80 +1307,23 @@ class ReportVisitForm extends CReportForm
             $people['names']=$cname['names'].(intval($cname['staff_status'])=="-1"?"（离职）":"");//员工名字
             $people['username']=$peoples;//账号名字
             //其他金额
-            $svc_A7=0;
-            $svc_B6=0;
-            $svc_C7=0;
-            $svc_D6=0;
-            $svc_E7=0;
-            $svc_F4=0;
-            $svc_G3=0;
-            $svc_A7s=0;
-            $svc_B6s=0;
-            $svc_C7s=0;
-            $svc_D6s=0;
-            $svc_E7s=0;
-            $svc_F4s=0;
-            $svc_G3s=0;
+            foreach ($classList as $set_id=>$set_name){
+                $people["amt_".$set_id]=0;//按金额
+                $people["sum_".$set_id]=0;//按单数
+            }
             foreach ($arr as $arrs){
-                $sql2="select field_value from sal_visit_info where visit_id='".$arrs['id']."' and field_id='svc_A7' ";
-                $money2 = Yii::app()->db->createCommand($sql2)->queryAll();
-                if(!empty($money2[0]['field_value'])){
-                    $svc_A7=$svc_A7+1;
-                    $svc_A7s+=$money2[0]['field_value'];
-                }
-                $sql3="select field_value from sal_visit_info where visit_id='".$arrs['id']."' and field_id='svc_B6' ";
-                $money3 = Yii::app()->db->createCommand($sql3)->queryAll();
-                if(!empty($money3[0]['field_value'])){
-                    $svc_B6=$svc_B6+1;
-                    $svc_B6s+=$money3[0]['field_value'];
-                }
-                $sql4="select field_value from sal_visit_info where visit_id='".$arrs['id']."' and field_id='svc_C7' ";
-                $money4 = Yii::app()->db->createCommand($sql4)->queryAll();
-                if(!empty($money4[0]['field_value'])){
-                    //echo "<div class='hide' data-type='svc_c7' data-id='{$arrs['id']}' data-date='{$arrs['visit_dt']}' data-monty='{$money4[0]['field_value']}'></div>";
-                    $svc_C7=$svc_C7+1;
-                    $svc_C7s+=$money4[0]['field_value'];
-                }
-                $sql5="select field_value from sal_visit_info where visit_id='".$arrs['id']."' and field_id='svc_D6' ";
-                $money5 = Yii::app()->db->createCommand($sql5)->queryAll();
-                if(!empty($money5[0]['field_value'])){
-                    $svc_D6=$svc_D6+1;
-                    $svc_D6s+=$money5[0]['field_value'];
-                }
-                $sql6="select field_value from sal_visit_info where visit_id='".$arrs['id']."' and field_id='svc_E7' ";
-                $money6 = Yii::app()->db->createCommand($sql6)->queryAll();
-                if(!empty($money6[0]['field_value'])){
-                    $svc_E7=$svc_E7+1;
-                    $svc_E7s+=$money6[0]['field_value'];
-                }
-                $sql7="select field_value from sal_visit_info where visit_id='".$arrs['id']."' and field_id='svc_F4' ";
-                $money7 = Yii::app()->db->createCommand($sql7)->queryAll();
-                if(!empty($money7[0]['field_value'])){
-                    $svc_F4=$svc_F4+1;
-                    $svc_F4s+=$money7[0]['field_value'];
-                }
-                $sql8="select field_value from sal_visit_info where visit_id='".$arrs['id']."' and field_id='svc_G3' ";
-                $money8 = Yii::app()->db->createCommand($sql8)->queryAll();
-                if(!empty($money8[0]['field_value'])){
-                    $svc_G3=$svc_G3+1;
-                    $svc_G3s+=$money8[0]['field_value'];
+                foreach ($classBySvcList as $set_id=>$charArr){
+                    if(!empty($charArr)){
+                        $charSql = implode("','",$charArr);
+                        $sql2="select field_value from sal_visit_info where visit_id='".$arrs['id']."' and field_id in ('{$charSql}') ";
+                        $money2 = Yii::app()->db->createCommand($sql2)->queryRow();
+                        if($money2&&!empty($money2['field_value'])){
+                            $people["amt_".$set_id]+=floatval($money2['field_value']);//按金额
+                            $people["sum_".$set_id]++;//按单数
+                        }
+                    }
                 }
             }
-
-            $people['svc_A7']=$svc_A7s;
-            $people['svc_B6']=$svc_B6s;
-            $people['svc_C7']=$svc_C7s;
-            $people['svc_D6']=$svc_D6s;
-            $people['svc_E7']=$svc_E7s;
-            $people['svc_F4']=$svc_F4s;
-            $people['svc_G3']=$svc_G3s;
-            $people['svc_A7s']=$svc_A7;
-            $people['svc_B6s']=$svc_B6;
-            $people['svc_C7s']=$svc_C7;
-            $people['svc_D6s']=$svc_D6;
-            $people['svc_E7s']=$svc_E7;
-            $people['svc_F4s']=$svc_F4;
-            $people['svc_G3s']=$svc_G3;
             $sql_rank_name="select * from sal_level where start_fraction <='".$rank['now_score']."' and end_fraction >='".$rank['now_score']."'";
             $rank_name= Yii::app()->db->createCommand($sql_rank_name)->queryRow();
             $people['rank']=$rank_name['level'];
@@ -1365,6 +1336,7 @@ class ReportVisitForm extends CReportForm
     }
 
     public function performanceDatas($model){
+        $classList = CGetName::getSetMenuTypeList("serviceTypeClass");
         Yii::$enableIncludePath = false;
         $phpExcelPath = Yii::getPathOfAlias('ext.phpexcel');
         spl_autoload_unregister(array('YiiBase','autoload'));
@@ -1378,6 +1350,15 @@ class ReportVisitForm extends CReportForm
             $objPHPExcel->getActiveSheet()->setCellValue('B'.($i+3), $model['all'][$i]['cityname']) ;
             $objPHPExcel->getActiveSheet()->setCellValue('C'.($i+3), $model['all'][$i]['singular']) ;
             $objPHPExcel->getActiveSheet()->setCellValue('D'.($i+3), $model['all'][$i]['money']) ;
+            $keyCum = 3;
+            foreach ($classList as $set_id=>$set_name){
+                $keyCum++;
+                $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow($keyCum,$i+3,$model['all'][$i]['amt_'.$set_id]);
+                $keyCum++;
+                $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow($keyCum,$i+3,$model['all'][$i]['sum_'.$set_id]);
+
+            }
+            /*
             $objPHPExcel->getActiveSheet()->setCellValue('E'.($i+3), $model['all'][$i]['svc_A7']) ;
             $objPHPExcel->getActiveSheet()->setCellValue('F'.($i+3), $model['all'][$i]['svc_A7s']) ;
             $objPHPExcel->getActiveSheet()->setCellValue('G'.($i+3), $model['all'][$i]['svc_B6']) ;
@@ -1392,6 +1373,7 @@ class ReportVisitForm extends CReportForm
             $objPHPExcel->getActiveSheet()->setCellValue('P'.($i+3), $model['all'][$i]['svc_F4s']) ;
             $objPHPExcel->getActiveSheet()->setCellValue('Q'.($i+3), $model['all'][$i]['svc_G3']) ;
             $objPHPExcel->getActiveSheet()->setCellValue('R'.($i+3), $model['all'][$i]['svc_G3s']) ;
+            */
         }
 //        print_r('<pre/>');
 //        print_r($model['all']);

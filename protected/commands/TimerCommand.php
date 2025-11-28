@@ -2,13 +2,13 @@
 class TimerCommand extends CConsoleCommand {
 
     //每天的23:25点执行
-	public function run() {
+	public function actionIndex() {
 	    /*报错代码
 		$obj = new FivestepForm();
 		$typelist = $obj->getFiveTypeList();
 		$steplist = $obj->getStepList();
 	    */
-        echo "Timer Start:".date("Y/m/d H:i:s")."\n";
+        //echo "Timer Start:".date("Y/m/d H:i:s")."\n";
         $typelist = array(
             0=>Yii::t('misc','Insecticidal'),
             1=>Yii::t('misc','Restroom'),
@@ -110,9 +110,267 @@ class TimerCommand extends CConsoleCommand {
         //销售俱乐部每天刷新一次
         $this->resetClubSales();
         //市场营销的资料超过15天自动退回
-        $this->marketCompanyForBack();
-        echo "Timer End:".date("Y/m/d H:i:s")."\n";
+        //$this->marketCompanyForBack();
+        //自动续约
+        $this->actionRenewal();
+        //自动终止
+        $this->actionStopByS();
+        //echo "Timer End:".date("Y/m/d H:i:s")."\n";
 	}
+
+    //暂停的CRM合约自动转终止
+	public function actionStopByS(){
+        $suffix = Yii::app()->params['envSuffix'];
+        $setMonth = Yii::app()->db->createCommand()->select("set_name")->from("sales{$suffix}.sal_set_menu")
+            ->where("set_type='computeStop'")->order("id desc")->queryRow();
+        $pro_remark = "CRM系统自动暂停转终止：".date("Y-m-d H:i:s");
+        $stop_set_id=100;//终止原因
+        $stopDate = date("Y-m-d");
+        if($setMonth){
+            $vir_arr=array();//CRM合约id
+            $contract_ids=array();//派单系统合约id
+            $surplus_json=array();//合约的终止剩余次数及剩余金额
+            $setMonth = intval($setMonth["set_name"]);
+            $setMonth = is_numeric($setMonth)?$setMonth:0;
+            $sDate = date("Y-m-d",strtotime("-{$setMonth} months"));
+            $virRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract_virtual")
+                ->where("vir_status=40 and DATE_FORMAT(effect_date,'%Y-%m-%d')<='{$sDate}' and u_id is not null")
+                ->queryAll();
+            if($virRows){
+                $totalAmt=0;//终止总金额
+                $totalSum=0;//终止总次数
+                foreach ($virRows as $key=>$virRow){
+                    $boolRow = Yii::app()->db->createCommand()->select("id")->from("sales{$suffix}.sal_contpro_virtual")
+                        ->where("vir_id=:id and pro_status>=1 and pro_status<30",array(":id"=>$virRow["id"]))
+                        ->queryRow();
+                    if($boolRow){//存在变更中的操作
+                        unset($virRows[$key]);
+                        continue;
+                    }
+                    $vir_arr[]=$virRow["id"];
+                    $contract_ids[$virRow["u_id"]]=$virRow["id"];
+                    $surplus_json[$virRow["id"]]=array(
+                        "surplus_number"=>empty($virRow["service_sum"])?0:intval($virRow["service_sum"]),
+                        "surplus_money"=>empty($virRow["year_amt"])?0:floatval($virRow["year_amt"]),
+                    );
+                }
+                $model = new CurlNotesModel();
+                $model->sendSurplusDataSetByUID();
+                $model->setMinUrl($model->min_url);
+                $uIDs = array_keys($contract_ids);
+                $data=array("contract_ids"=>implode(",",$uIDs));
+                $list = $model->sendUData($data,"GET",false);
+                if($list["status"]){//如果派单那边查出有剩余金额及剩余次数
+                    $outData = $list["outData"]["data"];
+                    foreach ($outData as $row){
+                        if(isset($contract_ids[$row["contract_id"]])){
+                            $id = $contract_ids[$row["contract_id"]];
+                            $surplus_json[$id]=$row;
+                        }
+                    }
+                }
+                if(empty($virRows)){
+                    return false;
+                }
+                foreach ($surplus_json as $item){
+                    $totalSum+=$item["surplus_number"];
+                    $totalAmt+=$item["surplus_money"];
+                }
+                $saveArr= array(
+                    "pro_type"=>"T",
+                    "pro_date"=>$stopDate,
+                    "pro_remark"=>$pro_remark,
+                    "pro_status"=>30,
+                    "city"=>"CN",
+                    "vir_id"=>current($vir_arr),
+                    "vir_id_text"=>implode(",",$vir_arr),
+                    "stop_set_id"=>$stop_set_id,
+                    "stop_date"=>$stopDate,
+                    "stop_year_amt"=>$totalAmt,
+                    "need_back"=>"N",
+                    "surplus_num"=>$totalSum,
+                    "surplus_amt"=>$totalAmt,
+                    "surplus_json"=>json_encode($surplus_json,JSON_UNESCAPED_UNICODE),
+                );
+                Yii::app()->db->createCommand()->insert("sal_virtual_batch",$saveArr);
+                $batch_id = Yii::app()->db->getLastInsertID();
+                Yii::app()->db->createCommand()->update("sal_virtual_batch",array(
+                    "pro_code"=>"STT".(10000+$batch_id)
+                ),"id=:id",array(":id"=>$batch_id));
+                foreach ($virRows as $virtualRow){
+                    $vir_id = $virtualRow["id"];
+                    $virSaveArr = $virtualRow;
+                    $virSaveArr["pro_vir_type"]=2;
+                    $virSaveArr["vir_batch_id"]=$batch_id;
+                    $virSaveArr["vir_id"]=$vir_id;
+                    $virSaveArr["pro_type"]="T";
+                    $virSaveArr["pro_num"]=CGetName::getProNumByVir($vir_id,$virSaveArr["pro_type"]);
+                    $virSaveArr["pro_date"]=$stopDate;
+                    $virSaveArr["pro_remark"]=$pro_remark;
+                    $virSaveArr["pro_status"]=30;
+                    $virSaveArr["pro_change"]=-1*$virtualRow["year_amt"];
+                    $dataEx = array(
+                        "stop_set_id"=>$stop_set_id,
+                        "stop_date"=>$stopDate,
+                        "stop_month_amt"=>$virtualRow["month_amt"],
+                        "stop_year_amt"=>$virtualRow["year_amt"],
+                        "need_back"=>"N",
+                        "surplus_num"=>$surplus_json[$vir_id]["surplus_number"],
+                        "surplus_amt"=>$surplus_json[$vir_id]["surplus_money"],
+                        "vir_status"=>50,
+                        "effect_date"=>$stopDate,
+                    );
+                    foreach ($dataEx as $key=>$item){
+                        $virSaveArr[$key]=$item;
+                    }
+                    unset($virSaveArr["id"]);
+                    Yii::app()->db->createCommand()->insert("sal_contpro_virtual",$virSaveArr);
+                    $virtualId = Yii::app()->db->getLastInsertID();
+                    Yii::app()->db->createCommand()->update("sal_contpro_virtual",array(
+                        "pro_code"=>"STT".(10000+$virtualId)
+                    ),"id=".$virtualId);
+                    Yii::app()->db->createCommand()->update("sal_contract_virtual",$dataEx,"id=".$vir_id);
+                }
+
+                //发送续约消息给派单系统
+                $uVirModel = new CurlNotesByVirPro();
+                $uVirModel->pro_type="T";
+                $virIDs = implode(",",$vir_arr);
+                $uVirModel->sendAllVirByIDsAndUpdate($virIDs);
+            }
+        }
+    }
+
+    //CRM合约自动续约
+	public function actionRenewal(){
+        $suffix = Yii::app()->params['envSuffix'];
+        $setDay = Yii::app()->db->createCommand()->select("set_name")->from("sales{$suffix}.sal_set_menu")
+            ->where("set_type='computeRenewal'")->order("id desc")->queryRow();
+        $pro_remark = "CRM系统自动续约";
+        if($setDay){
+            $setDay = intval($setDay["set_name"]);
+            $setDay = is_numeric($setDay)?$setDay:0;
+            $rDate = date("Y-m-d",strtotime("+{$setDay} days"));
+            $virRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract_virtual")
+                ->where("is_renewal='Y' and vir_status in (10,30) and DATE_FORMAT(cont_end_dt,'%Y-%m-%d')<='{$rDate}'")
+                ->queryAll();
+            if($virRows){
+                $virIDs=array();
+                $contIDs=array();
+                $renewalList=array();
+                foreach ($virRows as $key=>$virRow){
+                    $boolRow = Yii::app()->db->createCommand()->select("id")->from("sales{$suffix}.sal_contpro_virtual")
+                        ->where("vir_id=:id and pro_status>=1 and pro_status<30",array(":id"=>$virRow["id"]))
+                        ->queryRow();
+                    if($boolRow){//存在变更中的操作
+                        unset($virRows[$key]);
+                        continue;
+                    }
+                    $virIDs[]=$virRow["id"];
+                    if(!in_array($virRow["cont_id"],$contIDs)){
+                        $contIDs[]=$virRow["cont_id"];
+                        $renewalList[$virRow["cont_id"]]=array('maxDate'=>'2020-01-31','minDate'=>'2019-01-01','list'=>array());
+                    }
+                    $proVirRow=$virRow;
+                    unset($proVirRow["id"]);
+                    $proVirRow["pro_id"]=0;
+                    $proVirRow["vir_id"]=$virRow["id"];
+                    $proVirRow["pro_type"]="C";
+                    $proVirRow["pro_num"]=CGetName::getProNumByVir($proVirRow["vir_id"],$proVirRow["pro_type"]);
+                    $proVirRow["pro_date"]=date("Y-m-d",strtotime($virRow['cont_end_dt']."+1 days"));
+                    $proVirRow["pro_remark"]=$pro_remark;
+                    $proVirRow["pro_status"]=30;
+                    $proVirRow["vir_status"]=30;
+                    $proVirRow["pro_change"]=empty($virRow["year_amt"])?0:$virRow["year_amt"];
+                    $proVirRow["sign_type"]=2;//续约
+                    $proVirRow["effect_date"]=$proVirRow["pro_date"];
+                    $proVirRow["cont_start_dt"]=date("Y-m-01",strtotime($proVirRow['pro_date']));
+                    $proVirRow["cont_end_dt"]=date("Y-m-t",strtotime($proVirRow['cont_start_dt']."+1 year -1 days"));
+                    if($renewalList[$virRow["cont_id"]]['maxDate']<$proVirRow["cont_end_dt"]){
+                        $renewalList[$virRow["cont_id"]]['minDate']=$proVirRow["cont_start_dt"];
+                        $renewalList[$virRow["cont_id"]]['maxDate']=$proVirRow["cont_end_dt"];
+                    }
+                    $renewalList[$virRow["cont_id"]]['list'][]=$proVirRow;
+                }
+
+                if(empty($contIDs)){
+                    return false;
+                }
+                $contIDs = implode(",",$contIDs);
+                $contRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract")
+                    ->where("id in ({$contIDs})")
+                    ->queryAll();
+                if($contRows){
+                    foreach ($contRows as $contRow){
+                        $cont_id = $contRow["id"];
+                        if(isset($renewalList[$cont_id])){
+                            $proRow = $contRow;
+                            unset($proRow['id']);
+                            $proRow["cont_id"]=$contRow["id"];
+                            $proRow["pro_type"]="C";
+                            $proRow["pro_num"]=CGetName::getProNumByCont($proRow["cont_id"],$proRow["pro_type"]);
+                            $proRow["pro_date"]=$contRow["cont_end_dt"];
+                            $proRow["pro_remark"]=$pro_remark;
+                            $proRow["pro_status"]=30;
+                            $proRow["cont_status"]=30;
+                            $proRow["pro_change"]=empty($proRow["total_amt"])?0:$proRow["total_amt"];
+                            $proRow["sign_type"]=2;//续约
+                            $proRow["cont_start_dt"]=$renewalList[$cont_id]["minDate"];//
+                            $proRow["cont_end_dt"]=$renewalList[$cont_id]["maxDate"];//
+                            Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contpro",$proRow);
+                            $proRow["id"] = Yii::app()->db->getLastInsertID();
+                            Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contract_history",array(
+                                "table_type"=>5,
+                                "history_type"=>2,
+                                "table_id"=>$contRow["id"],
+                                "opr_id"=>$proRow["id"],
+                                "history_html"=>"<span>{$pro_remark}</span>",
+                            ));//
+                            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contpro",array(
+                                "pro_code"=>"CCR".(10000+$proRow["id"])
+                            ),"id=:id",array(":id"=>$proRow["id"]));//
+                            if(!empty($renewalList[$cont_id]["list"])){
+                                foreach ($renewalList[$cont_id]["list"] as $proVirRow){
+                                    $proVirRow["pro_id"]=$proRow["id"];
+                                    Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contpro_virtual",$proVirRow);
+                                    $proVirRow["id"] = Yii::app()->db->getLastInsertID();
+                                    Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contract_history",array(
+                                        "table_type"=>7,
+                                        "history_type"=>2,
+                                        "table_id"=>$proVirRow["vir_id"],
+                                        "opr_id"=>$proVirRow["id"],
+                                        "history_html"=>"<span>{$pro_remark}</span>",
+                                    ));//
+                                    Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contpro_virtual",array(
+                                        "pro_code"=>"CCR".(10000+$proVirRow["id"])
+                                    ),"id=:id",array(":id"=>$proVirRow["id"]));//
+
+                                    Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract_virtual",array(
+                                        "sign_type"=>$proVirRow["sign_type"],
+                                        "cont_start_dt"=>$proVirRow["cont_start_dt"],
+                                        "cont_end_dt"=>$proVirRow["cont_end_dt"],
+                                    ),"id=:id",array(":id"=>$proVirRow["vir_id"]));//
+                                }
+                            }
+
+                            if($renewalList[$cont_id]["maxDate"]>$contRow["cont_end_dt"]){
+                                Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract",array(
+                                    "cont_end_dt"=>$renewalList[$cont_id]["maxDate"],
+                                    "sign_type"=>2,
+                                ),"id=:id",array(":id"=>$cont_id));//
+                            }
+                        }
+                    }
+                }
+
+                //发送续约消息给派单系统
+                $uVirModel = new CurlNotesByVirPro();
+                $uVirModel->pro_type="C";
+                $virIDs = implode(",",$virIDs);
+                $uVirModel->sendAllVirByIDsAndUpdate($virIDs);
+            }
+        }
+    }
 
     //市场营销的资料超过15天自动退回
     private function marketCompanyForBack(){

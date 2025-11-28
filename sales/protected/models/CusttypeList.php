@@ -13,6 +13,8 @@ class CusttypeList extends CListPageModel
 			'name'=>Yii::t('code','Description'),
 			'rpt_type'=>Yii::t('code','Report Category'),
 			'type_group'=>Yii::t('code','Type'),
+			'rpt_u'=>"派单系统对应id",
+			'z_display'=>"是否显示",
 			'city'=>Yii::t('sales','City'),
 		);
 	}
@@ -58,6 +60,12 @@ class CusttypeList extends CListPageModel
 				case 'name':
 					$order .= " order by a.name ";
 					break;
+				case 'rpt_u':
+					$order .= " order by a.rpt_u ";
+					break;
+				case 'z_display':
+					$order .= " order by a.z_display ";
+					break;
 				case 'city':
 					$order .= " order by b.name ";
 					break;
@@ -82,7 +90,9 @@ class CusttypeList extends CListPageModel
 					$this->attr[] = array(
 						'id'=>$record['id'],
 						'name'=>$record['name'],
-						'type_group'=>($record['type_group']==1  
+						'rpt_u'=>$record['rpt_u'],
+						'z_display'=>$record['z_display']=="1"?"是":"否",
+						'type_group'=>($record['type_group']==1
 										? Yii::t('sales','Catering') 
 										: ($record['type_group']==2 ? Yii::t('sales','Non-catering') : '')
 									),

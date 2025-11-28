@@ -11,6 +11,11 @@
 		?>
 	</th>
 	<th>
+		<?php echo TbHtml::link($this->getLabelName('nal_tree_names').$this->drawOrderArrow('nal_tree_names'),'#',$this->createOrderLink('code-list','nal_tree_names'))
+			;
+		?>
+	</th>
+	<th>
 		<?php echo TbHtml::link($this->getLabelName('z_index').$this->drawOrderArrow('z_index'),'#',$this->createOrderLink('code-list','z_index'))
 			;
 		?>

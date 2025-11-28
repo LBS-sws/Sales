@@ -3,225 +3,136 @@ class ImportCommand extends CConsoleCommand {
 	protected $webroot;
 	protected $city;
 	protected $uid;
+	protected $id;
 	
-	public function run($args) {
-		$this->webroot = Yii::app()->params['webroot'];
-		$sql = "select a.id, a.ts, a.import_type, a.username, a.class_name, a.req_dt, file_type, file_content   
-					from acc_import_queue a
-				where a.status='P' order by a.req_dt limit 1";
+	public function actionIndex() {
+		$sql = "select a.* from sal_import_queue a
+				where a.status='P' order by a.req_dt asc limit 1";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
-		if ($row===false) return;
-		
-		$id = $row['id'];
-		$ts = $row['ts'];
-		$this->uid = $row['username'];
-		
-		if ($id!=0) $param = $this->getQueueParam($id);
-		
-		if (($id!=0) && !empty($param) && $this->markStatus($id, $ts, 'I')) {
-			$this->city = $param['CITY'];
-			$mapping = json_decode($param['MAPPING']);
-			$classname = $row['class_name'];
-			$importtype = $row['import_type'];
-			$uid = $this->uid;
-			$ts = $this->getTimeStamp($id);
-				
-			$mesg = "ID:$id NAME:$importtype CLASS:$classname USER:$uid\n";
-			echo $mesg;
-	
-			$excelfile = $this->writeExcelFile($row['file_content']);
-			$data = $this->formatData($excelfile, $row['file_type'], $mapping);
-			$log = $this->import($classname, $data, $id);
-			
-			$sts = (strpos($log, Yii::t('import','ERROR'))===false) ? 'C' : 'F';
-			$this->markStatus($id, $ts, $sts);
-			echo "\t-Done (default)\n";
-		}
-	}
-
-	protected function import($classname, $data, $queueid) {
-		$model = new $classname();
-		$logmsgErr = '';
-		$logmsgOk = '';
-		$logmsg = '';
-		$cnt = 0;
-		
-		$connection = Yii::app()->db;
-		$transaction=$connection->beginTransaction();
-		try {
-			foreach ($data as $row) {
-				$msgErr = $model->validateData($row);
-				$msgOk = '';
-				if ($msgErr=='') {
-					$cnt++;
-					$msgOk = $model->importData($connection, $row);
-				}
-				
-				$logmsgErr .= (empty($logmsgErr) ? "" : (empty($msgErr) ? "" : "\n")).$msgErr;
-				$logmsgOk .= (empty($logmsgOk) ? "" : (empty($msgOk) ? "" : "\n")).$msgOk;
-				echo (empty($msgErr) ? $msgOk : $msgErr)."\n";
-				
-				if ($cnt == 500) {
-					$logmsg = empty($logmsgErr) ? Yii::t('import','Import Success!') : Yii::t('import','Import Error:')."\n".$logmsgErr;
-					$logmsg .= "\n\n".Yii::t('import','Imported Rows:')."\n".$logmsgOk;
-					
-					$this->saveLog($connection, $queueid, $logmsg);
-					$transaction->commit();
-					$transaction=$connection->beginTransaction();
-					$cnt = 0;
-				}
-			}
-			$logmsg = empty($logmsgErr) ? Yii::t('import','Import Success!') : Yii::t('import','Import Error:')."\n".$logmsgErr;
-			$logmsg .= "\n\n".Yii::t('import','Imported Rows:')."\n".$logmsgOk;
-			$this->saveLog($connection, $queueid, $logmsg);
-			$transaction->commit();
-
-		} catch(Exception $e) {
-			$transaction->rollback();
-			echo 'Error: '.$e->getMessage();
-			$logmsg .= "\n\n".Yii::t('import','ERROR').' '.$e->getMessage();
-		}
-		return $logmsg;
-	}
-	
-	protected function writeExcelFile($content) {
-		$file = tempnam(sys_get_temp_dir(), 'excel_');
-		$handle = fopen($file, "w");
-		fwrite($handle, $content);
-		fclose($handle);
-		return $file;
-	}
-	
-	protected function formatData($filename, $fileext, $mapping) {
-		$rtn = array();
-		
-		$excel = new ExcelTool();
-		$excel->start();
-		$readerType = strtolower($fileext)=='xlsx' ? 'Excel2007' : 'Excel5';
-		$excel->readFileByType($filename, $readerType);
-		
-		$emptycnt = 0;
-		$rowidx = 2;
-		$ws = $excel->setActiveSheet(0);
-		do {
-			$fields = array();
-			$emptyrow = true;
-			foreach ($mapping as $item) {
-				if ($item->filefield >= 0) {
-					$value = $excel->getCellValue($excel->getColumn($item->filefield),$rowidx); 
-					$fields[$item->dbfieldid] = $value;
-					if ($emptyrow && !empty($value)) $emptyrow = false;
-				}
-			}
-			if ($emptyrow) {
-				$emptycnt++;
-			} else {
-				if (!isset($fields['uid'])) $fields['uid'] = $this->uid;
-				if (!isset($fields['city'])) $fields['city'] = $this->city;
-				if (!isset($fields['excel_row'])) $fields['excel_row'] = $rowidx;
-				$rtn[] = $fields;
-				$emptycnt = 0;
-			}
-			$rowidx++;
-		} while ($emptycnt <= 2);
-		
-		$excel->end();
-		unlink($filename);
-		
-		return $rtn;
-	}
-	
-	protected function getQueueParam($qid) {
-		$rtn = array();
-		$sql = "select * from acc_import_queue_param where queue_id=".$qid;
-		$rows = Yii::app()->db->createCommand($sql)->queryAll();
-		if (count($rows) > 0) {
-			foreach ($rows as $row) {
-				$param_field = $row['param_field'];
-				$param_value = $row['param_value'];
-				$rtn[$param_field] = $param_value; 
-			}
-		}
-		return $rtn;
-	}
-	
-	protected function markStatus($id, $ts, $sts) {
-		$sql = ($sts=='C' || $sts=='F')
-			? "update acc_import_queue set status=:status, fin_dt=now() where id=:id and ts=:ts"
-			: "update acc_import_queue set status=:status where id=:id and ts=:ts";
-		$command=Yii::app()->db->createCommand($sql);
-		if (strpos($sql,':id')!==false)
-			$command->bindParam(':id',$id,PDO::PARAM_INT);
-		if (strpos($sql,':status')!==false)
-			$command->bindParam(':status',$sts,PDO::PARAM_STR);
-		if (strpos($sql,':ts')!==false)
-			$command->bindParam(':ts',$ts,PDO::PARAM_STR);
-		$cnt = $command->execute();
-		return ($cnt>0);
-	}
-	
-	protected function saveLog(&$connection, $id, $msg) {
-		$sql = "update acc_import_queue_param set param_text=:msg where queue_id=:id and param_field='LOG'";
-		$command=$connection->createCommand($sql);
-		if (strpos($sql,':id')!==false)
-			$command->bindParam(':id',$id,PDO::PARAM_INT);
-		if (strpos($sql,':msg')!==false)
-			$command->bindParam(':msg',$msg,PDO::PARAM_STR);
-		$command->execute();
-	}
-	
-	protected function getTimeStamp($id) {
-		$ts = '';
-		$sql = "select ts from acc_import_queue where id=".$id;
-		$rows = Yii::app()->db->createCommand($sql)->queryAll();
-		if (count($rows) > 0) {
-			foreach ($rows as $row) {
-				$ts = $row['ts'];
-				break;
-			}
-		}
-		return $ts;
-	}
-	protected function getredeemscore(){
-        $start_time = date('Y-m-01 00:00:00', strtotime('-1 month'));
-        $end_time = date('Y-m-31 23:59:59', strtotime('-1 month'));
-        $sql="select a.*,b.* from sal_rank a
-              left join  sal_rankday b on  a.id=b.rank_id
-              where a.month>= '".$start_time."' and a.month<='".$end_time."'";
-        $rows = Yii::app()->db->createCommand($sql)->queryAll();
-
-        //用户排行榜积分累加
-        for ($i=0;$i<sizeof($rows);$i++){
-            if($rows[$i]['employee_id']){
-                $employee_id = $rows[$i]['employee_id'];
-                //计算上个赛季得分
-                $now_score = $rows[$i]['now_score'];
-                $add_score = 0;
-                //获取所有等级
-                $sql1 = 'select * from sal_level';
-                $level_list = Yii::app()->db->createCommand($sql1)->queryAll();
-                for ($j=0;$j<sizeof($level_list);$j++){
-                    if ($level_list[$j]['start_fraction']>=$now_score && $now_score<=$level_list[$j]['end_fraction']){
-                        $add_score = $level_list[$j]['reward'];
-                    }
-                }
-                if($add_score>0){
-                    $sql2 = 'select * from sal_redeem_score where employee_id ='.$employee_id;
-                    $al=Yii::app()->db->createCommand($sql2)->queryRow();
-                    if ($al){
-                        $add_score = $add_score+$al['score'];
-                        $up = Yii::app()->db->createCommand()->update('sal_redeem_score', array('score' => $add_score), 'id=:id', array(':id' => $al['id']));
-                    }else{
-                        $add =Yii::app()->db->createCommand()->insert('sal_redeem_score', array('score' => $add_score,'employee_id' => $employee_id));
-                    }
-
-                }
-
+		if ($row){
+            $id = $row['id'];
+            $this->id=$id;
+            Yii::app()->db->createCommand()->update("sal_import_queue",array(
+                "status"=>"I"
+            ),"id=:id",array(":id"=>$id));
+            echo "ID:import_{$id}\n";
+            set_error_handler([$this,"myErrorHandler"]);
+            switch ($row["import_type"]){
+                case "clueBox":
+                    $model = new ImportClueBoxForm('edit');
+                    $model->id = $id;
+                    $model->city_allow = $row["city_allow"];
+                    $model->req_dt = $row["req_dt"];
+                    $model->username = $row["username"];
+                    $model->import_type = $row["import_type"];
+                    $model->file_path = $row["import_file"];
+                    $list = $model->importChangeOne();
+                    break;
+                case "clue":
+                    $model = new ImportClueForm('edit');
+                    $model->id = $id;
+                    $model->city_allow = $row["city_allow"];
+                    $model->req_dt = $row["req_dt"];
+                    $model->username = $row["username"];
+                    $model->import_type = $row["import_type"];
+                    $model->file_path = $row["import_file"];
+                    $list = $model->importChangeOne();
+                    break;
+                case "clueStore":
+                    $model = new ImportClueStoreForm('edit');
+                    $model->id = $id;
+                    $model->city_allow = $row["city_allow"];
+                    $model->req_dt = $row["req_dt"];
+                    $model->username = $row["username"];
+                    $model->import_type = $row["import_type"];
+                    $model->file_path = $row["import_file"];
+                    $list = $model->importChangeOne();
+                    break;
+                case "client":
+                    $model = new ImportClientForm('edit');
+                    $model->id = $id;
+                    $model->city_allow = $row["city_allow"];
+                    $model->req_dt = $row["req_dt"];
+                    $model->username = $row["username"];
+                    $model->import_type = $row["import_type"];
+                    $model->file_path = $row["import_file"];
+                    $list = $model->importChangeOne();
+                    break;
+                case "clientStore":
+                    $model = new ImportClientStoreForm('edit');
+                    $model->id = $id;
+                    $model->city_allow = $row["city_allow"];
+                    $model->req_dt = $row["req_dt"];
+                    $model->username = $row["username"];
+                    $model->import_type = $row["import_type"];
+                    $model->file_path = $row["import_file"];
+                    $list = $model->importChangeOne();
+                    break;
+                case "vir":
+                    $model = new ImportVirForm('edit');
+                    $model->id = $id;
+                    $model->city_allow = $row["city_allow"];
+                    $model->req_dt = $row["req_dt"];
+                    $model->username = $row["username"];
+                    $model->import_type = $row["import_type"];
+                    $model->file_path = $row["import_file"];
+                    $list = $model->importChangeOne();
+                    break;
+                case "cont":
+                    $model = new ImportContForm('edit');
+                    $model->id = $id;
+                    $model->city_allow = $row["city_allow"];
+                    $model->req_dt = $row["req_dt"];
+                    $model->username = $row["username"];
+                    $model->import_type = $row["import_type"];
+                    $model->file_path = $row["import_file"];
+                    $list = $model->importChangeOne();
+                    break;
+                default:
+                    $list=array("code"=>400,"success_num"=>0,"error_num"=>0,'msg'=>"import_type error:{$row['import_type']}",'error_file'=>null);
             }
-
+            $message = isset($list["msg"])?$list["msg"]:"成功";
+            $list["msg"] = mb_strlen($message)>250?mb_substr($message,0,250,'UTF-8'):$message;
+            if(isset($list["code"])&&$list["code"]==200){
+                Yii::app()->db->createCommand()->update("sal_import_queue",array(
+                    "status"=>"C",
+                    "message"=>$list["msg"],
+                    "error_file"=>$list["error_file"],
+                    "fin_dt"=>date("Y-m-d H:i:s"),
+                    "success_num"=>$list["success_num"],
+                    "error_num"=>$list["error_num"],
+                ),"id=".$id);
+                echo "\t-Done (default)\n";
+            }else{
+                Yii::app()->db->createCommand()->update("sal_import_queue",array(
+                    "status"=>"E",
+                    "error_file"=>$list["error_file"],
+                    "fin_dt"=>date("Y-m-d H:i:s"),
+                    "message"=>$list["msg"],
+                    "success_num"=>$list["success_num"],
+                    "error_num"=>$list["error_num"],
+                ),"id=".$id);
+                echo "\t-FAIL\n";
+            }
         }
+	}
 
-
+    public function myErrorHandler($errno, $errstr, $errfile, $errline) {
+        $message = "错误 [$errno]: $errstr 在 $errfile 第 $errline 行。";
+        $list=array("code"=>400,"success_num"=>0,"error_num"=>0,'msg'=>'','error_file'=>null);
+        $list["msg"] = mb_strlen($message)>250?mb_substr($message,0,250,'UTF-8'):$message;
+        Yii::app()->db->createCommand()->update("sal_import_queue",array(
+            "status"=>"E",
+            "error_file"=>$list["error_file"],
+            "fin_dt"=>date("Y-m-d H:i:s"),
+            "message"=>$list["msg"],
+            "success_num"=>$list["success_num"],
+            "error_num"=>$list["error_num"],
+        ),"id=".$this->id);
+        // 可以选择是否继续执行或终止脚本
+        if (error_reporting() !== 0) {
+            throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+        }
     }
 }
 ?>

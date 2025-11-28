@@ -39,6 +39,74 @@ return array(
 		),
 	),
 
+    'Customer Manage'=>array( //线索管理
+        'access'=>'CM',
+		'icon'=>'fa-lightbulb-o',//fa-coffee
+        'items'=>array(
+            'Clue Box'=>array( //线索池
+                'access'=>'CM01',
+                'url'=>'clueBox/index',
+            ),
+            'Clue Head'=>array( //线索
+                'access'=>'CM02',
+                'url'=>'clueHead/index',
+            ),
+            'Clue Service'=>array( //商机
+                'access'=>'CM03',
+                'url'=>'clueService/index',
+            ),
+            'Store List'=>array( //门店列表
+                'access'=>'CM04',
+                'url'=>'clueStore/index',
+            ),
+            'Clue Report'=>array( //方案报价
+                'access'=>'CM05',
+                'url'=>'clueRpt/index',
+            ),
+            'Customer List'=>array( //客户列表
+                'access'=>'CM10',
+                'url'=>'clientHead/index',
+            ),
+        )
+    ),
+
+
+    'Contract Manage'=>array( //合同管理
+        'access'=>'CT',
+        'icon'=>'fa-archive',
+        'items'=>array(
+            'Contract List'=>array( //合同列表
+                'access'=>'CT01',
+                'url'=>'contHead/index',
+            ),
+            'Virtual List'=>array( //虚拟合同列表
+                'access'=>'CT02',
+                'url'=>'virtualHead/index',
+            ),
+            /*
+             * CM06
+             * CM07
+            'Contract Update List'=>array( //变更合同列表
+                'access'=>'CM09',
+                'url'=>'contPro/index',
+            ),
+            'Virtual Update List'=>array( //变更虚拟合同列表
+                'access'=>'CM08',
+                'url'=>'virtualPro/index',
+            ),
+            */
+        )
+    ),
+    'Call Service'=>array( //呼叫式服务
+        'access'=>'CS',
+        'icon'=>'fa-phone',
+        'items'=>array(
+            'Call History'=>array( //呼叫记录
+                'access'=>'CS01',
+                'url'=>'callService/index',
+            ),
+        )
+    ),
     'Stop Customer'=>array( //終止客戶
         'access'=>'SC',
 		'icon'=>'fa-superpowers',
@@ -356,7 +424,91 @@ return array(
                 'url'=>'/salesMin/edit',
                 'tag'=>'@',
             ),
+            'main lbs setting'=>array(//主体公司
+                'access'=>'HC12',
+                'url'=>'/mainLbs/index',
+                'tag'=>'@',
+            ),
+            'sales group setting'=>array(//人员组织架构
+                'access'=>'HC13',
+                'url'=>'/salesGroup/edit',
+                'tag'=>'@',
+            ),
+            'seal setting'=>array(//印章设置
+                'access'=>'HC14',
+                'url'=>'/seal/index',
+                'tag'=>'@',
+            ),
+            'pay type setting'=>array(//付款方式设置
+                'access'=>'HC15',
+                'url'=>'/payType/index',
+                'tag'=>'@',
+            ),
+            'service type setting'=>array(//服务项目设置
+                'access'=>'HC16',
+                'url'=>'/serviceType/index',
+                'tag'=>'@',
+            ),
+            'cont type setting'=>array(//合同类型设置
+                'access'=>'HC17',
+                'url'=>'/contType/index',
+                'tag'=>'@',
+            ),
+            'S/T remark setting'=>array(//暂停/终止原因配置
+                'access'=>'HC18',
+                'url'=>'/contSTSet/index',
+                'tag'=>'@',
+            ),
+            'yewudalei setting'=>array(//业务大类配置
+                'access'=>'HC19',
+                'url'=>'/yewudaleiSet/index',
+                'tag'=>'@',
+            ),
+            'menu setting'=>array(//通用配置
+                'access'=>'HC21',
+                'url'=>'/setMenu/index',
+                'tag'=>'@',
+            ),
+            /*
+            'cont area setting'=>array(//区域关联配置
+                'access'=>'HC20',
+                'url'=>'/contAreaSet/index',
+                'tag'=>'@',
+            ),
+            */
 		),
 	),
+    'Import'=>array(
+        'access'=>'XF',
+        'icon'=>'fa-bolt',
+        'items'=>array(
+            'Import'=>array(
+                'access'=>'XF03',
+                'url'=>'/import/clue',
+            ),
+            'U Import'=>array(
+                'access'=>'XF02',
+                'url'=>'/import/index',
+            ),
+            'Import Manager'=>array(
+                'access'=>'XF01',
+                'url'=>'/iqueue/index',
+            ),
+        ),
+    ),
+    'CRM Curl Notes'=>array(//CRM同步记录
+        'access'=>'ZC',
+        'icon'=>'fa-exchange',
+        'items'=>array(
+            'LBS To U'=>array(//LBS发送给派单系统
+                'access'=>'ZC01',
+                'url'=>'/curlNotes/index',
+            ),
+            'MH To LBS'=>array(//门户发送给LBS
+                'access'=>'ZC02',
+                'url'=>'/curlReceive/index',
+            ),
+        ),
+    ),
 
 );

@@ -140,23 +140,14 @@ class ReportController extends Controller
             $post= $_POST['ReportVisitForm'];
             Yii::app()->session['index'] = $post;
             if(!empty($post['sale'])){
+                $classList = CGetName::getSetMenuTypeList("serviceTypeClass");
                 $array=$model->Summary($post);
                 $sum['money']= array_sum(array_map(create_function('$val', 'return $val["money"];'), $array));
                 $sum['singular']= array_sum(array_map(create_function('$val', 'return $val["singular"];'), $array));
-                $sum['svc_A7']= array_sum(array_map(create_function('$val', 'return $val["svc_A7"];'), $array));
-                $sum['svc_B6']= array_sum(array_map(create_function('$val', 'return $val["svc_B6"];'), $array));
-                $sum['svc_C7']= array_sum(array_map(create_function('$val', 'return $val["svc_C7"];'), $array));
-                $sum['svc_D6']= array_sum(array_map(create_function('$val', 'return $val["svc_D6"];'), $array));
-                $sum['svc_E7']= array_sum(array_map(create_function('$val', 'return $val["svc_E7"];'), $array));
-                $sum['svc_F4']= array_sum(array_map(create_function('$val', 'return $val["svc_F4"];'), $array));
-                $sum['svc_G3']= array_sum(array_map(create_function('$val', 'return $val["svc_G3"];'), $array));
-                $sum['svc_A7s']= array_sum(array_map(create_function('$val', 'return $val["svc_A7s"];'), $array));
-                $sum['svc_B6s']= array_sum(array_map(create_function('$val', 'return $val["svc_B6s"];'), $array));
-                $sum['svc_C7s']= array_sum(array_map(create_function('$val', 'return $val["svc_C7s"];'), $array));
-                $sum['svc_D6s']= array_sum(array_map(create_function('$val', 'return $val["svc_D6s"];'), $array));
-                $sum['svc_E7s']= array_sum(array_map(create_function('$val', 'return $val["svc_E7s"];'), $array));
-                $sum['svc_F4s']= array_sum(array_map(create_function('$val', 'return $val["svc_F4s"];'), $array));
-                $sum['svc_G3s']= array_sum(array_map(create_function('$val', 'return $val["svc_G3s"];'), $array));
+                foreach ($classList as $set_id=>$set_name){
+                    $sum['amt_'.$set_id]= array_sum(array_map(create_function('$val', 'return $val["amt_'.$set_id.'"];'), $array));
+                    $sum['sum_'.$set_id]= array_sum(array_map(create_function('$val', 'return $val["sum_'.$set_id.'"];'), $array));
+                }
             }else{
                 $array=array();
             }

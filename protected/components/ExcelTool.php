@@ -80,6 +80,15 @@ class ExcelTool {
 		
 		return $output;
 	}
+
+	public function genReport() {
+        $objWriter = PHPExcel_IOFactory::createWriter($this->objPHPExcel, 'Excel2007');
+        ob_start();
+        $objWriter->save('php://output');
+        $output = ob_get_clean();
+
+        return $output;
+	}
 	
 	public function generateOutput($data, $sheetid) {
 		if ($sheetid > 0) {

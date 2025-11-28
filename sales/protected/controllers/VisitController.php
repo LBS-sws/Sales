@@ -25,13 +25,17 @@ class VisitController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','delete','save','searchcust','readcust','visited',
+				'actions'=>array('new','delete','save'),
+				'expression'=>array('VisitController','allowCRMReadWrite'),
+			),
+			array('allow',
+				'actions'=>array('edit','searchcust','readcust','visited',
 									'fileupload','fileremove','getcusttypelist','updatevip'
 								),
 				'expression'=>array('VisitController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view','filedownload','report','listfile'),
+				'actions'=>array('index','view','filedownload','report','listfile','qian'),
 				'expression'=>array('VisitController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -40,7 +44,13 @@ class VisitController extends Controller
 		);
 	}
 
-	public function actionIndex($pageNum=0) 
+	public function actionQian($index)
+	{
+	    $model = new VisitForm('edit');
+	    $model->addNotificationByQian($index);
+    }
+
+	public function actionIndex($pageNum=0)
 	{
        $model = new VisitList;
 		if (isset($_POST['VisitList'])) {
@@ -70,9 +80,28 @@ class VisitController extends Controller
 
 	public function actionReport() {
 		$model = new VisitList;
-		$model->submitReport();
-		Dialog::message(Yii::t('dialog','Information'), Yii::t('dialog','Report submitted. Please go to Report Manager to retrieve the output.'));
-		$this->redirect(Yii::app()->createUrl('visit/index'));
+        if (isset($_POST['VisitList'])) {
+            $model->attributes = $_POST['VisitList'];
+        } else {
+            $session = Yii::app()->session;
+            if (isset($session[$model->criteriaName()]) && !empty($session[$model->criteriaName()])) {
+                $criteria = $session[$model->criteriaName()];
+                if(!empty($_GET['start'])){
+                    $arr=$_GET;
+                    //   $criteria['filter']='[{"field_id":"visit_dt","operator":">=","srchval":"'.$arr['start'].'"},{"field_id":"visit_dt","operator":"<=","srchval":"'.$arr['end'].'"},{"field_id":"visit_obj","operator":"like","srchval":"签单"},{"field_id":"city_name","operator":"=","srchval":"'.$arr['city'].'"},{"field_id":"staff","operator":"like","srchval":"'.$arr['sales'].'"}]';//这个是直接给session
+                    $session['get']=$arr;
+                }//根据这个变化
+                //$criteria['filter']='[{"field_id":"staff","operator":"like","srchval":"5"}]';
+                $model->setCriteria($criteria);
+            }
+        }
+        if($model->retrieveDataTotal()){
+            $model->submitReport();
+            Dialog::message(Yii::t('dialog','Information'), Yii::t('dialog','Report submitted. Please go to Report Manager to retrieve the output.'));
+        }else{
+            Dialog::message(Yii::t('dialog','Information'), "数据为空，无法导出");
+        }
+        $this->redirect(Yii::app()->createUrl('visit/index'));
 	}
 	
 	public function actionSave() {
@@ -124,6 +153,7 @@ class VisitController extends Controller
 	{
 		$model = new VisitForm('new');
 		$model->visit_dt=date("Y/m/d");
+		$model->settingServices();
 		$this->render('form',array('model'=>$model,));
 	}
 	
@@ -274,8 +304,17 @@ class VisitController extends Controller
         echo $d->genFileListView();
     }
 
+	public static function allowCRMReadWrite() {
+        $city = Yii::app()->user->city;
+        if(in_array($city,array('CD'))){//试点城市不允许录入
+            return false;
+        }else{
+            return Yii::app()->user->validRWFunction('HK01');
+        }
+	}
+
 	public static function allowReadWrite() {
-		return Yii::app()->user->validRWFunction('HK01');
+        return Yii::app()->user->validRWFunction('HK01');
 	}
 	
 	public static function allowReadOnly() {

@@ -200,6 +200,10 @@ class SignedRateForm extends CFormModel
     }
 
     private function setTempForVisit(&$temp,$staffRow){
+        $idCharSql = "SELECT GROUP_CONCAT(CONCAT(\"'svc_\",a.id_char,\"'\")) as idChars FROM sal_service_type_info a LEFT JOIN sal_service_type b ON a.type_id=b.id 
+WHERE b.class_id is NOT null AND a.input_type='yearAmount' AND  b.class_id not in (6,7)";
+        $idChar = Yii::app()->db->createCommand($idCharSql)->queryRow();
+        $idChar =$idChar?$idChar["idChars"]:"''";
         $selectAmtSQL = "";//签单金额查询
         $selectSignSQL = "";//签单数量查询
         foreach ($this->visit_type_list as $row){
@@ -208,7 +212,7 @@ class SignedRateForm extends CFormModel
         }
         $dateSql = " and a.visit_dt BETWEEN '{$this->start_date}' and '{$this->end_date}'";
         //签单金额不包含纸品
-        $amtSql = " and b.field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7')";
+        $amtSql = " and b.field_id in ({$idChar})";
         //总拜访量
         $temp["visit_sum"] = Yii::app()->db->createCommand()->select("count(a.id)")->from("sal_visit a")
             ->where("a.username=:id {$dateSql}",array(":id"=>$staffRow["user_id"]))->queryScalar();

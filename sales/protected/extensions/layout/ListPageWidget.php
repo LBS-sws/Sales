@@ -11,6 +11,7 @@ class ListPageWidget extends CWidget
 	public $hasNavBar = true;
 	public $hasSearchBar = true;
 	public $hasPageBar = true;
+    public $tableClass="table table-hover";
     public $search_add_html = '';
 	public $searchlinkparam = array();
 	
@@ -29,7 +30,7 @@ class ListPageWidget extends CWidget
 		$layout .= '<div class="box-header"><h3 class="box-title"><strong>'.$this->title.'</strong></h3>';
 		$layout .= $this->renderDateButton();
 		$layout .= '</div>';
-		$layout .= '<div class="box-body table-responsive">';
+		$layout .= '<div class="box-body">';
 		if ($this->hasSearchBar || $this->hasNavBar) {
 			$layout .= '<div class="box-tools">';
 			if ($this->hasNavBar) {
@@ -45,7 +46,7 @@ class ListPageWidget extends CWidget
 			}
 		$layout .= '</div>';
 		}
-		$layout .= '<div><table id="tblData" class="table table-hover">';
+		$layout .= "<div class=\"table-responsive\" style=\"width: 100%\"><table id=\"tblData\" class=\"{$this->tableClass}\">";
 		$layout .= '<thead>';
 		$layout .= $this->render($this->viewhdr, null, true);
 		$layout .= '</thead>';
@@ -66,7 +67,7 @@ class ListPageWidget extends CWidget
 		$layout .= '</tbody>';
 		$layout .= '</table></div>';
 		$layout .= '</div>';
-		
+
 		$layout .= '<div class="box-footer clearfix">';
 		if ($this->hasSearchBar) {
 			$layout .= '<div class="box-tools">'.$this->pageBar().'</div>';

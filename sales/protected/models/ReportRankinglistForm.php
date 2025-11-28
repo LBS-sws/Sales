@@ -61,11 +61,15 @@ class ReportRankinglistForm extends CReportForm
 
     public function salepeople($start,$end,$onlyBool=false) {
         $suffix = Yii::app()->params['envSuffix'];
+        $idCharSql = "SELECT GROUP_CONCAT(CONCAT(\"'svc_\",a.id_char,\"'\")) as idChars FROM sal_service_type_info a LEFT JOIN sal_service_type b ON a.type_id=b.id 
+WHERE b.class_id is NOT null AND a.input_type='yearAmount' AND  b.class_id not in (6,7)";
+        $idChar = Yii::app()->db->createCommand($idCharSql)->queryRow();
+        $idChar =$idChar?$idChar["idChars"]:"''";
         $models = array();
        // $time= date('Y-m-d', strtotime(date('Y-m-01') ));
         $sql = "select a.city, a.username, sum(convert(b.field_value, decimal(12,2))) as money
 				from sal_visit a force index (idx_visit_02), sal_visit_info b
-				where a.id=b.visit_id and b.field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7') 
+				where a.id=b.visit_id and b.field_id in ({$idChar}) 
 				and a.visit_dt >= '$start'and a.visit_dt <= '$end' and  a.visit_obj like '%10%'
 				group by a.city, a.username
 			";
@@ -113,6 +117,10 @@ class ReportRankinglistForm extends CReportForm
     public function salelist($start,$end) {
         $suffix = Yii::app()->params['envSuffix'];
         $models = array();
+        $idCharSql = "SELECT GROUP_CONCAT(CONCAT(\"'svc_\",a.id_char,\"'\")) as idChars FROM sal_service_type_info a LEFT JOIN sal_service_type b ON a.type_id=b.id 
+WHERE b.class_id is NOT null AND a.input_type='yearAmount'";
+        $idChar = Yii::app()->db->createCommand($idCharSql)->queryRow();
+        $idChar =$idChar?$idChar["idChars"]:"''";
         $cities = General::getCityListWithNoDescendant();
        // $time= date('Y-m-d', strtotime(date('Y-m-01') ));
         foreach ($cities as $code=>$name) {
@@ -135,7 +143,7 @@ class ReportRankinglistForm extends CReportForm
                     $sql2="select id from sal_visit where city='$code' and  visit_obj like '%10%' and visit_dt >='".$start."'and visit_dt <='".$end."'";
                     $sum = Yii::app()->db->createCommand($sql2)->queryAll();
                     foreach ($sum as $id){
-                        $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and field_value>'0' and visit_id='".$id['id']."'";
+                        $sqlid="select count(visit_id) as sum from  sal_visit_info where field_id in ({$idChar}) and field_value>'0' and visit_id='".$id['id']."'";
                         $arr = Yii::app()->db->createCommand($sqlid)->queryRow();
                         $sum_arr[]=$arr['sum'];
                     }
@@ -164,6 +172,10 @@ class ReportRankinglistForm extends CReportForm
     public function salelists($start,$end) {
         $suffix = Yii::app()->params['envSuffix'];
         $models = array();
+        $idCharSql = "SELECT GROUP_CONCAT(CONCAT(\"'svc_\",a.id_char,\"'\")) as idChars FROM sal_service_type_info a LEFT JOIN sal_service_type b ON a.type_id=b.id 
+WHERE b.class_id is NOT null AND a.input_type='yearAmount' AND  b.class_id not in (6,7)";
+        $idChar = Yii::app()->db->createCommand($idCharSql)->queryRow();
+        $idChar =$idChar?$idChar["idChars"]:"''";
         $cities = General::getCityListWithNoDescendant();
      //   $time= date('Y-m-d', strtotime(date('Y-m-01') ));
         foreach ($cities as $code=>$name) {
@@ -191,7 +203,7 @@ class ReportRankinglistForm extends CReportForm
                 //总金额
                 $money=0;
                 foreach ($sum as $b){
-                    $sql3="select field_id, field_value from sal_visit_info where field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7') and visit_id = '".$b['id']."'";
+                    $sql3="select field_id, field_value from sal_visit_info where field_id in ({$idChar}) and visit_id = '".$b['id']."'";
                     $array = Yii::app()->db->createCommand($sql3)->queryAll();
                     $summoney = 0;
                     foreach($array as $item){
