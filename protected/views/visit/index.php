@@ -19,7 +19,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit';
 	<div class="box"><div class="box-body">
 	<div class="btn-group" role="group">
 		<?php 
-			if (Yii::app()->user->validRWFunction('HK01'))
+			if (VisitController::allowCRMReadWrite())
 				echo TbHtml::button('<span class="fa fa-file-o"></span> '.Yii::t('misc','Add Record'), array(
 					'submit'=>Yii::app()->createUrl('visit/new'), 
 				)); 
@@ -38,6 +38,26 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit';
 		</span>
 	</div>
 	</div></div>
+
+    <div class="box">
+        <div class="box-body">
+            <div class="form-group">
+                <label><?php echo Yii::t("ka","sign odds")."：";?></label>
+                <div class="btn-group" role="group">
+                    <?php
+                    $modelName = get_class($model);
+                    $signList=VisitForm::getSignOddsList();
+                    $class = $model->sign_odds===""?" btn-primary active":"";
+                    echo TbHtml::button("全部",array("class"=>"btn_submit".$class,"data-key"=>""));
+                    foreach ($signList as $key=>$value){
+                        $class = "".$key===$model->sign_odds?" btn-primary active":"";
+                        echo TbHtml::button($value,array("class"=>"btn_submit".$class,"data-key"=>$key));
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
 	<?php
     $search_add_html="";
     $modelName = get_class($model);
@@ -65,6 +85,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit';
 	echo $form->hiddenField($model,'orderField');
 	echo $form->hiddenField($model,'orderType');
 	echo $form->hiddenField($model,'filter');
+	echo $form->hiddenField($model,'sign_odds');
 ?>
 <?php $this->endWidget(); ?>
 <?php $this->renderPartial('//site/fileviewx',array('model'=>$model,
@@ -157,9 +178,17 @@ function showHelp() {
 EOF;
 Yii::app()->clientScript->registerScript('helpClick',$js,CClientScript::POS_HEAD);
 
+$url = Yii::app()->createUrl('visit/index',array("pageNum"=>1));
 $js = "
     $('.submit_shift').on('change',function(){
         $('form:first').submit();
+    });
+
+    $('.btn_submit').on('click',function(){
+        var key=$(this).data('key');
+        $(\"#VisitList_orderField\").val(\"\");
+        $(\"#VisitList_sign_odds\").val(key);
+        jQuery.yii.submitForm(this,'{$url}',{});
     });
 ";
 Yii::app()->clientScript->registerScript('calcFunction',$js,CClientScript::POS_READY);

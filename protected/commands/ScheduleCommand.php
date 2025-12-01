@@ -9,6 +9,7 @@ class ScheduleCommand extends CConsoleCommand {
 	protected $users = array();
 	
 	public function actionRptRenewalReminder($days=60, $whitelist='', $blacklist='') {
+		return true;//2024年7月10日17:43:11 不需要续约提醒
 		$tdate = date("Y/m/d");
 		$this->rptId = 'RptRenewalReminder';
 		$this->rptName = Yii::t('report','Renewal Reminder Report');

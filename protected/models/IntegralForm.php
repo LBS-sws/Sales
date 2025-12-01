@@ -109,7 +109,8 @@ class IntegralForm extends CFormModel
             $startDate = $this->year."-".$this->month."-01";
             $endDate = $this->year."-".$this->month."-31";
             //产品（INV）只统计新增，服务（非INV）统计新增、续约、更改
-            $exprSql = " and ((a.status in('A','C') and f.rpt_cat<>'INV') or (a.status='N'))";
+            //2025年5月27日15:58:28，利比斯(external_source=5)也不计算积分
+            $exprSql = " and a.external_source!=5 and a.external_source!=5 and ((a.status in('A','C') and f.rpt_cat<>'INV') or (a.status='N'))";
             $IDExprSql = " and (((a.status='A' or (a.status = 'C' and a.ctrt_period>=12)) and f.rpt_cat<>'INV') or (a.status='N'))";
             $selectSql = "a.*,g.score_bool,
             CONCAT(h.code,h.name) as company_name_str,

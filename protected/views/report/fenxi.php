@@ -93,7 +93,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
                 </table>
 
                 <table class="tftable2" border="1">
-                    <tr><th rowspan="6" width="100"><?php echo Yii::t('report','quyu');?></th><?php for($i=0;$i<count($model['all']['address']);$i++){?><th ><?php echo $model['all']['address'][$i]['name'];?></th><td ><?php echo $model['all']['address'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
+                    <tr><th rowspan="<?php echo ceil(count($model['all']['address'])/7);?>" width="100"><?php echo Yii::t('report','quyu');?></th><?php for($i=0;$i<count($model['all']['address']);$i++){?><th ><?php echo $model['all']['address'][$i]['name'];?></th><td ><?php echo $model['all']['address'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
                     <tr></tr>
                 </table>
 
@@ -101,7 +101,7 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
                 <table class="tftable3" border="1">
                     <tr><th rowspan="<?php echo ceil(count($model['all']['food'])/7);?>" width="100"><?php echo Yii::t('report','food');?></th><?php for($i=0;$i<count($model['all']['food']);$i++){?><th ><?php echo $model['all']['food'][$i]['name'];?></th><td ><?php echo $model['all']['food'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
                     <tr></tr>
-                    <tr><th rowspan="5" width="100"><?php echo Yii::t('report','nofood');?></th><?php for($i=0;$i<count($model['all']['nofood']);$i++){?><th ><?php echo $model['all']['nofood'][$i]['name'];?></th><td ><?php echo $model['all']['nofood'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
+                    <tr><th rowspan="<?php echo ceil(count($model['all']['nofood'])/7);?>" width="100"><?php echo Yii::t('report','nofood');?></th><?php for($i=0;$i<count($model['all']['nofood']);$i++){?><th ><?php echo $model['all']['nofood'][$i]['name'];?></th><td ><?php echo $model['all']['nofood'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
                     <tr></tr>
                 </table>
                 <?php endif ?>
@@ -123,15 +123,15 @@ $this->pageTitle=Yii::app()->name . ' - Sales Visit Form';
                 </table>
 
                 <table class="tftable2" border="1">
-                    <tr><th rowspan="6" width="100"><?php echo Yii::t('report','quyu');?></th><?php for($i=0;$i<count($arr['address']);$i++){?><th ><?php echo $arr['address'][$i]['name'];?></th><td ><?php echo $arr['address'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
+                    <tr><th rowspan="<?php echo ceil(count($arr['address'])/7);?>" width="100"><?php echo Yii::t('report','quyu');?></th><?php for($i=0;$i<count($arr['address']);$i++){?><th ><?php echo $arr['address'][$i]['name'];?></th><td ><?php echo $arr['address'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
                     <tr></tr>
                 </table>
 
                 <?php if (!empty($model['all'])): ?>
                 <table class="tftable3" border="1">
-                    <tr><th rowspan="<?php echo ceil(count($model['all']['food'])/7);?>" width="100"><?php echo Yii::t('report','food');?></th><?php for($i=0;$i<count($arr['food']);$i++){?><th ><?php echo $arr['food'][$i]['name'];?></th><td ><?php echo $arr['food'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
+                    <tr><th rowspan="<?php echo ceil(count($arr['food'])/7);?>" width="100"><?php echo Yii::t('report','food');?></th><?php for($i=0;$i<count($arr['food']);$i++){?><th ><?php echo $arr['food'][$i]['name'];?></th><td ><?php echo $arr['food'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
                     <tr></tr>
-                    <tr><th rowspan="5" width="100"><?php echo Yii::t('report','nofood');?></th><?php for($i=0;$i<count($arr['nofood']);$i++){?><th ><?php echo $arr['nofood'][$i]['name'];?></th><td ><?php echo $arr['nofood'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
+                    <tr><th rowspan="<?php echo ceil(count($arr['nofood'])/7);?>" width="100"><?php echo Yii::t('report','nofood');?></th><?php for($i=0;$i<count($arr['nofood']);$i++){?><th ><?php echo $arr['nofood'][$i]['name'];?></th><td ><?php echo $arr['nofood'][$i]['0'];?></td><?php if($i==6||$i==13||$i==20||$i==27||$i==34||$i==41){ echo "</tr>";}?><?php }?>
                     <tr></tr>
                 </table>
                 <?php endif ?>

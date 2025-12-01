@@ -6,7 +6,7 @@ class JobQueueCommand extends CConsoleCommand {
 		$this->webroot = Yii::app()->params['webroot'];
 		$sql = "select a.id, a.ts, a.rpt_type, a.username, a.rpt_desc, a.req_dt  
 					from sal_queue a
-				where a.status='P' order by a.req_dt limit 1";
+				where a.status='P' order by a.req_dt,a.id limit 1";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
 		if ($row===false) return;
 		

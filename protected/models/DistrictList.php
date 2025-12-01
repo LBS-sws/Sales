@@ -13,6 +13,7 @@ class DistrictList extends CListPageModel
 			'name'=>Yii::t('code','Description'),
 			'city'=>Yii::t('sales','City'),
             'display'=>Yii::t('customer','display'),
+            'nal_tree_names'=>"行政区域",
             'z_index'=>Yii::t('customer','z_index'),
 		);
 	}
@@ -37,6 +38,9 @@ class DistrictList extends CListPageModel
 				case 'city':
 					$clause .= General::getSqlConditionClause('b.name',$svalue);
 					break;
+				case 'nal_tree_names':
+					$clause .= General::getSqlConditionClause('a.nal_tree_names',$svalue);
+					break;
 			}
 		}
 		
@@ -45,6 +49,9 @@ class DistrictList extends CListPageModel
 			switch ($this->orderField) {
 				case 'name':
 					$order .= " order by a.name ";
+					break;
+				case 'nal_tree_names':
+					$order .= " order by a.nal_tree_names ";
 					break;
 				case 'city':
 					$order .= " order by b.name ";
@@ -68,6 +75,7 @@ class DistrictList extends CListPageModel
 						'id'=>$record['id'],
 						'name'=>$record['name'],
 						'city'=>$record['city_name'],
+						'nal_tree_names'=>$record['nal_tree_names'],
                         'z_index'=>$record['z_index'],
                         'display'=>$record['display']==1?Yii::t("customer","show"):Yii::t("customer","none"),
 					);

@@ -111,6 +111,12 @@ $this->pageTitle=Yii::app()->name . ' - Report';
 $url=Yii::app()->createUrl('report/city');
 $js = <<<EOF
    
+$('#ReportVisitForm_city').select2({
+    multiple: false,
+    maximumInputLength: 10,
+    language: 'zh-CN'
+});
+
       $(document).on("change","#ReportVisitForm_city,#ReportVisitForm_start_dt,#ReportVisitForm_end_dt",function () {   
             var city=$("#ReportVisitForm_city").val();
             var start_dt=$("#ReportVisitForm_start_dt").val();

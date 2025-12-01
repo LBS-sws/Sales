@@ -82,26 +82,28 @@ class KAStatisticForm extends CFormModel
     protected function getKaManForKaBot(){
 	    $maxYear = $this->search_year;
         $suffix = Yii::app()->params['envSuffix'];
+        $systemId = Yii::app()->params['systemId'];
         $table_pre = $this->table_pre;
         $city_allow = Yii::app()->user->city_allow();
-        $whereSql = "a.id>0 ";
-        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
+        $str = $table_pre=="_ka_"?"KA01":($table_pre=="_ra_"?"RA01":"CA01");
+        $whereSql = "f.a_read_write like '%{$str}%'";
         if(Yii::app()->user->validFunction($this->function_id)){
             $whereSql.= " and (h.staff_status!=-1 or (h.staff_status=-1 and DATE_FORMAT(h.leave_time,'%Y')>={$maxYear}))";//2023/06/16 改為可以看的所有記錄
         }elseif(Yii::app()->user->validFunction('CN19')){
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql.= " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
+            $whereSql.= " and (h.id in ({$idSQL}) or h.id in ({$idSQL}) or h.city in ({$city_allow}))";
         }else{
             $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
-            $whereSql.= " and a.kam_id in ({$idSQL})";
+            $whereSql.= " and h.id in ({$idSQL})";
         }
         $rows = Yii::app()->db->createCommand()
             ->select("h.id,h.code,h.name,h.city,h.entry_time,h.table_type")
-            ->from("sal{$table_pre}bot a")
-            ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
+            ->from("hr{$suffix}.hr_binding a")
+            ->leftJoin("hr{$suffix}.hr_employee h","a.employee_id=h.id")
+            ->leftJoin("security{$suffix}.sec_user_access f","f.username=a.user_id and f.system_id='{$systemId}'")
             ->where($whereSql)
             ->group("h.id,h.code,h.name,h.city,h.entry_time,h.table_type")
-            ->order("h.table_type asc,h.city,h.id")
+            ->order("h.entry_time asc")
             ->queryAll();
         return $rows?$rows:array();
     }
@@ -196,6 +198,47 @@ class KAStatisticForm extends CFormModel
                 //本月金額
                 $list[$employee_id]["sign_this_num"]+= $row["sign_this_num"];
                 $list[$employee_id]["sign_this_amt"]+= $row["sign_this_amt"];
+            }
+        }
+        return $list;
+    }
+
+    protected function getMTDAllList(){
+        $suffix = Yii::app()->params['envSuffix'];
+        $table_pre = $this->table_pre;
+        $list = array();
+        $city_allow = Yii::app()->user->city_allow();
+        $whereSql = "DATE_FORMAT(f.ava_date,'%Y')='{$this->ka_year}' and b.rate_num=100";
+        $whereSql.= " and FIND_IN_SET('1',a.contract_type)";
+        if(Yii::app()->user->validFunction($this->function_id)){
+            $whereSql.= "";//2023/06/16 改為可以看的所有記錄
+        }elseif(Yii::app()->user->validFunction('CN19')){
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql.= " and (a.kam_id in ({$idSQL}) or a.support_user in ({$idSQL}) or h.city in ({$city_allow}))";
+        }else{
+            $idSQL = KABotForm::getGroupIDStrForEmployeeID($this->employee_id);
+            $whereSql.= " and a.kam_id in ({$idSQL})";
+        }
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.kam_id,DATE_FORMAT(f.ava_date,'%Y/%m') as date_month,
+                count(f.id) as mtd_num,
+                sum(IFNULL(f.ava_fact_amt,0)) as mtd_amt
+            ")->from("sal{$table_pre}bot_ava f")
+            ->leftJoin("sal{$table_pre}bot a","f.bot_id=a.id")
+            ->leftJoin("sal_ka_link b","a.link_id=b.id")
+            ->leftJoin("hr{$suffix}.hr_employee h","a.kam_id=h.id")
+            ->where($whereSql)
+            ->group("a.kam_id,date_month")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $employee_id = "".$row["kam_id"];
+                $dateMonth = "".$row["date_month"];
+                if(!key_exists($employee_id,$list)){
+                    $list[$employee_id]=array();
+                }
+                $list[$employee_id]["mtd_num_".$dateMonth] = $row["mtd_num"];
+                $list[$employee_id]["mtd_amt_".$dateMonth] = $row["mtd_amt"];
             }
         }
         return $list;
@@ -345,6 +388,23 @@ class KAStatisticForm extends CFormModel
         return $groupList;
     }
 
+    public function getKASalesTop(){
+        $suffix = Yii::app()->params['envSuffix'];
+        $groupList = array();
+        $rows = Yii::app()->db->createCommand()->select("a.employee_id,a.group_id,b.group_name")
+            ->from("hr{$suffix}.hr_group_staff a")
+            ->leftJoin("hr{$suffix}.hr_group b","a.group_id=b.id")
+            ->where("b.group_code='KALIST'")
+            ->order("a.group_id asc")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $groupList[$row["employee_id"]] = $row;
+            }
+        }
+        return $groupList;
+    }
+
     public function getKAIndicatorList($date='')
     {
         $date = empty($date)?date_format(date_create(),"Y-m-01"):date_format(date_create($date),"Y-m-01");
@@ -464,6 +524,21 @@ class KAStatisticForm extends CFormModel
         return $list;
     }
 
+    protected function getBotAllEmployeeIDList(){
+        $list = array();
+        $table_pre = $this->table_pre;
+        $rows = Yii::app()->db->createCommand()->select("kam_id")
+            ->from("sal{$table_pre}bot")
+            ->group("kam_id")
+            ->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $list[]=$row["kam_id"];
+            }
+        }
+        return $list;
+    }
+
     public function retrieveData() {
         $this->data=array();
         $listVQS = $this->getAmtNumForVQS();//获取拜访、报价、本月的金额及数量
@@ -472,8 +547,12 @@ class KAStatisticForm extends CFormModel
         $listYM = $this->getAmtNumForYM();//获取YTD、MTD的金额及数量
         $kaManList = $this->getKaManForKaBot();//KA所有员工
         $kaGroupList = $this->getKASalesGroup();//KA分组
+        $topKaList = $this->getKASalesTop();//主管列表
         $kaIDXList = $this->getKAIndicatorList($this->start_date);//KA个人指标金额
         $renewalList = $this->getAmtNumForRenewal();//获取续约金额及数量
+        $mtdAllList = $this->getMTDAllList();//每月MTD
+        $idxAllList = $this->getEmployeeIdxAllList();//每月个人指标
+        //$employeeIDList = $this->getBotAllEmployeeIDList();//获取所有录入项目的员工id
         $data=array("group"=>array(),"staff"=>array());//排序，分组的员工置顶
         foreach ($kaManList as $row){
             $temp = $this->getTemp();
@@ -490,16 +569,41 @@ class KAStatisticForm extends CFormModel
             $temp["employee_id"] = $ka_id;
             $temp["entry_date"] = General::toDate($row["entry_time"]);
             $temp["kam_name"] = $row["name"]." ({$row["code"]})";
+            if($temp["entry_date"]>$this->end_date){
+                continue;
+            }
             $this->addTempForList($temp,$listVQS,$ka_id);
             $this->addTempForList($temp,$list90,$ka_id);
             $this->addTempForList($temp,$listNext,$ka_id);
             $this->addTempForList($temp,$listYM,$ka_id);
             $this->addTempForList($temp,$kaIDXList,$ka_id);
             $this->addTempForList($temp,$renewalList,$ka_id);
+            $this->addTempForList($temp,$mtdAllList,$ka_id);
+            $this->addTempForList($temp,$idxAllList,$ka_id);
 
+            if($keyStr=="group"){//主管需要第一个显示
+                if(key_exists($ka_id,$topKaList)){
+                    $ka_id="top";
+                }
+            }
             $data[$keyStr][$group_id][$ka_id] = $temp;
         }
-        $this->data = $data["group"];
+        $this->data = array();
+        if(!empty($data["group"])){//傻逼的排序功能
+            ksort($data["group"]);
+            foreach ($data["group"] as $group_id=>$group_row){
+                if(key_exists("top",$group_row)){
+                    $staffRow = $group_row["top"];
+                    $this->data[$group_id][$staffRow["employee_id"]]=$staffRow;
+                    unset($group_row["top"]);
+                }
+                if(!empty($group_row)){
+                    foreach ($group_row as $staff_id =>$staffRow){
+                        $this->data[$group_id][$staff_id]=$staffRow;
+                    }
+                }
+            }
+        }
         if(!empty($data["staff"])){
             foreach ($data["staff"] as $key=>$row){
                 $this->data[$key]=$row;
@@ -526,7 +630,7 @@ class KAStatisticForm extends CFormModel
     }
 
     protected function getTemp(){
-        return array(
+        $arr=array(
             "group_name"=>"独立组",//员工分组
             "employee_id"=>"",//KA_id
             "kam_name"=>"",//KA名称
@@ -555,6 +659,26 @@ class KAStatisticForm extends CFormModel
             "mtd_idx"=>0,//MTD指标
             "mtd_idx_rate"=>0,//MTD达成率（签约/指标）
 
+            "mtd_num_1_3"=>0,//mtd数量(1至3月)
+            "mtd_amt_1_3"=>0,//mtd金额(1至3月)
+            "mtd_idx_1_3"=>0,//MTD指标(1至3月)
+            "mtd_idx_rate_1_3"=>0,//MTD达成率（签约/指标）(1至3月)
+
+            "mtd_num_1_6"=>0,//mtd数量(1至6月)
+            "mtd_amt_1_6"=>0,//mtd金额(1至6月)
+            "mtd_idx_1_6"=>0,//MTD指标(1至6月)
+            "mtd_idx_rate_1_6"=>0,//MTD达成率（签约/指标）(1至6月)
+
+            "mtd_num_1_9"=>0,//mtd数量(1至9月)
+            "mtd_amt_1_9"=>0,//mtd金额(1至9月)
+            "mtd_idx_1_9"=>0,//MTD指标(1至9月)
+            "mtd_idx_rate_1_9"=>0,//MTD达成率（签约/指标）(1至9月)
+
+            "mtd_num_1_12"=>0,//mtd数量(1至12月)
+            "mtd_amt_1_12"=>0,//mtd金额(1至12月)
+            "mtd_idx_1_12"=>0,//MTD指标(1至12月)
+            "mtd_idx_rate_1_12"=>0,//MTD达成率（签约/指标）(1至12月)
+
             "ytd_num"=>0,//ytd数量
             "ytd_amt"=>0,//ytd金额
             "idx_sales_money"=>0,//个人指标金额
@@ -563,9 +687,22 @@ class KAStatisticForm extends CFormModel
             "group_amt"=>0,//团队金额
             "idx_group_money"=>0,//团队指标金额
             "idx_group_rate"=>"",//团队指标比例
+            "ytd_group_money"=>0,//YTD现有指标
+            "ytd_group_rate"=>"",//YTD现有达成率
             "renewal_total_sum"=>0,//续约数量
             "renewal_total_amt"=>0,//续约金额
+            "staff_bool"=>1,//是否录入过数据 0:从未录入 1：有录入
         );
+
+        for($i=1;$i<=12;$i++){
+            $month = $i<10?"0{$i}":$i;
+            $dateMonth = $this->ka_year."/".$month;
+            $arr["idx_".$dateMonth]=0;//个人的每月指标
+            $arr["mtd_num_".$dateMonth]=0;//个人的每月mtd数量
+            $arr["mtd_amt_".$dateMonth]=0;//个人的每月mtd金额
+        }
+
+        return $arr;
     }
 
     public static function getRateForNumber($number){
@@ -584,6 +721,10 @@ class KAStatisticForm extends CFormModel
     }
 
     protected function resetTdRow(&$list,$bool=false){
+        if($bool){
+            $list["idx_group_rate"]=self::getRateForCompute($list["ytd_amt"],$list["idx_sales_money"]);
+            $list["ytd_group_rate"]=self::getRateForCompute($list["ytd_amt"],$list["ytd_group_money"]);
+        }
         $list["qv_num_rate"] = self::getRateForCompute($list["quota_num"],$list["visit_num"]);
         $list["qv_amt_rate"] = self::getRateForCompute($list["quota_amt"],$list["visit_amt"]);
         $list["sq_num_rate"] = self::getRateForCompute($list["ytd_num"],$list["quota_num"]);
@@ -592,10 +733,81 @@ class KAStatisticForm extends CFormModel
         $list["sv_amt_rate"] = self::getRateForCompute($list["ytd_amt"],$list["visit_amt"]);
         $list["this_rate"] = self::getRateForCompute($list["sign_this_amt"],$list["sign_90_amt"]);
 
-        $list["mtd_idx"]=empty($list["idx_sales_money"])?0:round($list["idx_sales_money"]/12,2);
+        if(isset($list["entry_date"])&&!empty($list["entry_date"])){
+            $dateMonth = $this->ka_year."/".$this->ka_month;
+            $list["mtd_idx"]=$this->computeIdXNumByES($list["entry_date"],$list["idx_sales_money"],$dateMonth);
+        }
         $list["mtd_idx_rate"]=self::getRateForCompute($list["mtd_amt"],$list["mtd_idx"]);
         $list["idx_sales_rate"]=self::getRateForCompute($list["ytd_amt"],$list["idx_sales_money"]);
+        if($bool==false){
+            for ($i=1;$i<=12;$i++){
+                $month = $i<10?"0{$i}":$i;
+                $dateMonth = $this->ka_year."/".$month;
+                $list["mtd_idx_".$dateMonth]=$this->computeIdXNumByES($list["entry_date"],$list["idx_".$dateMonth],$dateMonth);
+                if($i<=3){
+                    $list["mtd_amt_1_3"]+=$list["mtd_amt_".$dateMonth];
+                    $list["mtd_num_1_3"]+=$list["mtd_num_".$dateMonth];
+                    $list["mtd_idx_1_3"]+=$list["mtd_idx_".$dateMonth];
+                }
+                if($i<=6){
+                    $list["mtd_amt_1_6"]+=$list["mtd_amt_".$dateMonth];
+                    $list["mtd_num_1_6"]+=$list["mtd_num_".$dateMonth];
+                    $list["mtd_idx_1_6"]+=$list["mtd_idx_".$dateMonth];
+                }
+                if($i<=9){
+                    $list["mtd_amt_1_9"]+=$list["mtd_amt_".$dateMonth];
+                    $list["mtd_num_1_9"]+=$list["mtd_num_".$dateMonth];
+                    $list["mtd_idx_1_9"]+=$list["mtd_idx_".$dateMonth];
+                }
+                if($i<=12){
+                    $list["mtd_amt_1_12"]+=$list["mtd_amt_".$dateMonth];
+                    $list["mtd_num_1_12"]+=$list["mtd_num_".$dateMonth];
+                    $list["mtd_idx_1_12"]+=$list["mtd_idx_".$dateMonth];
+                }
+            }
+        }
+        $list["mtd_idx_rate_1_3"]=self::getRateForCompute($list["mtd_amt_1_3"],$list["mtd_idx_1_3"]);
+        $list["mtd_idx_rate_1_6"]=self::getRateForCompute($list["mtd_amt_1_6"],$list["mtd_idx_1_6"]);
+        $list["mtd_idx_rate_1_9"]=self::getRateForCompute($list["mtd_amt_1_9"],$list["mtd_idx_1_9"]);
+        $list["mtd_idx_rate_1_12"]=self::getRateForCompute($list["mtd_amt_1_12"],$list["mtd_idx_1_12"]);
         //$list["idx_group_rate"]=self::getRateForCompute($list["group_amt"],$list["idx_group_money"]);
+    }
+
+    protected function computeIdXNumByES($entryDate,$idxSum,$dateMonth){
+        $mtdMonth = 12;
+        if(strtotime($entryDate)>strtotime($dateMonth."/01")){
+            return 0;
+        }
+        if(date("Y",strtotime($entryDate))==$this->search_year){//当年入职
+            $mtdMonth = date("n",strtotime($entryDate));
+            $mtdMonth = 12-$mtdMonth;
+            if(date("j",strtotime($entryDate))==1){//当月1号
+                $mtdMonth++;
+            }
+        }
+        $idxNum=empty($idxSum)||empty($mtdMonth)?0:round($idxSum/$mtdMonth,2);
+        return $idxNum;
+    }
+
+    protected function getEmployeeIdxAllList(){
+        $list = array();
+        for ($i=1;$i<=12;$i++){
+            $date = $this->ka_year."/".$i."/1";
+            $date = date_format(date_create($date),"Y-m-01");
+            $dateMonth = date_format(date_create($date),"Y/m");
+            $sql = "select employee_id,indicator_money,DATE_FORMAT(effect_date,'%Y/%m') as date_month from sal_ka_idx where DATE_FORMAT(effect_date,'%Y-%m-01')<='{$date}' order by effect_date asc";
+            $rows = Yii::app()->db->createCommand($sql)->queryAll();
+            if($rows){
+                foreach ($rows as $row){
+                    $employee_id = "".$row["employee_id"];
+                    if(!key_exists($employee_id,$list)){
+                        $list[$employee_id]=array();
+                    }
+                    $list[$employee_id]["idx_".$dateMonth]=floatval($row['indicator_money']);
+                }
+            }
+        }
+        return $list;
     }
 
     //顯示提成表的表格內容
@@ -609,6 +821,12 @@ class KAStatisticForm extends CFormModel
     }
 
     protected function getTopArr(){
+        $mtdCol = array(
+            array("name"=>Yii::t("ka","MTD Sign")),//MTD签约
+            array("name"=>Yii::t("ka","MTD Indicator")),//MTD指标
+            array("name"=>Yii::t("ka","MTD rate(sign/indicator)")),//MTD达成率（签约/指标）
+            array("name"=>Yii::t("ka","Sign total")),//签约数量
+        );
         $topList=array(
             array("name"=>Yii::t("ka","KAM"),"background"=>"#305496","color"=>"#ffffff",
                 "colspan"=>array(
@@ -700,12 +918,7 @@ class KAStatisticForm extends CFormModel
                 "colspan"=>array(
                     array(
                         "name"=>$this->ka_month.Yii::t("ka"," month success"),//月份达成
-                        "colspan"=>array(
-                            array("name"=>Yii::t("ka","MTD Sign")),//MTD签约
-                            array("name"=>Yii::t("ka","MTD Indicator")),//MTD指标
-                            array("name"=>Yii::t("ka","MTD rate(sign/indicator)")),//MTD达成率（签约/指标）
-                            array("name"=>Yii::t("ka","Sign total")),//签约数量
-                        )
+                        "colspan"=>$mtdCol
                     ),
                 )
             ),//MTD个人达成数据
@@ -728,8 +941,10 @@ class KAStatisticForm extends CFormModel
                 array(
                     "name"=>$this->search_year.Yii::t("ka"," success"),//2024达成
                     "colspan"=>array(
-                        array("name"=>Yii::t("ka","YTD Indicator")),//YTD指标
-                        array("name"=>Yii::t("ka","YTD rate")),//YTD达成率
+                        //array("name"=>Yii::t("ka","YTD All Indicator")),//YTD指标
+                        //array("name"=>Yii::t("ka","YTD All rate")),//YTD达成率
+                        array("name"=>Yii::t("ka","YTD Now Indicator")),//YTD指标
+                        array("name"=>Yii::t("ka","YTD Now rate")),//YTD达成率
                     )
                 )
             )
@@ -745,6 +960,38 @@ class KAStatisticForm extends CFormModel
                     )
                 )
             );//YTD续约数据
+        $topList[]=array("name"=>Yii::t("ka","MTD personal data"),"background"=>"#974706","color"=>"#ffffff",//每月KA销售业绩
+            "colspan"=>array(
+                array(
+                    "name"=>"1-3月达成",//月份达成
+                    "colspan"=>$mtdCol
+                ),
+            )
+        );//1-3月达成
+        $topList[]=array("name"=>Yii::t("ka","MTD personal data"),"background"=>"#974706","color"=>"#ffffff",//每月KA销售业绩
+            "colspan"=>array(
+                array(
+                    "name"=>"1-6月达成",//月份达成
+                    "colspan"=>$mtdCol
+                ),
+            )
+        );//1-6月达成
+        $topList[]=array("name"=>Yii::t("ka","MTD personal data"),"background"=>"#974706","color"=>"#ffffff",//每月KA销售业绩
+            "colspan"=>array(
+                array(
+                    "name"=>"1-9月达成",//月份达成
+                    "colspan"=>$mtdCol
+                ),
+            )
+        );//1-9月达成
+        $topList[]=array("name"=>Yii::t("ka","MTD personal data"),"background"=>"#974706","color"=>"#ffffff",//每月KA销售业绩
+            "colspan"=>array(
+                array(
+                    "name"=>"1-12月达成",//月份达成
+                    "colspan"=>$mtdCol
+                ),
+            )
+        );//1-12月达成
         return $topList;
     }
 
@@ -843,8 +1090,13 @@ class KAStatisticForm extends CFormModel
             "mtd_amt","mtd_idx","mtd_idx_rate","mtd_num",
             "ytd_num","ytd_amt","idx_sales_money","idx_sales_rate",
             "idx_group_money","idx_group_rate",
+            "ytd_group_money","ytd_group_rate",
             "renewal_total_sum","renewal_total_amt"
         );
+        $bodyKey=array_merge($bodyKey,array("mtd_amt_1_3","mtd_idx_1_3","mtd_idx_rate_1_3","mtd_num_1_3"));
+        $bodyKey=array_merge($bodyKey,array("mtd_amt_1_6","mtd_idx_1_6","mtd_idx_rate_1_6","mtd_num_1_6"));
+        $bodyKey=array_merge($bodyKey,array("mtd_amt_1_9","mtd_idx_1_9","mtd_idx_rate_1_9","mtd_num_1_9"));
+        $bodyKey=array_merge($bodyKey,array("mtd_amt_1_12","mtd_idx_1_12","mtd_idx_rate_1_12","mtd_num_1_12"));
         return $bodyKey;
     }
 
@@ -869,19 +1121,21 @@ class KAStatisticForm extends CFormModel
         $clickTdList = $this->getClickTdList();
         $html="";
         if(!empty($data)){
-            $allRow = [];//总计(所有地区)
+            $allRow = ["idx_group_money"=>0,"ytd_group_money"=>0];//总计(所有地区)
             foreach ($data as $city=>$row){
                 $currentRow = $row;
                 $staff_id=array_shift($currentRow)["employee_id"];
                 $rowspan = count($row);
-                $regionRow = ["idx_group_money"=>0,"group_amt"=>0];//分组汇总
+                $regionRow = ["idx_group_money"=>0,"ytd_group_money"=>0,"group_amt"=>0];//分组汇总
                 foreach ($row as $list){
                     $id = $list["employee_id"];
                     $this->resetTdRow($list);
                     $html.="<tr>";
                     foreach ($bodyKey as $keyStr){
-                        if(in_array($keyStr,array("idx_group_money","idx_group_rate"))){
-                            $this->downJsonText["excel"][$city][$staff_id][$keyStr]=0;
+                        if(in_array($keyStr,array("idx_group_money","idx_group_rate","ytd_group_money","ytd_group_rate"))){
+                            if(!in_array($keyStr,array("idx_group_money","idx_group_rate"))){
+                                $this->downJsonText["excel"][$city][$id][$keyStr]=0;
+                            }
                             $html.=($keyStr=="idx_group_money"&&$staff_id==$id)?":groupMoneyHtml:":"";
                             continue;
                         }
@@ -891,6 +1145,9 @@ class KAStatisticForm extends CFormModel
                         }
                         if($keyStr=="idx_sales_money"){
                             $regionRow["idx_group_money"]+=is_numeric($text)?floatval($text):0;
+                            if(isset($list["staff_bool"])&&$list["staff_bool"]==1){
+                                $regionRow["ytd_group_money"]+=is_numeric($text)?floatval($text):0;
+                            }
                         }
                         if(!key_exists($keyStr,$allRow)){
                             $allRow[$keyStr]=0;
@@ -912,20 +1169,29 @@ class KAStatisticForm extends CFormModel
                 }
 
                 if(in_array("idx_group_money",$bodyKey)){
+                    $allRow["idx_group_money"]+=is_numeric($regionRow["idx_group_money"])?floatval($regionRow["idx_group_money"]):0;
+                    $allRow["ytd_group_money"]+=is_numeric($regionRow["ytd_group_money"])?floatval($regionRow["ytd_group_money"]):0;
+
                     $regionRow["idx_group_rate"] = empty($regionRow["idx_group_money"])?0:($regionRow["group_amt"]/$regionRow["idx_group_money"]);
                     $regionRow["idx_group_rate"] = self::getRateForNumber($regionRow["idx_group_rate"]);
-                    $groupHtml="<td rowspan='{$rowspan}'>".$regionRow["idx_group_money"]."</td>";
-                    $groupHtml.="<td rowspan='{$rowspan}'>".$regionRow["idx_group_rate"]."</td>";
+                    $regionRow["ytd_group_rate"] = empty($regionRow["ytd_group_money"])?0:($regionRow["group_amt"]/$regionRow["ytd_group_money"]);
+                    $regionRow["ytd_group_rate"] = self::getRateForNumber($regionRow["ytd_group_rate"]);
+                    $groupHtml="";
+                    //$groupHtml="<td rowspan='{$rowspan}'>".$regionRow["idx_group_money"]."</td>";
+                    //$groupHtml.="<td rowspan='{$rowspan}'>".$regionRow["idx_group_rate"]."</td>";
+                    $groupHtml.="<td rowspan='{$rowspan}'>".$regionRow["ytd_group_money"]."</td>";
+                    $groupHtml.="<td rowspan='{$rowspan}'>".$regionRow["ytd_group_rate"]."</td>";
                     $html=str_replace(":groupMoneyHtml:", $groupHtml, $html);
-                    $this->downJsonText["excel"][$city][$staff_id]['idx_group_money']=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_money"]);
-                    $this->downJsonText["excel"][$city][$staff_id]['idx_group_rate']=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_rate"]);
+                    //$this->downJsonText["excel"][$city][$staff_id]['idx_group_money']=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_money"]);
+                    //$this->downJsonText["excel"][$city][$staff_id]['idx_group_rate']=array("groupLen"=>$rowspan,"text"=>$regionRow["idx_group_rate"]);
+                    $this->downJsonText["excel"][$city][$staff_id]['ytd_group_money']=array("groupLen"=>$rowspan,"text"=>$regionRow["ytd_group_money"]);
+                    $this->downJsonText["excel"][$city][$staff_id]['ytd_group_rate']=array("groupLen"=>$rowspan,"text"=>$regionRow["ytd_group_rate"]);
                 }
             }
             //所有汇总
             $allRow["city"]="_ALL";
             $allRow["group_name"]="";
             $allRow["entry_date"]="";
-            $allRow["idx_group_money"]="";
             $allRow["idx_group_rate"]="";
             $allRow["kam_name"]=Yii::t("ka","all total");
             $html.=$this->printTableTr($allRow,$bodyKey);
@@ -939,11 +1205,13 @@ class KAStatisticForm extends CFormModel
         $this->resetTdRow($data,true);
         $html="<tr class='tr-end click-tr'>";
         foreach ($bodyKey as $keyStr){
-            $text = key_exists($keyStr,$data)?$data[$keyStr]:"0";
-            $tdClass = ComparisonForm::getTextColorForKeyStr($text,$keyStr);
-            $text = self::showNum($text);
-            $this->downJsonText["excel"][$data['city']]["count"][]=$text;
-            $html.="<td class='{$tdClass}' style='font-weight: bold'><span>{$text}</span></td>";
+            if(!in_array($keyStr,array("idx_group_money","idx_group_rate"))){
+                $text = key_exists($keyStr,$data)?$data[$keyStr]:"0";
+                $tdClass = ComparisonForm::getTextColorForKeyStr($text,$keyStr);
+                $text = self::showNum($text);
+                $this->downJsonText["excel"][$data['city']]["count"][]=$text;
+                $html.="<td class='{$tdClass}' style='font-weight: bold'><span>{$text}</span></td>";
+            }
         }
         $html.="</tr>";
         return $html;

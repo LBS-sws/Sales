@@ -76,7 +76,7 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                 <?php echo $form->labelEx($model,'sum',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->numberField($model, 'sum',
-                        array('size'=>4,'min'=>0,'readonly'=>($model->scenario=='view'))
+                        array('size'=>4,'min'=>0,'readonly'=>($model->getReadonly()))
                     ); ?>
                 </div>
             </div>
@@ -84,7 +84,7 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                 <?php echo $form->labelEx($model,'sums',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->numberField($model, 'sums',
-                        array('size'=>4,'min'=>0,'readonly'=>($model->scenario=='view'))
+                        array('size'=>4,'min'=>0,'readonly'=>($model->getReadonly()))
                     ); ?>
                 </div>
             </div>
@@ -92,7 +92,7 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                 <?php echo $form->labelEx($model,'spanning',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->numberField($model, 'spanning',
-                        array('size'=>4,'min'=>0,'readonly'=>($model->scenario=='view'))
+                        array('size'=>4,'min'=>0,'readonly'=>($model->getReadonly()))
                     ); ?>
                 </div>
                 <div style="color: red"><?php echo Yii::t('report','li'); ?></div>
@@ -101,7 +101,7 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                 <?php echo $form->labelEx($model,'otherspanning',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->numberField($model, 'otherspanning',
-                        array('size'=>4,'min'=>0,'readonly'=>($model->scenario=='view'))
+                        array('size'=>4,'min'=>0,'readonly'=>($model->getReadonly()))
                     ); ?>
                 </div>
             </div>
@@ -110,7 +110,7 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                     <?php echo $form->labelEx($model,'business_spanning',array('class'=>"col-sm-2 control-label")); ?>
                     <div class="col-sm-2">
                         <?php echo $form->numberField($model, 'business_spanning',
-                            array('size'=>4,'min'=>0,'readonly'=>($model->scenario=='view'))
+                            array('size'=>4,'min'=>0,'readonly'=>($model->getReadonly()))
                         ); ?>
                     </div>
                     <div style="color: red"><?php echo Yii::t('report','li'); ?></div>
@@ -119,7 +119,7 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                     <?php echo $form->labelEx($model,'business_otherspanning',array('class'=>"col-sm-2 control-label")); ?>
                     <div class="col-sm-2">
                         <?php echo $form->numberField($model, 'business_otherspanning',
-                            array('size'=>4,'min'=>0,'readonly'=>($model->scenario=='view'))
+                            array('size'=>4,'min'=>0,'readonly'=>($model->getReadonly()))
                         ); ?>
                     </div>
                 </div>
@@ -128,7 +128,7 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                         <?php echo $form->labelEx($model,'restaurant_spanning',array('class'=>"col-sm-2 control-label")); ?>
                         <div class="col-sm-2">
                             <?php echo $form->numberField($model, 'restaurant_spanning',
-                                array('size'=>4,'min'=>0,'readonly'=>($model->scenario=='view'))
+                                array('size'=>4,'min'=>0,'readonly'=>($model->getReadonly()))
                             ); ?>
                         </div>
                         <div style="color: red"><?php echo Yii::t('report','li'); ?></div>
@@ -137,7 +137,7 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                         <?php echo $form->labelEx($model,'restaurant_otherspanning',array('class'=>"col-sm-2 control-label")); ?>
                         <div class="col-sm-2">
                             <?php echo $form->numberField($model, 'restaurant_otherspanning',
-                                array('size'=>4,'min'=>0,'readonly'=>($model->scenario=='view'))
+                                array('size'=>4,'min'=>0,'readonly'=>($model->getReadonly()))
                             ); ?>
                         </div>
             </div>

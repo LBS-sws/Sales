@@ -34,6 +34,7 @@ $this->pageTitle=Yii::app()->name . ' - Customer District';
 				'search'=>array(
 							'name',
 							'city',
+							'nal_tree_names',
 						),
 		));
 	?>

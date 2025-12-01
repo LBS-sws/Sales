@@ -22,16 +22,20 @@ class VisitForm extends CFormModel
 	public $shift;
 	public $shift_user;
 	public $status;
+	public $total_amt;
+	public $busine_id='A,B,C,D,H,E,F,G';
+	public $busine_id_text;
 	public $status_dt;
 	public $latitude;
 	public $longitude;
 	public $deal = 'N';
 	public $service_type;
 	public $quotation='N';
+	public $sign_odds=0;
 
 	public $service = array();
 	protected $dynamic_fields = array('latitude', 'longitude', 'deal');
-	protected $amount_fields = array('A7','B6','C7','D6','E7','F4','G3','H6');
+	public static $amount_fields = array('A7','B6','C7','D6','E7','F4','G3','H6');
 	
 	public $city;
 	public $city_name;
@@ -40,6 +44,7 @@ class VisitForm extends CFormModel
 	public $post_name;
 
 	public $files;
+    public $ltNowDate=false;//小于当前日期：true
 
 	public $docMasterId = array(
 							'visit'=>0,
@@ -52,119 +57,7 @@ class VisitForm extends CFormModel
 						);
 	
 	public function serviceDefinition() {
-		return array(
-			'A'=>array(
-					'name'=>Yii::t('sales','清洁'),
-					'type'=>'annual',
-					'items'=>array(
-                                'A10'=>array('name'=>Yii::t('sales','安装费'),'type'=>'amount'),
-								'A1'=>array('name'=>Yii::t('sales','马桶/蹲厕'),'type'=>'qty'),
-								'A2'=>array('name'=>Yii::t('sales','尿斗'),'type'=>'qty'),
-								'A3'=>array('name'=>Yii::t('sales','水盆'),'type'=>'qty','eol'=>true),
-								'A4'=>array('name'=>Yii::t('sales','清新机'),'type'=>'qty'),
-								'A5'=>array('name'=>Yii::t('sales','皂液机'),'type'=>'qty'),
-                                'A9'=>array('name'=>Yii::t('sales','雾化消毒'),'type'=>'qty','eol'=>true),
-                                'A11'=>array('name'=>Yii::t('sales','隔油池'),'type'=>'qty'),
-                                'A12'=>array('name'=>Yii::t('sales','油烟机清洗'),'type'=>'qty','eol'=>true),
-								'A6'=>array('name'=>Yii::t('sales','预估成交率').'(0-100%)','type'=>'pct'),
-								'A7'=>array('name'=>Yii::t('sales','合同年金额'),'type'=>'amount','eol'=>true),
-								'A8'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
-
-							),
-				),
-			'B'=>array(
-					'name'=>Yii::t('sales','租赁机器'),
-					'type'=>'annual',
-					'items'=>array(
-								'B1'=>array('name'=>Yii::t('sales','风扇机'),'type'=>'qty'),
-								'B2'=>array('name'=>Yii::t('sales','TC豪华'),'type'=>'qty'),
-								'B3'=>array('name'=>Yii::t('sales','水性喷机'),'type'=>'qty','eol'=>true),
-								'B4'=>array('name'=>Yii::t('sales','压缩香罐'),'type'=>'qty'),
-								'B8'=>array('name'=>Yii::t('sales','饮水机租赁'),'type'=>'qty'),
-								'B9'=>array('name'=>Yii::t('sales','滤芯'),'type'=>'qty','eol'=>true),
-								'B5'=>array('name'=>Yii::t('sales','预估成交率').'(0-100%)','type'=>'pct'),
-								'B6'=>array('name'=>Yii::t('sales','合同年金额'),'type'=>'amount','eol'=>true),
-								'B7'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
-							),
-				),
-			'C'=>array(
-					'name'=>Yii::t('sales','灭虫'),
-					'type'=>'annual',
-					'items'=>array(
-                        'C10'=>array('name'=>Yii::t('sales','安装费'),'type'=>'amount'),
-                        'C1'=>array('name'=>Yii::t('sales','服务面积'),'type'=>'qty','eol'=>true),
-                        'C2'=>array('name'=>Yii::t('sales','老鼠'),'type'=>'checkbox'),
-                        'C3'=>array('name'=>Yii::t('sales','蟑螂'),'type'=>'checkbox'),
-                        'C4'=>array('name'=>Yii::t('sales','果蝇'),'type'=>'checkbox'),
-                        'C5'=>array('name'=>Yii::t('sales','租灭蝇灯'),'type'=>'checkbox'),
-                        'C9'=>array('name'=>Yii::t('sales','焗雾'),'type'=>'checkbox'),
-                        'C11'=>array('name'=>Yii::t('sales','白蚁'),'type'=>'checkbox','eol'=>true),
-                        'C6'=>array('name'=>Yii::t('sales','预估成交率').'(0-100%)','type'=>'pct'),
-                        'C7'=>array('name'=>Yii::t('sales','合同年金额'),'type'=>'amount','eol'=>true),
-                        'C8'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
-							),
-				),
-			'D'=>array(
-					'name'=>Yii::t('sales','飘盈香'),
-					'type'=>'annual',
-					'items'=>array(
-								'D8'=>array('name'=>Yii::t('sales','装机费'),'type'=>'amount','eol'=>true),
-								'D1'=>array('name'=>Yii::t('sales','迷你小机'),'type'=>'qty'),
-								'D2'=>array('name'=>Yii::t('sales','小机'),'type'=>'qty'),
-								'D3'=>array('name'=>Yii::t('sales','中机'),'type'=>'qty'),
-								'D4'=>array('name'=>Yii::t('sales','大机'),'type'=>'qty','eol'=>true),
-								'D5'=>array('name'=>Yii::t('sales','预估成交率').'(0-100%)','type'=>'pct'),
-								'D6'=>array('name'=>Yii::t('sales','合同年金额'),'type'=>'amount','eol'=>true),
-								'D7'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
-							),
-				),
-			'H'=>array(
-					'name'=>Yii::t('sales','蔚诺空气业务'),
-					'type'=>'annual',
-					'items'=>array(
-								'H1'=>array('name'=>Yii::t('sales','类别'),'type'=>'select','func'=>'getTypeListForH'),
-                                'H4'=>array('name'=>Yii::t('sales','延长维保'),'type'=>'amount','eol'=>true),
-								'H2'=>array('name'=>Yii::t('sales','RA488'),'type'=>'qty'),
-								'H3'=>array('name'=>Yii::t('sales','RA800'),'type'=>'qty','eol'=>true),
-								'H5'=>array('name'=>Yii::t('sales','预估成交率').'(0-100%)','type'=>'pct'),
-								'H6'=>array('name'=>Yii::t('sales','合同年金额'),'type'=>'amount','eol'=>true),
-								'H7'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
-							),
-				),
-			'E'=>array(
-					'name'=>Yii::t('sales','甲醛'),
-					'type'=>'annual',
-					'items'=>array(
-								'E1'=>array('name'=>Yii::t('sales','服务面积'),'type'=>'qty','eol'=>true),
-								'E2'=>array('name'=>Yii::t('sales','除甲醛'),'type'=>'qty'),
-								'E3'=>array('name'=>Yii::t('sales','AC30'),'type'=>'qty'),
-								'E4'=>array('name'=>Yii::t('sales','PR10'),'type'=>'qty'),
-								'E5'=>array('name'=>Yii::t('sales','迷你清洁炮'),'type'=>'qty','eol'=>true),
-								'E6'=>array('name'=>Yii::t('sales','预估成交率').'(0-100%)','type'=>'pct'),
-								'E7'=>array('name'=>Yii::t('sales','合同年金额'),'type'=>'amount','eol'=>true),
-								'E8'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
-							),
-				),
-			'F'=>array(
-					'name'=>Yii::t('sales','纸品'),
-					'type'=>'none',
-					'items'=>array(
-								'F1'=>array('name'=>Yii::t('sales','擦手纸价'),'type'=>'amount'),
-								'F2'=>array('name'=>Yii::t('sales','大卷厕纸价'),'type'=>'amount','eol'=>true),
-								'F4'=>array('name'=>Yii::t('sales','合同金额'),'type'=>'amount','eol'=>true),
-								'F3'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
-							),
-				),
-			'G'=>array(
-					'name'=>Yii::t('sales','一次性售卖'),
-					'type'=>'none',
-					'items'=>array(
-								'G3'=>array('name'=>Yii::t('sales','合同金额'),'type'=>'amount','eol'=>true),
-								'G1'=>array('name'=>Yii::t('sales','种类'),'type'=>'text','eol'=>true),
-								'G2'=>array('name'=>Yii::t('sales','备注'),'type'=>'rmk'),
-							),
-				),
-		);
+	    return CGetName::serviceDefinition($this->busine_id);
 	}
 
 	//蔚诺空气业务的类型列表
@@ -212,22 +105,29 @@ class VisitForm extends CFormModel
     }
 
 	public function init() {
-		$this->city = Yii::app()->user->city();
-		$this->username = Yii::app()->user->id;
-		$this->visit_dt = date("Y/m/d");
-		$this->getStaffInfo();
-		$this->status = 'N';
-
-		$services = $this->serviceDefinition();
-		foreach ($services as $key=>$value) {
-			$fldid = 'svc_'.$key;
-			$this->service[$fldid] = '';
-			foreach ($value['items'] as $k=>$v) {
-				$fldid = 'svc_'.$k;
-				$this->service[$fldid] = '';
-			}
-		}
+        if(Yii::app()->getComponent('user')!==null){
+            $this->city = Yii::app()->user->city();
+            $this->username = Yii::app()->user->id;
+            $this->visit_dt = date("Y/m/d");
+            $this->getStaffInfo();
+            $this->status = 'N';
+        }
 	}
+
+	public function settingServices(){
+        $services = $this->serviceDefinition();
+        foreach ($services as $key=>$value) {
+            $fldid = 'svc_'.$key;
+            $this->service[$fldid] = '';
+            foreach ($value['items'] as $k=>$v) {
+                $fldid = 'svc_'.$k;
+                $this->service[$fldid] = '';
+                if(in_array($v["type"],array("device","ware"))){//设备
+                    $this->service[$fldid.'_rmk'] = '';
+                }
+            }
+        }
+    }
 	
 	public function attributeLabels()
 	{
@@ -252,6 +152,7 @@ class VisitForm extends CFormModel
             'service_type'=>Yii::t('sales','Service Type'),
 			'cust_alt_name'=>Yii::t('sales','Branch Name (if any)'),
             'quotation'=>Yii::t('sales','Quotation'),
+            'sign_odds'=>Yii::t('ka','sign odds'),
 		);
 		
 		$services = $this->serviceDefinition();
@@ -269,11 +170,11 @@ class VisitForm extends CFormModel
 
 	public function rules() {
 		return array(
-			array('visit_dt, username, district, visit_type, visit_obj,service_type, cust_type, cust_type_group, cust_name','required'),
+			array('visit_dt, username, district, sign_odds, visit_type, visit_obj,service_type, cust_type, cust_type_group, cust_name','required'),
 			array('visit_dt','validateVisitDt'),
 			array('service','validateServiceAmount'),
 			array('service','validateServices'),
-			array('id, city, city_name, remarks, staff, dept_name, post_name, street, cust_person, cust_person_role, cust_vip,quotation,
+			array('id, city, city_name,busine_id, remarks, staff, dept_name, post_name, street, cust_person, cust_person_role, cust_vip,quotation,
 				cust_tel, cust_alt_name, status, status_dt, latitude, longitude, deal, cust_type_group','safe'),
 			array('files, removeFileId, docMasterId, no_of_attm','safe'),
             array ('no_of_attm','validateTaxSlip'),
@@ -283,9 +184,12 @@ class VisitForm extends CFormModel
     public function validateVisitDt($attribute, $params) {
         $this->username = Yii::app()->user->id;
         $visit_dt = date("Y/m/d",strtotime($this->visit_dt));
-        $nowDate = date("Y/m/d");
-        $minDate = date("Y/m/d",strtotime($nowDate." - 1 day"));
-        if($this->getScenario()=="new"){
+        $thisDate = self::isVivienne()?"0000/00/00":date("Y/m/01");
+        $scenario = $this->getScenario();
+        if($scenario=="new"){
+            $nowDate = date("Y/m/d");
+            $minDate = date("Y/m/d",strtotime($nowDate." - 1 day"));
+            $minDate = $minDate<$thisDate?$thisDate:$minDate;
             if($visit_dt<$minDate){
                 $this->addError($attribute, "拜访日期必须大于".$minDate);
             }else{
@@ -298,27 +202,68 @@ class VisitForm extends CFormModel
                 }
             }
         }else{
-            $visitRow = Yii::app()->db->createCommand()->select("visit_dt")->from("sal_visit")
-                ->where("id=:id",array(":id"=>$this->id))->queryRow();
+            $visitRow = Yii::app()->db->createCommand()
+                ->select("a.*,d.type_group as cust_type_group")
+                ->from("sal_visit a")
+                ->leftJoin("sal_cust_type d","a.cust_type = d.id")
+                ->where("a.id=:id",array(":id"=>$this->id))->queryRow();
             if($visitRow){
                 $old_dt = date("Y/m/d",strtotime($visitRow["visit_dt"]));
-                if($old_dt>$visit_dt){
-                    $this->visit_dt = $old_dt;
+                $this->ltNowDate = $old_dt<$thisDate;
+                if($scenario=="delete"){
+                    if($this->ltNowDate){
+                        $this->addError($attribute, "无法删除({$old_dt})时间段的数据");
+                    }
+                }else{
+                    $updateBool = $visit_dt<$thisDate;//验证修改后的时间
+                    $this->ltNowDate = $updateBool||$this->ltNowDate;//验证修改前的时间
+                    if($this->ltNowDate){
+                        $notUpdate=self::getNotUpdateList();
+                        foreach ($notUpdate as $item){
+                            if(in_array($item,array("visit_obj","service_type"))){
+                                $this->$item = json_decode($visitRow[$item]);
+                            }else{
+                                $this->$item = $visitRow[$item];
+                            }
+                        }
+
+                        $sql = "select * from sal_visit_info where visit_id = ".$visitRow["id"];
+                        $rows = Yii::app()->db->createCommand($sql)->queryAll();
+                        if (count($rows) > 0) {
+                            foreach ($rows as $row) {
+                                $fldid = $row['field_id'];
+                                if (!isset($this->$fldid)&&!in_array($fldid,array("svc_G2","svc_F3","svc_E8","svc_H7","svc_D7","svc_C8","svc_B7","svc_A8"))) {
+                                    $this->service[$fldid] = $row['field_value'];
+                                }
+                            }
+                        }
+                    }
                 }
+            }else{
+                $this->addError($attribute, "数据异常，请刷新重试");
             }
         }
     }
 
+    public static function getNotUpdateList(){
+        return array("visit_dt","username","visit_type","quotation","sign_odds",
+            "visit_obj","service_type","cust_type_group","cust_type"
+        );
+    }
+
     public function validateTaxSlip($attribute, $params) {
         $count = $this->no_of_attm['visit'];
-        if (is_array($this->visit_obj)&&in_array('10',$this->visit_obj)&&(empty($count) || $count==0)) {
-            $this->addError($attribute, Yii::t('dialog','No visit Slip'));
+        if (is_array($this->visit_obj)&&in_array('10',$this->visit_obj)) {
+            $this->sign_odds=100;
+            if(empty($count) || $count==0){
+                $this->addError($attribute, Yii::t('dialog','No visit Slip'));
+            }
         }
     }
 
     public function inAmtFiles($gid){
         $key = "".$gid;
-        if (in_array($key, $this->amount_fields)) {
+        if (in_array($key, self::$amount_fields)) {
             return 1;
         }else{
             return 0;
@@ -330,7 +275,7 @@ class VisitForm extends CFormModel
 			$total = 0;
 			$services = $this->serviceDefinition();
 			foreach ($services as $key=>$value) {
-				if (in_array($key, $this->amount_fields)) {
+				if (in_array($key, self::$amount_fields)) {
 					$fldid = 'svc_'.$key;
 					if (isset($this->service[$fldid])) {
 						if (!empty($this->service[$fldid]) && is_numeric($this->service[$fldid])) $total += $this->service[$fldid];
@@ -338,7 +283,7 @@ class VisitForm extends CFormModel
 				}
 
 				foreach ($value['items'] as $k=>$v) {
-					if (in_array($k, $this->amount_fields)) {
+					if (in_array($k, self::$amount_fields)) {
 						$fldid = 'svc_'.$k;
 						if (isset($this->service[$fldid])) {
 							if (!empty($this->service[$fldid]) && is_numeric($this->service[$fldid])) $total += $this->service[$fldid];
@@ -409,30 +354,36 @@ class VisitForm extends CFormModel
 		}
 	}
 
-	public function retrieveData($index) {
+	public function retrieveData($index,$bool=true) {
 		$suffix = Yii::app()->params['envSuffix'];
-		$citylist = Yii::app()->user->city_allow();
-		$user = Yii::app()->user->id;
 		$sql = "select a.*, b.name as city_name, concat(f.code,' - ',f.name) as staff,
 					VisitObjDesc(a.visit_obj) as visit_obj_name, d.type_group, 
 					docman$suffix.countdoc('visit',a.id) as visitcountdoc, i.cust_vip
 				from sal_visit a 
-				inner join sal_cust_type d on a.cust_type = d.id
-				inner join hr$suffix.hr_binding c on a.username = c.user_id
-				inner join hr$suffix.hr_employee f on c.employee_id = f.id
+				left join sal_cust_type d on a.cust_type = d.id
+				left join hr$suffix.hr_binding c on a.username = c.user_id
+				left join hr$suffix.hr_employee f on c.employee_id = f.id
 				left outer join security$suffix.sec_city b on a.city=b.code
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
 				where a.id = $index
 			";
-		$sql .= ($this->isReadAll()) ? " and a.city in ($citylist)" : " and (a.username='$user' or a.shift_user='$user') ";
+		if($bool){
+            $citylist = Yii::app()->user->city_allow();
+            $user = Yii::app()->user->id;
+            $sql .= ($this->isReadAll()) ? " and a.city in ($citylist)" : " and (a.username='$user' or a.shift_user='$user') ";
+        }
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
 //        print_r('<pre/>');
 //        print_r($row);
 		if ($row!==false) {
 			$this->id = $row['id'];
 			$this->visit_dt = General::toDate($row['visit_dt']);
-			$this->username = $row['username'];
-			$this->getStaffInfo();
+            $this->username = $row['username'];
+            if($bool){
+                $thisDate = self::isVivienne()?"0000/00/00":date("Y/m/01");
+                $this->ltNowDate = $this->visit_dt<$thisDate;
+                $this->getStaffInfo();
+            }
 			$this->shift = $row['shift'];
 			$this->shift_user = $row['shift_user'];
 			$this->district = $row['district'];
@@ -450,11 +401,16 @@ class VisitForm extends CFormModel
 			$this->service_type = json_decode($row['service_type']);
 			$this->cust_type = $row['cust_type'];
 			$this->remarks = $row['remarks'];
+			$this->total_amt = $row['total_amt'];
+			$this->busine_id = $row['busine_id'];
+			$this->busine_id_text = $row['busine_id_text'];
 			$this->status = $row['status'];
 			$this->status_dt = $row['status_dt'];
 			$this->cust_type_group = $row['type_group'];
 			$this->no_of_attm['visit'] = $row['visitcountdoc'];
             $this->quotation = $row['quotation'];
+            $this->sign_odds = $row['sign_odds'];
+            $this->settingServices();
 		}
 		
 		$sql = "select * from sal_visit_info where visit_id = $index";
@@ -531,11 +487,11 @@ class VisitForm extends CFormModel
 			case 'new':
 				$sql = "insert into sal_visit(
 							username, visit_dt, visit_type, visit_obj, cust_type, cust_name, cust_person_role,service_type,quotation,
-							cust_alt_name, cust_person, cust_tel, district, street, remarks, status, status_dt,
+							cust_alt_name, cust_person, cust_tel, district, street, remarks, status, status_dt,sign_odds,
 							city, luu, lcu
 						) values (
 							:username, :visit_dt, :visit_type, :visit_obj, :cust_type, :cust_name, :cust_person_role,:service_type,:quotation,
-							:cust_alt_name, :cust_person, :cust_tel, :district, :street, :remarks, :status, :status_dt,
+							:cust_alt_name, :cust_person, :cust_tel, :district, :street, :remarks, :status, :status_dt,:sign_odds,
 							:city, :luu, :lcu
 						)";
 				break;
@@ -558,6 +514,7 @@ class VisitForm extends CFormModel
 					remarks = :remarks, 
 					status = :status,
 					status_dt = :status_dt,
+					sign_odds = :sign_odds,
 					shift_bool = 1,
 					luu = :luu
 					where id = :id and city=:city";
@@ -611,6 +568,10 @@ class VisitForm extends CFormModel
 		if (strpos($sql,':status_dt')!==false) {
 			$d = empty($this->status_dt) ? null : $this->status_dt;
 			$command->bindParam(':status_dt',$d,PDO::PARAM_STR);
+		}
+		if (strpos($sql,':sign_odds')!==false) {
+			$sign_odds = empty($this->sign_odds)||!is_numeric($this->sign_odds)? 0 : $this->sign_odds;
+			$command->bindParam(':sign_odds',$sign_odds,PDO::PARAM_STR);
 		}
 		if (strpos($sql,':city')!==false)
 			$command->bindParam(':city',$city,PDO::PARAM_STR);
@@ -721,12 +682,21 @@ class VisitForm extends CFormModel
 		}
 	}
 
+	public function addNotificationByQian($index){
+        $this->retrieveData($index,false);
+        if ($this->isPlaceOrder()) {
+            $connection = Yii::app()->db;
+            $this->addNotification($connection);
+        }
+    }
+
 	protected function addNotification(&$connection) {
 		$suffix = Yii::app()->params['envSuffix'];
+        $connection->createCommand()->delete("sal_push_message","key_id=:key_id",array(":key_id"=>$this->id));
 		$sql = "insert into sal_push_message(
 					msg_type, message_en, message_cn, message_tw, status, key_id, lcu, luu
 				) values (
-					'SALORDER', :message_en, :message_cn, :message_tw, 'P', :key_id, :uid, :uid
+					'SALORDER', :message_en, :message_cn, :message_tw, 'F', :key_id, :uid, :uid
 				)
 			";
 
@@ -738,46 +708,44 @@ class VisitForm extends CFormModel
 		$svcmsg_en = "";
 		$services = $this->serviceDefinition();
 		foreach($services as $key=>$value) {
-			if (strpos("ABCDEFGH", $key)!==false) {
-				foreach($value['items'] as $k=>$v) {
-					if ($v['type']=='amount') {
-						$fldid = 'svc_'.$k;
-						if (isset($this->service[$fldid]) && !empty($this->service[$fldid])) {
-							$svctype = $value['name'];
-							$amount = $this->service[$fldid];
-							
-							if ($key == 'F' || $key == 'G') {
-								if ($k == 'F4' || $key == 'G') {
-									$svcmsg_cn .= (($svcmsg_cn=="") ? "" : "，")."服务类型：$svctype ，合同金额：$amount";
-									$svcmsg_tw .= (($svcmsg_tw=="") ? "" : "，")."服務類型：$svctype ，合同金額：$amount";
-									$svcmsg_en .= (($svcmsg_en=="") ? "" : ",")."Service Type: $svctype , Amount: $amount";
-								}
-							} elseif ($k == 'A10' || $k == 'C10') {
-								$svcmsg_cn .= (($svcmsg_cn=="") ? "" : "，")."服务类型：$svctype ，安装费：$amount";
-								$svcmsg_tw .= (($svcmsg_tw=="") ? "" : "，")."服務類型：$svctype ，安装费：$amount";
-								$svcmsg_en .= (($svcmsg_en=="") ? "" : ",")."Service Type: $svctype , Installed Amount: $amount";
-							} elseif ($k == 'H4') {
-								$svcmsg_cn .= (($svcmsg_cn=="") ? "" : "，")."服务类型：$svctype ，延长维保：$amount";
-								$svcmsg_tw .= (($svcmsg_tw=="") ? "" : "，")."服務類型：$svctype ，延长维保：$amount";
-								$svcmsg_en .= (($svcmsg_en=="") ? "" : ",")."Service Type: $svctype , Extended maintenance: $amount";
-							} else {
-								$svcmsg_cn .= (($svcmsg_cn=="") ? "" : "，")."服务类型：$svctype ，合同年金额：$amount";
-								$svcmsg_tw .= (($svcmsg_tw=="") ? "" : "，")."服務類型：$svctype ，合同年金額：$amount";
-								$svcmsg_en .= (($svcmsg_en=="") ? "" : ",")."Service Type: $svctype , Annual Amount: $amount";
-							}
-							
+            foreach($value['items'] as $k=>$v) {
+                if (in_array($v['type'],array('amount','install_amt','yearAmount'))) {
+                    $fldid = 'svc_'.$k;
+                    if (isset($this->service[$fldid]) && !empty($this->service[$fldid])) {
+                        $svctype = $value['name'];
+                        $amount = $this->service[$fldid];
+
+                        if ($key == 'F' || $key == 'G') {
+                            if ($k == 'F4' || $key == 'G') {
+                                $svcmsg_cn .= (($svcmsg_cn=="") ? "" : "，")."服务类型：$svctype ，合同金额：$amount";
+                                $svcmsg_tw .= (($svcmsg_tw=="") ? "" : "，")."服務類型：$svctype ，合同金額：$amount";
+                                $svcmsg_en .= (($svcmsg_en=="") ? "" : ",")."Service Type: $svctype , Amount: $amount";
+                            }
+                        } elseif ($k == 'A10' || $k == 'C10') {
+                            $svcmsg_cn .= (($svcmsg_cn=="") ? "" : "，")."服务类型：$svctype ，安装费：$amount";
+                            $svcmsg_tw .= (($svcmsg_tw=="") ? "" : "，")."服務類型：$svctype ，安装费：$amount";
+                            $svcmsg_en .= (($svcmsg_en=="") ? "" : ",")."Service Type: $svctype , Installed Amount: $amount";
+                        } elseif ($k == 'H4') {
+                            $svcmsg_cn .= (($svcmsg_cn=="") ? "" : "，")."服务类型：$svctype ，延长维保：$amount";
+                            $svcmsg_tw .= (($svcmsg_tw=="") ? "" : "，")."服務類型：$svctype ，延长维保：$amount";
+                            $svcmsg_en .= (($svcmsg_en=="") ? "" : ",")."Service Type: $svctype , Extended maintenance: $amount";
+                        } else {
+                            $svcmsg_cn .= (($svcmsg_cn=="") ? "" : "，")."服务类型：$svctype ，合同年金额：$amount";
+                            $svcmsg_tw .= (($svcmsg_tw=="") ? "" : "，")."服務類型：$svctype ，合同年金額：$amount";
+                            $svcmsg_en .= (($svcmsg_en=="") ? "" : ",")."Service Type: $svctype , Annual Amount: $amount";
+                        }
+
 //							$amt += $this->service[$fldid];
 //							$svctype .= (($svctype=="") ? "" : ",").$value['name'];
-						}
-					}
-				}
-			}
+                    }
+                }
+            }
 		}
 		
 		if (!empty($svcmsg_cn) && !empty($svcmsg_tw) && !empty($svcmsg_en)) {
-			$uid = Yii::app()->user->id;
-			$staff = $this->staff;
-			$cityname = Yii::app()->user->city_name();
+            $uid = Yii::app()->getComponent('user')===null?"admin":Yii::app()->user->id;
+			$staff = CGetName::getEmployeeStrByUsername("name",$this->username);
+			$cityname = General::getCityName($this->city);
 			$amount = number_format($amt, 2, '.','');
 			
 //			$message_cn = "恭喜《 $cityname 》$staff 大神签单啦，服务类型：$svctype ，合同年金额：$amount";
@@ -903,10 +871,11 @@ class VisitForm extends CFormModel
 		return $rtn;
 	}
 
-	public function getCustTypeList($type_group=1) {
+	public static function getCustTypeList($type_group=1,$id=0) {
+        $id=empty($id)||!is_numeric($id)?0:$id;
 		$city = Yii::app()->user->city();
 		$rtn = array(''=>Yii::t('misc','-- None --'));
-		$sql = "select id, name from sal_cust_type where (city='99999' or city='$city') and type_group=$type_group order by name";
+		$sql = "select id, name from sal_cust_type where (city='99999' or city='$city') and type_group=$type_group AND (z_display=1 or id='{$id}') order by name";
 		$rows = Yii::app()->db->createCommand($sql)->queryAll();
 		if (count($rows) > 0) {
 			foreach($rows as $row) {
@@ -916,7 +885,7 @@ class VisitForm extends CFormModel
 		return $rtn;
 	}
 	
-	public function getDistrictList() {
+	public static function getDistrictList() {
 		$citylist = Yii::app()->user->city_allow();
 
 		$rtn = array(''=>Yii::t('misc','-- None --'));
@@ -928,6 +897,26 @@ class VisitForm extends CFormModel
 			}
 		}
 		return $rtn;
+	}
+
+	public static function getSignOddsList() {
+		return array(
+		    0=>"0%",
+		    20=>"20%",
+		    50=>"50%",
+		    80=>"80%",
+		    100=>"100%",
+        );
+	}
+
+	public static function getSignOddsStrByKey($key) {
+        $key = "".$key;
+        $list = self::getSignOddsList();
+        if(key_exists($key,$list)){
+            return $list[$key];
+        }else{
+            return $key;
+        }
 	}
 
 	protected function isMakingDeal($obj) {
@@ -1026,5 +1015,11 @@ class VisitForm extends CFormModel
             ";
             Yii::app()->db->createCommand($sql)->execute();
         }
+    }
+
+    public static function isVivienne(){
+        $vivienneList = isset(Yii::app()->params['vivienneList'])?Yii::app()->params['vivienneList']:array("VivienneChen88888");
+        $uid = Yii::app()->getComponent('user')===null?"admin":Yii::app()->user->id;
+        return in_array($uid,$vivienneList);
     }
 }

@@ -942,6 +942,10 @@ class CountSearch extends SearchForCurlU {
         $startDate = date("Y/m/01",strtotime($date." -4 month"));
         $endDate = date("Y/m/t",strtotime($date));
         $dateTemp = array();
+        $idCharSql = "SELECT GROUP_CONCAT(CONCAT(\"'svc_\",a.id_char,\"'\")) as idChars FROM sal_service_type_info a LEFT JOIN sal_service_type b ON a.type_id=b.id 
+WHERE b.class_id is NOT null AND a.input_type='yearAmount' AND  b.class_id not in (6,7)";
+        $idChar = Yii::app()->db->createCommand($idCharSql)->queryRow();
+        $idChar =$idChar?$idChar["idChars"]:"''";
         for($i=0;$i<=4;$i++){
             $dateKey = $i===0?date("Y/m",strtotime($date)):date("Y/m",strtotime($date." -{$i} month"));
             $dateTemp[$dateKey]=0;
@@ -951,7 +955,7 @@ class CountSearch extends SearchForCurlU {
         $rows = Yii::app()->db->createCommand()->select("b.username,DATE_FORMAT(b.visit_dt,'%Y/%m') as yearMonth,sum(convert(a.field_value, decimal(12,2))) as money")
             ->from("sal_visit_info a")
             ->leftJoin("sal_visit b","a.visit_id=b.id")
-            ->where("a.field_id in ('svc_A7','svc_B6','svc_C7','svc_D6','svc_E7','svc_F4','svc_G3') and b.visit_dt BETWEEN '{$startDate}' AND '{$endDate}' and ({$obj_where})")
+            ->where("a.field_id in ({$idChar}) and b.visit_dt BETWEEN '{$startDate}' AND '{$endDate}' and ({$obj_where})")
             ->group("b.username,yearMonth")->queryAll();
         if($rows){
             foreach ($rows as $row){

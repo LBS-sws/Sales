@@ -24,7 +24,7 @@ class DistrictController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('new','edit','delete','save'),
+				'actions'=>array('new','edit','delete','save','resetNal'),
 				'expression'=>array('DistrictController','allowReadWrite'),
 			),
 			array('allow', 
@@ -37,7 +37,13 @@ class DistrictController extends Controller
 		);
 	}
 
-	public function actionIndex($pageNum=0) 
+	public function actionResetNal(){
+        $model = new DistrictForm('view');
+        $model->resetNal();
+        die("end");
+    }
+
+	public function actionIndex($pageNum=0)
 	{
 		$model = new DistrictList;
 		if (isset($_POST['DistrictList'])) {

@@ -83,7 +83,17 @@ $this->pageTitle=Yii::app()->name . ' - Customer Type Form';
 					); ?>
 				</div>
 			</div>
-			
+
+            <div class="form-group">
+                <?php echo $form->labelEx($model,'z_display',array('class'=>"col-lg-2 control-label")); ?>
+                <div class="col-lg-5">
+                    <?php
+                    $list = array(Yii::t("customer","none"),Yii::t("customer","show"));
+                    echo $form->inlineRadioButtonList($model, 'z_display',$list,
+                        array('readonly'=>($model->scenario=='view'))
+                    ); ?>
+                </div>
+            </div>
 		</div>
 	</div>
 </section>

@@ -89,26 +89,18 @@ $this->pageTitle=Yii::app()->name . ' - Report';
             <div class="form-group">
                 <?php echo $form->labelEx($model,'sort',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-3">
-                    <?php echo $form->dropDownList($model, 'sort',
-                        array(
-                            'singular'=>Yii::t('report','singular'),
-                            'money'=>Yii::t('report','money'),
-                            'svc_A7'=>Yii::t('report','svc_A7'),
-                            'svc_C7'=>Yii::t('report','svc_C7'),
-                            'svc_E7'=>Yii::t('report','svc_E7'),
-                            'svc_F4'=>Yii::t('report','svc_F4'),
-                            'svc_D6'=>Yii::t('report','svc_D6'),
-                            'svc_B6'=>Yii::t('report','svc_B6'),
-                            'svc_G3'=>Yii::t('report','svc_G3'),
-                            'svc_A7s'=>Yii::t('report','svc_A7s'),
-                            'svc_C7s'=>Yii::t('report','svc_C7s'),
-                            'svc_E7s'=>Yii::t('report','svc_E7s'),
-                            'svc_F4s'=>Yii::t('report','svc_F4s'),
-                            'svc_D6s'=>Yii::t('report','svc_D6s'),
-                            'svc_B6s'=>Yii::t('report','svc_B6s'),
-                            'svc_G3s'=>Yii::t('report','svc_G3s')
-                        )
-                    ); ?>
+                    <?php
+                    $list = array(
+                        'singular'=>Yii::t('report','singular'),
+                        'money'=>Yii::t('report','money'),
+                    );
+                    $classList = CGetName::getSetMenuTypeList("serviceTypeClass");
+                    foreach ($classList as $set_id=>$set_name){
+                        $list["amt_".$set_id]=$set_name."(按金额)";
+                        $list["sum_".$set_id]=$set_name."(按单数)";
+                    }
+                    echo $form->dropDownList($model, 'sort',$list);
+                    ?>
                 </div>
             </div>
         </div>

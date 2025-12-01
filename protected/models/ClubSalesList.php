@@ -196,6 +196,7 @@ class ClubSalesList extends CListPageModel
 
     //设置销售所有人员列表
     private function setSalesList(){
+        $startDate = $this->startDate;
         $date = $this->endDate;
         $noCity = ClubSettingForm::$noCity;
         $noCitySql = implode("','",$noCity);
@@ -206,7 +207,10 @@ class ClubSalesList extends CListPageModel
             ->leftJoin("hr{$suffix}.hr_dept b","a.position=b.id")
             ->leftJoin("hr{$suffix}.hr_binding f","a.id=f.employee_id")
             ->leftJoin("security{$suffix}.sec_city city","a.city=city.code")
-            ->where("f.user_id is not null and replace(a.entry_time,'/', '-')<='{$date}' and b.dept_class='Sales' and a.city not in ('{$noCitySql}') and b.manager_leave=1 and a.staff_status!=-1")
+            ->where("f.user_id is not null and replace(a.entry_time,'/', '-')<='{$date}' and
+            ( a.staff_status!=-1 or 
+            (replace(a.leave_time,'/', '-')>='{$startDate}' and a.staff_status=-1)
+            ) and b.dept_class='Sales' and a.city not in ('{$noCitySql}') and b.manager_leave=1")
             ->order("a.city asc,a.code asc")->queryAll();
         if($rows){
             foreach ($rows as $row){

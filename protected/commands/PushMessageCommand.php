@@ -64,7 +64,7 @@ class PushMessageCommand extends CConsoleCommand {
 			'filters' => array(array("field" => "tag", "key" => $right, "relation" => "exists"),),
 			'headings' => $heading,
 			'contents' => $content,
-			'url'=> 'http://118.89.46.224/sa-uat/index.php',
+			'url'=> 'http://118.89.46.224/sa-prod/index.php',
 		);
 		
 		$fields = json_encode($fields);
@@ -75,7 +75,7 @@ class PushMessageCommand extends CConsoleCommand {
 		curl_setopt($ch, CURLOPT_URL, "https://onesignal.com/api/v1/notifications");
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8',
 												   'Authorization: Basic '.Yii::app()->params['onesignalKey']));
-//												   'Authorization: Basic ODk5Yjk0ZjAtYTc1ZS00ODM1LTg1OWQtNWM1OTgyNzkxOGQy'));
+//												   'Authorization: Basic MzMyYThhODQtZTY3Ni00Mzk4LTllZDMtYmFlZWY5MmU1ZWVm'));
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($ch, CURLOPT_HEADER, FALSE);
 		curl_setopt($ch, CURLOPT_POST, TRUE);

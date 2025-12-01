@@ -8,6 +8,8 @@ class CusttypeForm extends CFormModel
 	public $rpt_type;
 	public $type_group;
 	public $city;
+	public $rpt_u;
+	public $z_display=1;
 
 	/**
 	 * Declares customized attribute labels.
@@ -21,6 +23,8 @@ class CusttypeForm extends CFormModel
 			'rpt_type'=>Yii::t('code','Report Category'),
 			'city'=>Yii::t('sales','City'),
 			'type_group'=>Yii::t('code','Type'),
+            'rpt_u'=>"派单系统对应id",
+            'z_display'=>"是否显示",
 		);
 	}
 
@@ -31,7 +35,7 @@ class CusttypeForm extends CFormModel
 	{
 		return array(
 			array('name,city,type_group','required'),
-			array('id,rpt_type','safe'), 
+			array('id,rpt_u,z_display,rpt_type','safe'),
 		);
 	}
 
@@ -46,6 +50,8 @@ class CusttypeForm extends CFormModel
 			$this->rpt_type = $row['rpt_type'];
 			$this->city = $row['city'];
 			$this->type_group = $row['type_group'];
+			$this->rpt_u = $row['rpt_u'];
+			$this->z_display = $row['z_display'];
 		}
 		return true;
 	}
@@ -73,14 +79,16 @@ class CusttypeForm extends CFormModel
 				break;
 			case 'new':
 				$sql = "insert into sal_cust_type(
-						name, rpt_type, type_group, city, lcu, luu) values (
-						:name, :rpt_type, :type_group, :city, :lcu, :luu)";
+						name, rpt_type, rpt_u, z_display, type_group, city, lcu, luu) values (
+						:name, :rpt_type, :rpt_u, :z_display, :type_group, :city, :lcu, :luu)";
 				break;
 			case 'edit':
 				$sql = "update sal_cust_type set 
 					name = :name, 
 					rpt_type = :rpt_type,
 					type_group = :type_group,
+					rpt_u = :rpt_u,
+					z_display = :z_display,
 					city = :city,
 					luu = :luu
 					where id = :id";
@@ -100,6 +108,16 @@ class CusttypeForm extends CFormModel
 			$command->bindParam(':rpt_type',$this->rpt_type,PDO::PARAM_STR);
 		if (strpos($sql,':city')!==false)
 			$command->bindParam(':city',$this->city,PDO::PARAM_STR);
+		if (strpos($sql,':luu')!==false)
+			$command->bindParam(':luu',$uid,PDO::PARAM_STR);
+		if (strpos($sql,':rpt_u')!==false){
+            $rpt_u = empty($this->rpt_u)?null:$this->rpt_u;
+            $command->bindParam(':rpt_u',$rpt_u,PDO::PARAM_INT);
+        }
+		if (strpos($sql,':z_display')!==false){
+            $z_display = empty($this->z_display)?0:$this->z_display;
+            $command->bindParam(':z_display',$z_display,PDO::PARAM_INT);
+        }
 		if (strpos($sql,':luu')!==false)
 			$command->bindParam(':luu',$uid,PDO::PARAM_STR);
 		if (strpos($sql,':lcu')!==false)

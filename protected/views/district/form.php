@@ -66,6 +66,17 @@ $this->pageTitle=Yii::app()->name . ' - Customer District Form';
 				</div>
 			</div>
 
+			<div class="form-group">
+				<?php echo $form->labelEx($model,'nal_id',array('class'=>"col-sm-2 control-label")); ?>
+				<div class="col-sm-2">
+					<?php
+                    echo $form->hiddenField($model,'nal_id');
+                    echo $form->textField($model, 'nal_tree_names',
+						array('autocomplete'=>"off",'class'=>"nationalClick",'data-name'=>$model->nal_tree_names,'data-clue'=>2,'readonly'=>($model->scenario=='view'))
+					); ?>
+				</div>
+			</div>
+
 
             <div class="form-group">
                 <?php echo $form->labelEx($model,'z_index',array('class'=>"col-lg-2 control-label")); ?>
@@ -95,6 +106,7 @@ $this->pageTitle=Yii::app()->name . ' - Customer District Form';
 </section>
 
 <?php $this->renderPartial('//site/removedialog'); ?>
+<?php $this->renderPartial('//clue/nationalArea'); ?>
 
 <?php
 $js = Script::genDeleteData(Yii::app()->createUrl('district/delete'));

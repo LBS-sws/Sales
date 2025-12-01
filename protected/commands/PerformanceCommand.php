@@ -4,7 +4,7 @@ class PerformanceCommand extends CConsoleCommand
     public function run($args)
     {
 	$date = empty($args) ? date('Y-m-d') : $args[0];
-        $month=date('m', strtotime($date));
+        $month=date('n', strtotime($date));
         $year=date('Y', strtotime($date));
         $day=date('d', strtotime($date));
 //        if($day=='01'){
@@ -24,18 +24,41 @@ class PerformanceCommand extends CConsoleCommand
                         $lastmonth=12;
                         $lastyear=$year-1;
                     }
-                    $sqls="select * from sales$suffix.sal_performance where city='$city' and year='$lastyear' and month='$lastmonth' ";
-                    $row = Yii::app()->db->createCommand($sqls)->queryRow();
-                    if(empty($row)){
-                        $sql = "insert into sales$suffix.sal_performance(city, year, month, sum,sums,spanning,otherspanning,lcu, luu) 
-				values('$city', '$year', '$month', '0', '0','0','0','$uid', '$uid')
-			";
+                    $row = Yii::app()->db->createCommand()->select("id")->from("sales$suffix.sal_performance")
+                        ->where("city=:city and year=:year and month=:month",array(
+                            ":city"=>$city,
+                            ":year"=>$year,
+                            ":month"=>$month,
+                        ))->queryRow();
+                    if($row){
+                        //已存在，不需要增加
                     }else{
-                        $sql = "insert into sales$suffix.sal_performance(city, year, month, sum,sums,spanning,otherspanning,lcu, luu) 
-				values('$city', '$year', '$month', '".$row['sum']."', '".$row['sums']."','".$row['spanning']."','".$row['otherspanning']."','$uid', '$uid')
-			";
+                        //不存在，需要增加
+                        $saveList=array(
+                            "city"=>$city,
+                            "year"=>$year,
+                            "month"=>$month,
+                            "sum"=>0,
+                            "sums"=>0,
+                            "spanning"=>0,
+                            "otherspanning"=>0,
+                        );
+                        $lastRow = Yii::app()->db->createCommand()->select("*")->from("sales$suffix.sal_performance")
+                            ->where("city=:city and year=:year and month=:month",array(
+                                ":city"=>$city,
+                                ":year"=>$lastyear,
+                                ":month"=>$lastmonth,
+                            ))->queryRow();
+                        if($lastRow){
+                            $saveList = $lastRow;
+                            $saveList["year"]=$year;
+                            $saveList["month"]=$month;
+                            unset($saveList["id"]);
+                        }
+                        $saveList["lcu"]=$uid;
+                        $saveList["luu"]=$uid;
+                        Yii::app()->db->createCommand()->insert("sales$suffix.sal_performance",$saveList);
                     }
-                    $command=Yii::app()->db->createCommand($sql)->execute();
                 }
             }
 //        }
