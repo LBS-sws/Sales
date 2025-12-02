@@ -481,7 +481,7 @@ class ClueFlowForm extends CFormModel
                 $this->addVisitDetail();
             }
         }else{
-            if(Yii::app()->user->validRWFunction('HK01')) {//KA项目读写权限
+            if(Yii::app()->user->validRWFunction('KA01')) {//KA项目读写权限
                 $this->addKADetail();
             }
         }
