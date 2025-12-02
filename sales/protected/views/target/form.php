@@ -59,7 +59,7 @@ $this->pageTitle=Yii::app()->name . ' - Performance Form';
                 <?php echo $form->labelEx($model,'sale_day',array('class'=>"col-sm-2 control-label")); ?>
                 <div class="col-sm-2">
                     <?php echo $form->textField($model, 'sale_day',
-                        array('size'=>10,'maxlength'=>10,)
+                        array('size'=>10,'maxlength'=>10,'readonly'=>($model->getReadonly()))
                     ); ?>
                 </div>
             </div>

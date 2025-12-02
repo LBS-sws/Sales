@@ -2,12 +2,14 @@
 class RptVisitList extends CReport {
 	protected $readAll = false;
 	protected $shift=null;
+    protected $sign_odds="";
 	protected $dateRangeValue = '0';
 
-	public static $pageCount = 500;//最大数量:500*4
+	public static $pageCount = 4000;
 	
 	protected function fields() {
 		$field1 = array(
+			'id'=>array('label'=>"ID",'width'=>10,'align'=>'L'),
 			'city_name'=>array('label'=>Yii::t('sales','City'),'width'=>15,'align'=>'L'),
 			'staff'=>array('label'=>Yii::t('sales','Staff'),'width'=>20,'align'=>'L'),
 			'post_name'=>array('label'=>Yii::t('sales','Position'),'width'=>20,'align'=>'L'),
@@ -20,6 +22,7 @@ class RptVisitList extends CReport {
 			'district'=>array('label'=>Yii::t('sales','District'),'width'=>20,'align'=>'L'),
 			'street'=>array('label'=>Yii::t('sales','Street'),'width'=>20,'align'=>'L'),
 			'visit_dt'=>array('label'=>Yii::t('sales','Visit Date'),'width'=>15,'align'=>'C'),
+			'sign_odds'=>array('label'=>Yii::t('ka','sign odds'),'width'=>15,'align'=>'C'),
 			'lcd'=>array('label'=>Yii::t('sales','Lcd'),'width'=>15,'align'=>'C'),
 			'cust_name'=>array('label'=>Yii::t('sales','Customer Name'),'width'=>25,'align'=>'L'),
 			'cust_alt_name'=>array('label'=>Yii::t('sales','Branch Name (if any)'),'width'=>25,'align'=>'L'),
@@ -113,6 +116,7 @@ class RptVisitList extends CReport {
 	
 	public function header_structure() {
 		$header1 = array(
+			'id',
 			'city_name',
 			'staff',
 			'post_name',
@@ -125,6 +129,7 @@ class RptVisitList extends CReport {
 			'district',
 			'street',
 			'visit_dt',
+            'sign_odds',
 			'lcd',
 			'cust_name',
 			'cust_alt_name',
@@ -293,6 +298,7 @@ class RptVisitList extends CReport {
 		$this->staticSearchColumns = json_decode($this->criteria['STATIC_COL']);
 		$criteria = json_decode($this->criteria['CRITERIA']);
 		$this->shift = isset($criteria->shift)?$criteria->shift:null;
+		$this->sign_odds = isset($criteria->sign_odds)?$criteria->sign_odds:"";
 		$this->searchField = $criteria->searchField;
 		$this->searchValue = $criteria->searchValue;
 		$this->filter = json_decode($criteria->filter);
@@ -300,8 +306,10 @@ class RptVisitList extends CReport {
 	}
 	
 	public function retrieveData() {
+        ini_set('memory_limit', '1024M');
 		$suffix = Yii::app()->params['envSuffix'];
 		$uid = $this->criteria['UID'];
+        $pageThis = isset($this->criteria['PAGE_NUM'])?$this->criteria['PAGE_NUM']:0;
 
 		if(isset($this->criteria['CITY_ALLOW'])){
             $citylist = $this->criteria['CITY_ALLOW'];
@@ -324,23 +332,15 @@ class RptVisitList extends CReport {
 				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
 				where a.city in ($citylist)
 			";
-
-		$sql2 = "select count(a.id) from sal_visit a 
-				inner join hr$suffix.hr_binding c on a.username = c.user_id
-				inner join hr$suffix.hr_employee f on c.employee_id = f.id
-				inner join sal_visit_type d on a.visit_type = d.id
-				inner join sal_cust_type g on a.cust_type = g.id
-				inner join sal_cust_district h on a.district = h.id
-				left outer join security$suffix.sec_city b on a.city=b.code
-				left outer join sal_custstar i on a.username=i.username and a.cust_name=i.cust_name
-				where a.city in ($citylist)
-			";
 		if (!$this->readAll){
 		    $sql .= " and a.username='$uid' ";
-            $sql2 .= " and a.username='$uid' ";
         }
 			
 		$clause = "";
+        if($this->sign_odds!==""){
+            $this->sign_odds = is_numeric($this->sign_odds)?$this->sign_odds:0;
+            $clause.=" and a.sign_odds='{$this->sign_odds}' ";
+        }
 		$static = $this->staticSearchColumns;
 		$columns = $this->searchColumns;
 		if (!empty($this->searchField) && (!empty($this->searchValue) || in_array($this->searchField, $static) || $this->isAdvancedSearch())) {
@@ -368,73 +368,9 @@ class RptVisitList extends CReport {
         }
 		$order = $this->readAll	? " order by a.visit_dt desc, f.code,a.id desc" : " order by a.visit_dt desc, b.name, f.code,a.id desc";
 
-        $sqlTotal = $sql2.$clause;
-        $totalRow = Yii::app()->db->createCommand($sqlTotal)->queryScalar();
-echo "total:{$totalRow}\n";
         $sql = $sql.$clause.$order;
-        ini_set('memory_limit', '256M');
-        $pageThis = isset($this->criteria['PAGE_NUM'])?$this->criteria['PAGE_NUM']:0;
-        $this->getDateForPage($sql,$totalRow,$pageThis,$pageThis);
-		
-		return true;
-	}
-
-	private function rptDescNum($str){
-        if (strpos($str,'_续')!==false){
-            $numArr = explode("_续",$str);
-            $num = count($numArr)==2?$numArr[1]:0;
-            $num = empty($num)?1:$num;
-            $num++;
-            return "销售拜访报表_续".$num;
-        }else{
-            return "销售拜访报表_续";
-        }
-    }
-
-	private function addQueueRpt($page){
-        if(isset($this->criteria['QUEUE_ID'])){
-            $id = $this->criteria['QUEUE_ID'];
-            $row = Yii::app()->db->createCommand()->select("*")->from("sal_queue")
-                ->where("id=:id",array(":id"=>$id))->queryRow();
-            if($row){
-                $title = $this->rptDescNum($row["rpt_desc"]);
-                $list = $row;
-                unset($list["id"]);
-                $list["rpt_desc"]=$title;
-                $list["status"]="P";
-                $list["req_dt"]=date_format(date_create(""),"Y/m/d H:i:s");
-                $list["fin_dt"]=null;
-                Yii::app()->db->createCommand()->insert("sal_queue",$list);
-                $addID = Yii::app()->db->getLastInsertID();
-                Yii::app()->db->createCommand()->insert("sal_queue_param",array(
-                    "queue_id"=>$addID,
-                    "param_field"=>"PAGE_NUM",
-                    "param_value"=>$page,
-                ));
-                $infoRows = Yii::app()->db->createCommand()->select("*")->from("sal_queue_param")
-                    ->where("queue_id=:id",array(":id"=>$id))->queryAll();
-                if($infoRows){
-                    foreach ($infoRows as $infoRow){
-                        $infoList = $infoRow;
-                        unset($infoList["id"]);
-                        $infoList["queue_id"] = $addID;
-                        if($infoList["param_field"]=="RPT_NAME"){
-                            $infoList["param_value"]=$title;
-                        }
-                        Yii::app()->db->createCommand()->insert("sal_queue_param",$infoList);
-                    }
-                }
-            }
-        }
-    }
-
-	private function getDateForPage($sql,$totalRow,$page=0,$startPage=0){
-	    if($page-$startPage>3){//执行3次后，数据量太大，新增一个
-            $this->addQueueRpt($page);
-            return true;
-        }
         $pageMax = self::$pageCount;//最大数量
-        $startNum = $page*$pageMax;
+        $startNum = $pageThis*$pageMax;
         $sqlRow= $sql." LIMIT {$startNum},$pageMax";
         $rows = Yii::app()->db->createCommand($sqlRow)->queryAll();
         if (count($rows) > 0) {
@@ -449,6 +385,7 @@ echo "total:{$totalRow}\n";
                 }
                 $temp['id'] = $row['id'];
                 $temp['visit_dt'] = General::toDate($row['visit_dt']);
+                $temp['sign_odds'] = VisitForm::getSignOddsStrByKey($row['sign_odds']);
                 $temp['lcd'] = General::toDate($row['lcd']);
                 $temp['username'] = $row['username'];
                 $stf = $this->getStaffInfo($row['username']);
@@ -490,14 +427,16 @@ echo "total:{$totalRow}\n";
                 $this->data[] = $temp;
             }
         }
-        $this->printDetail();
-
-        if($startNum+$pageMax<$totalRow){
-            $page++;
-             return $this->getDateForPage($sql,$totalRow,$page,$startPage);
+        /*模拟最大数量
+        $num = count($this->data);
+        for ($i=$num;$i<self::$pageCount;$i++){
+            $this->data[]=$temp;
         }
-        return true;
-    }
+        */
+        $this->printDetail();
+		
+		return true;
+	}
 
 	public function getReportName() {
 		//$city_name = isset($this->criteria) ? ' - '.General::getCityName($this->criteria['CITY']) : '';

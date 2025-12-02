@@ -15,6 +15,7 @@ class IntegralSaveCommand extends CConsoleCommand
             $model->retrieveDataNew($id['id']);
             unset($model);
         }
+		/*
         $month1 = date("m", strtotime("$date -1 month"));
         $year1 = date("Y",strtotime(" $date -1 month"));
         echo "year({$year1}),month({$month1})\n";
@@ -35,6 +36,7 @@ class IntegralSaveCommand extends CConsoleCommand
             $model->retrieveDataNew($id['id']);
             unset($model);
         }
+		*/
         echo "IntegralSave End:\n";
     }
 }

@@ -24,18 +24,32 @@ $modelClass = get_class($model);
 
             <div class="col-lg-3">
                 <?php
-                echo $form->dropDownList($model,"pay_week",CGetName::getPayWeekList(),array(
-                    'readonly'=>$model->isReadonly(),'id'=>'pay_week'
-                ));
+                if($model->isReadonly()){
+                    echo $form->hiddenField($model,"pay_week",array('id'=>'pay_week'));
+                    echo TbHtml::textField("pay_week",CGetName::getPayWeekStrByKey($model->pay_week),array(
+                        'readonly'=>true
+                    ));
+                }else{
+                    echo $form->dropDownList($model,"pay_week",CGetName::getPayWeekList(),array(
+                        'readonly'=>$model->isReadonly(),'id'=>'pay_week'
+                    ));
+                }
                 ?>
             </div>
             <?php echo TbHtml::label($model->getAttributeLabel('pay_type'),"pay_type",array('class'=>"col-lg-1 control-label col-lg-left",'required'=>true)); ?>
 
             <div class="col-lg-3">
                 <?php
-                echo $form->dropDownList($model,"pay_type",CGetName::getPayTypeList(),array(
-                    'readonly'=>$model->isReadonly(),'id'=>'pay_type'
-                ));
+                if($model->isReadonly()){
+                    echo $form->hiddenField($model,"pay_type",array('id'=>'pay_type'));
+                    echo TbHtml::textField("pay_type",CGetName::getPayTypeStrByID($model->pay_type),array(
+                        'readonly'=>true
+                    ));
+                }else{
+                    echo $form->dropDownList($model,"pay_type",CGetName::getPayTypeList(),array(
+                        'readonly'=>$model->isReadonly(),'id'=>'pay_type'
+                    ));
+                }
                 ?>
             </div>
         </div>
@@ -73,9 +87,16 @@ $modelClass = get_class($model);
 
             <div class="col-lg-3">
                 <?php
-                echo $form->dropDownList($model,"fee_type",CGetName::getFeeTypeList(),array(
-                    'readonly'=>$model->isReadonly(),'id'=>'fee_type'
-                ));
+                if($model->isReadonly()){
+                    echo $form->hiddenField($model,"fee_type",array('id'=>'fee_type'));
+                    echo TbHtml::textField("fee_type",CGetName::getFeeTypeStrByKey($model->fee_type),array(
+                        'readonly'=>true
+                    ));
+                }else{
+                    echo $form->dropDownList($model,"fee_type",CGetName::getFeeTypeList(),array(
+                        'readonly'=>$model->isReadonly(),'id'=>'fee_type'
+                    ));
+                }
                 ?>
             </div>
             <?php echo TbHtml::label($model->getAttributeLabel('pay_month'),"pay_month",array('class'=>"col-lg-1 control-label col-lg-left")); ?>
@@ -102,27 +123,48 @@ $modelClass = get_class($model);
 
             <div class="col-lg-3">
                 <?php
-                echo $form->dropDownList($model,"settle_type",CGetName::getSettleTypeList(),array(
-                    'readonly'=>$model->isReadonly(),'id'=>'settle_type'
-                ));
+                if($model->isReadonly()){
+                    echo $form->hiddenField($model,"settle_type",array('id'=>'settle_type'));
+                    echo TbHtml::textField("settle_type",CGetName::getSettleTypeStrByKey($model->settle_type),array(
+                        'readonly'=>true
+                    ));
+                }else{
+                    echo $form->dropDownList($model,"settle_type",CGetName::getSettleTypeList(),array(
+                        'readonly'=>$model->isReadonly(),'id'=>'settle_type'
+                    ));
+                }
                 ?>
             </div>
             <?php echo TbHtml::label($model->getAttributeLabel('bill_day'),"bill_day",array('class'=>"col-lg-1 control-label",'required'=>true)); ?>
 
             <div class="col-lg-3">
                 <?php
-                echo $form->dropDownList($model,"bill_day",CGetName::getBillDayList(),array(
-                    'readonly'=>$model->isReadonly(),'id'=>'bill_day'
-                ));
+                if($model->isReadonly()){
+                    echo $form->hiddenField($model,"bill_day",array('id'=>'bill_day'));
+                    echo TbHtml::textField("bill_day",CGetName::getBillDayStrByKey($model->bill_day),array(
+                        'readonly'=>true
+                    ));
+                }else{
+                    echo $form->dropDownList($model,"bill_day",CGetName::getBillDayList(),array(
+                        'readonly'=>$model->isReadonly(),'id'=>'bill_day'
+                    ));
+                }
                 ?>
             </div>
             <?php echo TbHtml::label($model->getAttributeLabel('receivable_day'),"receivable_day",array('class'=>"col-lg-1 control-label",'required'=>true)); ?>
 
             <div class="col-lg-3">
                 <?php
-                echo $form->dropDownList($model,"receivable_day",CGetName::getReceivableDayList(),array(
-                    'readonly'=>$model->isReadonly(),'id'=>'receivable_day'
-                ));
+                if($model->isReadonly()){
+                    echo $form->hiddenField($model,"receivable_day",array('id'=>'receivable_day'));
+                    echo TbHtml::textField("receivable_day",CGetName::getReceivableDayStrByKey($model->receivable_day),array(
+                        'readonly'=>true
+                    ));
+                }else{
+                    echo $form->dropDownList($model,"receivable_day",CGetName::getReceivableDayList(),array(
+                        'readonly'=>$model->isReadonly(),'id'=>'receivable_day'
+                    ));
+                }
                 ?>
             </div>
         </div>

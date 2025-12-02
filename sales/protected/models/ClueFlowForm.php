@@ -26,6 +26,11 @@ class ClueFlowForm extends CFormModel
 	public $table_id;
 	public $ltNowDate=false;
 
+	public $lcu;
+	public $luu;
+	public $lcd;
+	public $lud;
+
 	public $clueHeadRow;
 	public $clueServiceRow;
 
@@ -249,6 +254,10 @@ class ClueFlowForm extends CFormModel
             $this->table_id = $row['table_id'];
             $this->store_num = $row['store_num'];
             $this->update_bool = $row['update_bool'];
+            $this->lcu = $row['lcu'];
+            $this->luu = $row['luu'];
+            $this->lcd = $row['lcd'];
+            $this->lud = $row['lud'];
 
             return true;
 		}else{
@@ -472,7 +481,9 @@ class ClueFlowForm extends CFormModel
                 $this->addVisitDetail();
             }
         }else{
-            $this->addKADetail();
+            if(Yii::app()->user->validRWFunction('HK01')) {//KA项目读写权限
+                $this->addKADetail();
+            }
         }
     }
 
@@ -590,8 +601,20 @@ class ClueFlowForm extends CFormModel
         ),"id=:id",array(":id"=>$this->id));
     }
 
-    protected function addVisitDetail(){
-        $uid = Yii::app()->user->id;
+    public function addVisitByFlowIDs($flow_ids){
+        if(is_array($flow_ids)){
+            foreach ($flow_ids as $flow_id){
+                $model = new ClueFlowForm('view');
+                $model->retrieveData($flow_id);
+                if($model->clue_type==1&&empty($model->table_id)&&$model->validate()){
+                    $model->addVisitDetail($model->lcu);
+                }
+            }
+        }
+    }
+
+    protected function addVisitDetail($username=''){
+        $uid = empty($username)?Yii::app()->user->id:$username;
         $serviceTypeJson = $this->clueHeadRow["service_type"];
         $visitObjJson = $this->visit_obj;
         Yii::app()->db->createCommand()->insert("sal_visit",array(

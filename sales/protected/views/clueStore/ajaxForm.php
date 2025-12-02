@@ -230,6 +230,16 @@ $className = get_class($model);
     </div>
 </div>
 <div class="form-group">
+    <?php echo TbHtml::label($model->getAttributeLabel("store_remark"),'',array('class'=>"col-lg-2 control-label","required"=>$model->invoice_type==2)); ?>
+    <div class="col-lg-8">
+        <?php
+        echo TbHtml::textArea("{$className}[store_remark]",$model->store_remark,array(
+            "class"=>'form-control','id'=>'win_store_remark','readonly'=>$model->isReadonly(),'rows'=>2
+        ));
+        ?>
+    </div>
+</div>
+<div class="form-group">
     <?php echo TbHtml::label($model->getAttributeLabel("invoice_id"),'',array('class'=>"col-lg-2 control-label")); ?>
     <div class="col-lg-5">
         <?php

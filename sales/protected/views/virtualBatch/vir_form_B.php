@@ -19,7 +19,7 @@
     <div class="col-lg-3">
         <?php
         echo $form->dropDownList($virModel,"pay_week",CGetName::getPayWeekList(),array(
-            'readonly'=>$virModel->isReadonly(),'id'=>'pay_week'
+            'readonly'=>$virModel->isReadonly(),'id'=>'pay_week','empty'=>''
         ));
         ?>
     </div>
@@ -28,7 +28,7 @@
     <div class="col-lg-3">
         <?php
         echo $form->dropDownList($virModel,"pay_type",CGetName::getPayTypeList(),array(
-            'readonly'=>$virModel->isReadonly(),'id'=>'pay_type'
+            'readonly'=>$virModel->isReadonly(),'id'=>'pay_type','empty'=>''
         ));
         ?>
     </div>
@@ -68,7 +68,7 @@
     <div class="col-lg-3">
         <?php
         echo $form->dropDownList($virModel,"fee_type",CGetName::getFeeTypeList(),array(
-            'readonly'=>$virModel->isReadonly(),'id'=>'fee_type'
+            'readonly'=>$virModel->isReadonly(),'id'=>'fee_type','empty'=>''
         ));
         ?>
     </div>
@@ -97,7 +97,7 @@
     <div class="col-lg-3">
         <?php
         echo $form->dropDownList($virModel,"settle_type",CGetName::getSettleTypeList(),array(
-            'readonly'=>$virModel->isReadonly(),'id'=>'settle_type'
+            'readonly'=>$virModel->isReadonly(),'id'=>'settle_type','empty'=>''
         ));
         ?>
     </div>
@@ -106,7 +106,7 @@
     <div class="col-lg-3">
         <?php
         echo $form->dropDownList($virModel,"bill_day",CGetName::getBillDayList(),array(
-            'readonly'=>$virModel->isReadonly(),'id'=>'bill_day'
+            'readonly'=>$virModel->isReadonly(),'id'=>'bill_day','empty'=>''
         ));
         ?>
     </div>
@@ -115,7 +115,7 @@
     <div class="col-lg-3">
         <?php
         echo $form->dropDownList($virModel,"receivable_day",CGetName::getReceivableDayList(),array(
-            'readonly'=>$virModel->isReadonly(),'id'=>'receivable_day'
+            'readonly'=>$virModel->isReadonly(),'id'=>'receivable_day','empty'=>''
         ));
         ?>
     </div>

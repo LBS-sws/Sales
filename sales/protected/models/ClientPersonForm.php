@@ -49,9 +49,9 @@ class ClientPersonForm extends CFormModel
 	public function rules()
 	{
 	    $list = array();
-        $list[]=array('id,person_code,person_pws,z_display,cust_email','safe');
+        $list[]=array('id,person_code,person_pws,z_display,sex,cust_email','safe');
         $list[]=array('clue_id','required');
-        $list[]=array('clue_store_id,cust_person,cust_tel,cust_person_role,sex','required','on'=>array("new","edit"));
+        $list[]=array('clue_store_id,cust_person,cust_tel,cust_person_role','required','on'=>array("new","edit"));
         $list[]=array('clue_id','validateClueID');
         $list[]=array('id','validateID');
 		return $list;

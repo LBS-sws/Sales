@@ -238,7 +238,8 @@ class ClueHeadForm extends ClueForm
             $whereSql.=" and (rec_employee_id in ({$groupIdStr}) or FIND_IN_SET('{$user_id}',extra_user)) ";
         }
         $rows = Yii::app()->db->createCommand()->select("*")->from("sal_clue")
-            ->where("rec_type=1 and cust_name like '%$cust_name%' {$whereSql}")->limit(10)->queryAll();
+            ->where("rec_type=1 and cust_name like '%$cust_name%' {$whereSql}")
+            ->order("LENGTH(cust_name) asc")->queryAll();
         if($rows){
             $data["state"]=1;
             $data["html"]='<div class="list-group">';

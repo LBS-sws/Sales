@@ -328,8 +328,8 @@ class ClueContModel
                 ),"id=:id",array(":id"=>$saveData["clueContRow"]["clue_id"]));
                 Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contract_history",$this->historyArr);
                 $this->addHistoryBy10($saveData);//生成历史记录
-                $this->sendContractVirForU($saveData);//虚拟合约发送给派单系统
                 $this->copyContractProForVir($saveData);//合同正式生效允许续约变更等操作
+                $this->sendContractVirForU($saveData);//虚拟合约发送给派单系统
                 break;
             case 19;//待印章
                 $db->createCommand()->update("sales{$suffix}.sal_contract",array(

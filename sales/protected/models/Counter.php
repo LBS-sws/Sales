@@ -33,36 +33,6 @@ class Counter {
         $model = new StopNoneList();
         return $model->countNotify();
     }
-
-//客户资料库
-    public static function marketCompany() {
-        $model = new MarketCompanyList();
-        return $model->countNotify();
-    }
-
-//地區跟進客戶資料
-    public static function marketArea() {
-        $model = new MarketAreaList();
-        return $model->countNotify();
-    }
-
-//銷售跟進客戶資料
-    public static function marketSales() {
-        $model = new MarketSalesList();
-        return $model->countNotify();
-    }
-
-//無意向客戶
-    public static function marketReject() {
-        $model = new MarketRejectList();
-        return $model->countNotify();
-    }
-
-//已完成客戶
-    public static function marketSuccess() {
-        $model = new MarketSuccessList();
-        return $model->countNotify();
-    }
 }
 
 ?>

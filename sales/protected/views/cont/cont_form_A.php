@@ -30,7 +30,7 @@ $modelClass = get_class($model);
                         <?php
                         $typelist = CGetName::getCustClassList((empty($model->clueHeadRow["cust_class_group"]) ? "0" : $model->clueHeadRow["cust_class_group"]));
                         echo $form->dropDownList($model, 'clueHeadRow[cust_class]',$typelist,
-                            array('readonly'=>true,"id"=>"cust_class")
+                            array('readonly'=>true,"id"=>"cust_class","empty"=>"")
                         ); ?>
                     </div>
                 </div>
@@ -38,7 +38,7 @@ $modelClass = get_class($model);
             <?php echo TbHtml::label(Yii::t("clue","service type"),'cust_name',array('class'=>"col-lg-1 control-label")); ?>
             <div class="col-lg-3">
                 <?php echo $form->dropDownList($model, 'clueHeadRow[service_type]',VisitForm::getServiceTypeList(),
-                    array('readonly'=>true)
+                    array('readonly'=>true,"empty"=>"")
                 ); ?>
             </div>
         </div>
@@ -49,21 +49,21 @@ $modelClass = get_class($model);
                     <div class="col-lg-3">
                         <?php
                         echo $form->dropDownList($model, 'clueHeadRow[cust_type]',KAClassForm::getClassListForId($model->clueHeadRow["cust_type"]),
-                            array('readonly'=>true)
+                            array('readonly'=>true,"empty"=>"")
                         ); ?>
                     </div>
                     <?php echo TbHtml::label(Yii::t("clue","clue source"),'cust_name',array('class'=>"col-lg-1 control-label")); ?>
                     <div class="col-lg-2">
                         <?php
                         echo $form->dropDownList($model, 'clueHeadRow[clue_source]',KASraForm::getSourceListForId($model->clueHeadRow["clue_source"]),
-                            array('readonly'=>true)
+                            array('readonly'=>true,"empty"=>"")
                         ); ?>
                     </div>
                     <?php echo TbHtml::label(Yii::t("clue","customer type"),'cust_name',array('class'=>"col-lg-1 control-label")); ?>
                     <div class="col-lg-2">
                         <?php
                         echo $form->dropDownList($model, 'clueHeadRow[cust_level]',KALevelForm::getLevelListForId($model->clueHeadRow["cust_level"]),
-                            array('readonly'=>true)
+                            array('readonly'=>true,"empty"=>"")
                         ); ?>
                     </div>
                 </div>

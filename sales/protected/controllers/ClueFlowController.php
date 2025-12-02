@@ -24,7 +24,7 @@ class ClueFlowController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('ajaxShow','ajaxDelete','ajaxSave'),
+				'actions'=>array('ajaxShow','ajaxDelete','ajaxSave','resetFlow'),
 				'expression'=>array('ClueFlowController','allowReadWrite'),
 			),
             /*
@@ -38,6 +38,12 @@ class ClueFlowController extends Controller
 			),
 		);
 	}
+
+    public function actionResetFlow(){
+        $flow_ids = array(127582,127608,127610,127613,127864,128013,128025);
+        $model = new ClueFlowForm('view');
+        $model->addVisitByFlowIDs($flow_ids);
+    }
 
     public function actionAjaxShow(){
         if(Yii::app()->request->isAjaxRequest) {//是否ajax请求

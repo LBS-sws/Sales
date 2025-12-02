@@ -221,6 +221,7 @@ class ClueStoreForm extends CFormModel
 	    $this->longitude=$this->clueHeadRow["longitude"];
 	    $this->create_staff=$this->clueHeadRow["rec_employee_id"];
 	    $this->yewudalei=$this->clueHeadRow["yewudalei"];
+	    $this->store_remark=$this->clueHeadRow["clue_remark"];
     }
 
 	public function retrieveData($index)
@@ -272,7 +273,7 @@ class ClueStoreForm extends CFormModel
     //哪些字段修改后需要记录
     protected static function historyUpdateList($status){
         $list = array('store_name','create_staff','yewudalei','store_full_name','district','cust_class_group','cust_class','area','address','cust_person','cust_person_role',
-            'cust_tel','cust_email','invoice_type','invoice_header','tax_id','invoice_address','invoice_number','invoice_user','z_display');
+            'cust_tel','cust_email','invoice_type','invoice_header','tax_id','invoice_address','invoice_number','invoice_user','z_display','store_remark');
         return $list;
     }
 

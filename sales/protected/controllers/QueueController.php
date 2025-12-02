@@ -45,7 +45,7 @@ class QueueController extends Controller
 	public function actionView($index) {
 		$uid = Yii::app()->user->id;
 
-		$sql = "select rpt_content, rpt_type from sal_queue where id=:id and username=:uid";
+		$sql = "select rpt_content,rpt_desc, rpt_type from sal_queue where id=:id and username=:uid";
 		$queue = Queue::model()->findBySql($sql, array(':id'=>$index,':uid'=>$uid));
 		if ($queue!==null) {
 			$file = $queue->rpt_content;
@@ -63,7 +63,8 @@ class QueueController extends Controller
 			$qparam = QueueParam::model()->findBySql($sql, array(':qid'=>$index));
 			$fname = ($qparam!==null) ? strtolower($qparam->param_value) : 'temp';
 
-			$filename = $fname.$ext;
+            $filename= iconv('utf-8','gbk//ignore',$queue['rpt_desc']);
+			$filename = $filename.$ext;
 			header("Content-type:".$ctype); //for pdf or excel file
 			//header('Content-Type:text/plain; charset=ISO-8859-15');
 			header('Content-Disposition: attachment; filename="'.$filename.'"'); 

@@ -55,6 +55,11 @@
         ?>
     </th>
     <th>
+        <?php echo TbHtml::link($this->getLabelName('sign_odds').$this->drawOrderArrow('a.sign_odds'),'#',$this->createOrderLink('visit-list','a.sign_odds'))
+        ;
+        ?>
+    </th>
+    <th>
         <?php echo TbHtml::link($this->getLabelName('visitdoc').$this->drawOrderArrow('visitdoc'),'#',$this->createOrderLink('visit-list','visitdoc'))
         ;
         ?>

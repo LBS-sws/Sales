@@ -28,6 +28,8 @@
 	<td <?php echo $cls_str;?>><?php echo $this->record['district']; ?></td>
 	<td <?php echo $cls_str;?>><?php echo $this->record['visit_info_text']; ?></td>
 	<td data-shift_user="<?php echo $this->record['shift_user']; ?>" <?php echo $cls_str;?>><?php echo $this->record['staff']; if($this->record['shift']=='Y'){echo "(离职)";}if($this->record['shift']=='Z'){echo "(转)";}?></td>
+
+    <td <?php echo $cls_str;?>><?php echo $this->record['sign_odds']; ?></td>
     <td>
         <?php
         echo TbHtml::button($this->record['visitdoc'],

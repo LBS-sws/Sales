@@ -203,12 +203,6 @@ class VirtualBatchForm extends CFormModel
                 if(empty($this->need_back)){
                     $this->addError("stop_set_id",'是否需要拆机不能为空');
                 }
-                if(empty($this->surplus_num)){
-                    $this->addError("stop_set_id",'剩余次数不能为空');
-                }
-                if(empty($this->surplus_amt)){
-                    $this->addError("stop_set_id",'剩余金额不能为空');
-                }
             }
         }
     }
@@ -837,7 +831,7 @@ class VirtualBatchForm extends CFormModel
             case "A":
                 $list = $this->historyUpdateList();
                 $numberList=array("lbs_main","yewudalei","other_sales_id","other_yewudalei","service_timer","seal_type_id","con_v_type","pay_week","pay_type","deposit_need","deposit_amt",
-                    "fee_type","profit_int","pay_month","pay_start","settle_type","bill_day","receivable_day","month_amt","year_amt","amt_install","remark"
+                    "fee_type","profit_int","pay_month","pay_start","settle_type","bill_day","receivable_day","month_amt","year_amt","amt_install"
                 );
                 foreach ($list as $key){
                     if (in_array($key,$numberList)){

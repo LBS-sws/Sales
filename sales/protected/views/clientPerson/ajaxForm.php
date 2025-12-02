@@ -29,7 +29,7 @@ $className = get_class($model);
     </div>
 </div>
 <div class="form-group">
-    <?php echo TbHtml::label($model->getAttributeLabel("sex"),'',array('class'=>"col-lg-4 control-label",'required'=>true)); ?>
+    <?php echo TbHtml::label($model->getAttributeLabel("sex"),'',array('class'=>"col-lg-4 control-label")); ?>
     <div class="col-lg-4">
         <?php
         echo TbHtml::inlineRadioButtonList("{$className}[sex]",$model->sex,CGetName::getPersonSexList(),array(

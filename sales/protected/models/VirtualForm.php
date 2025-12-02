@@ -158,6 +158,7 @@ class VirtualForm extends CFormModel
             'service_fre_type'=>Yii::t('clue','service fre type'),//
             'month_amt'=>Yii::t('clue','month amt'),//
             'year_amt'=>Yii::t('clue','year amt'),//
+            'remark'=>Yii::t('clue','invoice remark'),//
             'need_back'=>Yii::t('clue','need back'),//
             'need_back_json'=>Yii::t('clue','need back json'),//
 		);

@@ -40,7 +40,7 @@ $this->pageTitle=Yii::app()->name . ' - Reset-Login';
             <span>密码可由8~20位，数字、字母、符号组成（至少两两组合）</span>
             <?php
                 echo $form->passwordField($model,'new_password',
-                array('placeholder'=>Yii::t('misc','New Password'),'class'=>'login_input','id'=>'input_password'));
+                array('placeholder'=>Yii::t('misc','New Password'),'class'=>'login_input','id'=>'input_password',"autocomplete"=>"new-password"));
             ?>
             <span>
                 <p class="label_p">
@@ -51,7 +51,7 @@ $this->pageTitle=Yii::app()->name . ' - Reset-Login';
             </span>
             <?php
                 echo $form->passwordField($model,'again_new_password',
-                array('placeholder'=>Yii::t('misc','Again New Password'),'class'=>'login_input','id'=>'input_password'));
+                array('placeholder'=>Yii::t('misc','Again New Password'),'class'=>'login_input','id'=>'input_password',"autocomplete"=>"new-password"));
             ?>
             <?php
                 echo TbHtml::submitButton(Yii::t('misc','Login'),
@@ -97,7 +97,7 @@ $this->pageTitle=Yii::app()->name . ' - Reset-Login';
 
             <?php
             echo $form->passwordField($model,'new_password',
-                array('placeholder'=>Yii::t('misc','New Password'),'class'=>'mobile-login_input','id'=>'mobile_input_password'));
+                array('placeholder'=>Yii::t('misc','New Password'),'class'=>'mobile-login_input','id'=>'mobile_input_password',"autocomplete"=>"new-password"));
             ?>
             <span>
                 <p class="mobile-label_p">
@@ -108,7 +108,7 @@ $this->pageTitle=Yii::app()->name . ' - Reset-Login';
             </span>
             <?php
             echo $form->passwordField($model,'again_new_password',
-                array('placeholder'=>Yii::t('misc','Again New Password'),'class'=>'mobile-login_input','id'=>'mobile_input_password'));
+                array('placeholder'=>Yii::t('misc','Again New Password'),'class'=>'mobile-login_input','id'=>'mobile_input_password',"autocomplete"=>"new-password"));
             ?>
             <span style="text-align: left;">密码可由8~20位，数字、字母、符号组成（至少两两组合）</span>
             <?php

@@ -28,7 +28,7 @@ class ContHeadController extends Controller
                 'expression'=>array('ContHeadController','allowReadWrite'),
             ),
             array('allow',
-                'actions'=>array('index','view','detail','resetContract','sendFile'),
+                'actions'=>array('index','view','detail','resetStatus','sendFile'),
                 'expression'=>array('ContHeadController','allowReadOnly'),
             ),
             array('deny',  // deny all users
@@ -37,64 +37,20 @@ class ContHeadController extends Controller
         );
     }
 
-    public function actionResetContract(){
+    public function actionResetStatus(){
         $suffix = Yii::app()->params['envSuffix'];
-        $syncRows = Yii::app()->db->createCommand()->select("*")->from("datasync{$suffix}.sync_mh_api_curl")
-            ->where("data_content like '%\"eventType\":\"taskCreate\"%\"contractStatus\":\"1\"%'")->queryAll();
-        if($syncRows){
-            foreach ($syncRows as $curlRow){
-                $data = json_decode($curlRow['data_content'],true);
-                $mh_id = key_exists("instId",$data)?$data["instId"]:0;
-                switch ($curlRow['info_type']) {
-                    case "cont":
-                        $row = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract")
-                            ->where("mh_id=:id and cont_status<30 and cont_status>=10",array(":id"=>$mh_id))->queryRow();
-                        if($row){
-                            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract",array(
-                                "cont_status"=>1,
-                            ),"id=".$row["id"]);
-                            $model = new ClueContModel();
-                            $list = $model->syncChangeOne($data);
+        //刷新所有门店、客户的状态
+        $virRows = Yii::app()->db->createCommand()->select("clue_store_id,clue_id")->from("sales{$suffix}.sal_contract_virtual a")
+            ->where("vir_status>=10")->group("clue_store_id,clue_id")->queryAll();//
+        if($virRows){
+            foreach ($virRows as $virRow){
+                Yii::app()->db->createCommand()->update("sales{$suffix}.sal_clue",array(
+                    "clue_status"=>ClueVirProModel::getClientStatusByClueID($virRow["clue_id"])
+                ),"id=:id",array(":id"=>$virRow["clue_id"]));
 
-                            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract",array(
-                                "cont_status"=>$row["cont_status"],
-                            ),"id=".$row["id"]);
-                            echo "cont_".$row["id"]."<br/>";
-                        }
-                        break;
-                    case "pro":
-                        $row = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contpro")
-                            ->where("mh_id=:id and pro_status<30 and pro_status>=10",array(":id"=>$mh_id))->queryRow();
-                        if($row){
-                            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contpro",array(
-                                "pro_status"=>1,
-                            ),"id=".$row["id"]);
-                            $model = new ClueProModel();
-                            $list = $model->syncChangeOne($data);
-
-                            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contpro",array(
-                                "pro_status"=>$row["pro_status"],
-                            ),"id=".$row["id"]);
-                            echo "pro_".$row["id"]."<br/>";
-                        }
-                        break;
-                    case "virPro":
-                        $row = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_virtual_batch")
-                            ->where("mh_id=:id and pro_status<30 and pro_status>=10",array(":id"=>$mh_id))->queryRow();
-                        if($row){
-                            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_virtual_batch",array(
-                                "pro_status"=>1,
-                            ),"id=".$row["id"]);
-                            $model = new ClueVirProModel();
-                            $list = $model->syncChangeOne($data);
-
-                            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_virtual_batch",array(
-                                "pro_status"=>$row["pro_status"],
-                            ),"id=".$row["id"]);
-                            echo "virPro_".$row["id"]."<br/>";
-                        }
-                        break;
-                }
+                Yii::app()->db->createCommand()->update("sales{$suffix}.sal_clue_store",array(
+                    "store_status"=>ClueVirProModel::getStoreStatusByStoreID($virRow["clue_store_id"]),
+                ),"id=:id",array(":id"=>$virRow["clue_store_id"]));
             }
         }
     }

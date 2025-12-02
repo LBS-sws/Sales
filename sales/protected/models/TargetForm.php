@@ -5,6 +5,7 @@ class TargetForm extends CFormModel
 	public $id;
 	public $employee_name;
 	public $sale_day;
+    public $ltNowDate=false;//小于当前日期：true
 
 	
 	public function attributeLabels()
@@ -20,8 +21,44 @@ class TargetForm extends CFormModel
         return array(
             array('','required'),
             array('id,sale_day,','safe'),
+            array('id','validateID'),
         );
 	}
+
+    public function validateID($attribute, $params) {
+        $thisDate = PerformanceForm::isVivienne()?"0000/00/00":date("Y/m/01");
+        $scenario = $this->getScenario();
+        if(in_array($scenario,array("new"))){
+            $this->addError($attribute, "无法新增");
+        }else{
+            $id= empty($this->id)?0:$this->id;
+            $row = Yii::app()->db->createCommand()->select("a.*")->from("sal_integral a")
+                ->where("a.id=:id",array(":id"=>$id))->queryRow();
+            if($row){
+                $row["log_dt"] = date("Y/m/d",strtotime($row["year"]."/".$row["month"]."/01"));
+                $this->ltNowDate = $row["log_dt"]<$thisDate;
+                if($scenario=="delete"){
+                    if($row["log_dt"]<$thisDate){
+                        $this->addError($attribute, "无法删除({$row["log_dt"]})时间段的数据");
+                    }
+                }else{
+                    $updateBool = $row["log_dt"]<$thisDate;//验证修改前的时间
+                    if($updateBool){
+                        $notUpdate=self::getNotUpdateList();
+                        foreach ($notUpdate as $item){
+                            $this->$item = $row[$item];
+                        }
+                    }
+                }
+            }else{
+                $this->addError($attribute, "数据异常，请刷新重试");
+            }
+        }
+    }
+
+    public static function getNotUpdateList(){
+        return array("sale_day");
+    }
 
 
 	public function retrieveData($index)
@@ -35,9 +72,12 @@ class TargetForm extends CFormModel
 		$rows = Yii::app()->db->createCommand($sql)->queryRow();
 		if (count($rows) > 0)
 		{
-				$this->id = $rows['id'];
-				$this->employee_name = $rows['name'];
-				$this->sale_day = $rows['sale_day'];
+            $thisDate = PerformanceForm::isVivienne()?"0000/00/00":date("Y/m/01");
+            $targetDate=date("Y/m/d",strtotime($rows["year"]."/".$rows["month"]."/01"));
+            $this->ltNowDate = $targetDate<$thisDate;
+            $this->id = $rows['id'];
+            $this->employee_name = $rows['name'];
+            $this->sale_day = $rows['sale_day'];
 		}
 		return true;
 	}
@@ -105,4 +145,8 @@ class TargetForm extends CFormModel
 //		return ($this->scenario=='view'||$this->status=='V'||$this->posted||!empty($this->req_ref_no)||!empty($this->t3_doc_no));
 		return ($this->scenario!='new'||$this->status=='V'||$this->posted||!empty($this->req_ref_no)||!empty($this->t3_doc_no));
 	}
+
+    public function getReadonly(){
+        return $this->scenario=='view'||$this->ltNowDate;
+    }
 }

@@ -22,7 +22,7 @@ class ClientHeadForm extends ClueForm
     {
         $list = parent::attributeLabels();
         $list["clue_code"]=Yii::t('clue','client code');
-        $list["clue_status"]=Yii::t('clue','client code');
+        $list["clue_status"]=Yii::t('clue','client status');
         $list["clue_type"]=Yii::t('clue','type');
         $list["clue_remark"]=Yii::t('clue','client remark');
         return $list;

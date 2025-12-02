@@ -35,9 +35,16 @@ $modelClass = get_class($model);
 
             <div class="col-lg-3">
                 <?php
-                echo $form->dropDownList($model,"lbs_main",CGetName::getLbsMainList($model->city),array(
-                    'readonly'=>$model->isReadonly(),'id'=>'lbs_main'
-                ));
+                if($model->isReadonly()){
+                    echo $form->hiddenField($model,"lbs_main",array('id'=>'lbs_main'));
+                    echo TbHtml::textField("lbs_main",CGetName::getLbsMainNameByKey($model->lbs_main),array(
+                        'readonly'=>true
+                    ));
+                }else{
+                    echo $form->dropDownList($model,"lbs_main",CGetName::getLbsMainList($model->city),array(
+                        'readonly'=>$model->isReadonly(),'id'=>'lbs_main'
+                    ));
+                }
                 ?>
             </div>
             <?php echo TbHtml::label($model->getAttributeLabel('busine_id_text'),"busine_id_text",array('class'=>"col-lg-1 control-label",'required'=>true)); ?>
@@ -84,17 +91,31 @@ $modelClass = get_class($model);
 
             <div class="col-lg-3">
                 <?php
-                echo $form->dropDownList($model,"sign_type",CGetName::getSignTypeList(),array(
-                    'readonly'=>$model->isReadonly(),'id'=>'sign_type'
-                ));
+                if($model->isReadonly()){
+                    echo $form->hiddenField($model,"sign_type",array('id'=>'sign_type'));
+                    echo TbHtml::textField("sign_type",CGetName::getSignTypeStrByKey($model->sign_type),array(
+                        'readonly'=>true
+                    ));
+                }else{
+                    echo $form->dropDownList($model,"sign_type",CGetName::getSignTypeList(),array(
+                        'readonly'=>$model->isReadonly(),'id'=>'sign_type'
+                    ));
+                }
                 ?>
             </div>
             <?php echo TbHtml::label($model->getAttributeLabel('con_v_type'),"con_v_type",array('class'=>"col-lg-1 control-label",'required'=>true)); ?>
             <div class="col-lg-3">
                 <?php
-                echo $form->dropDownList($model,"con_v_type",CGetName::getContTypeList(),array(
-                    'readonly'=>$model->isReadonly(),'id'=>'con_v_type'
-                ));
+                if($model->isReadonly()){
+                    echo $form->hiddenField($model,"con_v_type",array('id'=>'con_v_type'));
+                    echo TbHtml::textField("con_v_type",CGetName::getContTypeStrByKey($model->con_v_type),array(
+                        'readonly'=>true
+                    ));
+                }else{
+                    echo $form->dropDownList($model,"con_v_type",CGetName::getContTypeList(),array(
+                        'readonly'=>$model->isReadonly(),'id'=>'con_v_type'
+                    ));
+                }
                 ?>
             </div>
             <?php echo TbHtml::label($model->getAttributeLabel('yewudalei'),"yewudalei",array('class'=>"col-lg-1 control-label",'required'=>true)); ?>
@@ -119,9 +140,16 @@ $modelClass = get_class($model);
             <?php echo TbHtml::label($model->getAttributeLabel('seal_type_id'),"seal_type_id",array('class'=>"col-lg-1 control-label col-lg-left",'required'=>true)); ?>
             <div class="col-lg-3">
                 <?php
-                echo $form->dropDownList($model,"seal_type_id",CGetName::getSealTypeList(),array(
-                    'readonly'=>$model->isReadonly()||$model->is_seal=="N",'id'=>'seal_type_id','empty'=>''
-                ));
+                if($model->isReadonly()){
+                    echo $form->hiddenField($model,"seal_type_id",array('id'=>'seal_type_id'));
+                    echo TbHtml::textField("seal_type_id",CGetName::getSealTypeStrByID($model->seal_type_id),array(
+                        'readonly'=>true
+                    ));
+                }else{
+                    echo $form->dropDownList($model,"seal_type_id",CGetName::getSealTypeList(),array(
+                        'readonly'=>$model->isReadonly()||$model->is_seal=="N",'id'=>'seal_type_id','empty'=>''
+                    ));
+                }
                 ?>
             </div>
             <?php echo TbHtml::label($model->getAttributeLabel('vir_status'),"vir_status",array('class'=>"col-lg-1 control-label",'required'=>true)); ?>

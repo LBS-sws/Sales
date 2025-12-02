@@ -18,6 +18,7 @@ class PerformanceForm extends CFormModel
     public $business_otherspanning;
     public $restaurant_spanning;
     public $restaurant_otherspanning;
+    public $ltNowDate=false;//小于当前日期：true
 
 	/**
 	 * Declares customized attribute labels.
@@ -50,10 +51,54 @@ class PerformanceForm extends CFormModel
 	public function rules()
 	{
 		return array(
-			array('','required'),
-			array('id,rpt_type,sums,spanning,otherspanning,business_spanning,business_otherspanning,restaurant_spanning,restaurant_otherspanning','safe'),
+			array('year,month','required'),
+			array('id,rpt_type,sum,sums,spanning,otherspanning,business_spanning,business_otherspanning,restaurant_spanning,restaurant_otherspanning','safe'),
+            array('id','validateID'),
 		);
 	}
+
+    public function validateID($attribute, $params) {
+        $thisDate = self::isVivienne()?"0000/00/00":date("Y/m/01");
+        $status_dt = date("Y/m/d",strtotime($this->year."/".$this->month."/01"));
+        $scenario = $this->getScenario();
+        if(in_array($scenario,array("new"))){
+            $this->ltNowDate = $status_dt<$thisDate;
+            //验证新增
+            if($status_dt<$thisDate){
+                $this->addError($attribute, "无法新增({$status_dt})时间段的数据");
+            }
+        }else{
+            $id= empty($this->id)?0:$this->id;
+            $row = Yii::app()->db->createCommand()->select("a.*")->from("sal_performance a")
+                ->where("a.id=:id",array(":id"=>$id))->queryRow();
+            if($row){
+                $row["log_dt"] = date("Y/m/d",strtotime($row["year"]."/".$row["month"]."/01"));
+                $this->ltNowDate = $row["log_dt"]<$thisDate;
+                if($scenario=="delete"){
+                    if($row["log_dt"]<$thisDate){
+                        $this->addError($attribute, "无法删除({$row["log_dt"]})时间段的数据");
+                    }
+                }else{
+                    $updateBool = $status_dt<$thisDate;//验证修改后的时间
+                    $updateBool = $updateBool||$row["log_dt"]<$thisDate;//验证修改前的时间
+                    if($updateBool){
+                        $notUpdate=self::getNotUpdateList();
+                        foreach ($notUpdate as $item){
+                            $this->$item = $row[$item];
+                        }
+                    }
+                }
+            }else{
+                $this->addError($attribute, "数据异常，请刷新重试");
+            }
+        }
+    }
+
+    public static function getNotUpdateList(){
+        return array("year","month","sum","sums","spanning","otherspanning",
+            "business_spanning","business_otherspanning","restaurant_spanning","restaurant_otherspanning",
+        );
+    }
 
 	public function retrieveData($index)
 	{
@@ -61,6 +106,7 @@ class PerformanceForm extends CFormModel
 		$sql = "select * from sal_performance where id=".$index." ";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();
 		if ($row!==false) {
+            $thisDate = self::isVivienne()?"0000/00/00":date("Y/m/01");
 			$this->id = $row['id'];
 			$this->year = $row['year'];
 			$this->month = $row['month'];
@@ -72,6 +118,7 @@ class PerformanceForm extends CFormModel
             $this->business_otherspanning = $row['business_otherspanning'];
             $this->restaurant_spanning = $row['restaurant_spanning'];
             $this->restaurant_otherspanning = $row['restaurant_otherspanning'];
+            $this->ltNowDate = date("Y/m/d",strtotime($this->year."/".$this->month."/01"))<$thisDate;
 		}
 		return true;
 	}
@@ -118,12 +165,11 @@ class PerformanceForm extends CFormModel
 		}
 
 		$uid = Yii::app()->user->id;
-        $sum=$_POST['PerformanceForm']['sum'];
 		$command=$connection->createCommand($sql);
 		if (strpos($sql,':id')!==false)
 			$command->bindParam(':id',$this->id,PDO::PARAM_INT);
 		if (strpos($sql,':sum')!==false)
-			$command->bindParam(':sum',$sum,PDO::PARAM_STR);
+			$command->bindParam(':sum',$this->sum,PDO::PARAM_STR);
         if (strpos($sql,':sums')!==false)
             $command->bindParam(':sums',$this->sums,PDO::PARAM_STR);
         if (strpos($sql,':spanning')!==false)
@@ -173,4 +219,14 @@ class PerformanceForm extends CFormModel
 		$rtn = ($row !== false);
 		return $rtn;
 	}
+
+    public static function isVivienne(){
+        $vivienneList = isset(Yii::app()->params['vivienneList'])?Yii::app()->params['vivienneList']:array("VivienneChen88888");
+        $uid = Yii::app()->getComponent('user')===null?"admin":Yii::app()->user->id;
+        return in_array($uid,$vivienneList);
+    }
+
+    public function getReadonly(){
+        return $this->scenario=='view'||$this->ltNowDate;
+    }
 }
