@@ -218,7 +218,7 @@ class CurlNotesByStore extends CurlNotesModel {
 			"name_bill"=>$row["invoice_header"],//开票名称
 			"addr_bill"=>$row["invoice_address"],//开票地址
 			"addr_bi_remarks"=>$row["tax_id"],//开票地址备注
-			"tel"=>$row["cust_tel"],//电话
+			"tel"=>$row["cust_person"]."({$row["cust_tel"]})",//电话
 			"fax"=>null,//传真
 			"email"=>$row["cust_email"],//邮箱
 			"customer_type"=>self::getCustClassStrByKey($row["cust_class"],"rpt_u"),//客户类型（需要用到派单lbs_enum表enum_type=4中的数据）
