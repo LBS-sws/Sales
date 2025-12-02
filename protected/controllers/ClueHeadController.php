@@ -215,7 +215,10 @@ class ClueHeadController extends Controller
         if(Yii::app()->request->isAjaxRequest) {//是否ajax请求
             $search=isset($_POST["search"])?$_POST["search"]:'';
             $city=isset($_POST["city"])?$_POST["city"]:'';
-            $items = CGetName::getNationalSearchItemByCity($city);
+            $items = array();
+            if(empty($search)){
+                $items = CGetName::getNationalSearchItemByCity($city);
+            }
             $clue_type=isset($_POST["clue_type"])?$_POST["clue_type"]:'';
             $data = CGetName::getNationalListBySearch($search,$clue_type,$items);
             echo CJSON::encode($data);//Yii 的方法将数组处理成json数据
