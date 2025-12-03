@@ -1,10 +1,10 @@
 <tr>
 	<th></th>
-	<th>
-		<?php echo TbHtml::link($this->getLabelName('id').$this->drawOrderArrow('a.id'),'#',$this->createOrderLink('code-list','a.id'))
-			;
-		?>
-	</th>
+    <th>
+        <?php echo TbHtml::link($this->getLabelName('lcd').$this->drawOrderArrow('service.lcd'),'#',$this->createOrderLink('code-list','service.lcd'))
+        ;
+        ?>
+    </th>
 	<th>
 		<?php echo TbHtml::link($this->getLabelName('clue_code').$this->drawOrderArrow('a.clue_code'),'#',$this->createOrderLink('code-list','a.clue_code'))
 			;
@@ -61,7 +61,7 @@
         ?>
     </th>
     <th>
-        <?php echo TbHtml::link($this->getLabelName('lcd').$this->drawOrderArrow('service.lcd'),'#',$this->createOrderLink('code-list','service.lcd'))
+        <?php echo TbHtml::link($this->getLabelName('id').$this->drawOrderArrow('a.id'),'#',$this->createOrderLink('code-list','a.id'))
         ;
         ?>
     </th>
