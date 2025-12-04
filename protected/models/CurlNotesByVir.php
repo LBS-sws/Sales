@@ -253,7 +253,7 @@ class CurlNotesByVir extends CurlNotesModel {
 
     protected function getContractFree($virRow){
         $data=array();
-        //sal_contract_vir_staff
+        //sal_contract_vir_week
         $suffix = Yii::app()->params['envSuffix'];
         $freeRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract_vir_week")
             ->where("vir_id=:id",array(":id"=>$virRow["id"]))->queryAll();
@@ -271,6 +271,10 @@ class CurlNotesByVir extends CurlNotesModel {
                     "update_time"=>null,
                     "update_uid"=>null,
                 );
+                // 需要判断 $virRow["service_fre_type"]==3 才传year_cycle
+                if($virRow["service_fre_type"]==3){
+                    $temp["year_cycle"]=$freeRow["year_cycle"];
+                }
                 if(!empty($virRow["u_id"])){
                     $temp["contract_id"]=$virRow["u_id"];
                 }
