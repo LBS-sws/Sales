@@ -37,18 +37,8 @@ $modelClass = get_class($model);
             </div>
             <?php echo TbHtml::label(Yii::t("clue","service type"),'cust_name',array('class'=>"col-lg-1 control-label")); ?>
             <div class="col-lg-3">
-                <?php
-                if(isset($model->clueHeadRow['service_type'])){
-                    $row = $model->clueHeadRow;
-                    $serviceType = $row['service_type'];
-                    if(!is_array($serviceType)){
-                        $decoded = json_decode($serviceType, true);
-                        $row['service_type'] = is_array($decoded) ? $decoded : (empty($serviceType) ? array() : array($serviceType));
-                        $model->clueHeadRow = $row;
-                    }
-                }
-                echo $form->dropDownList($model, 'clueHeadRow[service_type]', VisitForm::getServiceTypeList(),
-                    array('readonly'=>true, 'id'=>'service_type_select', 'multiple'=>'multiple')
+                <?php echo $form->dropDownList($model, 'clueHeadRow[service_type]',VisitForm::getServiceTypeList(),
+                    array('readonly'=>true,"empty"=>"")
                 ); ?>
             </div>
         </div>
