@@ -42,6 +42,16 @@ $('#busine_id').select2({
 	disabled: true,
 	templateSelection: formatState
 });
+$('#service_type_select').select2({
+	tags: false,
+	multiple: true,
+	maximumInputLength: 0,
+	maximumSelectionLength: 10,
+	allowClear: true,
+	language: '$lang',
+	disabled: true,
+	templateSelection: formatState
+});
 EOF;
 Yii::app()->clientScript->registerScript('select2_1',$js,CClientScript::POS_READY);
 $ClueSSEFormStr = empty($model->id)?"ClueSSEForm":"ContSSEForm";
