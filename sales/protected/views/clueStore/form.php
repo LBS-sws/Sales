@@ -199,9 +199,9 @@ $('#create_staff').change(function(){
     $('#invoice_type input').click(function(){
         $('#invoice_header').parent('div').prev('label').children('span').remove();
         $('#tax_id').parent('div').prev('label').children('span').remove();
-        $('#invoice_address').parent('div').prev('label').children('span').remove();
-        $('#invoice_number').parent('div').prev('label').children('span').remove();
-        $('#invoice_user').parent('div').prev('label').children('span').remove();
+        //$('#invoice_address').parent('div').prev('label').children('span').remove();
+        //$('#invoice_number').parent('div').prev('label').children('span').remove();
+        //$('#invoice_user').parent('div').prev('label').children('span').remove();
         var invoice_type = $(this).val();
         switch(invoice_type){
             case '':
@@ -218,9 +218,9 @@ $('#create_staff').change(function(){
             case '2':
                 $('#invoice_header').parent('div').prev('label').append('<span class="required">*</span>');
                 $('#tax_id').parent('div').prev('label').append('<span class="required">*</span>');
-                $('#invoice_address').parent('div').prev('label').append('<span class="required">*</span>');
-                $('#invoice_number').parent('div').prev('label').append('<span class="required">*</span>');
-                $('#invoice_user').parent('div').prev('label').append('<span class="required">*</span>');
+                //$('#invoice_address').parent('div').prev('label').append('<span class="required">*</span>');
+                //$('#invoice_number').parent('div').prev('label').append('<span class="required">*</span>');
+                //$('#invoice_user').parent('div').prev('label').append('<span class="required">*</span>');
                 break;
             case '3':
                 $('#invoice_header').parent('div').prev('label').append('<span class="required">*</span>');

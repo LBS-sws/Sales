@@ -76,6 +76,7 @@ class ClueInvoiceForm extends CFormModel
                 if(empty($this->tax_id)){
                     $this->addError($attribute, "税号不能为空");
                 }
+                /*
                 if(empty($this->invoice_address)){
                     $this->addError($attribute, "开票地址不能为空");
                 }
@@ -85,6 +86,7 @@ class ClueInvoiceForm extends CFormModel
                 if(empty($this->invoice_user)){
                     $this->addError($attribute, "账号不能为空");
                 }
+                */
                 break;
             case 3:
                 break;

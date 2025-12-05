@@ -142,7 +142,7 @@ $this->pageTitle=Yii::app()->name . ' - Clue Invoice Form';
                     ));
                     ?>
                 </div>
-                <?php echo Tbhtml::label($model->getAttributeLabel('invoice_address'),false,array('class'=>"col-lg-1 control-label","required"=>$model->invoice_type==2)); ?>
+                <?php echo Tbhtml::label($model->getAttributeLabel('invoice_address'),false,array('class'=>"col-lg-1 control-label")); ?>
                 <div class="col-lg-2">
                     <?php
                     echo $form->textField($model,'invoice_address',array(
@@ -152,7 +152,7 @@ $this->pageTitle=Yii::app()->name . ' - Clue Invoice Form';
                 </div>
             </div>
             <div class="form-group">
-                <?php echo Tbhtml::label($model->getAttributeLabel('invoice_number'),false,array('class'=>"col-lg-2 control-label","required"=>$model->invoice_type==2)); ?>
+                <?php echo Tbhtml::label($model->getAttributeLabel('invoice_number'),false,array('class'=>"col-lg-2 control-label")); ?>
                 <div class="col-lg-2">
                     <?php
                     echo $form->textField($model,'invoice_number',array(
@@ -160,7 +160,7 @@ $this->pageTitle=Yii::app()->name . ' - Clue Invoice Form';
                     ));
                     ?>
                 </div>
-                <?php echo Tbhtml::label($model->getAttributeLabel('invoice_user'),false,array('class'=>"col-lg-1 control-label","required"=>$model->invoice_type==2)); ?>
+                <?php echo Tbhtml::label($model->getAttributeLabel('invoice_user'),false,array('class'=>"col-lg-1 control-label")); ?>
                 <div class="col-lg-2">
                     <?php
                     echo $form->textField($model,'invoice_user',array(
@@ -238,9 +238,9 @@ Yii::app()->clientScript->registerScript('deleteRecord',$js,CClientScript::POS_R
 $js = <<<EOF
     $('#invoice_type input').click(function(){
         $('#tax_id').parent('div').prev('label').children('span').remove();
-        $('#invoice_address').parent('div').prev('label').children('span').remove();
-        $('#invoice_number').parent('div').prev('label').children('span').remove();
-        $('#invoice_user').parent('div').prev('label').children('span').remove();
+        //$('#invoice_address').parent('div').prev('label').children('span').remove();
+        //$('#invoice_number').parent('div').prev('label').children('span').remove();
+        //$('#invoice_user').parent('div').prev('label').children('span').remove();
         var invoice_type = $(this).val();
         switch(invoice_type){
             case "1":
@@ -248,9 +248,9 @@ $js = <<<EOF
                 break;
             case "2":
                 $('#tax_id').parent('div').prev('label').append('<span class="required">*</span>');
-                $('#invoice_address').parent('div').prev('label').append('<span class="required">*</span>');
-                $('#invoice_number').parent('div').prev('label').append('<span class="required">*</span>');
-                $('#invoice_user').parent('div').prev('label').append('<span class="required">*</span>');
+                //$('#invoice_address').parent('div').prev('label').append('<span class="required">*</span>');
+                //$('#invoice_number').parent('div').prev('label').append('<span class="required">*</span>');
+                //$('#invoice_user').parent('div').prev('label').append('<span class="required">*</span>');
                 break;
             case "3":
                 break;
