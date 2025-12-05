@@ -84,7 +84,7 @@ class CurlNotesByVir extends CurlNotesModel {
             "deposit_paid"=>empty($virRow["deposit_amt"])?0:floatval($virRow["deposit_amt"]),//已付押金 没有就传0
             "deposit_rmk"=>$virRow["deposit_rmk"],//押金备注 没有就传空
             "one_time_fee"=>0,//一次性费用 没有就传0
-            "remarks"=>$virRow["remark"],//备注 没有就传空
+            "crm_remarks"=>$virRow["remark"],//备注 没有就传空
             "tech_remarks"=>null,//技术员备注 没有就传空
             "status"=>self::getUStatusByVirStatus($virRow["vir_status"]),//合约状态 1 生效中 2 暂停 3 结束 4 删除 5 暂停生效
             "invoice_mode"=>0,//账单生成模式 没有就传0
