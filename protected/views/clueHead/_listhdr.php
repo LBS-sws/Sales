@@ -1,5 +1,10 @@
 <tr>
 	<th width="30px"></th>
+    <th width="100px">
+        <?php echo TbHtml::link($this->getLabelName('end_date').$this->drawOrderArrow('a.end_date'),'#',$this->createOrderLink('code-list','a.end_date'))
+        ;
+        ?>
+    </th>
 	<th width="100px">
 		<?php echo TbHtml::link($this->getLabelName('clue_code').$this->drawOrderArrow('a.clue_code'),'#',$this->createOrderLink('code-list','a.clue_code'))
 			;
@@ -47,11 +52,6 @@
 	</th>
 	<th width="130px">
 		<?php echo TbHtml::link($this->getLabelName('rec_employee_id').$this->drawOrderArrow('a.rec_employee_id'),'#',$this->createOrderLink('code-list','a.rec_employee_id'))
-			;
-		?>
-	</th>
-	<th width="100px">
-		<?php echo TbHtml::link($this->getLabelName('end_date').$this->drawOrderArrow('a.end_date'),'#',$this->createOrderLink('code-list','a.end_date'))
 			;
 		?>
 	</th>

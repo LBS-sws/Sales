@@ -293,7 +293,7 @@
         ));
         ?>
     </div>
-    <?php echo Tbhtml::label($model->getAttributeLabel('invoice_address'),false,array('class'=>"col-lg-1 control-label","required"=>$model->invoice_type==2)); ?>
+    <?php echo Tbhtml::label($model->getAttributeLabel('invoice_address'),false,array('class'=>"col-lg-1 control-label")); ?>
     <div class="col-lg-2">
         <?php
         echo $form->textField($model,'invoice_address',array(
@@ -303,7 +303,7 @@
     </div>
 </div>
 <div class="form-group">
-    <?php echo Tbhtml::label($model->getAttributeLabel('invoice_number'),false,array('class'=>"col-lg-2 control-label","required"=>$model->invoice_type==2)); ?>
+    <?php echo Tbhtml::label($model->getAttributeLabel('invoice_number'),false,array('class'=>"col-lg-2 control-label")); ?>
     <div class="col-lg-2">
         <?php
         echo $form->textField($model,'invoice_number',array(
@@ -311,7 +311,7 @@
         ));
         ?>
     </div>
-    <?php echo Tbhtml::label($model->getAttributeLabel('invoice_user'),false,array('class'=>"col-lg-1 control-label","required"=>$model->invoice_type==2)); ?>
+    <?php echo Tbhtml::label($model->getAttributeLabel('invoice_user'),false,array('class'=>"col-lg-1 control-label")); ?>
     <div class="col-lg-2">
         <?php
         echo $form->textField($model,'invoice_user',array(

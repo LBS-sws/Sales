@@ -44,7 +44,7 @@ $className = get_class($model);
         ));
         ?>
     </div>
-    <?php echo TbHtml::label($model->getAttributeLabel("invoice_address"),'',array('class'=>"col-lg-2 control-label","required"=>$model->invoice_type==2)); ?>
+    <?php echo TbHtml::label($model->getAttributeLabel("invoice_address"),'',array('class'=>"col-lg-2 control-label")); ?>
     <div class="col-lg-4">
         <?php
         echo TbHtml::textField("{$className}[invoice_address]",$model->invoice_address,array(
@@ -54,7 +54,7 @@ $className = get_class($model);
     </div>
 </div>
 <div class="form-group">
-    <?php echo TbHtml::label($model->getAttributeLabel("invoice_number"),'',array('class'=>"col-lg-2 control-label","required"=>$model->invoice_type==2)); ?>
+    <?php echo TbHtml::label($model->getAttributeLabel("invoice_number"),'',array('class'=>"col-lg-2 control-label")); ?>
     <div class="col-lg-4">
         <?php
         echo TbHtml::textField("{$className}[invoice_number]",$model->invoice_number,array(
@@ -62,7 +62,7 @@ $className = get_class($model);
         ));
         ?>
     </div>
-    <?php echo TbHtml::label($model->getAttributeLabel("invoice_user"),'',array('class'=>"col-lg-2 control-label","required"=>$model->invoice_type==2)); ?>
+    <?php echo TbHtml::label($model->getAttributeLabel("invoice_user"),'',array('class'=>"col-lg-2 control-label")); ?>
     <div class="col-lg-4">
         <?php
         echo TbHtml::textField("{$className}[invoice_user]",$model->invoice_user,array(
@@ -133,9 +133,9 @@ $className = get_class($model);
 $js = <<<EOF
     $('#win_invoice_type input').click(function(){
         $('#win_tax_id').parent('div').prev('label').children('span').remove();
-        $('#win_invoice_address').parent('div').prev('label').children('span').remove();
-        $('#win_invoice_number').parent('div').prev('label').children('span').remove();
-        $('#win_invoice_user').parent('div').prev('label').children('span').remove();
+        //$('#win_invoice_address').parent('div').prev('label').children('span').remove();
+        //$('#win_invoice_number').parent('div').prev('label').children('span').remove();
+        //$('#win_invoice_user').parent('div').prev('label').children('span').remove();
         var invoice_type = $(this).val();
         switch(invoice_type){
             case "1":
@@ -143,9 +143,9 @@ $js = <<<EOF
                 break;
             case "2":
                 $('#win_tax_id').parent('div').prev('label').append('<span class="required">*</span>');
-                $('#win_invoice_address').parent('div').prev('label').append('<span class="required">*</span>');
-                $('#win_invoice_number').parent('div').prev('label').append('<span class="required">*</span>');
-                $('#win_invoice_user').parent('div').prev('label').append('<span class="required">*</span>');
+                //$('#win_invoice_address').parent('div').prev('label').append('<span class="required">*</span>');
+                //$('#win_invoice_number').parent('div').prev('label').append('<span class="required">*</span>');
+                //$('#win_invoice_user').parent('div').prev('label').append('<span class="required">*</span>');
                 break;
             case "3":
                 break;

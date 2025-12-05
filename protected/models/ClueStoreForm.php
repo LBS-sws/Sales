@@ -141,6 +141,7 @@ class ClueStoreForm extends CFormModel
                 if(in_array($this->invoice_type,array(1,2))&&empty($this->tax_id)){
                     $this->addError("tax_id", "税号不能为空");
                 }
+                /*
                 if($this->invoice_type==2&&empty($this->invoice_address)){
                     $this->addError("invoice_address", "开票地址不能为空");
                 }
@@ -150,6 +151,7 @@ class ClueStoreForm extends CFormModel
                 if($this->invoice_type==2&&empty($this->invoice_user)){
                     $this->addError("invoice_address", "账号不能为空");
                 }
+                */
             }
         }else{
             $clueInvoiceModel = new ClueInvoiceForm("view");
