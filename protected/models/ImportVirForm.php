@@ -5,6 +5,23 @@ class ImportVirForm extends ImportForm
     public $visit_type;
     public $visit_obj;
     public $visit_obj_text;
+    
+    /**
+     * 缓存所有预加载的参考数据
+     * 结构：
+     * - fee_type: 费用类型列表
+     * - bill_day: 账单日列表
+     * - settle_type: 结算方式列表
+     * - pay_week: 付款周期列表
+     * - receivable_day: 应收期限列表
+     * - pay_type: 付款方式列表
+     * - service_type: 服务项目(按名称索引)
+     * - yewudalei: 业务大类(按名称索引)
+     * - main_lbs: 主体公司(按编码索引)
+     * - stop_set: 停止原因(按"类型_名称"索引)
+     */
+    protected $cacheData = array();
+    protected $batchInsertData = array();
 
     protected $eveList = array(
         array("name"=>"主合同编号","key"=>"cont_code","fun"=>"valContCode","requite"=>false),
@@ -77,15 +94,21 @@ class ImportVirForm extends ImportForm
         $this->valEmptyInt($data,$keyStr,$item);
     }
 
+    /**
+     * 验证费用类型字段
+     * 将导入数据中的费用类型名称转换为系统ID
+     * 优化：使用预加载缓存替代每次数据库查询
+     */
     protected function valFeeType(&$data,$keyStr,$item){
         $feeType = key_exists($keyStr, $data) ? $data[$keyStr] : '';
         if(empty($feeType)){
-            $data[$keyStr]=null;
+            $data[$keyStr]=null;  // 空值允许
         }else{
-            $list=CGetName::getFeeTypeList();
+            // 从缓存中查找，而非数据库
+            $list=$this->cacheData['fee_type'];
             $key = array_search($feeType, $list);
             if($key!==false){
-                $data[$keyStr]=$key;
+                $data[$keyStr]=$key;  // 转换为系统ID
             }else{
                 $this->status="E";
                 $this->message=$item['name']."不存在({$feeType})";
@@ -93,12 +116,16 @@ class ImportVirForm extends ImportForm
         }
     }
 
+    /**
+     * 验证账单日字段
+     * 优化：改为CGetName调用敀为缓存查找，避免重复整合数据库
+     */
     protected function valBillDay(&$data,$keyStr,$item){
         $billDay = key_exists($keyStr, $data) ? $data[$keyStr] : '';
         if(empty($billDay)){
             $data[$keyStr]=null;
         }else{
-            $list=CGetName::getBillDayList();
+            $list=$this->cacheData['bill_day'];
             $key = array_search($billDay, $list);
             if($key!==false){
                 $data[$keyStr]=$key;
@@ -109,12 +136,16 @@ class ImportVirForm extends ImportForm
         }
     }
 
+    /**
+     * 验证结算方式字段
+     * 优化：改为CGetName调用敀为缓存查找
+     */
     protected function valSettleType(&$data,$keyStr,$item){
         $settleType = key_exists($keyStr, $data) ? $data[$keyStr] : '';
         if(empty($settleType)){
             $data[$keyStr]=null;
         }else{
-            $list=CGetName::getSettleTypeList();
+            $list=$this->cacheData['settle_type'];
             $key = array_search($settleType, $list);
             if($key!==false){
                 $data[$keyStr]=$key;
@@ -125,12 +156,16 @@ class ImportVirForm extends ImportForm
         }
     }
 
+    /**
+     * 验证付款周期字段
+     * 优化：使用缓存替代CGetName方法调用
+     */
     protected function valPayWeek(&$data,$keyStr,$item){
         $payWeek = key_exists($keyStr, $data) ? $data[$keyStr] : '';
         if(empty($payWeek)){
             $data[$keyStr]=null;
         }else{
-            $list=CGetName::getPayWeekList();
+            $list=$this->cacheData['pay_week'];
             $key = array_search($payWeek, $list);
             if($key!==false){
                 $data[$keyStr]=$key;
@@ -141,12 +176,16 @@ class ImportVirForm extends ImportForm
         }
     }
 
+    /**
+     * 验证应收期限字段
+     * 优化：使用缓存替代CGetName方法调用
+     */
     protected function valReceivableDay(&$data,$keyStr,$item){
         $receivableDay = key_exists($keyStr, $data) ? $data[$keyStr] : '';
         if(empty($receivableDay)){
             $data[$keyStr]=null;
         }else{
-            $list=CGetName::getReceivableDayList();
+            $list=$this->cacheData['receivable_day'];
             $key = array_search($receivableDay, $list);
             if($key!==false){
                 $data[$keyStr]=$key;
@@ -157,12 +196,16 @@ class ImportVirForm extends ImportForm
         }
     }
 
+    /**
+     * 验证付款方式字段
+     * 优化：使用缓存替代CGetName方法调用
+     */
     protected function valPayType(&$data,$keyStr,$item){
         $payType = key_exists($keyStr, $data) ? $data[$keyStr] : '';
         if(empty($payType)){
             $data[$keyStr]=null;
         }else{
-            $list=CGetName::getPayTypeList();
+            $list=$this->cacheData['pay_type'];
             $key = array_search($payType, $list);
             if($key!==false){
                 $data[$keyStr]=$key;
@@ -173,14 +216,21 @@ class ImportVirForm extends ImportForm
         }
     }
 
+    /**
+     * 验证需技本员字段
+     * 功能：根据技本员体编码，查询技本员ID列表
+     * 注意：此方法仍使用数据库查询（体编码数量少），暂既不优化
+     */
     protected function valTechnicianList(&$data,$keyStr,$item){
         $codeStr = key_exists($keyStr, $data) ? $data[$keyStr] : '';
         if(!empty($codeStr)){
             $ids=array();
             $names=array();
+            // 按逗号分解多个技本员体编码
             $codeList = explode(",",$codeStr);
             foreach ($codeList as $code){
                 if(!empty($code)){
+                    // 查询技本员信息信息
                     $row = $this->getEmployeeListByCode($code);
                     if($row){
                         $ids[]=$row["id"];
@@ -192,6 +242,7 @@ class ImportVirForm extends ImportForm
                 }
             }
             if(!empty($ids)){
+                // 将ID和名称以逻号分隔存储
                 $data[$keyStr]=implode(",",$ids);
                 $data["technician_id_text"]=implode(",",$names);
             }else{
@@ -202,23 +253,39 @@ class ImportVirForm extends ImportForm
         }
     }
 
+    /**
+     * 验证终止或暂停原因字段
+     * 逻辑：
+     * - 仅在虚拟合约状态为"暂停"(40)或"终止"(50)时处理
+     * - 根据状态类型(1=暂停 2=终止)匹配对应的停止原因
+     * - 若指定原因不存在，自动使用同类型的首个默认原因
+     * 优化：使用缓存替代多次数据库查询
+     */
     protected function valStopSet(&$data,$keyStr,$item){
         $stopName = key_exists($keyStr, $data) ? $data[$keyStr] : '';
+        // 只在合约被暂停或终止时处理该字段
         if(empty($stopName)||!in_array($data["vir_status"],array(50,40))){
-            $data[$keyStr]=null;
+            $data[$keyStr]=null;  // 其他状态不需要停止原因
         }else{
+            // 根据虚拟合约状态确定停止类型: 暂停=1, 终止=2
             $s_type=$data["vir_status"]==40?1:2;
-            $stopRow=Yii::app()->db->createCommand()->select("*")->from("sal_cont_str")
-                ->where("name=:name and str_type={$s_type}",array(":name"=>$stopName))->queryRow();
-            if($stopRow){
-                $data[$keyStr]=$stopRow["id"];
+            $key = $s_type.'_'.$stopName;
+            
+            // 首先尝试查找精确匹配的停止原因
+            if(isset($this->cacheData['stop_set'][$key])){
+                $data[$keyStr]=$this->cacheData['stop_set'][$key];
             }else{
-                $stopRow=Yii::app()->db->createCommand()->select("*")->from("sal_cont_str")
-                    ->where("str_type={$s_type}")->order("id desc")->queryRow();
-                if($stopRow){
-                    $data[$keyStr]=$stopRow["id"];
-                }else{
-                    $data[$keyStr]=null;
+                // 若不存在指定的停止原因，使用同类型的第一个默认原因
+                $found = false;
+                foreach($this->cacheData['stop_set'] as $cacheKey=>$id){
+                    if(strpos($cacheKey, $s_type.'_')===0){  // 检查是否属于同停止类型
+                        $data[$keyStr]=$id;
+                        $found = true;
+                        break;
+                    }
+                }
+                if(!$found){
+                    $data[$keyStr]=null;  // 该类型无任何停止原因
                 }
             }
         }
@@ -388,13 +455,22 @@ class ImportVirForm extends ImportForm
         }
     }
 
+    /**
+     * 验证服务项目字段
+     * 功能：
+     * 1. 查询服务项目基本信息(ID、类型、编码)
+     * 2. 若存在主合同，验证该服务项目是否属于主合同
+     * 3. 提取相关字段(service_type, busine_id, busine_id_int, busine_id_text)
+     * 优化：使用预加载缓存替代数据库查询
+     */
     protected function valBusine(&$data,$keyStr,$item){
         $busineName = key_exists($keyStr,$data)?$data[$keyStr]:'';
         $contRow = key_exists("contRow",$data)?$data["contRow"]:array();
         if(!empty($busineName)){
-            $row = Yii::app()->db->createCommand()->select("id,service_type,id_char")->from("sal_service_type")
-                ->where("name=:name",array(":name"=>$busineName))->queryRow();
+            // 从缓存中快速查找，而非执行SQL查询
+            $row = isset($this->cacheData['service_type'][$busineName]) ? $this->cacheData['service_type'][$busineName] : null;
             if($row){
+                // 如果存在关联的主合同，需要验证该服务项目是否在主合同的服务范围内
                 if(!empty($contRow)){
                     $contRow["busine_id"] = explode(",",$contRow["busine_id"]);
                     if(!in_array($row["id_char"],$contRow["busine_id"])){
@@ -402,10 +478,11 @@ class ImportVirForm extends ImportForm
                         $this->message=$item['name']."异常，主合同({$contRow['cont_code']})不存在该服务项目({$busineName})";
                     }
                 }
+                // 提取服务项目的关键属性到数据对象
                 $data["service_type"]=$row["service_type"];
-                $data["busine_id"]=$row["id_char"];
-                $data["busine_id_int"]=$row["id"];
-                $data["busine_id_text"]=$busineName;
+                $data["busine_id"]=$row["id_char"];      // 服务项目编码
+                $data["busine_id_int"]=$row["id"];        // 服务项目ID
+                $data["busine_id_text"]=$busineName;      // 服务项目名称
             }else{
                 $this->status="E";
                 $this->message=$item['name']."不存在({$busineName})";
@@ -497,52 +574,77 @@ class ImportVirForm extends ImportForm
         }
     }
 
+    /**
+     * 验证业务大类字段
+     * 将业务大类名称转换为系统ID
+     * 优化：使用缓存哈希表查找替代数据库查询
+     */
     protected function valYewudalei(&$data,$keyStr,$item){
         $yewudalei = isset($data[$keyStr])?$data[$keyStr]:"-1";
-        $row = Yii::app()->db->createCommand()->select("id")->from("sal_yewudalei")
-            ->where("name=:name",array(":name"=>$yewudalei))->queryRow();
-        if($row){
-            $data[$keyStr]=$row["id"];
+        // 直接从缓存索引中查找，O(1)时间复杂度
+        if(isset($this->cacheData['yewudalei'][$yewudalei])){
+            $data[$keyStr]=$this->cacheData['yewudalei'][$yewudalei];
         }else{
             $this->status="E";
             $this->message=$item['name']."不存在";
         }
     }
 
+    /**
+     * 验证主体公司字段（城市关联版本）
+     * 功能：查询符合条件的主体公司
+     * 查询逻辑：
+     * - show_type=2: 全国显示
+     * - show_type=1: 仅在指定城市显示
+     * - show_type=3: 在多个城市显示(show_city字段)
+     * 优化：使用缓存替代复杂SQL查询
+     */
     protected function valCodeMain(&$data,$keyStr,$item){
         $codeMain = isset($data[$keyStr])?$data[$keyStr]:"";
         $city = isset($data["city"])?$data["city"]:"";
         if(!empty($codeMain)){
-            $row = Yii::app()->db->createCommand()->select("id")->from("sal_main_lbs")
-                ->where("(show_type=2 or (show_type=1 AND city='{$city}') or (show_type=3 AND FIND_IN_SET('{$city}',show_city))) and mh_code=:mh_code",
-                    array(":mh_code"=>$codeMain)
-                )->queryRow();
-            if($row){
-                $data[$keyStr]=$row["id"];
-            }else{
+            $found = false;
+            // 从缓存中查找匹配的编码记录
+            if(isset($this->cacheData['main_lbs'][$codeMain])){
+                // 遍历该编码对应的所有记录(可能有多个)
+                foreach($this->cacheData['main_lbs'][$codeMain] as $row){
+                    // 判断该记录是否对当前城市可见
+                    if($row['show_type']==2 || 
+                       ($row['show_type']==1 && $row['city']==$city) || 
+                       ($row['show_type']==3 && strpos($row['show_city'],$city)!==false)){
+                        $data[$keyStr]=$row["id"];
+                        $found = true;
+                        break;  // 找到第一条匹配记录后退出
+                    }
+                }
+            }
+            if(!$found){
                 $this->status="E";
                 $this->message="城市{$city}没有{$item['name']}编号：{$codeMain}";
             }
         }else{
-            $data[$keyStr]=null;
+            $data[$keyStr]=null;  // 允许空值
         }
     }
 
+    /**
+     * 验证主体公司字段（无城市限制版本）
+     * 不考虑城市限制，直接返回找到的第一条记录
+     * 用于service_main等非城市关联的主体公司字段
+     * 优化：缓存查找，O(1)时间复杂度
+     */
     protected function valCodeMainAll(&$data,$keyStr,$item){
         $codeMain = isset($data[$keyStr])?$data[$keyStr]:"";
         if(!empty($codeMain)){
-            $row = Yii::app()->db->createCommand()->select("id")->from("sal_main_lbs")
-                ->where("mh_code=:mh_code",
-                    array(":mh_code"=>$codeMain)
-                )->queryRow();
-            if($row){
-                $data[$keyStr]=$row["id"];
+            // 检查缓存中是否存在该编码的记录
+            if(isset($this->cacheData['main_lbs'][$codeMain]) && !empty($this->cacheData['main_lbs'][$codeMain])){
+                $data[$keyStr]=$this->cacheData['main_lbs'][$codeMain][0]["id"];  // 取第一条记录
             }else{
                 $this->status="E";
                 $this->message=$item['name']."不存在";
             }
         }else{
-            $data[$keyStr]=null;
+            $data[$keyStr]=null;  // 允许空值
         }
     }
 
@@ -564,6 +666,58 @@ class ImportVirForm extends ImportForm
             $this->status="E";
             $this->message="系统配置异常：销售拜访没有签单类型";
         }
+        // 初始化缓存数据
+        $this->initCacheData();
+    }
+    
+    /**
+     * 初始化所有参考数据缓存
+     * 目的：在导入前一次性加载所有需要的维表数据到内存，避免后续循环中重复查库
+     * 性能优化：减少数据库查询从N次降低到常数次，显著提升大批量导入性能
+     * 调用时机：initForm()方法中，在业务逻辑处理之前
+     */
+    protected function initCacheData(){
+        // 一次性加载所有枚举类型数据（这些数据通过CGetName静态方法返回）
+        $this->cacheData['fee_type'] = CGetName::getFeeTypeList();
+        $this->cacheData['bill_day'] = CGetName::getBillDayList();
+        $this->cacheData['settle_type'] = CGetName::getSettleTypeList();
+        $this->cacheData['pay_week'] = CGetName::getPayWeekList();
+        $this->cacheData['receivable_day'] = CGetName::getReceivableDayList();
+        $this->cacheData['pay_type'] = CGetName::getPayTypeList();
+        
+        // 加载服务项目表数据，按服务名称构建索引以支持快速查找
+        // 返回结构：["服务名" => {id, name, service_type, id_char}]
+        $serviceRows = Yii::app()->db->createCommand()->select("id,name,service_type,id_char")->from("sal_service_type")->queryAll();
+        $this->cacheData['service_type'] = array();
+        foreach($serviceRows as $row){
+            $this->cacheData['service_type'][$row['name']] = $row;  // 按名称索引便于查询
+        }
+        
+        // 加载业务大类数据，按名称构建ID索引
+        // 返回结构：["大类名" => 大类ID]
+        $yewuRows = Yii::app()->db->createCommand()->select("id,name")->from("sal_yewudalei")->queryAll();
+        $this->cacheData['yewudalei'] = array();
+        foreach($yewuRows as $row){
+            $this->cacheData['yewudalei'][$row['name']] = $row['id'];
+        }
+        
+        // 加载主体公司数据，按编码构建索引
+        // 返回结构：["编码" => [{id, mh_code, show_type, city, show_city}, ...]]
+        // 一个编码可能对应多条记录（不同城市/显示类型），故使用数组存储
+        $mainRows = Yii::app()->db->createCommand()->select("id,mh_code,show_type,city,show_city")->from("sal_main_lbs")->queryAll();
+        $this->cacheData['main_lbs'] = array();
+        foreach($mainRows as $row){
+            $this->cacheData['main_lbs'][$row['mh_code']][] = $row;
+        }
+        
+        // 加载停止原因数据，按"停止类型_停止原因名"构建联合索引
+        // 返回结构：["1_暂停" => ID, "2_终止" => ID]
+        $stopRows = Yii::app()->db->createCommand()->select("id,name,str_type")->from("sal_cont_str")->queryAll();
+        $this->cacheData['stop_set'] = array();
+        foreach($stopRows as $row){
+            $key = $row['str_type'].'_'.$row['name'];
+            $this->cacheData['stop_set'][$key] = $row['id'];
+        }
     }
 
     protected function proTypeByStatus($status){
@@ -579,7 +733,16 @@ class ImportVirForm extends ImportForm
         }
     }
 
+    /**
+     * 计算本次虚拟合约关联的主合同
+     * 功能：
+     * 1. 创建销售回访记录(sal_clue_service)
+     * 2. 创建主合同记录(sal_contract)
+     * 3. 创建主合同变更记录(sal_contpro)
+     * 注意：外部方法会检查$data["cont_id"]是否为空来决定是否需要执行此方法
+     */
     protected function computeContID(&$data){
+        // 创建销售回访纪录(不是每次都需要)
         Yii::app()->db->createCommand()->insert("sal_clue_service",array(
             'clue_id'=>$data["storeRow"]["clue_id"],
             'clue_type'=>$data["storeRow"]["clue_type"],
@@ -600,6 +763,8 @@ class ImportVirForm extends ImportForm
             'report_id'=>$this->id,
         ));
         $data["clue_service_id"] = Yii::app()->db->getLastInsertID();
+        
+        // 创建主合同
         $contArr = array(
             'clue_id'=>$data["storeRow"]["clue_id"],
             'clue_type'=>$data["storeRow"]["clue_type"],
@@ -647,8 +812,9 @@ class ImportVirForm extends ImportForm
             "lcu"=>$this->username,
         );
         Yii::app()->db->createCommand()->insert("sal_contract",$contArr);
-        //sal_contract_sse
         $data["cont_id"] = Yii::app()->db->getLastInsertID();
+        
+        // 创建主合同变更记录(初始执行状态)
         $contArr["cont_id"]=$data["cont_id"];
         $contArr["pro_code"]="PDL-".$data["vir_code"];
         $contArr["pro_type"]=$this->proTypeByStatus($data["vir_status"]);
@@ -727,11 +893,23 @@ class ImportVirForm extends ImportForm
         return $sseArr;
     }
 
+    /**
+     * 保存单条虚拟合约数据
+     * 流程：
+     * 1. 若不存在主合同，自动生成(computeContID)
+     * 2. 生成或更新SSE关联数据(computeContSSEID)
+     * 3. 收集数据用于后续批量或单条插入
+     * 性能：预留批量操作结构，便于后续扩展批量插入优化
+     */
     protected function saveOneData($data){
+        // 若不存在主合同ID，说明此虚拟合约需新建主合同和关联信息
         if(empty($data["cont_id"])){
-            $this->computeContID($data);
+            $this->computeContID($data);  // 自动创建主合同及相关记录
         }
+        // 生成或更新SSE(主合同、服务、门店)三层关联数据
         $this->computeContSSEID($data);
+        // 将处理后的数据收集，便于后续批量操作优化
+        $this->batchInsertData[] = $data;
         $data["create_staff"]=$data["sales_id"];
         $data["report_id"]=$this->id;
         $saveKey=array(
@@ -801,10 +979,10 @@ class ImportVirForm extends ImportForm
             }
         }
         Yii::app()->db->createCommand()->update("sal_clue",array(
-            "clue_status"=>ClueVirProModel::getClientStatusByClueID($data["clue_id"]),
+            "clue_status"=>$this->getClientStatusByClueID($data["clue_id"]),
         ),"id=:id",array(":id"=>$data["clue_id"]));
         Yii::app()->db->createCommand()->update("sal_clue_store",array(
-            "store_status"=>ClueVirProModel::getStoreStatusByStoreID($data["clue_store_id"]),
+            "store_status"=>$this->getStoreStatusByStoreID($data["clue_store_id"]),
         ),"id=:id",array(":id"=>$data["clue_store_id"]));
     }
 

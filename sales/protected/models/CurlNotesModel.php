@@ -42,12 +42,18 @@ class CurlNotesModel extends CurlNotesApi {
     public static function getUStatusByStoreStatus($store_status){
         //状态 1 服务中 2 停止服务 3 其他
         switch ($store_status){
+            case 0:
+            case 1:
             case 2:
             case 10:
             case 30:
                 return 1;
+            case 3:
             case 40:
+            case 50:
                 return 2;
+            case 4:
+                return 3;
             default:
                 return 3;
         }
