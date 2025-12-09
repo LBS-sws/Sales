@@ -43,6 +43,14 @@ $('#busine_id_service').select2({
         return rtn;
     } 
 });
+
+$('#busine_id_service').on('change',function(){
+    if($(this).val()=='G'){
+        $('#win_visit_obj').append('<option value=\"10\" >签单</option>');
+    }else{
+        $('#win_visit_obj').children('option[value=\"10\"]').remove();
+    }
+});
 ";
 echo $js;
 ?>

@@ -61,7 +61,8 @@ $showStoreBool = isset($showStoreBool)?$showStoreBool:true;
     ?>
     <div class="col-lg-8">
         <?php
-        echo Tbhtml::dropDownList("ClueFlowForm[visit_obj][]",$model->visit_obj,CGetName::getVisitObjListNotDEAL(),
+        $visitObjList = isset($model->clueServiceRow["busine_id"])&&$model->clueServiceRow["busine_id"]==array("G")?CGetName::getVisitObjList():CGetName::getVisitObjListNotDEAL();
+        echo Tbhtml::dropDownList("ClueFlowForm[visit_obj][]",$model->visit_obj,$visitObjList,
             array('id'=>"win_visit_obj",'multiple'=>'multiple')
         );
         ?>
@@ -174,7 +175,7 @@ $showStoreBool = isset($showStoreBool)?$showStoreBool:true;
             ?>
         </div>
         <?php
-        echo Tbhtml::label(Yii::t('clue','predict amt(year)'),'win_predict_amt',array('class'=>"col-lg-3 control-label"));
+        echo Tbhtml::label(Yii::t('clue','predict amt(year)'),'win_predict_amt',array('class'=>"col-lg-3 control-label",'required'=>isset($model->clueServiceRow["busine_id"])&&$model->clueServiceRow["busine_id"]==array("G")));
         ?>
         <div class="col-lg-3">
             <?php
@@ -216,6 +217,14 @@ $('#win_sign_odds').change(function(){
             $('#win_box_intention').addClass('hide');
             $('#win_visit_text').attr('placeholder','');
         }
+    }
+});
+$('#win_visit_obj').on('change',function(){
+    if(JSON.stringify($(this).val())=='[\"10\"]'){
+        $('#win_sign_odds').val(100);
+        $('label[for=\"win_predict_amt\"]').append('<span class=\"required\">*</span>');
+    }else{
+        $('label[for=\"win_predict_amt\"]').children('span').remove();
     }
 });
 

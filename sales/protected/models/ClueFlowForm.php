@@ -26,6 +26,8 @@ class ClueFlowForm extends CFormModel
 	public $table_id;
 	public $ltNowDate=false;
 
+	protected $is_qiandan=false;
+
 	public $lcu;
 	public $luu;
 	public $lcd;
@@ -72,10 +74,16 @@ class ClueFlowForm extends CFormModel
         $list[]=array('visit_obj','validateVisitObj');
         $list[]=array('id','validateID');
         $list[]=array('sign_odds','validateSignOdds');
+        $list[]=array('predict_amt','validateQiandan');
         $list[]=array('survey_bool','validateSurveyBool','on'=>array("new","edit"));
 		return $list;
 	}
 
+    public function validateQiandan($attribute, $param) {
+	    if(empty($this->predict_amt)){
+            $this->addError($attribute, "预估成交金额(年金额)不能为空");
+        }
+    }
     public function validateSurveyBool($attribute, $param) {
         if($this->clueHeadRow["box_type"]==1){
             if($this->survey_bool===""||$this->survey_bool===null){
@@ -205,6 +213,7 @@ class ClueFlowForm extends CFormModel
     }
 
     public function validateVisitObj($attribute, $param) {
+        $this->is_qiandan=false;
 	    if(!empty($this->visit_obj)){
 	        $idStr = implode("','",$this->visit_obj);
 	        $idList = array();
@@ -216,6 +225,7 @@ class ClueFlowForm extends CFormModel
                     $idList[]=$row["id"];
                     $nameList[]=$row["name"];
                     if($row["name"]=="签单"){
+                        $this->is_qiandan=true;
                         $this->sign_odds=100;
                     }
                 }
@@ -617,6 +627,7 @@ class ClueFlowForm extends CFormModel
         $uid = empty($username)?Yii::app()->user->id:$username;
         $serviceTypeJson = $this->clueHeadRow["service_type"];
         $visitObjJson = $this->visit_obj;
+        $predict_amt = empty($this->predict_amt)?0:floatval($this->predict_amt);
         Yii::app()->db->createCommand()->insert("sal_visit",array(
             "username"=>$uid,
             "visit_dt"=>$this->visit_date,
@@ -640,8 +651,25 @@ class ClueFlowForm extends CFormModel
             "lcu"=>$uid,
             "status"=>'N',
             "status_dt"=>null,
+            "visit_info_text"=>$this->is_qiandan?("{$predict_amt}({$this->clueServiceRow["busine_id_text"]})"):null,
+            "total_amt"=>$this->is_qiandan?$this->predict_amt:0,
         ));
         $visitId = Yii::app()->db->getLastInsertID();
+        if($this->is_qiandan){
+            Yii::app()->db->createCommand()->insert("sal_visit_info",array(
+                "visit_id"=>$visitId,
+                "field_id"=>"svc_G3",
+                "field_value"=>$predict_amt
+            ));
+            Yii::app()->db->createCommand()->insert("sal_visit_info",array(
+                "visit_id"=>$visitId,
+                "field_id"=>"svc_G2",
+                "field_value"=>"CRM自动生成"
+            ));
+
+            $model= new VisitForm('edit');//首页需要提示大神签单
+            $model->addNotificationByQian($visitId);
+        }
         Yii::app()->db->createCommand()->update("sal_clue_flow",array(
             "table_id"=>$visitId,
         ),"id=:id",array(":id"=>$this->id));

@@ -11,7 +11,7 @@
                         ));
                         ?>
                     <?php endif ?>
-                    <?php if ($row["contract_bool"]): ?>
+                    <?php if ($row["busine_id"]!="G"&&$row["contract_bool"]): ?>
                         <?php
                         $con_url=Yii::app()->createUrl('contHead/new',array("clue_service_id"=>$row["id"]));
                         echo TbHtml::link("发起合同审批",$con_url,array(
@@ -19,7 +19,7 @@
                         ));
                         ?>
                     <?php endif ?>
-                    <?php if (!empty($row["status_text"])): ?>
+                    <?php if ($row["busine_id"]!="G"&&!empty($row["status_text"])): ?>
                     <div class="pull-right">
                         <p class="">
                             <?php echo $row["status_text"];?>
