@@ -1,29 +1,7 @@
-
 <?php
 
 class ImportContForm extends ImportVirForm
 {
-    /**
-     * 缓存所有服务项目数据
-     * 结构：["服务项目名" => {id, service_type, id_char}]
-     * 用途：在valBusine()中快速查找，避免循环内数据库查询
-     */
-    protected $serviceTypeCache = array();
-    
-    /**
-     * 缓存所有已存在的合同编号
-     * 结构：["合同编号" => true]
-     * 用途：在valContCode()中快速检测重复
-     */
-    protected $contCodeCache = array();
-    
-    /**
-     * 缓存所有已存在的客户编码及其信息
-     * 结构：["客户编码" => {id, clue_type, city, ...}]
-     * 用途：在valClientCode()中快速查找，避免重复查询
-     */
-    protected $clueCodeCacheForCont = array();
-    
     protected $eveList = array(
         array("name"=>"主合同编号","key"=>"cont_code","fun"=>"valContCode","requite"=>true),
         array("name"=>"客户编号","key"=>"clue_id","fun"=>"valClientCode","requite"=>true),
@@ -57,40 +35,6 @@ class ImportContForm extends ImportVirForm
         array("name"=>"终止或暂停日期","key"=>"stop_date","fun"=>"valDate","requite"=>false),
     );
 
-    /**
-     * 初始化缓存数据（重写父类方法）
-     * 在导入前一次性加载所有需要的参考数据到内存
-     * 目的：避免后续循环中重复数据库查询
-     */
-    public function initCacheData(){
-        // 调用父类的缓存初始化（初始化枚举类型等缓存）
-        parent::initCacheData();
-        
-        // 预加载所有服务项目到内存缓存，避免valBusine()中的循环查询
-        // 按名称索引便于快速查找
-        $serviceRows = Yii::app()->db->createCommand()->select("id,name,service_type,id_char")->from("sal_service_type")->queryAll();
-        foreach($serviceRows as $row){
-            $this->serviceTypeCache[$row['name']] = $row;
-        }
-        
-        // 预加载所有已存在的合同编号，用于快速检测重复
-        $contRows = Yii::app()->db->createCommand()->select("cont_code")->from("sal_contract")->queryAll();
-        foreach($contRows as $row){
-            $this->contCodeCache[$row['cont_code']] = true;
-        }
-        
-        // 预加载所有已存在的客户编码及其信息，避免valClientCode()中的查询
-        $clueRows = Yii::app()->db->createCommand()->select("*")->from("sal_clue")->queryAll();
-        foreach($clueRows as $row){
-            $this->clueCodeCacheForCont[$row['clue_code']] = $row;
-        }
-    }
-
-    /**
-     * 验证服务项目字段
-     * 功能：验证多个服务项目（以逗号分隔），并转换为系统ID和编码
-     * 优化：使用预加载缓存替代循环中的数据库查询
-     */
     protected function valBusine(&$data,$keyStr,$item){
         $busineName = key_exists($keyStr,$data)?$data[$keyStr]:'';
         $busineNameList = empty($busineName)?array():explode(",",$busineName);
@@ -98,9 +42,9 @@ class ImportContForm extends ImportVirForm
             $ids=array();
             $names=array();
             foreach ($busineNameList as $itemName){
-                // 从缓存中查找，而非执行数据库查询，避免N+1问题
-                if(isset($this->serviceTypeCache[$itemName])){
-                    $row = $this->serviceTypeCache[$itemName];
+                $row = Yii::app()->db->createCommand()->select("id,service_type,id_char")->from("sal_service_type")
+                    ->where("name=:name",array(":name"=>$itemName))->queryRow();
+                if($row){
                     $ids[]=$row["id_char"];
                     $names[]=$itemName;
                 }else{
@@ -116,16 +60,12 @@ class ImportContForm extends ImportVirForm
         }
     }
 
-    /**
-     * 验证合同编号字段
-     * 功能：检测合同编号是否已存在（避免重复）
-     * 优化：使用预加载缓存替代数据库查询
-     */
     protected function valContCode(&$data,$keyStr,$item){
         $cont_code = key_exists($keyStr,$data)?$data[$keyStr]:'';
         if(!empty($cont_code)){
-            // 从缓存中查找，而非执行数据库查询
-            if(isset($this->contCodeCache[$cont_code])){
+            $row = Yii::app()->db->createCommand()->select("*")->from("sal_contract")
+                ->where("cont_code=:cont_code",array(":cont_code"=>$cont_code))->queryRow();
+            if($row){
                 $this->status="E";
                 $this->message=$item['name']."已存在({$cont_code})";
             }
@@ -135,18 +75,12 @@ class ImportContForm extends ImportVirForm
         }
     }
 
-    /**
-     * 验证客户编号字段
-     * 功能：根据客户编号查询客户信息，并验证权限（城市限制）
-     * 优化：使用预加载缓存替代数据库查询
-     */
     protected function valClientCode(&$data,$keyStr,$item){
         $clue_code = key_exists($keyStr,$data)?$data[$keyStr]:'';
         if(!empty($clue_code)){
-            // 从缓存中查找，而非执行数据库查询
-            if(isset($this->clueCodeCacheForCont[$clue_code])){
-                $row = $this->clueCodeCacheForCont[$clue_code];
-                // 检查用户是否有权限访问该城市
+            $row = Yii::app()->db->createCommand()->select("*")->from("sal_clue")
+                ->where("clue_code=:clue_code",array(":clue_code"=>$clue_code))->queryRow();
+            if($row){
                 if (strpos($this->city_allow,"'{$row['city']}'")!==false){
                     $data[$keyStr]=$row["id"];
                     $data["clue_id"]=$row["id"];

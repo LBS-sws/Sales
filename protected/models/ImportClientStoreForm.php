@@ -3,27 +3,6 @@
 class ImportClientStoreForm extends ImportForm
 {
     protected $pinyin;
-    
-    /**
-     * 缓存所有查询过的客户编码，避免重复数据库查询
-     * 结构：["clue_code" => {id, clue_type, ...}]
-     * 用途：在valCode()中快速查找已有客户，减少数据库查询
-     */
-    protected $cluecodeCache = array();
-    
-    /**
-     * 缓存所有查询过的门店编码，避免重复检查重复
-     * 结构：["store_code" => true]
-     * 用途：在valStoreCode()中快速检测门店编码是否已存在
-     */
-    protected $storeCoreCache = array();
-    
-    /**
-     * 缓存各客户的门店计数，避免多次COUNT查询
-     * 结构：[clue_id => count]
-     * 用途：在computeStoreCode()中快速获取门店数量，生成门店编码
-     */
-    protected $clueStoreCountCache = array();
     protected $eveList = array(
         array("name"=>"门店类别","key"=>"clue_type","fun"=>"valClueType","requite"=>true),
         array("name"=>"服务类型","key"=>"service_type","fun"=>"valServiceType","requite"=>false),
@@ -64,34 +43,30 @@ class ImportClientStoreForm extends ImportForm
     protected function valCode(&$data,$keyStr,$item){
         $clueCode = key_exists($keyStr,$data)?$data[$keyStr]:'';
         if(!empty($clueCode)){
-            // 从缓存中查找，而非执行数据库查询
-            if(isset($this->cluecodeCache[$clueCode])){
-                $row = $this->cluecodeCache[$clueCode];
+            $row = Yii::app()->db->createCommand()->select("id,clue_type")->from("sal_clue")
+                ->where("clue_code=:clue_code",array(":clue_code"=>$clueCode))->queryRow();
+            if(!$row){
+                $this->status="E";
+                $this->message=$item['name']."没找到({$clueCode})";
+            }else{
                 if($row["clue_type"]!=$data["clue_type"]){
                     $this->status="E";
-                    $this->message="门店类别(".CGetName::getClueTypeStr($data["clue_type"])."）与客户类别（".CGetName::getClueTypeStr($row["clue_type"])."）不一致";
+                    $this->message="门店类别(".CGetName::getClueTypeStr($data["clue_type"]).")与客户类别（".CGetName::getClueTypeStr($row["clue_type"])."）不一致";
                 }else{
                     $data["clue_id"]=$row["id"];
                 }
-            }else{
-                $this->status="E";
-                $this->message=$item['name']."没找到({$clueCode})";
             }
         }else{
             $data["clue_id"]=null;
         }
     }
 
-    /**
-     * 验证门店编号字段
-     * 功能：检测门店编号是否已存在（避免重复）
-     * 优化：使用预加载缓存替代数据库查询
-     */
     protected function valStoreCode(&$data,$keyStr,$item){
         $store_code = key_exists($keyStr,$data)?$data[$keyStr]:'';
         if(!empty($store_code)){
-            // 从缓存中查找，而非执行数据库查询
-            if(isset($this->storeCoreCache[$store_code])){
+            $row = Yii::app()->db->createCommand()->select("id")->from("sal_clue_store")
+                ->where("store_code=:store_code",array(":store_code"=>$store_code))->queryRow();
+            if($row){
                 $this->status="E";
                 $this->message=$item['name']."已存在({$store_code})";
             }
@@ -100,37 +75,8 @@ class ImportClientStoreForm extends ImportForm
         }
     }
 
-    /**
-     * 初始化缓存数据
-     * 在导入前一次性加载所有需要的参考数据到内存
-     * 目的：避免后续循环中重复数据库查询
-     */
-    public function initCacheData(){
-        // 预加载所有已存在的客户编码和门店编码，用于快速查重
-        // 这样validateRowData中的valCode()和valStoreCode()就不需要查库了
-        $clueRows = Yii::app()->db->createCommand()->select("id,clue_code,clue_type")->from("sal_clue")->queryAll();
-        foreach($clueRows as $row){
-            $this->cluecodeCache[$row['clue_code']] = $row;
-        }
-        
-        // 预加载所有已存在的门店编码
-        $storeRows = Yii::app()->db->createCommand()->select("store_code")->from("sal_clue_store")->queryAll();
-        foreach($storeRows as $row){
-            $this->storeCoreCache[$row['store_code']] = true;
-        }
-        
-        // 预计算每个客户的门店数量，避免后续computeStoreCode()中频繁COUNT查询
-        $countRows = Yii::app()->db->createCommand()->select("clue_id,count(*) as sum")->from("sal_clue_store")->group("clue_id")->queryAll();
-        foreach($countRows as $row){
-            $this->clueStoreCountCache[$row['clue_id']] = $row['sum'];
-        }
-    }
-    
     protected function saveBodyList(){
         if(!empty($this->bodyList)){
-            // 在处理数据前初始化缓存，避免循环内重复查库
-            $this->initCacheData();
-            
             $phpExcelPath = Yii::getPathOfAlias('ext.pinyin');
             include($phpExcelPath . DIRECTORY_SEPARATOR . 'Autoloader.php');
             $this->pinyin = new Pinyin(); // 默认
@@ -152,15 +98,6 @@ class ImportClientStoreForm extends ImportForm
         }
     }
 
-    /**
-     * 计算新客户ID
-     * 功能：
-     * 1. 自动生成客户编号和简称（基于转接拼音）
-     * 2. 创建所属客户记录(sal_clue)
-     * 3. 创建客户历史记录、城市前程、君员懒上笼一签
-     * 4. 如果存在罖厶人，自动创建罖厶人记录
-     * 注意：外部saveOneData会检查clue_id是否为空来决定是否执行
-     */
     protected function computeClueID(&$data){
         if(empty($data["clue_id"])){
             $data["entry_date"]=empty($data["entry_date"])?$this->req_dt:$data["entry_date"];
@@ -234,11 +171,6 @@ class ImportClientStoreForm extends ImportForm
         }
     }
 
-    /**
-     * 计算开票信息
-     * 功能：根据客户信息创建开票档
-     * 注意：仅有invoice_header不为空且clue_id存在时才需要创建
-     */
     protected function computeInvoiceID(&$data){
         if(!empty($data["clue_id"])&&empty($data["invoice_id"])){
             if(!empty($data["invoice_header"])){
@@ -263,44 +195,20 @@ class ImportClientStoreForm extends ImportForm
         }
     }
 
-    /**
-     * 计算门店编号
-     * 功能：根据客户编号和现有门店数量生成新的门店编码
-     * 编码规则：[客户编号]-[字符(A-Z)][数字(001-999)]
-     * 优化：使用缓存的门店计数替代COUNT查询
-     */
     protected function computeStoreCode(&$data){
         if(empty($data["store_code"])){
-            // 从缓存中获取门店计数，而非执行COUNT查询
-            $num = isset($this->clueStoreCountCache[$data["clue_id"]]) ? $this->clueStoreCountCache[$data["clue_id"]] : 0;
-            
-            // 计算字符和数字组合
-            $charNum = floor($num/1000)+65;     // A=65, B=66, ...
+            $row = Yii::app()->db->createCommand()->select("count(*) as sum")
+                ->from("sal_clue_store")->where("clue_id=:clue_id",array(":clue_id"=>$data["clue_id"]))->queryRow();
+            $num = $row&&!empty($row["sum"])?$row["sum"]:0;
+            $charNum = floor($num/1000)+65;
             $num = floor($num%1000);
             $num = "".(1000+$num);
-            $num = mb_substr($num,1);            // 去掉千位数字，得到001-999
-            
+            $num = mb_substr($num,1);
             $store_code=$data["clue_code"]."-".chr($charNum).$num;
             $data["store_code"]=$store_code;
-            
-            // 同时更新缓存，为后续的新门店做准备
-            if(!isset($this->clueStoreCountCache[$data["clue_id"]])){
-                $this->clueStoreCountCache[$data["clue_id"]] = 0;
-            }
-            $this->clueStoreCountCache[$data["clue_id"]]++;
-            // 同时更新门店编码缓存，避免后续重复
-            $this->storeCoreCache[$store_code] = true;
         }
     }
 
-    /**
-     * 保存单条门店数据
-     * 流程：
-     * 1. 自动创建客户记录(computeClueID)
-     * 2. 创建开票信息(computeInvoiceID)
-     * 3. 自动生成门店编号(computeStoreCode)
-     * 4. 插入门店、罖厶人等多条记录
-     */
     protected function saveOneData($data){
         $this->computeClueID($data);
         $this->computeInvoiceID($data);
