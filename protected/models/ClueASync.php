@@ -4,6 +4,7 @@ class ClueASync{
 	public $search_city=array('SZ');//'CD','SZ',
     public $start_date="2025-10-22";
     public $end_date="2025-11-26";
+    public $setList=array();//sql查询后的配置
 
     public $pinyin;
     public function __construct()
@@ -11,6 +12,9 @@ class ClueASync{
         $phpExcelPath = Yii::getPathOfAlias('ext.pinyin');
         include($phpExcelPath . DIRECTORY_SEPARATOR . 'Autoloader.php');
         $this->pinyin = new Pinyin(); // 默认
+        $this->setList["hrEmploy"]=array();//人事系统员工表
+        $this->setList["districtList"]=array();//区域查询
+        $this->setList["classList"]=array();//客户类型查询
     }
 
 
@@ -123,19 +127,45 @@ class ClueASync{
         $suffix = Yii::app()->params['envSuffix'];
 		$startDt=$this->start_date;
 		$endDt=$this->end_date;
-		$citySql = "'".implode("','",$this->search_city)."'";
-		$serviceType=array(1=>array("char"=>"A","name"=>"洁净"),2=>array("char"=>"C","name"=>"虫害防制"));
-		$visitRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_visit")
-			->where("city in ({$citySql}) and visit_dt BETWEEN '{$startDt}' and '{$endDt}' AND visit_obj NOT LIKE '%10%'")
-            ->order("id asc")->queryAll();
-		if($visitRows){
-			foreach($visitRows as $visitRow){
+        $whereSql ="visit_dt BETWEEN '{$startDt}' and '{$endDt}' AND visit_obj NOT LIKE '%10%'";
+        if(!empty($this->search_city)){
+            $whereSql.= " and city in ('".implode("','",$this->search_city)."')";
+        }
+        $totalNum = Yii::app()->db->createCommand()->select("count(id)")->from("sales{$suffix}.sal_visit")
+            ->where($whereSql)->queryScalar();
+        echo "total:{$totalNum}\n";
+        $this->getVisitRows($whereSql,1,5000,$totalNum);//每次执行5000条数据
+	}
+
+	protected function getVisitRows($whereSql,$pageNum,$maxPage,$totalNum){
+        $suffix = Yii::app()->params['envSuffix'];
+        $startNum=($pageNum-1)*$maxPage;
+        if($startNum<$totalNum){
+            echo "page:{$pageNum}\n";
+            $visitRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_visit")
+                ->where($whereSql)->order("id asc")->limit($maxPage,$startNum)->queryAll();
+            $this->addVisitRows($visitRows);
+            $pageNum++;
+            $this->getVisitRows($whereSql,$pageNum,$maxPage,$totalNum);
+        }
+    }
+
+	protected function addVisitRows($visitRows){
+        $suffix = Yii::app()->params['envSuffix'];
+        $serviceType=array(1=>array("char"=>"A","name"=>"洁净"),2=>array("char"=>"C","name"=>"虫害防制"));
+        if($visitRows){
+            foreach($visitRows as $visitRow){
                 $visitRow['visit_dt'] = date("Y-m-d",strtotime($visitRow['visit_dt']));
-                $employee_id = CGetName::getEmployeeIDByUserName($visitRow['username']);
+                if(!key_exists($visitRow['username'],$this->setList["hrEmploy"])){
+                    $this->setList["hrEmploy"][$visitRow['username']]=CGetName::getEmployeeIDByUserName($visitRow['username']);
+                }
+                $employee_id = $this->setList["hrEmploy"][$visitRow['username']];
                 $visitRow["employee_id"]=$employee_id;
                 $visitRow['service_type'] = empty($visitRow['service_type'])?'["1"]':$visitRow['service_type'];
                 $service_type = json_decode($visitRow['service_type'],true);
-                $service_type = current($service_type);
+                $service_type = is_array($service_type)?current($service_type):"";
+                $service_type = is_array($service_type)?current($service_type):"";
+                $service_type = "".$service_type;
 
                 $visitRow['visit_obj'] = json_decode($visitRow['visit_obj'],true);
                 $visit_obj = is_array($visitRow['visit_obj'])?implode(',',$visitRow['visit_obj']):1;
@@ -223,22 +253,30 @@ class ClueASync{
                         'lcd'=>$visitRow["lcd"],
                     ));
                 }
-			}
-		}
-	}
+            }
+        }
+    }
 
     protected function getInsertClueListByVisit($visitRow)
     {
         $suffix = Yii::app()->params['envSuffix'];
-        $districtList = Yii::app()->db->createCommand()->select("nal_id,nal_tree_names")->from("sales{$suffix}.sal_cust_district")
-            ->where("id=:id",array(':id'=>$visitRow['district']))->queryRow();
-        $districtList = $districtList?$districtList:array("nal_id"=>null,"nal_tree_names"=>null);
-        //$districtList=$this->getDistrictList($district_name,$visitRow['city']);
-        $class_name = Yii::app()->db->createCommand()->select("name")->from("sales{$suffix}.sal_cust_type")
-            ->where("id=:id",array(':id'=>$visitRow['cust_type']))->queryRow();
-        $class_name = $class_name?$class_name['name']:'';
+        $visitRow['district']="".$visitRow['district'];
+        $visitRow['cust_type']="".$visitRow['cust_type'];
+        if(!isset($this->setList["districtList"][$visitRow['district']])){
+            $districtList = Yii::app()->db->createCommand()->select("nal_id,nal_tree_names")->from("sales{$suffix}.sal_cust_district")
+                ->where("id=:id",array(':id'=>$visitRow['district']))->queryRow();
+            $districtList = $districtList?$districtList:array("nal_id"=>null,"nal_tree_names"=>null);
+            $this->setList["districtList"][$visitRow['district']]=$districtList;
+        }
+        $districtList = $this->setList["districtList"][$visitRow['district']];
+        if(!isset($this->setList["classList"][$visitRow['cust_type']])){
+            $class_name = Yii::app()->db->createCommand()->select("name")->from("sales{$suffix}.sal_cust_type")
+                ->where("id=:id",array(':id'=>$visitRow['cust_type']))->queryRow();
+            $class_name = $class_name?$class_name['name']:'';
+            $this->setList["classList"][$visitRow['cust_type']]=$this->getCustClassList($class_name);
+        }
+        $custClassList = $this->setList["classList"][$visitRow['cust_type']];
         $employee_id = $visitRow['employee_id'];
-        $custClassList=$this->getCustClassList($class_name);
         $codeList = $this->computeClueCode($visitRow['cust_name']);
         $insertArr=array(
             'abbr_code'=>$codeList['abbr_code'],

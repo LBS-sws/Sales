@@ -223,7 +223,7 @@ class CurlNotesByStore extends CurlNotesModel {
 			"email"=>$row["cust_email"],//邮箱
 			"customer_type"=>self::getCustClassStrByKey($row["cust_class"],"rpt_u"),//客户类型（需要用到派单lbs_enum表enum_type=4中的数据）
 			"status"=>self::getUStatusByStoreStatus($row["store_status"]),//状态 1 服务中 2 停止服务 3 其他
-			"remarks"=>$row["store_remark"],//备注
+			"crm_remarks"=>$row["store_remark"],//备注
 			"street"=>$clientHeadRow["street"],//街道
 			"sales_rep"=>self::getEmployeeStrByKey("code",$row["create_staff"]),//销售代表 （传员工编号）
 			"inv_remarks"=>$row["invoice_rmk"],//发票备注

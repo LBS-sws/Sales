@@ -38,7 +38,7 @@ $modelClass = get_class($model);
             <?php echo TbHtml::label(Yii::t("clue","service type"),'cust_name',array('class'=>"col-lg-1 control-label")); ?>
             <div class="col-lg-3">
                 <?php echo $form->dropDownList($model, 'clueHeadRow[service_type]',VisitForm::getServiceTypeList(),
-                    array('readonly'=>true,"empty"=>"")
+                    array('readonly'=>true, 'id'=>'service_type_select', 'multiple'=>'multiple')
                 ); ?>
             </div>
         </div>

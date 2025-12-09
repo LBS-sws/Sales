@@ -84,7 +84,7 @@ class CurlNotesByVir extends CurlNotesModel {
             "deposit_paid"=>empty($virRow["deposit_amt"])?0:floatval($virRow["deposit_amt"]),//已付押金 没有就传0
             "deposit_rmk"=>$virRow["deposit_rmk"],//押金备注 没有就传空
             "one_time_fee"=>0,//一次性费用 没有就传0
-            "remarks"=>$virRow["remark"],//备注 没有就传空
+            "crm_remarks"=>$virRow["remark"],//备注 没有就传空
             "tech_remarks"=>null,//技术员备注 没有就传空
             "status"=>self::getUStatusByVirStatus($virRow["vir_status"]),//合约状态 1 生效中 2 暂停 3 结束 4 删除 5 暂停生效
             "invoice_mode"=>0,//账单生成模式 没有就传0
@@ -253,7 +253,7 @@ class CurlNotesByVir extends CurlNotesModel {
 
     protected function getContractFree($virRow){
         $data=array();
-        //sal_contract_vir_staff
+        //sal_contract_vir_week
         $suffix = Yii::app()->params['envSuffix'];
         $freeRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract_vir_week")
             ->where("vir_id=:id",array(":id"=>$virRow["id"]))->queryAll();
@@ -271,6 +271,10 @@ class CurlNotesByVir extends CurlNotesModel {
                     "update_time"=>null,
                     "update_uid"=>null,
                 );
+                // 需要判断 $virRow["service_fre_type"]==3 才传year_cycle
+                if($virRow["service_fre_type"]==3){
+                    $temp["year_cycle"]=$freeRow["year_cycle"];
+                }
                 if(!empty($virRow["u_id"])){
                     $temp["contract_id"]=$virRow["u_id"];
                 }
