@@ -522,7 +522,7 @@ class ClueProModel
     protected function proTypeChange($proRow,$contOldRow){
         $suffix = Yii::app()->params['envSuffix'];
         switch ($proRow["pro_type"]){
-            case "NA":
+            case "NA"://增加门店
                 $contRow = Yii::app()->db->createCommand()->select("a.*,b.ka_ava_id")
                     ->from("sales{$suffix}.sal_contract a")
                     ->leftJoin("sales{$suffix}.sal_clue_service b","a.clue_service_id=b.id")
@@ -532,6 +532,18 @@ class ClueProModel
                 }
                 if($contRow&&$contRow["clue_type"]==1){//地推
                     $this->serviceVisitQian($proRow,$contRow);
+                }
+                break;
+            case "A"://合同内容调整
+                if($proRow['pro_change']>0){//金额增加
+                    $contRow = Yii::app()->db->createCommand()->select("a.*,b.ka_ava_id")
+                        ->from("sales{$suffix}.sal_contract a")
+                        ->leftJoin("sales{$suffix}.sal_clue_service b","a.clue_service_id=b.id")
+                        ->where("a.id=:id",array(":id"=>$proRow["cont_id"]))->queryRow();
+                    if($contRow&&$contRow["clue_type"]==1){//地推
+                        $proRow["cont_start_dt"]=date("Y-m-d");//强制设置为当前时间
+                        $this->serviceVisitQian($proRow,$contRow);
+                    }
                 }
                 break;
         }

@@ -486,6 +486,7 @@ class ClueVirProModel
     //合同正式生效允许续约变更等操作
     protected function copyContractProForVir($saveData){
         $nowDate = date_format(date_create(),"Y/m/d");
+        $proRow = $saveData["virBatchRow"];
         $suffix = Yii::app()->params['envSuffix'];
         $virRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contpro_virtual")
             ->where("pro_vir_type=2 and vir_batch_id=:id and vir_id in ({$saveData["virBatchRow"]["vir_id_text"]})",array(
@@ -521,6 +522,97 @@ class ClueVirProModel
                 Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contract_history",$historyArr);
                 $this->saveVirInfo($virRow);
 				CGetName::resetVirStaffAndWeek($virRow['vir_id']);
+            }
+
+            $this->proTypeChange($proRow,$virRows);
+        }
+    }
+
+    protected function proTypeChange($proRow,$virRows){
+        $suffix = Yii::app()->params['envSuffix'];
+        switch ($proRow["pro_type"]){
+            case "A"://合同内容调整
+                if($proRow['pro_change']>0){//金额增加
+                    $virRow = Yii::app()->db->createCommand()->select("*")
+                        ->from("sales{$suffix}.sal_contract_virtual")
+                        ->where("id=:id",array(":id"=>$proRow["vir_id"]))->queryRow();
+                    if($virRow&&$virRow["clue_type"]==1){//地推
+                        $this->serviceVisitQian($proRow,$virRows);
+                    }
+                }
+                break;
+        }
+    }
+
+    protected function serviceVisitQian($proRow,$virRows){
+        $suffix = Yii::app()->params['envSuffix'];
+        $date = date("Y-m-d");
+        if($virRows){
+            foreach ($virRows as $virRow){
+                $username = CGetName::getUserNameByEmployeeID($virRow['sales_id']);
+                if(CGetName::getUserNameHasAccess($username,"HK01")){//有销售拜访的读写权限
+                    $serviceRow = Yii::app()->db->createCommand()->select("b.service_type,b.city,a.*")
+                        ->from("sales{$suffix}.sal_clue_service a")
+                        ->leftJoin("sales{$suffix}.sal_clue b","a.clue_id=b.id")
+                        ->where("a.id=:id",array(":id"=>$virRow["clue_service_id"]))->queryRow();
+                    $storeRow = Yii::app()->db->createCommand()->select("*")
+                        ->from("sales{$suffix}.sal_clue_store")
+                        ->where("id=:id",array(":id"=>$virRow["clue_store_id"]))->queryRow();
+                    $visit_info_text = floatval($virRow["month_amt"]);
+                    $visit_info_text.= "({$virRow["busine_id_text"]})";
+                    Yii::app()->db->createCommand()->insert("sal_visit",array(
+                        "username"=>$username,
+                        "visit_dt"=>$date,
+                        "visit_type"=>$serviceRow["visit_type"],
+                        "visit_obj"=>'["10"]',
+                        "visit_obj_name"=>"签单",
+                        "quotation"=>"是",
+                        "visit_info_text"=>empty($visit_info_text)?null:$visit_info_text,
+                        "service_type"=>$serviceRow["service_type"],//json
+                        "cust_type"=>CGetName::getVisitCustTypeIDByCustClassID($storeRow["cust_class"]),
+                        "cust_name"=>$storeRow["store_name"],
+                        "cust_person"=>$storeRow["cust_person"],
+                        "cust_tel"=>$storeRow["cust_tel"],
+                        "district"=>CGetName::getVisitDistrictIDByNalID($storeRow["district"],$storeRow["city"]),
+                        "remarks"=>"CRM自动生成",
+                        "sign_odds"=>100,
+                        "city"=>$storeRow["city"],
+                        "total_amt"=>$virRow["year_amt"],
+                        "busine_id"=>$virRow["busine_id"],
+                        "busine_id_text"=>$virRow["busine_id_text"],
+                        "lcu"=>$username,
+                        "status"=>'N',
+                        "status_dt"=>null,
+                    ));
+                    $visitId = Yii::app()->db->getLastInsertID();
+                    Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_clue_flow",array(
+                        "clue_id"=>$virRow["clue_id"],
+                        "clue_type"=>$virRow["clue_type"],
+                        "clue_service_id"=>$virRow["clue_service_id"],
+                        "visit_date"=>$date,
+                        "create_staff"=>$virRow['sales_id'],
+                        "store_num"=>1,
+                        "update_bool"=>4,
+                        "rpt_bool"=>empty($serviceRow["rpt_amt"])?0:1,
+                        "lbs_main"=>$serviceRow["lbs_main"],
+                        "predict_date"=>$serviceRow["predict_date"],
+                        "predict_amt"=>$serviceRow["predict_amt"],
+                        "sign_odds"=>100,
+                        "visit_text"=>"CRM自动生成",
+                        "visit_obj"=>'10',
+                        "visit_obj_text"=>"签单",
+                        "table_id"=>$visitId,
+                        "lcu"=>$username,
+                    ));
+                    $vir_ids = $virRow["vir_id"];
+                    $insertSQL = "INSERT INTO sal_visit_info (visit_id,field_id,field_value,lcu,luu,lcd,lud)
+                                SELECT '{$visitId}',field_id,field_value,lcu,luu,lcd,lud 
+                                FROM sal_contract_vir_info WHERE virtual_id in ({$vir_ids})";
+                    Yii::app()->db->createCommand($insertSQL)->execute();
+
+                    $model= new VisitForm('edit');//首页需要提示大神签单
+                    $model->addNotificationByQian($visitId);
+                }
             }
         }
     }
