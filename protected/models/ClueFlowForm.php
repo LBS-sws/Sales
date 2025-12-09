@@ -80,7 +80,7 @@ class ClueFlowForm extends CFormModel
 	}
 
     public function validateQiandan($attribute, $param) {
-	    if(empty($this->predict_amt)){
+	    if($this->is_qiandan&&empty($this->predict_amt)){
             $this->addError($attribute, "预估成交金额(年金额)不能为空");
         }
     }
