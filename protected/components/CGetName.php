@@ -2250,10 +2250,17 @@ class CGetName {
     }
 
     public static function getServiceTypeRptStrByList($ids){
-        $ids = implode(",",$ids);
+        if(empty($ids)){
+            return "NONE";
+        }
         $suffix = Yii::app()->params['envSuffix'];
+        $idList = array();
+        foreach($ids as $id){
+            $idList[] = intval($id);
+        }
+        $idStr = implode(",", $idList);
         $rows = Yii::app()->db->createCommand()->select("rpt_cat")->from("swoper$suffix.swo_customer_type")
-            ->where("id in ({$ids}) and rpt_cat!='' and rpt_cat is not null")->group("rpt_cat")->queryAll();
+            ->where("id in ({$idStr}) and rpt_cat!='' and rpt_cat is not null")->group("rpt_cat")->queryAll();
         if($rows){
             $rpt_cat="";
             foreach ($rows as $row){
