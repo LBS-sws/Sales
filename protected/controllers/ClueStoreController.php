@@ -24,7 +24,7 @@ class ClueStoreController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('index','storeList','new','edit','view','detail','save','delete','ajaxShow','ajaxSave'),
+				'actions'=>array('index','storeList','new','edit','view','detail','save','delete','ajaxShow','ajaxSave','transferStore','SearchTargetCustomer'),
 				'expression'=>array('ClueStoreController','allowStoreReadWrite'),
 			),
 			array('allow',
@@ -277,6 +277,105 @@ class ClueStoreController extends Controller
                 $this->redirect(Yii::app()->createUrl('clueStore/edit',array('index'=>$model->id)));
 			}
 		}
+	}
+	
+	/**
+	 * AJAX搜索目标客户
+	 */
+	public function actionSearchTargetCustomer()
+	{
+		if (!self::allowStoreReadWrite()) {
+			echo CJSON::encode(array('status' => 0, 'results' => array()));
+			Yii::app()->end();
+		}
+
+		if (Yii::app()->request->isAjaxRequest) {
+			$keyword = isset($_POST['keyword']) ? trim($_POST['keyword']) : '';
+			$storeId = isset($_POST['store_id']) ? intval($_POST['store_id']) : 0;
+
+			// 获取当前门店的客户ID
+			$storeRow = Yii::app()->db->createCommand()
+				->select("clue_id")
+				->from("sal_clue_store")
+				->where("id=:id", array(":id" => $storeId))
+				->queryRow();
+
+			if (!$storeRow) {
+				echo CJSON::encode(array('status' => 0, 'results' => array()));
+				Yii::app()->end();
+			}
+
+			$currentClueId = $storeRow['clue_id'];
+			$data = array('status' => 0, 'results' => array());
+
+			if (!empty($keyword) && strlen($keyword) >= 1) {
+				// 按客户名称或客户编码搜索
+				$rows = Yii::app()->db->createCommand()
+					->select("id, cust_name, clue_code")
+					->from("sal_clue")
+					->where("(cust_name LIKE :keyword OR clue_code LIKE :keyword) AND id != :current_id", array(
+						":keyword" => "%{$keyword}%",
+						":current_id" => $currentClueId
+					))
+					->order("id desc")
+					->limit(10)
+					->queryAll();
+
+				if ($rows) {
+					$data['status'] = 1;
+					foreach ($rows as $row) {
+						$data['results'][] = array(
+							'id' => $row['id'],
+							'name' => $row['cust_name'] . ' (' . $row['clue_code'] . ')'
+						);
+					}
+				}
+			}
+
+			echo CJSON::encode($data);
+			Yii::app()->end();
+		} else {
+			throw new CHttpException(400, 'Bad Request');
+		}
+	}
+
+	/**
+	 * 转移门店及其关联合约
+	 */
+	public function actionTransferStore()
+	{
+		if (!self::allowStoreTransfer()) {
+			echo CJSON::encode(array('status' => false, 'message' => '您没有权限执行此操作'));
+			Yii::app()->end();
+		}
+
+		if (Yii::app()->request->isPostRequest || Yii::app()->request->isAjaxRequest) {
+			$model = new TransferStoreForm();
+			$model->store_id = isset($_POST['store_id']) ? intval($_POST['store_id']) : 0;
+			$model->target_clue_id = isset($_POST['target_clue_id']) ? intval($_POST['target_clue_id']) : 0;
+			$model->transfer_reason = isset($_POST['transfer_reason']) ? trim($_POST['transfer_reason']) : '';
+
+			$result = $model->executeTransfer();
+
+			if (Yii::app()->request->isAjaxRequest) {
+				echo CJSON::encode($result);
+			} else {
+				if ($result['status']) {
+					Dialog::message(Yii::t('dialog', 'Information'), $result['message']);
+					$this->redirect(Yii::app()->createUrl('clueStore/index'));
+				} else {
+					Dialog::message(Yii::t('dialog', 'Error'), $result['message']);
+					$this->redirect(Yii::app()->createUrl('clueStore/detail', array('index' => $model->store_id)));
+				}
+			}
+			Yii::app()->end();
+		} else {
+			throw new CHttpException(400, 'Bad Request');
+		}
+	}
+	
+	public static function allowStoreTransfer() {
+		return Yii::app()->user->validRWFunction('CM11');
 	}
 	
 	public static function allowStoreReadWrite() {
