@@ -500,6 +500,7 @@ class ClueVirProModel
             "lcu"=>0,
         );
         if($virRows) {
+            $oldVirRows=array();//旧合约信息
             foreach ($virRows as $virRow) {
                 Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contpro_virtual",array(
                     "pro_status"=>30
@@ -507,6 +508,8 @@ class ClueVirProModel
 
                 $oldVir = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract_virtual")
                     ->where("id=:id",array(":id"=>$virRow["vir_id"]))->queryRow();
+
+                $oldVirRows[$virRow["vir_id"]]=$oldVir;
                 $updateRow = array();
                 $notSaveKey = array("id");
                 foreach ($oldVir as $keyStr=>$value){
@@ -524,11 +527,11 @@ class ClueVirProModel
 				CGetName::resetVirStaffAndWeek($virRow['vir_id']);
             }
 
-            $this->proTypeChange($proRow,$virRows);
+            $this->proTypeChange($proRow,$virRows,$oldVirRows);
         }
     }
 
-    protected function proTypeChange($proRow,$virRows){
+    protected function proTypeChange($proRow,$virRows,$oldVirRows){
         $suffix = Yii::app()->params['envSuffix'];
         switch ($proRow["pro_type"]){
             case "A"://合同内容调整
@@ -537,20 +540,53 @@ class ClueVirProModel
                         ->from("sales{$suffix}.sal_contract_virtual")
                         ->where("id=:id",array(":id"=>$proRow["vir_id"]))->queryRow();
                     if($virRow&&$virRow["clue_type"]==1){//地推
-                        $this->serviceVisitQian($proRow,$virRows);
+                        $this->serviceVisitQian($proRow,$virRows,$oldVirRows);
                     }
                 }
                 break;
         }
     }
 
-    protected function serviceVisitQian($proRow,$virRows){
+    protected function serviceVisitQian($proRow,$virRows,$oldVirRows){
         $suffix = Yii::app()->params['envSuffix'];
         $date = date("Y-m-d");
         if($virRows){
+            $buChar=array();//月金额，年金额主键
             foreach ($virRows as $virRow){
+                $updateList=array();
                 $username = CGetName::getUserNameByEmployeeID($virRow['sales_id']);
                 if(CGetName::getUserNameHasAccess($username,"HK01")){//有销售拜访的读写权限
+                    $virRow['month_amt'] = floatval($virRow['month_amt']);
+                    $virRow['year_amt'] = floatval($virRow['year_amt']);
+                    if (isset($oldVirRows[$virRow["vir_id"]])) {
+                        $virRow['month_amt'] -= floatval($oldVirRows[$virRow["vir_id"]]['month_amt']);
+                        $virRow['year_amt'] -= floatval($oldVirRows[$virRow["vir_id"]]['year_amt']);
+                        $updateList[] = array(
+                            "virtual_id" => $virRow["vir_id"],
+                            "field_id" => "svc_" . $virRow["busine_id"],//月金额
+                            "field_value" => $virRow['month_amt'],//月金额
+                        );
+                        if(!isset($buChar[$virRow["busine_id"]])){
+                            $charRow = Yii::app()->db->createCommand()->select("a.id_char")
+                                ->from("sales{$suffix}.sal_service_type_info a")
+                                ->leftJoin("sales{$suffix}.sal_service_type b","a.type_id=b.id")
+                                ->where("a.input_type='yearAmount' and b.id_char=:id_char",array(
+                                    ":id_char"=>$virRow["busine_id"],
+                                ))->queryRow();
+                            if($charRow){
+                                $buChar[$virRow["busine_id"]]="svc_".$charRow["id_char"];
+                            }else{
+                                $buChar[$virRow["busine_id"]]="";
+                            }
+                        }
+                        if(!empty($buChar[$virRow["busine_id"]])){
+                            $updateList[]=array(
+                                "virtual_id"=>$virRow["vir_id"],
+                                "field_id"=>$buChar[$virRow["busine_id"]],//年金额
+                                "field_value"=>$virRow['year_amt'],//年金额
+                            );
+                        }
+                    }
                     $serviceRow = Yii::app()->db->createCommand()->select("b.service_type,b.city,a.*")
                         ->from("sales{$suffix}.sal_clue_service a")
                         ->leftJoin("sales{$suffix}.sal_clue b","a.clue_id=b.id")
@@ -609,6 +645,13 @@ class ClueVirProModel
                                 SELECT '{$visitId}',field_id,field_value,lcu,luu,lcd,lud 
                                 FROM sal_contract_vir_info WHERE virtual_id in ({$vir_ids})";
                     Yii::app()->db->createCommand($insertSQL)->execute();
+                    if(!empty($updateList)){
+                        foreach ($updateList as $update){
+                            Yii::app()->db->createCommand()->update("sales{$suffix}.sal_visit_info",array(
+                                "field_value"=>$update["field_value"]
+                            ),"visit_id=:visit_id and field_id=:field_id",array(":visit_id"=>$visitId,":field_id"=>$update["field_id"]));
+                        }
+                    }
 
                     $model= new VisitForm('edit');//首页需要提示大神签单
                     $model->addNotificationByQian($visitId);
