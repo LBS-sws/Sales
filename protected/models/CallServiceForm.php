@@ -68,11 +68,17 @@ class CallServiceForm extends CFormModel
         if(empty($this->busine_id)){
             $this->addError($attribute,"请选择服务项目");
         }
-        if(empty($this->month_char)){
+        if(empty($this->call_month_json)){
             $this->addError($attribute,"请选择服务频次");
         }
         if(empty($this->vir_json)){
             $this->addError($attribute,"请选择呼叫的门店");
+        }else{
+            foreach ($this->vir_json as $row){
+                if(empty($row["u_id"])){
+                    $this->addError($attribute,"合约({$row["vir_code"]})还未同步到派单系统，无法呼叫");
+                }
+            }
         }
     }
 
