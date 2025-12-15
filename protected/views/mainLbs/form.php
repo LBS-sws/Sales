@@ -140,7 +140,6 @@ $('#show_type').change(function(){
 });
 $('#city').select2({
     multiple: false,
-    maximumInputLength: 10,
     language: '$lang',
     disabled: $disabled
 });
@@ -148,7 +147,6 @@ $('#show_city').select2({
 	tags: false,
 	multiple: true,
 	maximumInputLength: 0,
-	maximumSelectionLength: 10,
 	allowClear: true,
 	language: '$lang',
 	disabled: $disabled,

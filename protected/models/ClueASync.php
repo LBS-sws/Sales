@@ -19,12 +19,30 @@ class ClueASync{
 
 
 	public function syncByKA(){
-        return false;
         $suffix = Yii::app()->params['envSuffix'];
-        $startDt="2024/12/30";
-        $endDt="2025/02/27";
-        $dateSql = " and apply_date BETWEEN '{$startDt}' and '{$endDt}'";
-        $dateSql = " and a.kam_id=5107";//只同步林娟
+        $dateSql = " and a.kam_id in (3743,3744,4428,4429,4460,4461,4463,4464,4864,5315,5563,5619,5640,5704,5826,6038,6110,6114,6186,6397)";//只同步林娟
+        $cityCodeList=array(
+            "3743"=>"HNKA",
+            "3744"=>"HDKA",
+            "4428"=>"QDMS",
+            "4429"=>"XBKA",
+            "4460"=>"HDKA",
+            "4461"=>"SHKA",
+            "4463"=>"XBKA",
+            "4464"=>"XBKA",
+            "4864"=>"HNKA",
+            "5315"=>"HNKA",
+            "5563"=>"XBKA",
+            "5619"=>"HDKA",
+            "5640"=>"HDKA",
+            "5704"=>"XBKA",
+            "5826"=>"HDKA",
+            "6038"=>"XBKA",
+            "6110"=>"XBKA",
+            "6114"=>"HDKA",
+            "6186"=>"HNKA",
+            "6397"=>"SHKA",
+        );
         $cityCode="HNKA";
         $serviceType=array("char"=>"C","name"=>"虫害防制");
         $busine_id=$serviceType['char'];
@@ -36,7 +54,10 @@ class ClueASync{
         if($kaRows){
             foreach($kaRows as $kaRow){
                 $kaRow['apply_date'] = date("Y-m-d",strtotime($kaRow['apply_date']));
-                $employee_id = $kaRow['kam_id'];
+                $employee_id = "".$kaRow['kam_id'];
+                if(isset($cityCodeList[$employee_id])){
+                    $kaRow["city_code"]=$cityCodeList[$employee_id];
+                }
                 //判断是否存在线索
                 $clueRow = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_clue")
                     ->where("cust_name=:name",array(
@@ -46,6 +67,13 @@ class ClueASync{
                     $insertArr = $this->getInsertClueListByKa($kaRow);
                     Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_clue",$insertArr);
                     $clue_id = Yii::app()->db->getLastInsertID();
+                    Yii::app()->db->createCommand()->insert("sal_clue_history",array(
+                        "table_id"=>$clue_id,
+                        "table_type"=>1,
+                        "history_type"=>1,
+                        "history_html"=>"<span>KA项目同步</span>",
+                        "lcu"=>$insertArr['lcu'],
+                    ));
 
                     ClueUAreaForm::saveUAreaData($clue_id,$insertArr['city']);
                     ClueUStaffForm::saveUStaffData($clue_id,$insertArr['rec_employee_id']);
@@ -124,6 +152,7 @@ class ClueASync{
     }
 
 	public function syncByVisit(){
+	    return false;
         $suffix = Yii::app()->params['envSuffix'];
 		$startDt=$this->start_date;
 		$endDt=$this->end_date;
