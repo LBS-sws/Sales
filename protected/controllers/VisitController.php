@@ -306,7 +306,7 @@ class VisitController extends Controller
 
 	public static function allowCRMReadWrite() {
         $city = Yii::app()->user->city;
-        if(in_array($city,array('CD'))){//试点城市不允许录入
+        if(in_array($city,array('CD','SZ','SH'))){//试点城市不允许录入
             return false;
         }else{
             return Yii::app()->user->validRWFunction('HK01');
