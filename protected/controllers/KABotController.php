@@ -230,7 +230,8 @@ class KABotController extends Controller
     }
 	
 	public static function allowReadWrite() {
-		return Yii::app()->user->validRWFunction('KA01');
+		return false;
+		//return Yii::app()->user->validRWFunction('KA01');
 	}
 	
 	public static function allowReadOnly() {
@@ -238,7 +239,8 @@ class KABotController extends Controller
 	}
 
 	public static function allowShift() {//转移
-		return Yii::app()->user->validFunction('CN18');
+		return false;
+		//return Yii::app()->user->validFunction('CN18');
 	}
 
     //由於2023/06/23日修改，所以之前的舊數據需要清空

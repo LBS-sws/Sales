@@ -73,11 +73,13 @@ $this->pageTitle=Yii::app()->name . ' - Visit Type Form';
             <div class="btn-group pull-right" role="group">
                 <?php if ($model->scenario!='new'): ?>
                     <?php
+                    /*
                     if (Yii::app()->user->validFunction('CN18')){
                         echo TbHtml::button('<span class="fa fa-refresh"></span> '.Yii::t('ka','Shift'), array(
                                 'data-toggle'=>'modal','data-target'=>'#shiftDialog',)
                         );
                     }
+                    */
                     ?>
 
                     <?php
