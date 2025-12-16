@@ -35,6 +35,9 @@ class ClueStoreForm extends CFormModel
 	public $u_id;
 	public $u_group_id;
 	public $yewudalei;
+	public $clue_level_id;   // 门店等级ID
+	public $store_level_id;   // 门店等级ID
+	public $clue_tag_ids = array();   // 门店标签IDs
 
 	public $clueHeadRow;
 
@@ -71,6 +74,8 @@ class ClueStoreForm extends CFormModel
             'store_remark'=>Yii::t('clue','store remark'),//开票地址
             'z_display'=>Yii::t('clue','z display'),//开票地址
             'latitude'=>Yii::t('clue','punctuation'),//位置标点
+            'store_level_id'=>'客户等级',//门店等级
+            'clue_tag_ids'=>'客户标签',//门店标签
             'yewudalei'=>Yii::t('clue','yewudalei'),//
 		);
 		return $list;
@@ -82,7 +87,7 @@ class ClueStoreForm extends CFormModel
 	public function rules()
 	{
 	    $list = array();
-        $list[]=array('id,clue_id,office_id,store_full_name,clue_type,create_staff,store_code,city,yewudalei','safe');
+        $list[]=array('id,clue_id,office_id,store_full_name,clue_type,create_staff,store_code,city,yewudalei,store_level_id,clue_tag_ids','safe');
         $list[]=array('area,district,address,cust_person,cust_tel,cust_email,cust_person_role','safe');
         $list[]=array('latitude,longitude,store_remark,invoice_type,invoice_header,tax_id,invoice_address,invoice_number,invoice_user','safe');
         $list[]=array('clue_id,create_staff,yewudalei','required');
@@ -224,6 +229,22 @@ class ClueStoreForm extends CFormModel
 	    $this->create_staff=$this->clueHeadRow["rec_employee_id"];
 	    $this->yewudalei=$this->clueHeadRow["yewudalei"];
 	    $this->store_remark=$this->clueHeadRow["clue_remark"];
+	    $this->inheritCustomerLevelAndTags();
+    }
+
+    /**
+     * 从客户继承等级和标签（仅当门店未设置时）
+     */
+    private function inheritCustomerLevelAndTags()
+    {
+        // 仅当门店未设置等级时，从客户继承等级
+        if (empty($this->store_level_id) && !empty($this->clueHeadRow["clue_level_id"])) {
+            $this->store_level_id = $this->clueHeadRow["clue_level_id"];
+        }
+        // 仅当门店未设置标签时，从客户继承标签
+        if (empty($this->clue_tag_ids) && !empty($this->clueHeadRow["clue_tag_ids"])) {
+            $this->clue_tag_ids = $this->clueHeadRow["clue_tag_ids"];
+        }
     }
 
 	public function retrieveData($index)
@@ -266,6 +287,8 @@ class ClueStoreForm extends CFormModel
             $this->longitude = $row['longitude'];
             $this->u_group_id = $row['u_group_id'];
             $this->u_id = $row['u_id'];
+            $this->store_level_id = $row['store_level_id'];
+            $this->clue_tag_ids = !empty($row['store_tag']) ? explode(',', $row['store_tag']) : array();
             return true;
 		}else{
 		    return false;
@@ -429,6 +452,8 @@ class ClueStoreForm extends CFormModel
                     "longitude"=>$this->longitude,
                     "store_remark"=>$this->store_remark,
                     "z_display"=>$this->z_display,
+                    "store_level_id"=>empty($this->store_level_id) ? null : $this->store_level_id,
+                    "store_tag"=>is_array($this->clue_tag_ids) ? implode(',', $this->clue_tag_ids) : $this->clue_tag_ids,
                     "lcu"=>$uid,
                 ));
                 $this->id = Yii::app()->db->getLastInsertID();
@@ -469,6 +494,8 @@ class ClueStoreForm extends CFormModel
                     "longitude"=>$this->longitude,
                     "store_remark"=>$this->store_remark,
                     "z_display"=>$this->z_display,
+                    "store_level_id"=>empty($this->store_level_id) ? null : $this->store_level_id,
+                    "store_tag"=>is_array($this->clue_tag_ids) ? implode(',', $this->clue_tag_ids) : $this->clue_tag_ids,
                     "luu"=>$uid,
                 ),"id=:id",array(":id"=>$this->id));
                 ClientPersonForm::saveUPersonDataByStoreModel($this);
@@ -533,4 +560,65 @@ class ClueStoreForm extends CFormModel
 	public function isReadonly() {
 		return $this->getScenario()=='view';
 	}
+
+	public static function getClueLevelList()
+	{
+		$suffix = Yii::app()->params['envSuffix'];
+		$levelList = Yii::app()->db->createCommand()
+			->select('id, level_name')
+			->from("sales{$suffix}.sal_clue_level")
+			->where('status = :status', array(':status' => 1))
+			->order('sort ASC')
+			->queryAll();
+		
+		$options = array('' => '-- 选择等级 --');
+		if (!empty($levelList)) {
+			foreach ($levelList as $level) {
+				$options[$level['id']] = $level['level_name'];
+			}
+		}
+		return $options;
+	}
+
+	public static function getClueTagList()
+	{
+		$suffix = Yii::app()->params['envSuffix'];
+		$tagList = Yii::app()->db->createCommand()
+			->select('id, tag_name')
+			->from("sales{$suffix}.sal_clue_tag")
+			->where('status = :status', array(':status' => 1))
+			->order('sort ASC')
+			->queryAll();
+		
+		$options = array();
+		if (!empty($tagList)) {
+			foreach ($tagList as $tag) {
+				$options[$tag['id']] = $tag['tag_name'];
+			}
+		}
+		return $options;
+	}
+
+	public static function getClueTagListWithColor()
+	{
+		$suffix = Yii::app()->params['envSuffix'];
+		$tagList = Yii::app()->db->createCommand()
+			->select('id, tag_name, tag_color')
+			->from("sales{$suffix}.sal_clue_tag")
+			->where('status = :status', array(':status' => 1))
+			->order('sort ASC')
+			->queryAll();
+		
+		$options = array();
+		if (!empty($tagList)) {
+			foreach ($tagList as $tag) {
+				$options[$tag['id']] = array(
+					'name' => $tag['tag_name'],
+					'color' => $tag['tag_color']
+				);
+			}
+		}
+		return $options;
+	}
+
 }

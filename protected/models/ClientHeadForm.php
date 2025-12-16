@@ -106,6 +106,8 @@ class ClientHeadForm extends ClueForm
             "service_type"=>empty($this->service_type)?null:json_encode($this->service_type),
             "clue_remark"=>$this->clue_remark,
             "group_bool"=>$this->clue_type==1?$this->group_bool:"Y",
+            "clue_level_id"=>empty($this->clue_level_id) ? null : $this->clue_level_id,
+            "clue_tag"=>is_array($this->clue_tag_ids) ? implode(',', $this->clue_tag_ids) : $this->clue_tag_ids,
         );
         //client_code
         if($this->getScenario()=="new"){

@@ -1,5 +1,5 @@
 <?php
-//HK01HK02HK03HK04HK05HA01HA02HA03HA04HA05HA06HA07HD01HD02HD03HD09HD01HD02HE01HE02HC01HC02HC03HC04HC05HC06HC07HC08
+//HK01HK02HK03HK04HK05HA01HA02HA03HA04HA05HA06HA07HD01HD02HD03HD09HD01HD02HE01HE02HC01HC02HC03HC04HC05HC06HC07HC08HC22HC23
 return array(
 
 	'Data Entry'=>array(
@@ -467,6 +467,16 @@ return array(
             'menu setting'=>array(//通用配置
                 'access'=>'HC21',
                 'url'=>'/setMenu/index',
+                'tag'=>'@',
+            ),
+            'Clue Level'=>array(//客户等级管理
+                'access'=>'HC22',
+                'url'=>'/clueLevel/index',
+                'tag'=>'@',
+            ),
+            'Clue Tag'=>array(//客户标签管理
+                'access'=>'HC23',
+                'url'=>'/clueTag/index',
                 'tag'=>'@',
             ),
             /*

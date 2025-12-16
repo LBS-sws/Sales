@@ -12,7 +12,7 @@ class ClueHeadForm extends ClueForm
     public function rules()
     {
         $list = array();
-        $list[]=array('id,full_name,end_date,table_type,last_date,rec_type,rec_employee_id,latitude,longitude,yewudalei,group_bool,cust_vip,clue_remark','safe');
+        $list[]=array('id,full_name,end_date,table_type,last_date,rec_type,rec_employee_id,latitude,longitude,yewudalei,group_bool,cust_vip,clue_remark,clue_level_id,clue_tag_ids','safe');
         $list[]=array('clue_type,city,entry_date,cust_name,service_type,cust_class_group,cust_class','required','on'=>array('new','edit'));
         $list[]=array('clue_status,clue_code,street,address,clue_source,area,cust_person,cust_tel,cust_email,cust_address,cust_person_role','safe');
         if($this->clue_type==1){//地推
@@ -106,6 +106,7 @@ class ClueHeadForm extends ClueForm
             "full_name"=>$this->full_name,
             "service_type"=>empty($this->service_type)?null:json_encode($this->service_type),
             "clue_remark"=>$this->clue_remark,
+            "clue_level_id"=>CGetName::getNumberNull($this->clue_level_id),
         );
         //clue_code
         if($this->getScenario()=="new"){

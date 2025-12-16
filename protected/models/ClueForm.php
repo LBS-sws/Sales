@@ -47,12 +47,14 @@ class ClueForm extends CFormModel
     public $talk_city_id;
     public $support_user;
     public $busine_id;
-    public $clue_label;
+    public $clue_tag;
     public $latitude;
     public $longitude;
     public $yewudalei;
     public $box_type;
     public $ka_id;
+    public $clue_level_id;   // 客户等级ID (新增字段 - 关联sal_clue_level表)
+    public $clue_tag_ids = array();   // 客户标签IDs (新增字段 - 多个标签ID数组)
     public $u_id;
     public $u_group_id;
     public $lcu;
@@ -78,7 +80,7 @@ class ClueForm extends CFormModel
 	{
 		$list = array(
             'clue_code'=>Yii::t('clue','clue code'),//线索编号
-            'clue_label'=>Yii::t('clue','clue label'),//线索标签（未使用)
+            'clue_tag'=>Yii::t('clue','clue label'),//线索标签（未使用)
             'cust_name'=>Yii::t('clue','customer name'),//客户名
             'full_name'=>Yii::t('clue','full name'),//客户名
             'clue_type'=>Yii::t('clue','clue type'),//线索类型
@@ -120,6 +122,8 @@ class ClueForm extends CFormModel
             'talk_city_id'=>Yii::t('clue','talk city'),//洽谈地区
             'latitude'=>Yii::t('clue','punctuation'),//位置标点
             'yewudalei'=>Yii::t('clue','yewudalei'),//
+            'clue_level_id'=>'客户等级',//客户等级
+            'clue_tag_ids'=>'客户标签',//客户标签
             'cust_vip'=>Yii::t('clue','customer vip'),//
             'u_id'=>Yii::t('clue','u id'),//
 		);
@@ -132,9 +136,9 @@ class ClueForm extends CFormModel
 	public function rules()
 	{
 	    $list = array();
-        $list[]=array('id,full_name,end_date,table_type,last_date,rec_type,rec_employee_id,latitude,longitude,yewudalei,group_bool,cust_vip,clue_remark','safe');
+        $list[]=array('id,full_name,end_date,table_type,last_date,rec_type,rec_employee_id,latitude,longitude,yewudalei,group_bool,cust_vip,clue_remark,clue_level_id,clue_tag_ids','safe');
         $list[]=array('clue_type,city,entry_date,cust_name,service_type,cust_class_group,cust_class','required');
-        $list[]=array('clue_status,clue_code,street,address,clue_source,area,cust_person,cust_tel,cust_email,cust_address,cust_person_role','safe');
+        $list[]=array('clue_status,clue_code,street,address,clue_source,area,cust_person,cust_tel,cust_email,cust_address,cust_person_role,cont_email','safe');
 	    if($this->clue_type==1){//地推
             $list[]=array('district','required');
         }else{
@@ -275,7 +279,7 @@ class ClueForm extends CFormModel
 			$this->clue_type = $row['clue_type'];
 			$this->cust_name = $row['cust_name'];
 			$this->full_name = $row['full_name'];
-			$this->clue_label = $row['clue_label'];
+			$this->clue_tag = $row['clue_tag'];
             $this->service_type = empty($row['service_type'])?array():json_decode($row['service_type']);
 			$this->clue_status = $row['clue_status'];
 			$this->clue_code = $row['clue_code'];
@@ -310,6 +314,9 @@ class ClueForm extends CFormModel
 			$this->longitude = $row['longitude'];
 			$this->yewudalei = $row['yewudalei'];
 			$this->clue_remark = $row['clue_remark'];
+			$this->clue_level_id = $row['clue_level_id'];
+			// 从 clue_tag 字段读取逗号分隔的标签ID
+			$this->clue_tag_ids = !empty($row['clue_tag']) ? explode(',', $row['clue_tag']) : array();
 			$this->u_id = $row['u_id'];
 			$this->u_group_id = $row['u_group_id'];
 			$this->talk_city_id = $row['talk_city_id']===null?null:json_decode($row['talk_city_id'],true);
@@ -344,7 +351,7 @@ class ClueForm extends CFormModel
             }
         }
     }
-	
+
 	public function saveData()
 	{
 		$connection = Yii::app()->db;
@@ -558,5 +565,84 @@ class ClueForm extends CFormModel
         $this->clue_code=$computeList["clue_code"];
         $this->abbr_code=$computeList["abbr_code"];
         return $this->clue_code;
+    }
+
+    /**
+     * 获取客户等级列表
+     * 用于前端下拉框展示
+     * 支持生产和测试环境的数据库前缀自动区分
+     *
+     * @return array 格式: array(id => level_name)
+     */
+    public static function getClueLevelList()
+    {
+        $suffix = Yii::app()->params['envSuffix'];
+        $levelList = Yii::app()->db->createCommand()
+            ->select('id, level_name')
+            ->from("sales{$suffix}.sal_clue_level")
+            ->where('status = :status', array(':status' => 1))
+            ->order('sort ASC')
+            ->queryAll();
+
+        $options = array('' => '-- 选择等级 --');
+        if (!empty($levelList)) {
+            foreach ($levelList as $level) {
+                $options[$level['id']] = $level['level_name'];
+            }
+        }
+        return $options;
+    }
+
+    /**
+     * 获取所有可用的客户标签列表
+     * 用于表单下拉框
+     *
+     * @return array 格式: array(id => tag_name)
+     */
+    public static function getClueTagList()
+    {
+        $suffix = Yii::app()->params['envSuffix'];
+        $tagList = Yii::app()->db->createCommand()
+            ->select('id, tag_name')
+            ->from("sales{$suffix}.sal_clue_tag")
+            ->where('status = :status', array(':status' => 1))
+            ->order('sort ASC')
+            ->queryAll();
+
+        $options = array();
+        if (!empty($tagList)) {
+            foreach ($tagList as $tag) {
+                $options[$tag['id']] = $tag['tag_name'];
+            }
+        }
+        return $options;
+    }
+
+    /**
+     * 获取所有可用的客户标签列表（带颜色）
+     * 用于前端显示
+     *
+     * @return array 格式: array(id => array('name' => tag_name, 'color' => tag_color))
+     */
+    public static function getClueTagListWithColor()
+    {
+        $suffix = Yii::app()->params['envSuffix'];
+        $tagList = Yii::app()->db->createCommand()
+            ->select('id, tag_name, tag_color')
+            ->from("sales{$suffix}.sal_clue_tag")
+            ->where('status = :status', array(':status' => 1))
+            ->order('sort ASC')
+            ->queryAll();
+
+        $options = array();
+        if (!empty($tagList)) {
+            foreach ($tagList as $tag) {
+                $options[$tag['id']] = array(
+                    'name' => $tag['tag_name'],
+                    'color' => $tag['tag_color']
+                );
+            }
+        }
+        return $options;
     }
 }

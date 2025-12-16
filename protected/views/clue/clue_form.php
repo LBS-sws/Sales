@@ -152,6 +152,30 @@ $modelClass = get_class($model);
             ); ?>
         </div>
     </div>
+    <!-- ========================================== -->
+    <!-- 新增: 客户等级下拉 客户标签 -->
+    <!-- ========================================== -->
+    <div class="form-group">
+        <!-- 客户等级: 单选，需要从 sal_clue_level 表查询 -->
+        <?php echo $form->labelEx($model,'clue_level_id',array('class'=>"col-lg-2 control-label")); ?>
+        <div class="col-lg-3">
+            <?php
+            // 调用后端方法获取等级列表
+            echo $form->dropDownList($model, 'clue_level_id', ClueForm::getClueLevelList(),
+                array('readonly'=>$model->isReadonly(),'id'=>'clue_level_id')
+            ); ?>
+        </div>
+        <!-- 新增: 客户标签多选下拉框 -->
+        <?php echo $form->labelEx($model,'clue_tag_ids',array('class'=>"col-lg-2 control-label")); ?>
+        <div class="col-lg-3">
+            <?php
+            // 调用后端方法获取所有可用的标签并显示为多选下拉框
+            echo $form->dropDownList($model, 'clue_tag_ids', ClueForm::getClueTagList(),
+                array('readonly'=>$model->isReadonly(),'id'=>'clue_tag_ids','class'=>'select2','multiple'=>'multiple')
+            ); ?>
+        </div>
+    </div>
+
     <?php if ($model->clue_type==2): ?>
         <div class="form-group">
             <?php echo $form->labelEx($model,'cust_level',array('class'=>"col-lg-2 control-label")); ?>
@@ -444,6 +468,23 @@ $('#service_type').select2({
 	disabled: $disabled,
 	templateSelection: formatState
 });
+	
+// 初始化客户标签多选
+$('#clue_tag_ids').select2({
+	tags: false,
+	multiple: true,
+	maximumInputLength: 0,
+	allowClear: true,
+	language: '$lang',
+	disabled: $disabled
+});
+	
+$('#clue_level_id').select2({
+	multiple: false,
+	maximumInputLength: 0,
+	language: '$lang',
+	disabled: $disabled
+});
 EOF;
 if($model->clue_type==2){
     $js.="
@@ -475,4 +516,9 @@ Yii::app()->clientScript->registerScript('select2_1',$js,CClientScript::POS_READ
     .poppver-hint-con{ margin: -10px -15px;font-size: 12px;width: 400px;}
     .poppver-hint-con span{ float: right;width: 70px;font-weight: bold}
     .popover{ max-width: 400px !important;}
+    /* 修复 select2 标签文字颜色 */
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        color: #333;
+        background-color: #f5f5f5;
+    }
 </style>

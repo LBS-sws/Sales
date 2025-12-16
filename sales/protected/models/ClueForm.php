@@ -47,7 +47,7 @@ class ClueForm extends CFormModel
     public $talk_city_id;
     public $support_user;
     public $busine_id;
-    public $clue_label;
+    public $clue_tag;
     public $latitude;
     public $longitude;
     public $yewudalei;
@@ -78,7 +78,7 @@ class ClueForm extends CFormModel
 	{
 		$list = array(
             'clue_code'=>Yii::t('clue','clue code'),//线索编号
-            'clue_label'=>Yii::t('clue','clue label'),//线索标签（未使用)
+            'clue_tag'=>Yii::t('clue','clue label'),//线索标签（未使用)
             'cust_name'=>Yii::t('clue','customer name'),//客户名
             'full_name'=>Yii::t('clue','full name'),//客户名
             'clue_type'=>Yii::t('clue','clue type'),//线索类型
@@ -275,7 +275,7 @@ class ClueForm extends CFormModel
 			$this->clue_type = $row['clue_type'];
 			$this->cust_name = $row['cust_name'];
 			$this->full_name = $row['full_name'];
-			$this->clue_label = $row['clue_label'];
+			$this->clue_tag = $row['clue_tag'];
             $this->service_type = empty($row['service_type'])?array():json_decode($row['service_type']);
 			$this->clue_status = $row['clue_status'];
 			$this->clue_code = $row['clue_code'];

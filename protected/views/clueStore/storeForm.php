@@ -132,6 +132,23 @@
         ?>
     </div>
 </div>
+<!-- 新增: 门店客户等级和客户标签 -->
+<div class="form-group">
+    <?php echo $form->labelEx($model,'store_level_id',array('class'=>"col-lg-2 control-label")); ?>
+    <div class="col-lg-3">
+        <?php
+        echo $form->dropDownList($model, 'store_level_id', ClueStoreForm::getClueLevelList(),
+            array('readonly'=>$model->isReadonly(),'id'=>'store_level_id','class'=>'form-control')
+        ); ?>
+    </div>
+    <?php echo $form->labelEx($model,'clue_tag_ids',array('class'=>"col-lg-2 control-label")); ?>
+    <div class="col-lg-3">
+        <?php
+        echo $form->dropDownList($model, 'clue_tag_ids', ClueStoreForm::getClueTagList(),
+            array('readonly'=>$model->isReadonly(),'id'=>'clue_tag_ids','class'=>'form-control select2','multiple'=>'multiple')
+        ); ?>
+    </div>
+</div>
 <div class="form-group">
     <?php echo $form->labelEx($model,'create_staff',array('class'=>"col-lg-2 control-label")); ?>
     <div class="col-lg-2">
@@ -340,3 +357,25 @@
         ?>
     </div>
 </div>
+<?php
+$js = <<<'JS'
+$(function() {
+    // 初始化客户标签多选下拉框
+    $('#clue_tag_ids').select2({
+        tags: false,
+        multiple: true,
+        maximumInputLength: 0,
+        allowClear: true,
+        disabled: false
+    });
+});
+JS;
+Yii::app()->clientScript->registerScript('storeFormTagsInit',$js,CClientScript::POS_END);
+?>
+<style>
+    /* 修复 select2 标签文字颜色 */
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        color: #333;
+        background-color: #f5f5f5;
+    }
+</style>

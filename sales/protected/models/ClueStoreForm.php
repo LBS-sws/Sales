@@ -35,6 +35,8 @@ class ClueStoreForm extends CFormModel
 	public $u_id;
 	public $u_group_id;
 	public $yewudalei;
+	public $clue_level_id;   // 客户等级ID (从客户继承)
+	public $clue_tag_ids = array();   // 客户标签IDs (从客户继承)
 
 	public $clueHeadRow;
 
@@ -224,6 +226,14 @@ class ClueStoreForm extends CFormModel
 	    $this->create_staff=$this->clueHeadRow["rec_employee_id"];
 	    $this->yewudalei=$this->clueHeadRow["yewudalei"];
 	    $this->store_remark=$this->clueHeadRow["clue_remark"];
+	    // 仅当门店未设置等级时，从客户继承等级
+	    if (empty($this->clue_level_id) && !empty($this->clueHeadRow["clue_level_id"])) {
+	        $this->clue_level_id = $this->clueHeadRow["clue_level_id"];
+	    }
+	    // 仅当门店未设置标签时，从客户继承标签
+	    if (empty($this->clue_tag_ids) && !empty($this->clueHeadRow["clue_tag_ids"])) {
+	        $this->clue_tag_ids = $this->clueHeadRow["clue_tag_ids"];
+	    }
     }
 
 	public function retrieveData($index)

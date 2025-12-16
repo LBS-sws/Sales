@@ -114,14 +114,30 @@ class ImportForm extends CFormModel
     }
 
     public function importChangeOne() {
+        echo "[importChangeOne] 开始执行\n";
         $list = array('code'=>400,'success_num'=>0,'error_num'=>0,'msg'=>"","error_file"=>null);
         $this->status="P";
+        
+        echo "[importChangeOne] 调用formatData()...\n";
         $this->formatData();
+        echo "[importChangeOne] formatData()完成\n";
+        
+        echo "[importChangeOne] 调用initForm()...\n";
         $this->initForm();
+        echo "[importChangeOne] initForm()完成\n";
+        
+        echo "[importChangeOne] 调用validateHead()...\n";
         $this->validateHead();
+        echo "[importChangeOne] validateHead()完成，状态: ".$this->status."\n";
+        
         if($this->status=="P"){
+            echo "[importChangeOne] 调用saveBodyList()...\n";
             $this->saveBodyList();
+            echo "[importChangeOne] saveBodyList()完成\n";
+            unset($this->bodyList);
+            gc_collect_cycles();
         }else{
+            echo "[importChangeOne] 状态不为P，跳过saveBodyList()，错误信息: ".$this->message."\n";
             $list["msg"] = $this->message;
         }
         if(!empty($this->successList)){
@@ -160,30 +176,44 @@ class ImportForm extends CFormModel
             }
             $list["error_file"]=$excel->genReport();
             $excel->end();
+            // 清理错误列表内存
+            unset($this->errorList);
+            gc_collect_cycles();
         }
+        // 清理其他临时数据
+        unset($this->headList);
+        unset($this->keyList);
+        gc_collect_cycles();
         return $list;
     }
 
     protected function validateHead(){
+        echo "[validateHead] 开始验证excel头\n";
         if(!empty($this->headList)){
+            echo "[validateHead] headList不为空，整个列数: ".count($this->headList)."\n";
             foreach ($this->eveList as $row){
                 $key = array_search($row["name"],$this->headList);
                 if($key!==false){
                     $this->keyList[$row["key"]]=$key;
+                    echo "[validateHead] 找到字段 ".$row["name"]." at column ".$key."\n";
                 }else{
                     $this->status="E";
                     $this->message="第五行内未找到：".$row["name"];
+                    echo "[validateHead] 找不到字段: ".$row["name"]."\n";
                     return false;
                 }
             }
         }else{
             $this->status="E";
             $this->message="excel第五行不能为空";
+            echo "[validateHead] excel的headList为空\n";
         }
     }
 
     protected function saveBodyList(){
         if(!empty($this->bodyList)){
+            $totalCount = count($this->bodyList);
+            echo "开始保存 {$totalCount} 条记录...\n";
             foreach ($this->bodyList as $i=>$row){
                 $this->status="P";
                 $data=array();
@@ -196,9 +226,30 @@ class ImportForm extends CFormModel
                     $this->errorList[]=array("list"=>$row,"message"=>$this->message);
                 }else{
                     $this->successList[]=$i+5;
-                    $this->saveOneData($data);
+                    try {
+                        $this->saveOneData($data);
+                    } catch (Exception $e) {
+                        echo "[错误] 第 ".($i+1)." 行保存失败: ".$e->getMessage()."\n";
+                        $this->errorList[]=array("list"=>$row,"message"=>"保存失败: ".$e->getMessage());
+                    }
+                }
+                // 每处理100条记录后清理一次内存和连接缓冲
+                if(($i+1)%100==0){
+                    echo "[" .date('H:i:s'). "]已处理 " .($i+1). " / " .$totalCount. " 条\n";
+                    // 清理数据库连接缓冲区
+                    $db = Yii::app()->db;
+                    if($db->getActive()){
+                        $db->setActive(false);
+                        $db->setActive(true);
+                    }
+                    gc_collect_cycles();
+                }
+                // 每1条都输出进度
+                if($totalCount <= 10 || ($i+1)==1 || ($i+1)==$totalCount){
+                    echo "处理 ".($i+1)." 条\n";
                 }
             }
+            echo "保存 {$totalCount} 条记录完毕\n";
         }
     }
 
@@ -231,37 +282,67 @@ class ImportForm extends CFormModel
     }
 
     protected function formatData() {
+        echo "[formatData] 开始读取excel文件: ".$this->file_path."\n";
         $excel = new ExcelTool();
+        echo "[formatData] 创建 ExcelTool对象\n";
         $excel->start();
+        echo "[formatData] 调用 start()\n";
         $excel->readFile($this->file_path);
+        echo "[formatData] 读取文件完成\n";
         $this->headList=array();
         $this->bodyList=array();
         /**读取excel文件中的第一个工作表*/
         $excel->setActiveSheet(0);
         $currentSheet = $excel->getActiveSheet();
+        echo "[formatData] 获取最高列...\n";
         /**取得最大的列号*/
         $allColumn = $currentSheet->getHighestColumn();
         $allColumn = $this->getColumnToNum($allColumn);
+        echo "[formatData] 最大列号: ".$allColumn."\n";
         /**取得一共有多少行*/
         $allRow = $currentSheet->getHighestRow();
+        echo "[formatData] 最大行数: ".$allRow."\n";
+        
+        echo "[formatData] 读取第5行作为列头...\n";
         for($currentColumn= 0;$currentColumn<= $allColumn; $currentColumn++){
-            $val = $currentSheet->getCellByColumnAndRow($currentColumn,5)->getValue();/**ord()将字符转为十进制数*/
+            $val = $currentSheet->getCellByColumnAndRow($currentColumn,5)->getValue();
             $val = trim($val);
             array_push($this->headList,$val);
         }
+        echo "[formatData] headList数量: ".count($this->headList)."\n";
+        
+        echo "[formatData] 读取从第6行开始的数据...\n";
         /**从第6行开始输出，因为excel表中第一行为列名*/
+        $batchSize = 50;
+        $currentBatch = 0;
+        $startTime = time();
         for($currentRow = 6;$currentRow <= $allRow;$currentRow++){
             /**从第A列开始输出*/
             $arr = array();
             for($currentColumn= 0;$currentColumn<= $allColumn; $currentColumn++){
-                //$val = $currentSheet->getCellByColumnAndRow($currentColumn,$currentRow)->getValue();/**ord()将字符转为十进制数*/
-                $val = $currentSheet->getCellByColumnAndRow($currentColumn,$currentRow)->getCalculatedValue();//獲取公式后的結果
+                // 改用getValue()替代getCalculatedValue()以提高速度
+                $val = $currentSheet->getCellByColumnAndRow($currentColumn,$currentRow)->getValue();
+                if(is_null($val)){
+                    $val = "";
+                }
                 $val = trim($val);
                 array_push($arr,$val);
             }
             array_push($this->bodyList,$arr);
+            
+            // 每读取50行输出一次进度
+            $currentBatch++;
+            if($currentBatch % $batchSize == 0){
+                $elapsed = time() - $startTime;
+                echo "[formatData] 已读取 ".$currentBatch." 行数据 (耗时 ".$elapsed." 秒)\n";
+                // 清理内存
+                gc_collect_cycles();
+            }
         }
+        $elapsed = time() - $startTime;
+        echo "[formatData] 数据读取完成，总共 ".count($this->bodyList)." 条体数据 (耗时 ".$elapsed." 秒)\n";
         $excel->end();
+        echo "[formatData] 整个文件读取完成\n";
     }
 
     private function getColumnToNum($str){

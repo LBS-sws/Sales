@@ -106,6 +106,8 @@ class ClueHeadForm extends ClueForm
             "full_name"=>$this->full_name,
             "service_type"=>empty($this->service_type)?null:json_encode($this->service_type),
             "clue_remark"=>$this->clue_remark,
+            "clue_level_id"=>CGetName::getNumberNull($this->clue_level_id),   // 新增：客户等级ID
+            "clue_tag"=>is_array($this->clue_tag_ids) ? implode(',', $this->clue_tag_ids) : (empty($this->clue_tag_ids) ? null : $this->clue_tag_ids),
         );
         //clue_code
         if($this->getScenario()=="new"){

@@ -82,7 +82,7 @@ $this->pageTitle=Yii::app()->name . ' - Clue Store Form';
                             'submit'=>Yii::app()->createUrl('clueStore/edit',array("index"=>$model->id))));
                         ?>
                     <?php endif ?>
-                    <?php if ($model->scenario=='view' && Yii::app()->user->validRWFunction('CM11')): ?>
+                    <?php if ($model->scenario=='view' && Yii::app()->user->validRWFunction('CM04')): ?>
                         <?php echo TbHtml::button('<span class="fa fa-share"></span> 转移门店', array(
                             'color'=>TbHtml::BUTTON_COLOR_WARNING,
                             'data-toggle'=>'modal','data-target'=>'#transferStoreDialog'));
