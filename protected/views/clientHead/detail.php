@@ -152,6 +152,15 @@ $('body').on('click','.sse-form-save',function(){
             // 请求成功时的回调函数
             if(response.status==1){
                 $(obj).html(response.html);
+                $(obj).find('script').each(function(){
+                    if(this.text){
+                        $.globalEval(this.text);
+                    }else if(this.textContent){
+                        $.globalEval(this.textContent);
+                    }else if(this.innerHTML){
+                        $.globalEval(this.innerHTML);
+                    }
+                });
                 select2SSE(response);
                 showFormErrorHtml('保存成功!');
             }else{
@@ -189,6 +198,15 @@ $('body').on('click','.sse-all-form-save',function(){
             // 请求成功时的回调函数
             if(response.status==1){
                 $(obj).html(response.html);
+                $(obj).find('script').each(function(){
+                    if(this.text){
+                        $.globalEval(this.text);
+                    }else if(this.textContent){
+                        $.globalEval(this.textContent);
+                    }else if(this.innerHTML){
+                        $.globalEval(this.innerHTML);
+                    }
+                });
                 select2SSE(response);
                 showFormErrorHtml('保存成功!');
             }else{
@@ -209,6 +227,15 @@ function changeServiceRow(response){
 function clickServiceRow(response){
     if(response.htmlFlow!=''){
         $('#clueFlowAndStore').html(response.htmlFlow);
+        $('#clueFlowAndStore').find('script').each(function(){
+            if(this.text){
+                $.globalEval(this.text);
+            }else if(this.textContent){
+                $.globalEval(this.textContent);
+            }else if(this.innerHTML){
+                $.globalEval(this.innerHTML);
+            }
+        });
         select2SSE(response);
     }
 }

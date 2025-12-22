@@ -308,7 +308,8 @@ class ContForm extends CFormModel
             $this->id = null;
             $this->mh_id = null;
             $this->cont_status = 0;
-            $this->clueSSERow = CGetName::getClueSSeRowByClueServiceID($this->clue_service_id);
+            // 不分页，获取所有关联门店
+            $this->clueSSERow = CGetName::getClueSSeRowByClueServiceID($this->clue_service_id,1,0,0);
         }
     }
 
@@ -333,7 +334,8 @@ class ContForm extends CFormModel
             $this->retrieveData($row["id"]);
             $this->clueSSERow = CGetName::getContSSeRowByContID($this->id);
         }else{
-            $this->clueSSERow = CGetName::getClueSSeRowByClueServiceID($this->clue_service_id);
+            // 不分页，获取所有关联门店
+            $this->clueSSERow = CGetName::getClueSSeRowByClueServiceID($this->clue_service_id,1,0,0);
             $this->sign_type=1;
             $this->cont_status=0;
             $this->sales_id = $this->clueServiceRow["create_staff"];

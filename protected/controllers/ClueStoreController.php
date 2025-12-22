@@ -73,14 +73,10 @@ class ClueStoreController extends Controller
                 $model->attributes = $_POST['ClueStoreForm'];
                 if ($model->validate()) {
                     $model->saveData();
-                    $clientHeadModel = new ClientHeadForm("view");
-                    $clientHeadModel->id = $model->clue_id;
-                    $clientHeadModel->city = $model->city;
-                    $html = $this->renderPartial('//clientHead/dv_store',array('model'=>$clientHeadModel),true);
-                    echo CJSON::encode(array('status'=>1,'html'=>$html,'error'=>''));
+                    echo CJSON::encode(array('status'=>1,'message'=>'保存成功','data'=>array('id'=>$model->id)));
                 } else {
                     $message = CHtml::errorSummary($model);
-                    echo CJSON::encode(array('status'=>0,'html'=>'','error'=>$message));
+                    echo CJSON::encode(array('status'=>0,'error'=>$message));
                 }
             }
         }else{

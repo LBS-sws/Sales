@@ -1407,16 +1407,49 @@ class CGetName {
         return $row;
     }
 
-    //获取商机内关联的所有门店
-    public static function getClueSSeRowByClueServiceID($clue_service_id,$updateBool=1){
+    //批量获取线索内的门店（过滤掉已有报价的门店）
+    public static function getClueStoreRowsByStoreIDs($store_ids){
+        if (empty($store_ids)) {
+            return array();
+        }
         $rows = Yii::app()->db->createCommand()
+            ->select("a.*,b.invoice_header,b.tax_id,b.invoice_address")
+            ->from("sal_clue_store a")
+            ->leftJoin("sal_clue_invoice b","a.invoice_id=b.id")
+            ->where(array('in', 'a.id', $store_ids))
+            ->andWhere("(a.report_id IS NULL OR a.report_id = '')")
+            ->queryAll();
+        return $rows;
+    }
+
+    //获取商机内关联的所有门店
+    public static function getClueSSeRowByClueServiceID($clue_service_id,$updateBool=1,$page=0,$pageSize=10){
+        $query = Yii::app()->db->createCommand()
             ->select("a.id as a_id,a.update_bool,a.clue_store_id,a.busine_id,a.busine_id_text,b.*,f.invoice_header,f.tax_id,f.invoice_address,CONCAT('{$updateBool}') as rec_bool")
             ->from("sal_clue_sre_soe a")
             ->leftJoin("sal_clue_store b","a.clue_store_id=b.id")
             ->leftJoin("sal_clue_invoice f","b.invoice_id=f.id")
             ->where("a.clue_service_id=:id",array(":id"=>$clue_service_id))
-            ->order("a.id asc")->queryAll();//
+            ->order("a.id asc");
+        
+        // 如果page大于0，说明需要分页
+        if($page > 0 && $pageSize > 0){
+            $offset = ($page - 1) * $pageSize;
+            $query->limit($pageSize, $offset);
+        }
+        
+        $rows = $query->queryAll();
         return $rows;
+    }
+    
+    // 获取关联门店总数
+    public static function getClueSSeCountByClueServiceID($clue_service_id){
+        $count = Yii::app()->db->createCommand()
+            ->select("COUNT(a.id) as total")
+            ->from("sal_clue_sre_soe a")
+            ->where("a.clue_service_id=:id",array(":id"=>$clue_service_id))
+            ->queryScalar();
+        return $count ? $count : 0;
     }
 
     //获取合约内关联的所有门店
@@ -1581,7 +1614,7 @@ class CGetName {
     }
 
     //获取线索内的门店(未绑定的门店)
-    public static function getClueStoreNotSSERows($clue_id,$clue_service_id){
+    public static function getClueStoreNotSSERows($clue_id,$clue_service_id,$search='',$page=0,$pageSize=10){
         $idStr="0";
         $sseRows = Yii::app()->db->createCommand()->select("a.clue_store_id")
             ->from("sal_clue_sre_soe a")
@@ -1591,11 +1624,58 @@ class CGetName {
                 $idStr.=",".$sseRow["clue_store_id"];
             }
         }
-        $rows = Yii::app()->db->createCommand()->select("a.*,b.invoice_header,b.tax_id,b.invoice_address")
+        
+        $whereSql = "a.clue_id=:clue_id and a.id not in ($idStr) and a.z_display=1";
+        $params = array(":clue_id"=>$clue_id);
+        
+        // 添加搜索条件
+        if(!empty($search)){
+            $whereSql .= " and (a.store_name like :search or a.address like :search or a.cust_person like :search or a.cust_tel like :search)";
+            $params[":search"] = "%".$search."%";
+        }
+        
+        $query = Yii::app()->db->createCommand()->select("a.*,b.invoice_header,b.tax_id,b.invoice_address")
             ->from("sal_clue_store a")
             ->leftJoin("sal_clue_invoice b","a.invoice_id=b.id")
-            ->where("a.clue_id=:clue_id and a.id not in ($idStr) and a.z_display=1",array(":clue_id"=>$clue_id))->order("lcd asc")->queryAll();
+            ->where($whereSql, $params)
+            ->order("lcd desc");
+        
+        // 如果page大于0，说明需要分页
+        if($page > 0 && $pageSize > 0){
+            $offset = ($page - 1) * $pageSize;
+            $query->limit($pageSize, $offset);
+        }
+        
+        $rows = $query->queryAll();
         return $rows;
+    }
+    
+    // 获取未绑定门店总数
+    public static function getClueStoreNotSSECount($clue_id,$clue_service_id,$search=''){
+        $idStr="0";
+        $sseRows = Yii::app()->db->createCommand()->select("a.clue_store_id")
+            ->from("sal_clue_sre_soe a")
+            ->where("clue_service_id=:id",array(":id"=>$clue_service_id))->queryAll();
+        if($sseRows){
+            foreach ($sseRows as $sseRow){
+                $idStr.=",".$sseRow["clue_store_id"];
+            }
+        }
+        
+        $whereSql = "a.clue_id=:clue_id and a.id not in ($idStr) and a.z_display=1";
+        $params = array(":clue_id"=>$clue_id);
+        
+        // 添加搜索条件
+        if(!empty($search)){
+            $whereSql .= " and (a.store_name like :search or a.address like :search or a.cust_person like :search or a.cust_tel like :search)";
+            $params[":search"] = "%".$search."%";
+        }
+        
+        $count = Yii::app()->db->createCommand()->select("COUNT(a.id) as total")
+            ->from("sal_clue_store a")
+            ->where($whereSql, $params)
+            ->queryScalar();
+        return $count ? $count : 0;
     }
 
     //获取客户内的门店(未绑定的门店)

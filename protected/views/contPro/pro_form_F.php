@@ -55,14 +55,12 @@ $modelClass = get_class($model);
                         <?php
                         $html = "";
                         $rows = $model->clueSSERow;
-                        $storeRows = array();
                         if(!empty($rows)){
                             $html.='<tr class="hide"><td colspan="9"></td></tr>';
                             foreach ($rows as $row){
                                 $classHide = in_array($row["clue_store_id"],$model->showStore)?"":" hide";
                                 $storeList=CGetName::getClueStoreRowByStoreID($row["clue_store_id"]);
                                 $areaText = empty($storeList['area'])?0:$storeList['area'];
-                                $storeRows[]=$storeList;
                                 $busine_id_text = implode("、",$row["busine_id_text"]);
                                 $busine_id_text = CGetName::getBusineStrByText($busine_id_text);
                                 $html.="<tr data-id='{$row['clue_store_id']}' data-area='{$areaText}' class='win_sse_store {$classHide}'>";
@@ -104,7 +102,7 @@ $modelClass = get_class($model);
 
 <?php
 if($model->isReadonly()===false){
-    $this->renderPartial("//contPro/sseStoreDialog",array('storeRows'=>$storeRows,'model'=>$model));
+    $this->renderPartial("//contPro/sseStoreDialog",array('model'=>$model));
     $this->renderPartial("//cont/settingFreeJS");
 }
 ?>

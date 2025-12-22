@@ -17,6 +17,14 @@ switch(Yii::app()->language) {
     default: $lang = Yii::app()->language;
 }
 $disabled = $model->isReadonly()? 'true':'false';
+?>
+<script type="text/javascript">
+function formatState(state) {
+	var rtn = $('<span style="color:black">'+state.text+'</span>');
+	return rtn;
+}
+</script>
+<?php
 $js = <<<EOF
 $('.lookFile').on('click',function(){
     var id = $(this).data('id');
@@ -49,7 +57,7 @@ $('#busine_id').select2({
 	disabled: true,
 	templateSelection: formatState
 });
-$('#service_type_select').select2({
+$('#service_type').select2({
 	tags: false,
 	multiple: true,
 	maximumInputLength: 0,
@@ -87,8 +95,8 @@ $('.win_sse_store').click(function(){
 });
 $('form:first').submit(function(){
     var obj = {};
-    var checkStore = $('#checkStore').val();
-    checkStore = checkStore.split(',');
+    var checkStoreVal = $('#checkStore').val() || '';
+    var checkStore = checkStoreVal ? checkStoreVal.split(',') : [];
     $(".win_sse_form").each(function(){
         var store_id = ""+$(this).data('id');
         if(checkStore.indexOf(store_id)>-1){

@@ -83,7 +83,7 @@ class City extends CActiveRecord
 		return !$this->exists("region='$code'");
 	}
 	
-	public function getCurrency($code) {
+	public static function getCurrency($code) {
 		$table = 'security'.Yii::app()->params['envSuffix'].'.sec_city_info';		
 		$sql = "select field_value from $table where code='$code' and field_id='currency'";
 		$row = Yii::app()->db->createCommand($sql)->queryRow();

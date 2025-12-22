@@ -19,18 +19,18 @@ $showStoreBool = isset($showStoreBool)?$showStoreBool:true;
             );
             ?>
         </div>
-        <div class="col-lg-7">
-            <div class="btn-group <?php echo empty($storeNum)?"":"hide"?>">
-                <?php echo TbHtml::button(Yii::t("clue","add clue store"),array(
-                    'color'=>TbHtml::BUTTON_COLOR_PRIMARY,
-                    'data-load'=>Yii::app()->createUrl('clueSSE/ajaxShow'),
-                    'data-submit'=>Yii::app()->createUrl('clueSSE/ajaxSave'),
-                    'data-serialize'=>"ClueSSEForm[scenario]=new&ClueSSEForm[clue_service_id]=".$model->clue_service_id,
-                    'data-obj'=>"#clue_service_store",
-                    'class'=>'openDialogForm',
-                ));?>
-            </div>
-        </div>
+		<div class="col-lg-7">
+			<div class="btn-group <?php echo empty($storeNum)?"":"hide"?>">
+				<?php echo TbHtml::button(Yii::t("clue","add clue store"),array(
+					'color'=>TbHtml::BUTTON_COLOR_PRIMARY,
+					'data-load'=>Yii::app()->createUrl('clueSSE/ajaxShow'),
+					'data-submit'=>Yii::app()->createUrl('clueSSE/ajaxSave'),
+					'data-serialize'=>"ClueSSEForm[scenario]=new&ClueSSEForm[clue_service_id]=".$model->clue_service_id."&ClueSSEForm[clue_id]=".$model->clue_id,
+					'data-obj'=>"#clue_service_store",
+					'class'=>'openDialogForm',
+				));?>
+			</div>
+		</div>
     </div>
 <?php endif ?>
 <div class="form-group">

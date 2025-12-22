@@ -48,11 +48,16 @@ class ClientHeadForm extends ClueForm
     }
     public function setClueServiceID($clue_service_id=0){
         $staff_id = CGetName::getEmployeeIDByMy();
+        $canSelectAny = Yii::app()->user->validRWFunction('CM02') || Yii::app()->user->validRWFunction('CM10');
         if(!empty($clue_service_id)&&is_numeric($clue_service_id)){
             $row = Yii::app()->db->createCommand()->select("*")->from("sal_clue_service")
                 ->where("id=:id",array(":id"=>$clue_service_id))->queryRow();
             if($row&&$row["clue_id"]==$this->id){
                 if(ClientHeadList::isReadAll()){
+                    $this->clue_service_id = $row["id"];
+                    $this->clueServiceRow = $row;
+                    return true;
+                }elseif($canSelectAny){
                     $this->clue_service_id = $row["id"];
                     $this->clueServiceRow = $row;
                     return true;
@@ -68,8 +73,15 @@ class ClientHeadForm extends ClueForm
             }
         }
         $whereSql = "";
-        if(!ClientHeadList::isReadAll()){
-            $whereSql=" and create_staff=".$staff_id;
+        if(!ClientHeadList::isReadAll() && !$canSelectAny){
+            $groupIds = CGetName::getGroupStaffIDByStaffID($staff_id);
+            $groupIds[] = $staff_id;
+            $groupIds = array_values(array_unique(array_filter($groupIds)));
+            if(!empty($groupIds)){
+                $whereSql = " and create_staff in (".implode(",", $groupIds).")";
+            }else{
+                $whereSql = " and create_staff=".$staff_id;
+            }
         }
         $row = Yii::app()->db->createCommand()->select("*")->from("sal_clue_service")
             ->where("clue_id=:id {$whereSql}",array(":id"=>$this->id))
@@ -79,6 +91,13 @@ class ClientHeadForm extends ClueForm
             $this->clueServiceRow = $row;
             return true;
         }
+        // 初始化空的商机数据，避免视图访问时出错
+        $this->clue_service_id = 0;
+        $this->clueServiceRow = array(
+            'id' => 0,
+            'service_status' => 0,
+            'total_amt' => 0
+        );
         return true;
     }
 

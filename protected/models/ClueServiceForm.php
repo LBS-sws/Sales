@@ -197,6 +197,50 @@ class ClueServiceForm extends CFormModel
 		return true;
 	}
 
+    /**
+     * 获取商机数据（用于异步加载）
+     */
+    public static function getServiceData($clueModel){
+        $whereSql="";
+        if(ClientHeadList::isReadAll()){
+            //全部
+        }else{
+            $staff_id = CGetName::getEmployeeIDByMy();
+            $groupIdStr = CGetName::getGroupStaffIDByStaffID($staff_id);
+            $groupIdStr = !empty($groupIdStr)?implode(",",$groupIdStr):$staff_id;
+            $whereSql.=" and create_staff in ({$groupIdStr}) ";
+        }
+        
+        $rows = Yii::app()->db->createCommand()->select("*")
+            ->from("sal_clue_service")
+            ->where("clue_id=:clue_id {$whereSql}",array(":clue_id"=>$clueModel->id))
+            ->order("id desc")
+            ->queryAll();
+            
+        $services = array();
+        if($rows){
+            foreach($rows as $row){
+                $services[] = array(
+                    'id' => $row['id'],
+                    'clue_id' => $row['clue_id'],
+                    'busine_id_text' => $row['busine_id_text'],
+                    'visit_obj_text' => $row['visit_obj_text'],
+                    'sign_odds' => $row['sign_odds'],
+                    'service_status' => $row['service_status'],
+                    'status_text' => CGetName::getServiceStatusStrByKey($row['service_status']),
+                    'active' => $clueModel->clue_service_id==$row["id"],
+                    'rpt_bool' => in_array($row["service_status"],array(2,4)), // 待报价
+                    'contract_bool' => in_array($row["service_status"],array(6,8)) // 待合同审批
+                );
+            }
+        }
+        
+        return array(
+            'services' => $services,
+            'can_add' => Yii::app()->user->validRWFunction('CM02')||Yii::app()->user->validRWFunction('CM10')
+        );
+    }
+
     public static function printClueServiceBox($modelObj,$clueModel){
         $html="";
         $whereSql="";

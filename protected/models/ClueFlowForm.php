@@ -677,49 +677,53 @@ class ClueFlowForm extends CFormModel
 
     public static function printClueFlowAndStoreBox($modelObj,$clueModel){
         $html="";
-        if(!empty($clueModel->clue_service_id)){
-            $html.="<div class='box box-info'><div class='box-body'>";
-            $tabs=array();
-            //商机跟进记录
-            $tabs[] = array(
-                'label'=>Yii::t("clue","clue service flow"),
-                'content'=>self::printClueServiceFlowBox($modelObj,$clueModel),
-                'active'=>true,
-                "id"=>"clue_service_flow"
-            );
-            //门店
-            $tabs[] = array(
-                'label'=>Yii::t("clue","clue service store"),
-                'content'=>self::printClueServiceStoreBox($modelObj,$clueModel),
-                'active'=>false,
-                "id"=>"clue_service_store"
-            );
-            $html.=TbHtml::tabbableTabs($tabs);
-            $html.="</div></div>";
-        }
+        // 即使商机ID为0，也要渲染完整的tab结构（显示空列表）
+        $html.="<div class='box box-info'><div class='box-body'>";
+        $tabs=array();
+        //商机跟进记录
+        $tabs[] = array(
+            'label'=>Yii::t("clue","clue service flow"),
+            'content'=>self::printClueServiceFlowBox($modelObj,$clueModel),
+            'active'=>true,
+            "id"=>"clue_service_flow"
+        );
+        //门店
+        $tabs[] = array(
+            'label'=>Yii::t("clue","clue service store"),
+            'content'=>self::printClueServiceStoreBox($modelObj,$clueModel),
+            'active'=>false,
+            "id"=>"clue_service_store"
+        );
+        $html.=TbHtml::tabbableTabs($tabs);
+        $html.="</div></div>";
         return $html;
     }
 
     //商机跟进记录
     public static function printClueServiceFlowBox($modelObj,$clueModel){
         $html="";
+        // 即使商机ID为0，也要渲染视图（显示空列表）
+        $rows = array();
         if(!empty($clueModel->clue_service_id)){
             $rows = Yii::app()->db->createCommand()->select("*")->from("sal_clue_flow")
                 ->where("clue_service_id=:id",array(":id"=>$clueModel->clue_service_id))
-                ->order("visit_date desc,id desc")->queryAll();//
-            $html.=$modelObj->renderPartial("//clue/clue_flow_box",array("rows"=>$rows,"model"=>$clueModel),true);
+                ->order("visit_date desc,id desc")->queryAll();
         }
+        $html.=$modelObj->renderPartial("//clue/clue_flow_box",array("rows"=>$rows,"model"=>$clueModel),true);
         return $html;
     }
 
     //门店
     public static function printClueServiceStoreBox($modelObj,$clueModel){
         $html="";
+        // 即使商机ID为0，也要渲染门店区域（显示空列表）
+        $updateBool = 1;
+        $rows = array();
         if(!empty($clueModel->clue_service_id)){
-            $updateBool = 1;
-            $rows = CGetName::getClueSSeRowByClueServiceID($clueModel->clue_service_id,$updateBool);
-            $html.=$modelObj->renderPartial("//clue/clue_store_box",array("rows"=>$rows,"model"=>$clueModel),true);
+            // 不分页，获取所有关联门店（page=0表示不分页）
+            $rows = CGetName::getClueSSeRowByClueServiceID($clueModel->clue_service_id,$updateBool,0,0);
         }
+        $html.=$modelObj->renderPartial("//clue/clue_store_box",array("rows"=>$rows,"model"=>$clueModel),true);
         return $html;
     }
 

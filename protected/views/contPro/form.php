@@ -47,8 +47,9 @@ $this->pageTitle=Yii::app()->name . ' - Clue Head Form';
         }else{
             $backUrl = Yii::app()->createUrl('contPro/index');
         }
-        echo TbHtml::button('<span class="fa fa-reply"></span> '.Yii::t('misc','Back'), array(
-				'submit'=>$backUrl));
+        echo TbHtml::link('<span class="fa fa-reply"></span> '.Yii::t('misc','Back'), $backUrl, array(
+                'class'=>'btn btn-default'
+        ));
 		?>
         <?php if ($model->scenario!='view'&&in_array($model->pro_status,array(0,9))): ?>
             <?php echo TbHtml::button('<span class="fa fa-save"></span> '.Yii::t('clue','draft'), array(

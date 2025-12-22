@@ -16,6 +16,14 @@ switch(Yii::app()->language) {
     default: $lang = Yii::app()->language;
 }
 $disabled = $model->isReadonly()? 'true':'false';
+?>
+<script type="text/javascript">
+function formatState(state) {
+	var rtn = $('<span style="color:black">'+state.text+'</span>');
+	return rtn;
+}
+</script>
+<?php
 $js = <<<EOF
 $('.lookFile').on('click',function(){
     var id = $(this).data('id');
@@ -42,7 +50,7 @@ $('#busine_id').select2({
 	disabled: true,
 	templateSelection: formatState
 });
-$('#service_type_select').select2({
+$('#service_type').select2({
 	tags: false,
 	multiple: true,
 	maximumInputLength: 0,

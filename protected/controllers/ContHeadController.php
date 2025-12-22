@@ -28,7 +28,7 @@ class ContHeadController extends Controller
                 'expression'=>array('ContHeadController','allowReadWrite'),
             ),
             array('allow',
-                'actions'=>array('index','view','detail','resetStatus','sendFile'),
+                'actions'=>array('index','view','detail','resetStatus','sendFile','ajaxLoadStores'),
                 'expression'=>array('ContHeadController','allowReadOnly'),
             ),
             array('deny',  // deny all users
@@ -277,6 +277,75 @@ class ContHeadController extends Controller
         }else{
             $this->redirect(Yii::app()->createUrl('contHead/index'));
         }
+    }
+
+    /**
+     * 异步加载合同关联门店列表
+     */
+    public function actionAjaxLoadStores()
+    {
+        $cont_id = isset($_GET['cont_id']) ? intval($_GET['cont_id']) : 0;
+        $pageNum = isset($_GET['page']) ? intval($_GET['page']) : 1;
+        $searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
+        
+        if (empty($cont_id)) {
+            echo json_encode(array('status' => 'error', 'message' => '合同ID不能为空'));
+            Yii::app()->end();
+        }
+
+        // 使用分页模型查询
+        $storeModel = new ContStoreList();
+        $storeModel->searchKeyword = $searchKeyword;
+        $storeModel->cont_id = $cont_id;
+        $storeModel->retrieveDataByPage($pageNum);
+        
+        $storeList = array();
+        foreach ($storeModel->attr as $row) {
+            $person = $row["cust_person"];
+            $person.= !empty($row["cust_person_role"])?" ({$row["cust_person_role"]})":"";
+            $person.= !empty($row["cust_tel"])?" {$row["cust_tel"]}":"";
+            
+            $virLists = CGetName::getContractVirRowsByContIDAndStoreID($row["cont_id"],$row["id"]);
+            $checkID = array();
+            $virtualCodes = array();
+            
+            if($virLists){
+                foreach ($virLists as $virList){
+                    if($virList["service_fre_type"]==3&&in_array($virList["vir_status"],array(10,30))){
+                        if(!in_array($row["id"],$checkID)){
+                            $checkID[]=$row["id"];
+                        }
+                    }
+                    $virtualCodes[] = array(
+                        'id' => $virList['id'],
+                        'code' => $virList['vir_code']
+                    );
+                }
+            }
+            
+            $storeList[] = array(
+                'id' => $row['id'],
+                'store_code' => $row['store_code'],
+                'store_name' => $row['store_name'],
+                'cust_class' => CGetName::getCustClassStrByKey($row['cust_class']),
+                'district' => CGetName::getDistrictStrByKey($row['district']),
+                'address' => $row['address'],
+                'person' => $person,
+                'store_status' => CGetName::getClueStoreStatusByKey($row['store_status']),
+                'virtual_codes' => $virtualCodes,
+                'can_check' => !empty($checkID),
+                'check_id' => implode(',', $checkID)
+            );
+        }
+
+        echo json_encode(array(
+            'status' => 'success',
+            'data' => $storeList,
+            'pageNum' => $storeModel->pageNum,
+            'totalRow' => $storeModel->totalRow,
+            'noOfPages' => $storeModel->noOfPages
+        ));
+        Yii::app()->end();
     }
 
     public static function allowReadWrite() {
