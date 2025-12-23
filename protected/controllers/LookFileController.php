@@ -106,6 +106,7 @@ class LookFileController extends Controller
             $fileExt = explode(".",$fileExt);
             $fileExt =".".end($fileExt);
             $fileName = $model->lookFileRow["file_name"];
+            $fileName = str_replace("&","_",$fileName);
             $fileName = strpos($fileName,$fileExt)!==false?$fileName:($fileName.$fileExt);
             $fileName= iconv('utf-8','gbk//ignore',$fileName);
             $file_path = $model->lookFileRow["phy_path_name"]."/".$model->lookFileRow["phy_file_name"];
