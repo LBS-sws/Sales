@@ -23,7 +23,7 @@ $this->pageTitle=Yii::app()->name . ' - Clue Head Form';
         .col-lg-right{ padding-right: 0px;}
         .col-lg-left{ padding-left: 0px;}
     }
-    .cust-search-div{ position: absolute;top: 0px;left: 0px;width: 600px;display: none;background: #fff;}
+    .cust-search-div{ position: absolute;top: 0px;left: 0px;width: 800px;display: none;background: #fff;}
     .cust-search-div .list-group{ max-height: 200px;overflow: scroll;border: 1px solid #d2d6de;margin: 0px;}
     .cust-search-div .list-group-item{ padding: 5px 15px;border-radius: 0px;}
     .bat_phone_div_click.open{ }

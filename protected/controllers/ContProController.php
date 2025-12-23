@@ -24,11 +24,11 @@ class ContProController extends Controller
     {
         return array(
             array('allow',
-                'actions'=>array('save','edit','new','delete','saveSeal','ajaxLoadSseStores'),
+                'actions'=>array('save','edit','new','delete','saveSeal','ajaxLoadSseStores','ajaxRenderSseStoreRows','ajaxGetSseStoreRows'),
                 'expression'=>array('ContProController','allowReadWrite'),
             ),
             array('allow',
-                'actions'=>array('index','view','compare','resetFile','ajaxLoadSseStores'),
+                'actions'=>array('index','view','compare','resetFile','ajaxLoadSseStores','ajaxRenderSseStoreRows','ajaxGetSseStoreRows'),
                 'expression'=>array('ContProController','allowReadOnly'),
             ),
             array('deny',  // deny all users
@@ -53,6 +53,18 @@ class ContProController extends Controller
         $cont_id = isset($_GET['cont_id']) ? intval($_GET['cont_id']) : 0;
         $pro_type = isset($_GET['pro_type']) ? trim($_GET['pro_type']) : '';
         $type = isset($_GET['type']) ? trim($_GET['type']) : '';
+        $pageNum = isset($_GET['page']) ? intval($_GET['page']) : 1;
+        $searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
+        $pageSize = isset($_GET['pageSize']) ? intval($_GET['pageSize']) : 0;
+        if ($pageNum <= 0) {
+            $pageNum = 1;
+        }
+        if ($pageSize <= 0) {
+            $pageSize = 30;
+        }
+        if ($pageSize > 200) {
+            $pageSize = 200;
+        }
 
         if (empty($cont_id)) {
             header('Content-Type: application/json; charset=UTF-8');
@@ -132,12 +144,13 @@ class ContProController extends Controller
         $storeModel = new ContProStoreList();
         $storeModel->cont_id = $cont_id;
         $storeModel->pro_id = $pro_id;
+        $storeModel->searchKeyword = $searchKeyword;
+        $storeModel->noOfItem = $pageSize;
 
         // 如果有门店ID限制，添加到查询条件
         $storeModel->storeIds = $storeIds;
 
-        $storeModel->noOfItem = 999999;
-        $storeModel->retrieveDataByPage(1);
+        $storeModel->retrieveDataByPage($pageNum);
 
         $storeList = array();
         foreach ($storeModel->attr as $storeInfo) {
@@ -160,6 +173,254 @@ class ContProController extends Controller
             'pageNum' => $storeModel->pageNum,
             'totalRow' => $storeModel->totalRow,
             'noOfPages' => $storeModel->noOfPages
+        ));
+        Yii::app()->end();
+    }
+
+    public function actionAjaxGetSseStoreRows()
+    {
+        $pro_id = isset($_GET['pro_id']) ? intval($_GET['pro_id']) : 0;
+        $cont_id = isset($_GET['cont_id']) ? intval($_GET['cont_id']) : 0;
+        $pro_type = isset($_GET['pro_type']) ? trim($_GET['pro_type']) : '';
+        $type = isset($_GET['type']) ? trim($_GET['type']) : '';
+        $store_ids = isset($_GET['store_ids']) ? trim($_GET['store_ids']) : '';
+
+        header('Content-Type: application/json; charset=UTF-8');
+
+        if (empty($cont_id)) {
+            echo CJSON::encode(array('status' => 'error', 'message' => '合同ID不能为空'));
+            Yii::app()->end();
+        }
+
+        $ids = array();
+        if (!empty($store_ids)) {
+            $parts = explode(',', $store_ids);
+            foreach ($parts as $p) {
+                $p = trim($p);
+                if ($p !== '' && ctype_digit($p)) {
+                    $ids[] = intval($p);
+                }
+            }
+            $ids = array_values(array_unique($ids));
+        }
+
+        if (empty($ids)) {
+            echo CJSON::encode(array('status' => 'error', 'message' => '门店ID不能为空'));
+            Yii::app()->end();
+        }
+
+        if (empty($pro_type) && !empty($type)) {
+            $pro_type = $type;
+        }
+        if (empty($pro_type)) {
+            $pro_type = 'C';
+        }
+
+        if (!empty($pro_id)) {
+            $model = new ContProForm('view');
+            if (!$model->retrieveData($pro_id)) {
+                echo CJSON::encode(array('status' => 'error', 'message' => '变更记录不存在'));
+                Yii::app()->end();
+            }
+            $model->pro_type = $pro_type;
+            $model->getUpdateClueServiceRow();
+        } else {
+            $model = new ContProForm('new');
+            $model->cont_id = $cont_id;
+            $model->pro_status = 0;
+            $model->validateContID('cont_id', '');
+            if ($model->hasErrors()) {
+                $errors = $model->getErrors();
+                $firstMsg = '加载失败';
+                foreach ($errors as $fieldErrors) {
+                    if (is_array($fieldErrors) && !empty($fieldErrors[0])) {
+                        $firstMsg = $fieldErrors[0];
+                        break;
+                    }
+                }
+                echo CJSON::encode(array('status' => 'error', 'message' => $firstMsg));
+                Yii::app()->end();
+            }
+            $model->pro_type = $pro_type;
+            $model->getUpdateClueServiceRow();
+        }
+
+        $rows = $model->clueSSERow;
+        $data = array();
+        $notFound = array();
+
+        foreach ($ids as $sid) {
+            $sidStr = '' . $sid;
+            if (!isset($rows[$sidStr])) {
+                $notFound[] = $sid;
+                continue;
+            }
+            $row = $rows[$sidStr];
+            $storeList = CGetName::getClueStoreRowByStoreID($row["clue_store_id"]);
+            if (empty($storeList)) {
+                $notFound[] = $sid;
+                continue;
+            }
+
+            $service = array();
+            if (!empty($row["detail_json"]) && is_array($row["detail_json"])) {
+                foreach ($row["detail_json"] as $detailJson) {
+                    if (is_array($detailJson)) {
+                        foreach ($detailJson as $k => $v) {
+                            $service[$k] = $v;
+                        }
+                    }
+                }
+            }
+
+            $busine_id_text = implode("、", $row["busine_id_text"]);
+            $busine_id_text = CGetName::getBusineStrByText($busine_id_text);
+
+            $data[] = array(
+                'id' => $row['clue_store_id'],
+                'store_name' => $storeList["store_name"],
+                'district' => CGetName::getDistrictStrByKey($storeList["district"]),
+                'address' => $storeList["address"],
+                'cust_person' => $storeList["cust_person"],
+                'cust_tel' => $storeList["cust_tel"],
+                'invoice_header' => $storeList["invoice_header"],
+                'tax_id' => $storeList["tax_id"],
+                'invoice_address' => $storeList["invoice_address"],
+                'busine_text' => $busine_id_text,
+                'sales' => CGetName::getEmployeeNameByKey($row["sales_id"]),
+                'area' => empty($storeList['area']) ? 0 : $storeList['area'],
+                'area_text' => CGetName::getAreaStrByArea($storeList["area"]),
+                'service' => $service,
+            );
+        }
+
+        echo CJSON::encode(array(
+            'status' => 'success',
+            'data' => $data,
+            'notFound' => $notFound,
+        ));
+        Yii::app()->end();
+    }
+
+    public function actionAjaxRenderSseStoreRows()
+    {
+        $pro_id = isset($_GET['pro_id']) ? intval($_GET['pro_id']) : 0;
+        $cont_id = isset($_GET['cont_id']) ? intval($_GET['cont_id']) : 0;
+        $pro_type = isset($_GET['pro_type']) ? trim($_GET['pro_type']) : '';
+        $type = isset($_GET['type']) ? trim($_GET['type']) : '';
+        $store_ids = isset($_GET['store_ids']) ? trim($_GET['store_ids']) : '';
+
+        header('Content-Type: application/json; charset=UTF-8');
+
+        if (empty($cont_id)) {
+            echo CJSON::encode(array('status' => 'error', 'message' => '合同ID不能为空'));
+            Yii::app()->end();
+        }
+
+        $ids = array();
+        if (!empty($store_ids)) {
+            $parts = explode(',', $store_ids);
+            foreach ($parts as $p) {
+                $p = trim($p);
+                if ($p !== '' && ctype_digit($p)) {
+                    $ids[] = intval($p);
+                }
+            }
+            $ids = array_values(array_unique($ids));
+        }
+
+        if (empty($ids)) {
+            echo CJSON::encode(array('status' => 'error', 'message' => '门店ID不能为空'));
+            Yii::app()->end();
+        }
+
+        if (empty($pro_type) && !empty($type)) {
+            $pro_type = $type;
+        }
+        if (empty($pro_type)) {
+            $pro_type = 'C';
+        }
+
+        if (!empty($pro_id)) {
+            $model = new ContProForm('view');
+            if (!$model->retrieveData($pro_id)) {
+                echo CJSON::encode(array('status' => 'error', 'message' => '变更记录不存在'));
+                Yii::app()->end();
+            }
+            $model->pro_type = $pro_type;
+            $model->getUpdateClueServiceRow();
+        } else {
+            $model = new ContProForm('new');
+            $model->cont_id = $cont_id;
+            $model->pro_status = 0;
+            $model->validateContID('cont_id', '');
+            if ($model->hasErrors()) {
+                $errors = $model->getErrors();
+                $firstMsg = '加载失败';
+                foreach ($errors as $fieldErrors) {
+                    if (is_array($fieldErrors) && !empty($fieldErrors[0])) {
+                        $firstMsg = $fieldErrors[0];
+                        break;
+                    }
+                }
+                echo CJSON::encode(array('status' => 'error', 'message' => $firstMsg));
+                Yii::app()->end();
+            }
+            $model->pro_type = $pro_type;
+            $model->getUpdateClueServiceRow();
+        }
+
+        $rows = $model->clueSSERow;
+        $sec_type = $model->isReadonly() === true ? 'view' : 'edit';
+
+        $html = '';
+        $notFound = array();
+        foreach ($ids as $sid) {
+            $sidStr = '' . $sid;
+            if (!isset($rows[$sidStr])) {
+                $notFound[] = $sid;
+                continue;
+            }
+            $row = $rows[$sidStr];
+            $storeList = CGetName::getClueStoreRowByStoreID($row["clue_store_id"]);
+            if (empty($storeList)) {
+                $notFound[] = $sid;
+                continue;
+            }
+
+            $areaText = empty($storeList['area']) ? 0 : $storeList['area'];
+            $busine_id_text = implode("、", $row["busine_id_text"]);
+            $busine_id_text = CGetName::getBusineStrByText($busine_id_text);
+
+            $html .= "<tr data-id='{$row['clue_store_id']}' data-area='{$areaText}' class='win_sse_store'>";
+            $html .= "<td>".$storeList["store_name"]."</td>";
+            $html .= "<td>".CGetName::getDistrictStrByKey($storeList["district"])."</td>";
+            $html .= "<td>".$storeList["address"]."</td>";
+            $html .= "<td>".$storeList["cust_person"]."</td>";
+            $html .= "<td>".$storeList["cust_tel"]."</td>";
+            $html .= "<td>".$storeList["invoice_header"]."</td>";
+            $html .= "<td>".$storeList["tax_id"]."</td>";
+            $html .= "<td>".$storeList["invoice_address"]."</td>";
+            $html .= "<td>".$busine_id_text."</td>";
+            $html .= "<td>".CGetName::getEmployeeNameByKey($row["sales_id"])."</td>";
+            $html .= "<td class='area'>".CGetName::getAreaStrByArea($storeList["area"])."</td>";
+            $html .= "</tr>";
+
+            $clueSSEModel = new ContProSSEForm($sec_type);
+            $clueSSEModel->busine_id = $row["busine_id"];
+            $clueSSEModel->service = array();
+            foreach ($row["detail_json"] as $detailJson) {
+                $clueSSEModel->service = array_merge($clueSSEModel->service, $detailJson);
+            }
+
+            $formHtml = $this->renderPartial("//contPro/sseForm", array('clueSSEModel' => $clueSSEModel, 'form' => null), true);
+            $html .= "<tr class='win_sse_form active' data-id='{$row['clue_store_id']}'><td colspan='11'>{$formHtml}</td></tr>";
+        }
+
+        echo CJSON::encode(array(
+            'status' => 'success',
+            'html' => $html,
+            'notFound' => $notFound,
         ));
         Yii::app()->end();
     }

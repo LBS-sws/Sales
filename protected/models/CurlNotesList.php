@@ -243,7 +243,7 @@ class CurlNotesList extends CListPageModel
                     $model = new CurlNotesByStore();
                     $model->outData = json_decode($row["out_content"],true);
                     $model->status_type=$row["status_type"];
-                    $model->endData();
+                    $model->endPersonData();
                     break;
                 case "contVir"://虚拟合约同步
                     $model = new CurlNotesByVir();

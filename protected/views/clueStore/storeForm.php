@@ -159,7 +159,11 @@
                 "class"=>'form-control','readonly'=>true
             ));
         }else{
-            echo $form->dropDownList($model,'create_staff',CGetName::getAssignEmployeeAllList($model->create_staff),array(
+            $staffList = array();
+            if (!empty($model->create_staff)) {
+                $staffList[$model->create_staff] = CGetName::getEmployeeNameByKey($model->create_staff);
+            }
+            echo $form->dropDownList($model,'create_staff',$staffList,array(
                 "class"=>'form-control','readonly'=>$model->isReadOnly(),'id'=>'create_staff','empty'=>''
             ));
         }

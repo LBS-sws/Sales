@@ -24,11 +24,11 @@ class ClueStoreController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('index','storeList','new','edit','view','detail','save','delete','ajaxShow','ajaxSave','transferStore','SearchTargetCustomer'),
+				'actions'=>array('index','storeList','new','edit','view','detail','save','delete','ajaxShow','ajaxSave','transferStore','SearchTargetCustomer','SearchClueOrClient','SearchAssignEmployee'),
 				'expression'=>array('ClueStoreController','allowStoreReadWrite'),
 			),
 			array('allow',
-				'actions'=>array('index','storeList','view','detail','ajaxShow'),
+				'actions'=>array('index','storeList','view','detail','ajaxShow','SearchAssignEmployee'),
 				'expression'=>array('ClueStoreController','allowStoreReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -334,6 +334,103 @@ class ClueStoreController extends Controller
 			throw new CHttpException(400, 'Bad Request');
 		}
 	}
+
+    public function actionSearchClueOrClient()
+    {
+        if (!self::allowStoreReadWrite()) {
+            echo CJSON::encode(array('results' => array()));
+            Yii::app()->end();
+        }
+
+        if (!Yii::app()->request->isAjaxRequest) {
+            throw new CHttpException(400, 'Bad Request');
+        }
+
+        $keyword = isset($_POST['keyword']) ? trim($_POST['keyword']) : '';
+        if (empty($keyword) || mb_strlen($keyword, 'UTF-8') < 1) {
+            echo CJSON::encode(array('results' => array()));
+            Yii::app()->end();
+        }
+
+        $staff_id = CGetName::getEmployeeIDByMy();
+        $groupIdArr = CGetName::getGroupStaffIDByStaffID($staff_id);
+        $groupIdStr = implode(",", $groupIdArr);
+
+        $whereSql = "del_num=0 and rec_type=1";
+        $params = array(":keyword" => "%{$keyword}%");
+        if(ClueHeadList::isReadAll()){
+            $citylist = Yii::app()->user->city_allow();
+            $whereSql.=" and city in ({$citylist}) ";
+        }else{
+            $whereSql.=" and rec_employee_id in ({$groupIdStr})";
+        }
+        $whereSql .= " and (cust_name like :keyword or clue_code like :keyword)";
+
+        $rows = Yii::app()->db->createCommand()->select("id,clue_code,cust_name")
+            ->from("sal_clue")
+            ->where($whereSql, $params)
+            ->order("table_type desc,lcd desc,id desc")
+            ->limit(50)
+            ->queryAll();
+
+        $results = array();
+        if($rows){
+            foreach ($rows as $row){
+                $results[] = array(
+                    "id" => $row["id"],
+                    "text" => "({$row["clue_code"]}) {$row["cust_name"]}",
+                );
+            }
+        }
+
+        echo CJSON::encode(array('results' => $results));
+        Yii::app()->end();
+    }
+
+    public function actionSearchAssignEmployee()
+    {
+        if (!self::allowStoreReadOnly()) {
+            echo CJSON::encode(array('results' => array()));
+            Yii::app()->end();
+        }
+
+        if (!Yii::app()->request->isAjaxRequest) {
+            throw new CHttpException(400, 'Bad Request');
+        }
+
+        $keyword = isset($_POST['keyword']) ? trim($_POST['keyword']) : '';
+        if ($keyword === '' || mb_strlen($keyword, 'UTF-8') < 1) {
+            echo CJSON::encode(array('results' => array()));
+            Yii::app()->end();
+        }
+
+        $suffix = Yii::app()->params['envSuffix'];
+        $rows = Yii::app()->db->createCommand()
+            ->select("b.id,b.code,b.name")
+            ->from("hr{$suffix}.hr_binding a")
+            ->leftJoin("hr{$suffix}.hr_employee b", "a.employee_id=b.id")
+            ->leftJoin("security{$suffix}.sec_user_access f", "a.user_id=f.username and f.system_id='sal'")
+            ->where("(b.staff_status!=-1 and f.a_read_write like '%CM02%') and (b.name like :keyword or b.code like :keyword)", array(
+                ":keyword" => "%{$keyword}%",
+            ))
+            ->group("b.id,b.code,b.name")
+            ->order("b.city,b.entry_time,b.id")
+            ->limit(50)
+            ->queryAll();
+
+        $results = array();
+        if ($rows) {
+            foreach ($rows as $row) {
+                $results[] = array(
+                    "id" => $row["id"],
+                    "text" => $row["name"] . " ({$row["code"]})",
+                );
+            }
+        }
+
+        echo CJSON::encode(array('results' => $results));
+        Yii::app()->end();
+    }
 
 	/**
 	 * 转移门店及其关联合约

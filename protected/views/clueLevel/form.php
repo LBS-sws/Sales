@@ -85,7 +85,7 @@ $this->breadcrumbs=array(
 			<div class="form-group">
 				<?php echo $form->labelEx($model,'level_desc',array('class'=>"control-label")); ?>
 				<div>
-					<?php echo $form->textArea($model,'level_desc',array('class'=>'form-control','rows'=>3,'style'=>'max-width:600px')); ?>
+					<?php echo $form->textArea($model,'level_desc',array('class'=>'form-control','rows'=>3,'style'=>'max-width:800px')); ?>
 					<?php echo $form->error($model,'level_desc'); ?>
 				</div>
 			</div>

@@ -46,6 +46,14 @@ class ClueRptForm extends CFormModel
 	public $lookFileRow;
 	public $goMhWebUrl;
 
+    public function getRptHistoryRows(){
+        $rows = Yii::app()->db->createCommand()->select("id,lcd,clue_service_id,total_amt,rpt_status,mh_id,sales_id")
+            ->from("sal_clue_rpt")
+            ->where("clue_service_id=:clue_service_id",array(":clue_service_id"=>$this->clue_service_id))
+            ->order("id desc")->queryAll();
+        return $rows ? $rows : array();
+    }
+
     /**
 	 * Declares customized attribute labels.
 	 * If not declared here, an attribute would have a label that is
@@ -186,14 +194,19 @@ class ClueRptForm extends CFormModel
     }
 
     public function validateID($attribute, $param) {
-        $row = Yii::app()->db->createCommand()->select("*")->from("sal_clue_rpt")
-            ->where("clue_service_id=:id",array(":id"=>$this->clue_service_id))
-            ->queryRow();
+        if(empty($this->id)){
+            $this->mh_id = null;
+            return;
+        }
+        $row = Yii::app()->db->createCommand()->select("id,mh_id")->from("sal_clue_rpt")
+            ->where("id=:id and clue_service_id=:clue_service_id",array(
+                ":id"=>$this->id,
+                ":clue_service_id"=>$this->clue_service_id,
+            ))->queryRow();
         if($row){
-            $this->id = $row["id"];
             $this->mh_id = $row["mh_id"];
         }else{
-            $this->mh_id = null;
+            $this->addError($attribute, "报价记录不存在，请刷新重试");
         }
     }
 

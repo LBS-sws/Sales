@@ -24,11 +24,11 @@ class SalesGroupController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('edit','save'),
+				'actions'=>array('edit','save','searchEmployee'),
 				'expression'=>array('SalesGroupController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index'),
+				'actions'=>array('index','searchEmployee'),
 				'expression'=>array('SalesGroupController','allowReadOnly'),
 			),
 			array('deny',  // deny all users
@@ -67,6 +67,48 @@ class SalesGroupController extends Controller
         var_dump($list);
         Yii::app()->end();
 	}
+
+    public function actionSearchEmployee()
+    {
+        if (!self::allowReadOnly()) {
+            echo CJSON::encode(array('results' => array()));
+            Yii::app()->end();
+        }
+
+        if (!Yii::app()->request->isAjaxRequest) {
+            throw new CHttpException(400, 'Bad Request');
+        }
+
+        $keyword = isset($_POST['keyword']) ? trim($_POST['keyword']) : '';
+        if ($keyword === '' || mb_strlen($keyword, 'UTF-8') < 1) {
+            echo CJSON::encode(array('results' => array()));
+            Yii::app()->end();
+        }
+
+        $suffix = Yii::app()->params['envSuffix'];
+        $rows = Yii::app()->db->createCommand()
+            ->select("id,code,name")
+            ->from("hr{$suffix}.hr_employee")
+            ->where("staff_status!=-1 and (name like :keyword or code like :keyword)", array(
+                ":keyword" => "%{$keyword}%",
+            ))
+            ->order("table_type asc,id asc")
+            ->limit(50)
+            ->queryAll();
+
+        $results = array();
+        if ($rows) {
+            foreach ($rows as $row) {
+                $results[] = array(
+                    "id" => $row["id"],
+                    "text" => $row["name"] . " ({$row["code"]})",
+                );
+            }
+        }
+
+        echo CJSON::encode(array('results' => $results));
+        Yii::app()->end();
+    }
 
 	public function actionView()
 	{

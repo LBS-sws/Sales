@@ -164,7 +164,11 @@ class ClientPersonForm extends CFormModel
                 ),"id=:id",array(":id"=>$this->id));
                 break;
             case "delete":
-                $connection->createCommand()->delete("sal_clue_person","id=:id",array(":id"=>$this->id));
+                $connection->createCommand()->update("sal_clue_person",array(
+                    "z_display"=>0,
+                    "status"=>4,
+                    "luu"=>$uid,
+                ),"id=:id",array(":id"=>$this->id));
         }
         $this->sendDataByU();
 		return true;

@@ -105,7 +105,8 @@ class ClueFlowForm extends CFormModel
     public function validateSignOdds($attribute, $param) {
         if($this->clue_type==2){//KA线索
             $rptRow = Yii::app()->db->createCommand()->select("*")->from("sal_clue_rpt")
-                ->where("clue_service_id=:id",array(":id"=>$this->clue_service_id))->queryRow();
+                ->where("clue_service_id=:id",array(":id"=>$this->clue_service_id))
+                ->order("id desc")->queryRow();
             if($this->getScenario()=="delete"){
                 $endFlowRow = Yii::app()->db->createCommand()->select("*")->from("sal_clue_flow")
                     ->where("clue_service_id=:clue_service_id and id!=:id",array(":clue_service_id"=>$this->clue_service_id,":id"=>$this->id))

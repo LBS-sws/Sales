@@ -229,7 +229,7 @@ class ClueServiceForm extends CFormModel
                     'service_status' => $row['service_status'],
                     'status_text' => CGetName::getServiceStatusStrByKey($row['service_status']),
                     'active' => $clueModel->clue_service_id==$row["id"],
-                    'rpt_bool' => in_array($row["service_status"],array(2,4)), // 待报价
+                    'rpt_bool' => in_array($row["service_status"],array(2,4,5)), // 待报价
                     'contract_bool' => in_array($row["service_status"],array(6,8)) // 待合同审批
                 );
             }
@@ -272,7 +272,7 @@ class ClueServiceForm extends CFormModel
                 $row["rpt_bool"] = false;//报价按钮
                 $row["contract_bool"] = false;//合同按钮
                 $row["status_text"] = "";//状态文本
-                if(in_array($row["service_status"],array(2,4))){//待报价
+                if(in_array($row["service_status"],array(2,4,5))){//待报价
                     $row["rpt_bool"] = true;
                 }elseif (in_array($row["service_status"],array(6,8))){//待合同审批
                     $row["contract_bool"] = true;

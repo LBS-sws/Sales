@@ -119,11 +119,34 @@ class ClueSSEController extends Controller
         if(Yii::app()->request->isAjaxRequest) {
             try {
                 $clue_service_id = isset($_POST['clue_service_id']) ? intval($_POST['clue_service_id']) : 0;
-                $updateType = isset($_POST['update_type']) ? $_POST['update_type'] : ''; // device/ware/pest/method
-                $updateValue = isset($_POST['update_value']) ? $_POST['update_value'] : '';
                 $storeIds = isset($_POST['store_ids']) ? $_POST['store_ids'] : array();
+                $updateValues = isset($_POST['update_values']) ? $_POST['update_values'] : null;
+                $updateType = isset($_POST['update_type']) ? $_POST['update_type'] : '';
+                $updateValue = isset($_POST['update_value']) ? $_POST['update_value'] : null;
                 
-                if(empty($clue_service_id) || empty($updateType) || empty($storeIds)){
+                if(empty($clue_service_id) || empty($storeIds) || (empty($updateValues) && empty($updateType))){
+                    echo CJSON::encode(array('status'=>0,'error'=>'参数错误'));
+                    Yii::app()->end();
+                }
+
+                if (empty($updateValues)) {
+                    $updateValues = array($updateType => $updateValue);
+                }
+
+                if (!is_array($updateValues)) {
+                    echo CJSON::encode(array('status'=>0,'error'=>'参数错误'));
+                    Yii::app()->end();
+                }
+
+                $allowTypes = array('device','ware','pest','method');
+                $applyTypes = array();
+                foreach ($updateValues as $typeKey => $valueList) {
+                    if (in_array($typeKey, $allowTypes, true)) {
+                        $applyTypes[$typeKey] = $valueList;
+                    }
+                }
+
+                if (empty($applyTypes)) {
                     echo CJSON::encode(array('status'=>0,'error'=>'参数错误'));
                     Yii::app()->end();
                 }
@@ -144,29 +167,69 @@ class ClueSSEController extends Controller
                 foreach($storeIds as $sseId){
                     $sseModel = new ClueSSEForm('edit');
                     if($sseModel->retrieveData($sseId) && $sseModel->clue_service_id == $clue_service_id){
-                        // 获取当前服务数据
-                        $service = $sseModel->service;
-                        
-                        // 根据类型更新对应字段
-                        foreach($sseModel->serviceDefinition() as $gid=>$items){
-                            $fieldKey = '';
-                            switch($updateType){
-                                case 'device':
-                                    $fieldKey = 'svc_'.$gid.'Device';
-                                    break;
-                                case 'ware':
-                                    $fieldKey = 'svc_'.$gid.'Ware';
-                                    break;
-                                case 'pest':
-                                    $fieldKey = 'svc_'.$gid.'Pest';
-                                    break;
-                                case 'method':
-                                    $fieldKey = 'svc_'.$gid.'Method';
-                                    break;
+                        $service = is_array($sseModel->service) ? $sseModel->service : array();
+
+                        $typeKeyList = array(
+                            'device' => array(),
+                            'ware' => array(),
+                            'pest' => array(),
+                            'method' => array(),
+                        );
+
+                        foreach ($sseModel->serviceDefinition() as $gid => $items) {
+                            if (!isset($items['items']) || !is_array($items['items'])) {
+                                continue;
                             }
-                            
-                            if(!empty($fieldKey)){
-                                $service[$fieldKey] = $updateValue;
+                            foreach ($items['items'] as $fid => $fv) {
+                                if (!is_array($fv) || !isset($fv['type']) || !isset($typeKeyList[$fv['type']])) {
+                                    continue;
+                                }
+                                $typeKeyList[$fv['type']][] = 'svc_'.$fid;
+                            }
+                        }
+
+                        foreach ($applyTypes as $typeKey => $valueList) {
+                            if (!is_array($valueList)) {
+                                if ($valueList === null || $valueList === '') {
+                                    $valueList = array();
+                                } else {
+                                    $valueList = array($valueList);
+                                }
+                            }
+
+                            $selectedSet = array();
+                            foreach ($valueList as $v) {
+                                $v = (string)$v;
+                                if ($v !== '') {
+                                    $selectedSet[$v] = true;
+                                }
+                            }
+
+                            $allKeys = isset($typeKeyList[$typeKey]) ? $typeKeyList[$typeKey] : array();
+                            foreach ($allKeys as $svcKey) {
+                                if (isset($selectedSet[$svcKey])) {
+                                    if ($typeKey === 'device' || $typeKey === 'ware') {
+                                        if (!array_key_exists($svcKey, $service)) {
+                                            $service[$svcKey] = '0';
+                                        }
+                                        $rmkKey = $svcKey.'_rmk';
+                                        if (!array_key_exists($rmkKey, $service)) {
+                                            $service[$rmkKey] = '';
+                                        }
+                                    } else {
+                                        $service[$svcKey] = 'Y';
+                                    }
+                                } else {
+                                    if (array_key_exists($svcKey, $service)) {
+                                        unset($service[$svcKey]);
+                                    }
+                                    if ($typeKey === 'device' || $typeKey === 'ware') {
+                                        $rmkKey = $svcKey.'_rmk';
+                                        if (array_key_exists($rmkKey, $service)) {
+                                            unset($service[$rmkKey]);
+                                        }
+                                    }
+                                }
                             }
                         }
                         

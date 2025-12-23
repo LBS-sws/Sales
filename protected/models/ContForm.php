@@ -148,9 +148,11 @@ class ContForm extends CFormModel
         seal_type_id,prioritize_seal,prioritize_service,predict_amt,pay_week,pay_type,fee_type,
         is_seal,is_renewal,con_v_type,settle_type,bill_day,receivable_day,bill_bool,area_bool,areaJson,serviceJson,
         total_sum,effect_date,stop_date,surplus_num,surplus_amt,other_sales_id,other_yewudalei','safe');
+        $list[]=array('lbs_main','required','on'=>array('draft'));
         $list[]=array('lbs_main,sales_id,yewudalei,cont_type,con_v_type,sign_date,cont_start_dt,cont_end_dt,sign_type,
         prioritize_seal,prioritize_service,predict_amt,pay_week,pay_type,fee_type,
         is_seal,settle_type,bill_day,receivable_day,bill_bool,area_bool','required','on'=>array('audit'));
+        $list[]=array('lbs_main','numerical','integerOnly'=>true,'min'=>1,'on'=>array('draft','audit'));
         $list[]=array('is_seal','validateIsSeal','on'=>array('audit'));
         $list[]=array('is_renewal','validateRenewal','on'=>array('audit'));
         $list[]=array('fee_type','validateFeeType','on'=>array('audit'));

@@ -163,21 +163,29 @@ $hasRows = !empty($rows);
                 <h4 class="modal-title">批量设置</h4>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>选择设置类型：</label>
-                    <select class="form-control" id="batch_update_type">
-                        <option value="">请选择</option>
-                        <option value="device">设备</option>
-                        <option value="ware">洁具</option>
-                        <option value="pest">标靶（虫害）</option>
-                        <option value="method">处理方式</option>
-                    </select>
+                <div class="form-group" id="batch_device_group">
+                    <label>
+                        <input type="checkbox" class="batch_apply_type" data-type="device"> 设备
+                    </label>
+                    <select class="form-control batch_value_select" id="batch_device_value" multiple disabled></select>
                 </div>
-                <div class="form-group" id="batch_update_value_group" style="display:none;">
-                    <label>设置内容：</label>
-                    <select class="form-control" id="batch_update_value" multiple>
-                    </select>
-                    <p class="help-block">请选择要应用到所选门店的内容</p>
+                <div class="form-group" id="batch_ware_group">
+                    <label>
+                        <input type="checkbox" class="batch_apply_type" data-type="ware"> 洁具
+                    </label>
+                    <select class="form-control batch_value_select" id="batch_ware_value" multiple disabled></select>
+                </div>
+                <div class="form-group" id="batch_pest_group">
+                    <label>
+                        <input type="checkbox" class="batch_apply_type" data-type="pest"> 标靶（虫害）
+                    </label>
+                    <select class="form-control batch_value_select" id="batch_pest_value" multiple disabled></select>
+                </div>
+                <div class="form-group" id="batch_method_group">
+                    <label>
+                        <input type="checkbox" class="batch_apply_type" data-type="method"> 处理方式
+                    </label>
+                    <select class="form-control batch_value_select" id="batch_method_value" multiple disabled></select>
                 </div>
                 <div class="alert alert-info">
                     <i class="fa fa-info-circle"></i> 
@@ -389,95 +397,135 @@ $('body').off('click', '#btn_batch_update').on('click', '#btn_batch_update', fun
         return;
     }
     updateSelectedCount();
-    $('#batch_update_type').val('');
-    $('#batch_update_value_group').hide();
-    $('#batch_update_value').html('').val('');
+    $('.batch_apply_type').prop('checked', false).prop('disabled', false);
+    $('#batch_device_group,#batch_ware_group,#batch_pest_group,#batch_method_group').show();
+    $('.batch_value_select').each(function(){
+        if ($(this).data('select2')) {
+            $(this).select2('destroy');
+        }
+        $(this).html('').val(null).prop('disabled', true);
+    });
+    fillBatchSelectOptions();
     $('#batchUpdateModal').modal('show');
 });
 
-// 选择类型时加载对应的选项
-$('body').off('change', '#batch_update_type').on('change', '#batch_update_type', function(){
-    var type = $(this).val();
-    if(!type){
-        $('#batch_update_value_group').hide();
-        return;
-    }
-    
-    // 获取第一个门店的服务定义来填充选项
-    var firstStoreId = $('.store_check_one:checked').first().val();
-    if(!firstStoreId){
-        alert('请先选择门店');
-        return;
-    }
-    
-    // 根据类型加载对应的选项
+function getBatchOptionsBySelector(selector){
     var options = [];
-    var selector = '';
-    
-    switch(type){
-        case 'device':
-            selector = '.changeDevice';
-            break;
-        case 'ware':
-            selector = '.changeWare';
-            break;
-        case 'pest':
-            selector = '.changePestMethod';
-            break;
-        case 'method':
-            selector = '.changePestMethod';
-            break;
-    }
-    
-    // 从现有的select2中获取选项
     var firstSelect = $(selector).first();
     if(firstSelect.length > 0){
         firstSelect.find('option').each(function(){
-            options.push({
-                value: $(this).val(),
-                text: $(this).text()
-            });
+            var v = $(this).val();
+            if(v){
+                options.push({
+                    value: v,
+                    text: $(this).text()
+                });
+            }
         });
     }
-    
-    // 填充批量设置的select
+    return options;
+}
+
+function fillBatchSelect(selectObj, options){
     var html = '';
     $.each(options, function(i, opt){
-        if(opt.value){
-            html += '<option value="' + opt.value + '">' + opt.text + '</option>';
-        }
+        html += '<option value="' + opt.value + '">' + opt.text + '</option>';
     });
-    
-    $('#batch_update_value').html(html);
-    $('#batch_update_value_group').show();
-    
-    // 初始化select2
-    $('#batch_update_value').select2({
+    if (selectObj.data('select2')) {
+        selectObj.select2('destroy');
+    }
+    selectObj.html(html).val(null);
+    selectObj.select2({
         tags: false,
         multiple: true,
         allowClear: true,
         closeOnSelect: false,
         placeholder: '请选择'
     });
+}
+
+function setBatchTypeStatus(type, options){
+    var groupObj = $('#batch_' + type + '_group');
+    var checkboxObj = $('.batch_apply_type[data-type="' + type + '"]');
+    var selectObj = $('#batch_' + type + '_value');
+    if(!options || options.length === 0){
+        checkboxObj.prop('checked', false).prop('disabled', true);
+        selectObj.prop('disabled', true);
+        groupObj.hide();
+    } else {
+        checkboxObj.prop('disabled', false);
+        selectObj.prop('disabled', true);
+        groupObj.show();
+    }
+}
+
+function fillBatchSelectOptions(){
+    var deviceOptions = getBatchOptionsBySelector('.changeDevice');
+    var wareOptions = getBatchOptionsBySelector('.changeWare');
+    var pestOptions = getBatchOptionsBySelector('.changePest');
+    var methodOptions = getBatchOptionsBySelector('.changeMethod');
+
+    fillBatchSelect($('#batch_device_value'), deviceOptions);
+    fillBatchSelect($('#batch_ware_value'), wareOptions);
+    fillBatchSelect($('#batch_pest_value'), pestOptions);
+    fillBatchSelect($('#batch_method_value'), methodOptions);
+
+    setBatchTypeStatus('device', deviceOptions);
+    setBatchTypeStatus('ware', wareOptions);
+    setBatchTypeStatus('pest', pestOptions);
+    setBatchTypeStatus('method', methodOptions);
+}
+
+$('body').off('change', '.batch_apply_type').on('change', '.batch_apply_type', function(){
+    var type = $(this).data('type');
+    var selectId = '#batch_' + type + '_value';
+    var selectObj = $(selectId);
+    var checked = $(this).prop('checked');
+    selectObj.prop('disabled', !checked);
+    if (!checked) {
+        selectObj.val(null).trigger('change');
+    }
 });
 
 // 确认批量设置
 $('body').off('click', '#btn_confirm_batch_update').on('click', '#btn_confirm_batch_update', function(){
-    var type = $('#batch_update_type').val();
-    var value = $('#batch_update_value').val();
     var storeIds = [];
+    var updateValues = {};
     
     $('.store_check_one:checked').each(function(){
         storeIds.push($(this).val());
     });
-    
-    if(!type){
-        alert('请选择设置类型');
+
+    $('.batch_apply_type:checked').each(function(){
+        var type = $(this).data('type');
+        var selectId = '#batch_' + type + '_value';
+        var values = $(selectId).val() || [];
+        if(!values || values.length === 0){
+            var typeName = '';
+            if(type === 'device') typeName = '设备';
+            if(type === 'ware') typeName = '洁具';
+            if(type === 'pest') typeName = '标靶（虫害）';
+            if(type === 'method') typeName = '处理方式';
+            alert('请选择' + (typeName ? typeName : '设置') + '内容');
+            updateValues = null;
+            return false;
+        }
+        updateValues[type] = values;
+    });
+
+    if(updateValues === null){
         return;
     }
-    
-    if(!value || value.length === 0){
-        alert('请选择设置内容');
+
+    var hasType = false;
+    for (var k in updateValues) {
+        if (updateValues.hasOwnProperty(k)) {
+            hasType = true;
+            break;
+        }
+    }
+    if(!hasType){
+        alert('请至少选择一个设置类型');
         return;
     }
     
@@ -499,8 +547,7 @@ $('body').off('click', '#btn_confirm_batch_update').on('click', '#btn_confirm_ba
         type: 'POST',
         data: {
             clue_service_id: {$clueServiceId},
-            update_type: type,
-            update_value: value,
+            update_values: updateValues,
             store_ids: storeIds
         },
         dataType: 'json',

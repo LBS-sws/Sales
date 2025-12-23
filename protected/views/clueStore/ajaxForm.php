@@ -53,7 +53,11 @@ $className = get_class($model);
     <?php echo TbHtml::label($model->getAttributeLabel("create_staff"),'',array('class'=>"col-lg-2 control-label",'required'=>true)); ?>
     <div class="col-lg-3">
         <?php
-        echo TbHtml::dropDownList("{$className}[create_staff]",$model->create_staff,CGetName::getAssignEmployeeAllList($model->create_staff),array(
+        $staffList = array();
+        if (!empty($model->create_staff)) {
+            $staffList[$model->create_staff] = CGetName::getEmployeeNameByKey($model->create_staff);
+        }
+        echo TbHtml::dropDownList("{$className}[create_staff]",$model->create_staff,$staffList,array(
             "class"=>'form-control','readonly'=>$model->isReadonly(),'id'=>'win_create_staff','empty'=>''
         ));
         ?>
@@ -312,6 +316,8 @@ $className = get_class($model);
     <?php
     $ajaxArea = Yii::app()->createAbsoluteUrl("clueHead/ajaxArea");
     $ajaxYewudalei = Yii::app()->createAbsoluteUrl("clueHead/ajaxYewudalei");
+    $ajaxEmployee = Yii::app()->createUrl("clueStore/searchAssignEmployee");
+    $disable = $model->isReadonly() ? "true" : "false";
     $js = <<<EOF
     $('#win_district').change(function(){
         $('#win_address').val($(this).val());
@@ -320,7 +326,26 @@ $('#win_create_staff').select2({
     dropdownParent: $('#open-form-Dialog'),
     multiple: false,
     maximumInputLength: 10,
-    language: 'zh-CN'
+    language: 'zh-CN',
+    disabled: {$disable},
+    ajax: {
+        url: '{$ajaxEmployee}',
+        type: 'POST',
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+            return {
+                keyword: params.term
+            };
+        },
+        processResults: function (data) {
+            return {
+                results: data.results
+            };
+        },
+        cache: true
+    },
+    placeholder: '请输入员工姓名或编号搜索'
 });
     $('#win_citySelect').change(function(){
         $.ajax({

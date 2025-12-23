@@ -19,17 +19,34 @@ $this->beginWidget('bootstrap.widgets.TbModal', array(
     <div class="form-group">
         <div class="col-lg-12">
             <?php
-            echo TbHtml::dropDownList('clue_id','',$model->clueList, array("id"=>"clue_id_select"));
+            echo TbHtml::dropDownList('clue_id','',array(), array("id"=>"clue_id_select"));
             ?>
         </div>
     </div>
 
     <?php
+    $searchUrl = Yii::app()->createUrl('clueStore/searchClueOrClient');
     $js="
 $('#clue_id_select').select2({
     dropdownParent: $('#selectClueFormDialog'),
     multiple: false,
     maximumInputLength: 10,
+    minimumInputLength: 1,
+    ajax: {
+        url: '{$searchUrl}',
+        type: 'POST',
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+            return {
+                keyword: params.term
+            };
+        },
+        processResults: function (data) {
+            return data;
+        },
+        cache: true
+    },
     language: 'zh-CN'
 });
 ";

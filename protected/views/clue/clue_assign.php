@@ -10,7 +10,7 @@ $content.= '</div></div>';
 $content.= '<div class="form-group">';
 $content.= Tbhtml::label(Yii::t('clue','rec employee'),'',array('class'=>"col-lg-4 control-label"));
 $content.= '<div class="col-lg-6">';
-$content.= Tbhtml::dropDownList("assign_employee",'', CGetName::getAssignEmployeeList(),
+$content.= Tbhtml::dropDownList("assign_employee",'', array(),
     array('id'=>"assign_employee",)
 );
 
@@ -33,6 +33,7 @@ $this->widget('bootstrap.widgets.TbModal', array(
     'show'=>false,
 ));
 
+$ajaxEmployee = Yii::app()->createUrl('clueStore/searchAssignEmployee');
 $js="
 $('#assign_type').change(function(){
     var assign_type=$(this).val();
@@ -66,7 +67,32 @@ $('#assign_type').change(function(){
         window.location.href=url;
     });
     
-$('#assign_city,#assign_employee').select2({
+$('#assign_employee').select2({
+    dropdownParent: $('#clueAssignDialog'),
+    multiple: false,
+    maximumInputLength: 10,
+    language: 'zh-CN',
+    ajax: {
+        url: '{$ajaxEmployee}',
+        type: 'POST',
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+            return {
+                keyword: params.term
+            };
+        },
+        processResults: function (data) {
+            return {
+                results: data.results
+            };
+        },
+        cache: true
+    },
+    placeholder: '请输入员工姓名或编号搜索'
+});
+
+$('#assign_city').select2({
     dropdownParent: $('#clueAssignDialog'),
     multiple: false,
     maximumInputLength: 10,

@@ -86,17 +86,32 @@ $('#{$modelClass}_area_bool').on('change','input',function() {
         $('#areaJsonDiv').addClass('hide');
     }
 });
-$('.win_sse_store').click(function(){
-    if($(this).next('tr.win_sse_form').hasClass('active')){
-        $(this).next('tr.win_sse_form').removeClass('active');
+$(document).on('click', '.win_sse_store', function(){
+    var nextRow = $(this).next('tr.win_sse_form');
+    if(nextRow.hasClass('active')){
+        nextRow.removeClass('active');
     }else{
-        $(this).next('tr.win_sse_form').addClass('active');
+        nextRow.addClass('active');
     }
 });
 $('form:first').submit(function(){
+    if(window.contProStoreLoading){
+        showFormErrorHtml('门店加载中，请稍后再提交');
+        return false;
+    }
     var obj = {};
     var checkStoreVal = $('#checkStore').val() || '';
     var checkStore = checkStoreVal ? checkStoreVal.split(',') : [];
+    for (var i = 0; i < checkStore.length; i++) {
+        var sid = $.trim(checkStore[i]);
+        if (!sid) {
+            continue;
+        }
+        if ($('.win_sse_form[data-id="' + sid + '"]').length <= 0) {
+            showFormErrorHtml('门店信息尚未加载完成，请稍后再提交');
+            return false;
+        }
+    }
     $(".win_sse_form").each(function(){
         var store_id = ""+$(this).data('id');
         if(checkStore.indexOf(store_id)>-1){
@@ -218,7 +233,7 @@ $('table').on('change','.fileVal',function() {
     var pos = filename.lastIndexOf(".");
     var str = filename.substring(pos, filename.length);
     var str1 = str.toLowerCase();
-    var fileType = "jpg|jpeg|png|xlsx|pdf|docx|txt";
+    var fileType = "jpg|jpeg|png|xlsx|pdf|docx|txt|doc|wps";
     var re = new RegExp("\.(" + fileType + ")$");
     if (!re.test(str1)) {
         showFormErrorHtml("文件格式不正确，只能上传格式为：" + fileType + "的文件。");

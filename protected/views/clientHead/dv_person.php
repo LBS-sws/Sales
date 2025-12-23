@@ -89,6 +89,28 @@ $('#personSearch').on('keypress', function(e){
     }
 });
 
+$('#personPagination').on('click', 'a[data-page]', function(e){
+    e.preventDefault();
+    var page = parseInt($(this).data('page'), 10);
+    var search = decodeURIComponent($(this).data('search') || '');
+    if(page){
+        loadClientPerson(page, search);
+    }
+});
+
+$('#personPagination').on('click', '.personPageGo', function(e){
+    e.preventDefault();
+    var maxPages = parseInt($(this).data('max'), 10) || 1;
+    var search = decodeURIComponent($(this).data('search') || '');
+    gotoPersonPage(maxPages, search);
+});
+
+$('#personPagination').on('keypress', '#personPageJump', function(e){
+    if(e.which == 13){
+        $('#personPagination .personPageGo').trigger('click');
+    }
+});
+
 function loadClientPerson(page, search){
     page = page || 1;
     search = search || '';
@@ -151,31 +173,63 @@ function loadClientPerson(page, search){
 function renderPersonPagination(pageNum, noOfPages, totalRow, search){
     var html = '';
     if(totalRow > 0){
+        var encodedSearch = encodeURIComponent(search || '');
         html += '<div style="display: inline-block;">';
         html += '共 ' + totalRow + ' 条记录 ';
         
         // 上一页
         if(pageNum > 1){
-            html += '<a href="javascript:void(0);" onclick="loadClientPerson(' + (pageNum-1) + ', \'' + search + '\')"><上一页</a> ';
+            html += '<a href="javascript:void(0);" data-page="' + (pageNum-1) + '" data-search="' + encodedSearch + '"><上一页</a> ';
         }
         
         // 页码
-        for(var i = 1; i <= noOfPages; i++){
+        var maxVisible = 7;
+        var half = Math.floor(maxVisible / 2);
+        var start = pageNum - half;
+        var end = pageNum + half;
+        if(start < 1){
+            end += (1 - start);
+            start = 1;
+        }
+        if(end > noOfPages){
+            start -= (end - noOfPages);
+            end = noOfPages;
+        }
+        if(start < 1){
+            start = 1;
+        }
+        if(noOfPages <= maxVisible){
+            start = 1;
+            end = noOfPages;
+        }
+        if(start > 1){
+            html += '<a href="javascript:void(0);" data-page="1" data-search="' + encodedSearch + '">1</a> ';
+            if(start > 2){
+                html += '<span>...</span> ';
+            }
+        }
+        for(var i = start; i <= end; i++){
             if(i == pageNum){
                 html += '<strong>' + i + '</strong> ';
             } else {
-                html += '<a href="javascript:void(0);" onclick="loadClientPerson(' + i + ', \'' + search + '\')">' + i + '</a> ';
+                html += '<a href="javascript:void(0);" data-page="' + i + '" data-search="' + encodedSearch + '">' + i + '</a> ';
             }
+        }
+        if(end < noOfPages){
+            if(end < noOfPages - 1){
+                html += '<span>...</span> ';
+            }
+            html += '<a href="javascript:void(0);" data-page="' + noOfPages + '" data-search="' + encodedSearch + '">' + noOfPages + '</a> ';
         }
         
         // 下一页
         if(pageNum < noOfPages){
-            html += '<a href="javascript:void(0);" onclick="loadClientPerson(' + (pageNum+1) + ', \'' + search + '\')">下一页></a> ';
+            html += '<a href="javascript:void(0);" data-page="' + (pageNum+1) + '" data-search="' + encodedSearch + '">下一页></a> ';
         }
         
         // 页码跳转
         html += '跳转到 <input type="number" id="personPageJump" min="1" max="' + noOfPages + '" style="width:50px;" /> 页 ';
-        html += '<button onclick="gotoPersonPage(' + noOfPages + ', \'' + search + '\')">跳转</button>';
+        html += '<button type="button" class="personPageGo" data-max="' + noOfPages + '" data-search="' + encodedSearch + '">跳转</button>';
         html += '</div>';
     }
     $('#personPagination').html(html);

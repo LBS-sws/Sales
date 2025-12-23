@@ -116,6 +116,7 @@ $link3 = Yii::app()->createAbsoluteUrl("clueHead/getcusttypelist");
 $ajaxArea = Yii::app()->createAbsoluteUrl("clueHead/ajaxArea");
 $ajaxYewudalei = Yii::app()->createAbsoluteUrl("clueHead/ajaxYewudalei");
 $disable = $model->isReadOnly()?"true":"false";
+$ajaxEmployee = Yii::app()->createUrl('clueStore/searchAssignEmployee');
 $js = <<<EOF
 $('#cust_class_group').on('change',function() {
 	var group = $(this).val();
@@ -155,10 +156,34 @@ $('#cust_class_group').on('change',function() {
             $('#invoice_type input[value="'+invoice_type+'"]').prop('checked',true).trigger('click');
         }
     });
-    $('#citySelect,#create_staff').select2({
+    $('#citySelect').select2({
         multiple: false,
         maximumInputLength: 10,
         disabled: {$disable}
+    });
+    $('#create_staff').select2({
+        multiple: false,
+        maximumInputLength: 10,
+        disabled: {$disable},
+        language: 'zh-CN',
+        ajax: {
+            url: '{$ajaxEmployee}',
+            type: 'POST',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    keyword: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results
+                };
+            },
+            cache: true
+        },
+        placeholder: '请输入员工姓名或编号搜索'
     });
     $('#district').change(function(){
         $('#address').val($(this).val());

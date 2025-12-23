@@ -127,6 +127,54 @@ $this->pageTitle=Yii::app()->name . ' - Clue Head Form';
                     </p>
                 </div>
             </div>
+            <?php
+            $rptHistoryRows = $model->getRptHistoryRows();
+            if(!empty($rptHistoryRows)){
+                ?>
+                <div class="form-group">
+                    <div class="col-lg-12">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <th width="90">ID</th>
+                                <th width="140">创建时间</th>
+                                <th width="140">报价人</th>
+                                <th width="140">状态</th>
+                                <th width="140">报价金额</th>
+                                <th width="160">门户</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <?php foreach($rptHistoryRows as $rptRow): ?>
+                                <tr>
+                                    <td>
+                                        <?php
+                                        $rptEditUrl = Yii::app()->createUrl('clueRpt/edit',array('index'=>$rptRow['id']));
+                                        echo TbHtml::link($rptRow['id'],$rptEditUrl,array('target'=>'_blank'));
+                                        ?>
+                                    </td>
+                                    <td><?php echo $rptRow['lcd']; ?></td>
+                                    <td><?php echo CGetName::getEmployeeNameByKey($rptRow['sales_id']); ?></td>
+                                    <td><?php echo CGetName::getRptStatusStrByKey($rptRow['rpt_status']); ?></td>
+                                    <td><?php echo $rptRow['total_amt']; ?></td>
+                                    <td>
+                                        <?php
+                                        if(!empty($rptRow['mh_id'])){
+                                            echo TbHtml::link(Yii::t("clue","link mh"),CGetName::getMHUrlByClueRptMHID($rptRow['mh_id']),array(
+                                                "target"=>"_blank",
+                                            ));
+                                        }
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <?php
+            }
+            ?>
             <div class="form-group">
                 <?php echo $form->labelEx($model,'cust_name',array('class'=>"col-lg-2 control-label")); ?>
                 <div class="col-lg-6">
@@ -355,7 +403,7 @@ $('table').on('change','.fileVal',function() {
     var pos = filename.lastIndexOf(".");
     var str = filename.substring(pos, filename.length);
     var str1 = str.toLowerCase();
-    var fileType = "jpg|jpeg|png|xlsx|pdf|docx|txt";
+    var fileType = "jpg|jpeg|png|xlsx|pdf|docx|txt|doc|wps";
     var re = new RegExp("\.(" + fileType + ")$");
     if (!re.test(str1)) {
         showFormErrorHtml("文件格式不正确，只能上传格式为：" + fileType + "的文件。");

@@ -138,7 +138,7 @@ $('table').on('change','.fileVal',function() {
     var pos = filename.lastIndexOf(".");
     var str = filename.substring(pos, filename.length);
     var str1 = str.toLowerCase();
-    var fileType = "jpg|jpeg|png|xlsx|pdf|docx|txt";
+    var fileType = "jpg|jpeg|png|xlsx|pdf|docx|txt|doc|wps";
     var re = new RegExp("\.(" + fileType + ")$");
     if (!re.test(str1)) {
         showFormErrorHtml("文件格式不正确，只能上传格式为：" + fileType + "的文件。");

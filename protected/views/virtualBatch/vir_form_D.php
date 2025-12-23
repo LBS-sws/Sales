@@ -5,6 +5,29 @@
 </div>
 <div class="form-group">
     <div class="col-lg-12">
+        <div class="input-group" style="max-width: 480px;">
+            <?php echo TbHtml::textField("virtualBatchStoreSearch","",array(
+                "class"=>"form-control",
+                "placeholder"=>"搜索门店名称/编号/虚拟合约号",
+                "id"=>"virtualBatchStoreSearchInput"
+            )); ?>
+            <span class="input-group-btn">
+                <?php echo TbHtml::button('<i class="fa fa-search"></i> 搜索', array(
+                    'color'=>TbHtml::BUTTON_COLOR_PRIMARY,
+                    'id'=>'btnVirtualBatchStoreSearch',
+                    'type'=>'button'
+                )); ?>
+                <?php echo TbHtml::button('<i class="fa fa-refresh"></i> 重置', array(
+                    'color'=>TbHtml::BUTTON_COLOR_DEFAULT,
+                    'id'=>'btnVirtualBatchStoreReset',
+                    'type'=>'button'
+                )); ?>
+            </span>
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-lg-12">
         <div class="table-responsive">
             <table class="table table-striped table-bordered">
                 <thead>
@@ -24,7 +47,7 @@
                     <?php endif ?>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody id="virtualBatchStoreTbody">
                 <?php
                 $html = "";
                 $rows = $model->virHeadRows;
@@ -61,5 +84,126 @@
                 </tbody>
             </table>
         </div>
+        <div id="virtualBatchStorePagination" style="text-align:center;margin-top:10px;"></div>
     </div>
 </div>
+
+<style>
+    .virbatch-page-hide { display: none !important; }
+</style>
+<?php
+$js = <<<EOF
+var virtualBatchStorePageSize = 10;
+var virtualBatchStoreCurrentPage = 1;
+var virtualBatchStoreCurrentSearch = '';
+
+function virtualBatchNormalizeText(text) {
+    return $.trim((text || '') + '').toLowerCase();
+}
+
+function virtualBatchRenderPagination(totalRow, pageNum, noOfPages) {
+    totalRow = parseInt(totalRow || 0);
+    pageNum = parseInt(pageNum || 1);
+    noOfPages = parseInt(noOfPages || 1);
+    virtualBatchStoreCurrentPage = pageNum;
+
+    var html = '';
+    if (noOfPages > 1) {
+        html += '<div style="display:inline-block;">';
+        if (pageNum > 1) {
+            html += '<a href="javascript:void(0);" class="virbatch-store-page-link" data-page="' + (pageNum - 1) + '">上一页</a> ';
+        }
+        var startPage = Math.max(1, pageNum - 2);
+        var endPage = Math.min(noOfPages, pageNum + 2);
+        for (var i = startPage; i <= endPage; i++) {
+            if (i === pageNum) {
+                html += '<span style="margin:0 5px;font-weight:bold;">' + i + '</span>';
+            } else {
+                html += '<a href="javascript:void(0);" class="virbatch-store-page-link" data-page="' + i + '" style="margin:0 5px;">' + i + '</a>';
+            }
+        }
+        if (pageNum < noOfPages) {
+            html += ' <a href="javascript:void(0);" class="virbatch-store-page-link" data-page="' + (pageNum + 1) + '">下一页</a>';
+        }
+        html += '</div>';
+        html += ' <span style="margin-left:15px;">共 ' + totalRow + ' 条记录，' + noOfPages + ' 页</span>';
+    } else if (totalRow > 0) {
+        html = '<span>共 ' + totalRow + ' 条记录</span>';
+    }
+    $('#virtualBatchStorePagination').html(html);
+}
+
+function virtualBatchApplyFilterAndPage(page) {
+    page = parseInt(page || 1);
+    if (page <= 0) {
+        page = 1;
+    }
+
+    var keyword = virtualBatchNormalizeText(virtualBatchStoreCurrentSearch);
+    var rows = $('#virtualBatchStoreTbody').find('tr');
+    var matched = [];
+
+    rows.each(function(){
+        var tr = $(this);
+        tr.removeClass('virbatch-page-hide');
+        if (!keyword) {
+            matched.push(tr);
+            return;
+        }
+        var text = virtualBatchNormalizeText(tr.text());
+        if (text.indexOf(keyword) >= 0) {
+            matched.push(tr);
+        } else {
+            tr.addClass('virbatch-page-hide');
+        }
+    });
+
+    var totalRow = matched.length;
+    var noOfPages = totalRow > 0 ? Math.max(1, Math.ceil(totalRow / virtualBatchStorePageSize)) : 1;
+    if (page > noOfPages) {
+        page = noOfPages;
+    }
+    virtualBatchStoreCurrentPage = page;
+
+    var start = (page - 1) * virtualBatchStorePageSize;
+    var end = start + virtualBatchStorePageSize;
+
+    for (var i = 0; i < matched.length; i++) {
+        if (i < start || i >= end) {
+            $(matched[i]).addClass('virbatch-page-hide');
+        }
+    }
+
+    virtualBatchRenderPagination(totalRow, page, noOfPages);
+}
+
+$('#btnVirtualBatchStoreSearch').on('click', function(){
+    virtualBatchStoreCurrentSearch = $('#virtualBatchStoreSearchInput').val() || '';
+    virtualBatchApplyFilterAndPage(1);
+});
+
+$('#virtualBatchStoreSearchInput').on('keypress', function(e){
+    if (e.which == 13) {
+        virtualBatchStoreCurrentSearch = $(this).val() || '';
+        virtualBatchApplyFilterAndPage(1);
+        return false;
+    }
+});
+
+$('#btnVirtualBatchStoreReset').on('click', function(){
+    $('#virtualBatchStoreSearchInput').val('');
+    virtualBatchStoreCurrentSearch = '';
+    virtualBatchApplyFilterAndPage(1);
+});
+
+$(document).on('click', '.virbatch-store-page-link', function(){
+    var page = parseInt($(this).data('page') || 1);
+    virtualBatchApplyFilterAndPage(page);
+});
+
+$(document).ready(function(){
+    virtualBatchApplyFilterAndPage(1);
+});
+EOF;
+Yii::app()->clientScript->registerScript('virtualBatchStorePager',$js,CClientScript::POS_READY);
+?>

@@ -22,10 +22,14 @@ class ClientReportList extends CListPageModel
         
         $sql1 = "SELECT count(DISTINCT a.id)
                 FROM sal_clue_rpt a
+                LEFT JOIN sal_clue b ON a.clue_id = b.id
+                LEFT JOIN sal_clue_service c ON a.clue_service_id = c.id
                 WHERE a.clue_id = :clue_id";
         
-        $sql2 = "SELECT a.*
+        $sql2 = "SELECT a.*, b.clue_code, c.busine_id_text
                 FROM sal_clue_rpt a
+                LEFT JOIN sal_clue b ON a.clue_id = b.id
+                LEFT JOIN sal_clue_service c ON a.clue_service_id = c.id
                 WHERE a.clue_id = :clue_id";
         
         $clause = "";
@@ -34,7 +38,7 @@ class ClientReportList extends CListPageModel
         // 如果有搜索关键词
         if (!empty($this->searchKeyword)) {
             $keyword = addslashes($this->searchKeyword);
-            $clause .= " AND (a.clue_code LIKE '%{$keyword}%' OR a.cust_name LIKE '%{$keyword}%')";
+            $clause .= " AND (b.clue_code LIKE '%{$keyword}%' OR a.cust_name LIKE '%{$keyword}%')";
         }
         
         $order = " ORDER BY a.lcd DESC";

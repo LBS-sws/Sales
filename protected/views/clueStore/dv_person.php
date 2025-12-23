@@ -56,6 +56,14 @@
                             'data-obj'=>"#store_dv_person",
                             'class'=>'openDialogForm',
                         ));
+                        $html.="&nbsp;";
+                        $html.=TbHtml::link("<span class='glyphicon glyphicon-trash'></span>",'javascript:void(0);',array(
+                            'data-load'=>Yii::app()->createUrl('clueStorePerson/ajaxDelete'),
+                            'data-submit'=>Yii::app()->createUrl('clueStorePerson/ajaxSave'),
+                            'data-serialize'=>"ClueStorePersonForm[scenario]=delete&ClueStorePersonForm[id]=".$row["id"],
+                            'data-obj'=>"#store_dv_person",
+                            'class'=>'openDialogForm',
+                        ));
                     }
                     $html.="</td>";
                     $html.="</tr>";

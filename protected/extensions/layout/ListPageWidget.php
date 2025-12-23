@@ -17,6 +17,7 @@ class ListPageWidget extends CWidget
 	public $advancedSearch = false;
 	
 	public $hasDateButton = false;
+    public $tableClass = '';
 	
 	public $record;
 	public $recordptr;
@@ -45,7 +46,8 @@ class ListPageWidget extends CWidget
 			}
 		$layout .= '</div>';
 		}
-		$layout .= '<div><table id="tblData" class="table table-hover">';
+        $tableClass = empty($this->tableClass) ? 'table table-hover' : $this->tableClass;
+		$layout .= '<div><table id="tblData" class="'.$tableClass.'">';
 		$layout .= '<thead>';
 		$layout .= $this->render($this->viewhdr, null, true);
 		$layout .= '</thead>';

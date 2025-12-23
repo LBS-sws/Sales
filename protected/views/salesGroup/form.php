@@ -134,6 +134,11 @@ $('#staffDialogOK').on('click', function (e) {
 $('.sales-group').on('click','.click-name',function(){
     $('#staffDialog .modal-title').text('修改');
     var staff=$(this).parents('.media').eq(0).data('staff');
+    var staffText=$(this).text();
+    if($('#employee_id').find('option[value=\"'+staff+'\"]').length===0){
+        var newOption = new Option(staffText, staff, true, true);
+        $('#employee_id').append(newOption);
+    }
     $('#employee_id').val(staff).trigger('change');
     $('#staffDialog').data('type',2).modal('show');
     $('.click-name').removeClass('update_click');
@@ -219,7 +224,7 @@ $this->beginWidget('bootstrap.widgets.TbModal', array(
         ?>
         <div class="col-lg-5">
             <?php
-            echo Tbhtml::dropDownList("employee_id",'',SalesGroupForm::getAllEmployeeList(),
+            echo Tbhtml::dropDownList("employee_id",'',array(),
                 array('id'=>"employee_id",'empty'=>'')
             );
             ?>
@@ -238,7 +243,25 @@ $('#employee_id').select2({
     multiple: false,
     maximumInputLength: 10,
     language: '$lang',
-    disabled: false
+    disabled: false,
+    ajax: {
+        url: '".Yii::app()->createUrl('salesGroup/searchEmployee')."',
+        type: 'POST',
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+            return {
+                keyword: params.term
+            };
+        },
+        processResults: function (data) {
+            return {
+                results: data.results
+            };
+        },
+        cache: true
+    },
+    placeholder: '请输入员工姓名或编号搜索'
 });
 ";
 Yii::app()->clientScript->registerScript('addStaffBtn',$js,CClientScript::POS_READY);

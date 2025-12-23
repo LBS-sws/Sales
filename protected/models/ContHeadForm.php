@@ -549,7 +549,7 @@ class ContHeadForm extends ContForm
             "service_fre_type"=>empty($virtualRow["service_fre_type"])?0:$virtualRow["service_fre_type"],
             "service_fre_json"=>$virtualRow["service_fre_json"],
             "service_fre_text"=>$virtualRow["service_fre_text"],
-            "lbs_main"=>$this->lbs_main,
+            "lbs_main"=>intval($this->lbs_main),
             "sign_date"=>empty($this->sign_date)?null:General::toDate($this->sign_date),
             "prioritize_service"=>$this->prioritize_service,
             "prioritize_seal"=>$this->prioritize_seal,

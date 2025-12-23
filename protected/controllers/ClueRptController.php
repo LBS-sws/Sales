@@ -114,6 +114,7 @@ class ClueRptController extends Controller
                 if($draftModel->validate()){
                     $draftModel->rpt_status = 0;
                     $draftModel->saveData();
+                    $model->id = $draftModel->id;
                     $_FILES=array();
                     $model->rptFileJson=array();
                     $model->contFileJson=array();

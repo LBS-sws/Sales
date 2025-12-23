@@ -55,11 +55,18 @@ class ClueStorePersonForm extends ClientPersonForm{
 
     //发送数据至派单系统
     public function sendDataByU(){
-        if(in_array($this->getScenario(),array("new","edit"))){
+        if(in_array($this->getScenario(),array("new","edit","delete"))){
             $uStoreModel = new CurlNotesByStore();
             if(empty($this->clientStoreRow["u_id"])){//客户未同步，则同步客户信息
                 //$uStoreModel->putDataByClientID($this->clue_id);
             }else{
+                if($this->getScenario()==="delete"){
+                    $personRow = Yii::app()->db->createCommand()->select("u_id")->from("sal_clue_person")
+                        ->where("id=:id",array(":id"=>$this->id))->queryRow();
+                    if(empty($personRow) || empty($personRow["u_id"])){
+                        return;
+                    }
+                }
                 $uStoreModel->putPersonDataByPersonID($this->id,$this->clientStoreRow);
             }
             $uStoreModel->setOutContentByData();

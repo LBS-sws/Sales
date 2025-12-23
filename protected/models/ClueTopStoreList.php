@@ -72,7 +72,6 @@ class ClueTopStoreList extends ClueStoreList
         }else{
             $clause.=" and g.rec_employee_id in ({$groupIdStr})";
         }
-        $this->setClueList($groupIdStr);
         switch ($this->flow_odds){
             case 1://我负责的
                 $clause.=" and g.rec_employee_id={$staff_id} ";
@@ -143,23 +142,4 @@ class ClueTopStoreList extends ClueStoreList
 		$session['criteria_ClueTopStoreList'] = $this->getCriteria();
 		return true;
 	}
-
-	protected function setClueList($groupIdStr){
-        $this->clueList=array();
-        $whereSql = "del_num=0 and rec_type=1";
-        if(ClueHeadList::isReadAll()){
-            $citylist = Yii::app()->user->city_allow();
-            $whereSql.=" and city in ({$citylist}) ";
-        }else{
-            $whereSql.=" and rec_employee_id in ({$groupIdStr})";
-        }
-        $rows = Yii::app()->db->createCommand()->select("id,clue_code,cust_name")
-            ->from("sal_clue")
-            ->where($whereSql)->order("table_type desc,lcd desc")->queryAll();
-        if($rows){
-            foreach ($rows as $row){
-                $this->clueList[$row["id"]] = "({$row["clue_code"]}) ".$row["cust_name"];
-            }
-        }
-    }
 }

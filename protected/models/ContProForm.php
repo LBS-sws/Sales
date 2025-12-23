@@ -239,25 +239,24 @@ class ContProForm extends ContHeadForm
 
     protected function getGoingVirByClueID(){
         $sseRows=array();
-        $rows = Yii::app()->db->createCommand()->select("*")->from("sal_clue_store")
-            ->where("clue_id=:clue_id",array(":clue_id"=>$this->clue_id))->queryAll();
+        $rows = Yii::app()->db->createCommand()
+            ->select("s.id,s.create_staff")
+            ->from("sal_clue_store s")
+            ->leftJoin("sal_contract_virtual v","v.cont_id=:cont_id and v.clue_store_id=s.id",array(":cont_id"=>$this->cont_id))
+            ->where("s.clue_id=:clue_id and v.id is null",array(":clue_id"=>$this->clue_id))
+            ->queryAll();
         if($rows){
             foreach ($rows as $row){
-                //查询是否有虚拟合同
-                $proBool = Yii::app()->db->createCommand()->select("id")->from("sal_contract_virtual")
-                    ->where("cont_id=:cont_id and clue_store_id=:clue_store_id",array(":cont_id"=>$this->cont_id,":clue_store_id"=>$row["id"]))->queryRow();
-                if(!$proBool){
-                    $clue_store_id = "".$row["id"];
-                    if(!key_exists($clue_store_id,$sseRows)){
-                        $sseRows[$clue_store_id]=array(
-                            "a_id"=>$row["id"],
-                            "clue_store_id"=>$row["id"],
-                            "sales_id"=>$row["create_staff"],
-                            "busine_id"=>$this->busine_id,
-                            "busine_id_text"=>explode("、",$this->busine_id_text),
-                            "detail_json"=>array(),
-                        );
-                    }
+                $clue_store_id = "".$row["id"];
+                if(!key_exists($clue_store_id,$sseRows)){
+                    $sseRows[$clue_store_id]=array(
+                        "a_id"=>$row["id"],
+                        "clue_store_id"=>$row["id"],
+                        "sales_id"=>$row["create_staff"],
+                        "busine_id"=>$this->busine_id,
+                        "busine_id_text"=>explode("、",$this->busine_id_text),
+                        "detail_json"=>array(),
+                    );
                 }
             }
         }

@@ -9,7 +9,11 @@ $className = get_class($model);
     <?php echo TbHtml::label($model->getAttributeLabel("employee_id"),'',array('class'=>"col-lg-4 control-label",'required'=>true)); ?>
     <div class="col-lg-4">
         <?php
-        echo TbHtml::dropDownList("{$className}[employee_id]",$model->employee_id,CGetName::getAssignEmployeeAllList(),array(
+        $staffList = array();
+        if (!empty($model->employee_id)) {
+            $staffList[$model->employee_id] = CGetName::getEmployeeNameByKey($model->employee_id);
+        }
+        echo TbHtml::dropDownList("{$className}[employee_id]",$model->employee_id,$staffList,array(
             "class"=>'form-control','id'=>'u_employee_id','readonly'=>$model->isReadonly()
         ));
         ?>
@@ -31,6 +35,24 @@ $className = get_class($model);
         dropdownParent: $('#open-form-Dialog'),
         multiple: false,
         maximumInputLength: 10,
-        disabled: false
+        disabled: <?php echo $model->isReadonly() ? 'true' : 'false'; ?>,
+        ajax: {
+            url: '<?php echo Yii::app()->createUrl("clueStore/searchAssignEmployee"); ?>',
+            type: 'POST',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    keyword: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results
+                };
+            },
+            cache: true
+        },
+        placeholder: '请输入员工姓名或编号搜索'
     });
 </script>
