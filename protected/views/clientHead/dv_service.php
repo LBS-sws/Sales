@@ -11,6 +11,9 @@
         </div>
     </div>
 </div>
+<div class="row">
+    <div class="col-lg-12 text-center" id="clue_service_pagination"></div>
+</div>
 <!--商机跟进记录、关联门店-->
 <div id="clueFlowAndStore">
     <div style="text-align:center; padding: 20px;"><i class="fa fa-spinner fa-spin"></i> 加载中...</div>
@@ -29,8 +32,10 @@ $js = <<<EOF
 });
 
 function loadClientService(){
+    var page = arguments.length > 0 ? arguments[0] : 0;
     var serviceRow = $('#clue_service_row');
     var flowDiv = $('#clueFlowAndStore');
+    var paginationDiv = $('#clue_service_pagination');
 	var serviceId = (function(){
 		var search = window.location.search || '';
 		var match = search.match(/[?&]service_id=(\d+)/);
@@ -39,13 +44,15 @@ function loadClientService(){
     
     serviceRow.html('<div style="text-align:center; padding: 20px;"><i class="fa fa-spinner fa-spin"></i> 加载中...</div>');
     flowDiv.html('<div style="text-align:center; padding: 20px;"><i class="fa fa-spinner fa-spin"></i> 加载中...</div>');
+    paginationDiv.html('');
     
     $.ajax({
         url: '{$ajaxUrl}',
         type: 'GET',
         data: {
 			clue_id: {$clueId},
-			service_id: serviceId
+			service_id: serviceId,
+            page: page
         },
         dataType: 'json',
         success: function(response){
@@ -53,6 +60,7 @@ function loadClientService(){
                 // 直接使用服务器端渲染的HTML，保持原有样式
                 if(response.html && response.html.trim() !== ''){
                     serviceRow.html(response.html);
+                    renderServicePagination(response.totalRow || 0, response.pageNum || 1, response.noOfPages || 1);
                     // 触发原有的初始化逻辑
                     if(typeof select2SSE === 'function'){
                         select2SSE(response);
@@ -85,6 +93,45 @@ function loadClientService(){
         }
     });
 }
+
+function renderServicePagination(totalRow, pageNum, noOfPages){
+    totalRow = parseInt(totalRow || 0);
+    pageNum = parseInt(pageNum || 1);
+    noOfPages = parseInt(noOfPages || 1);
+    var paginationDiv = $('#clue_service_pagination');
+
+    var html = '';
+    if(noOfPages > 1){
+        html += '<div style="display:inline-block;">';
+        if(pageNum > 1){
+            html += '<a href="javascript:void(0);" class="client-service-page-link" data-page="' + (pageNum - 1) + '">上一页</a> ';
+        }
+        var startPage = Math.max(1, pageNum - 2);
+        var endPage = Math.min(noOfPages, pageNum + 2);
+        for(var i = startPage; i <= endPage; i++){
+            if(i === pageNum){
+                html += '<span style="margin:0 5px;font-weight:bold;">' + i + '</span>';
+            }else{
+                html += '<a href="javascript:void(0);" class="client-service-page-link" data-page="' + i + '" style="margin:0 5px;">' + i + '</a>';
+            }
+        }
+        if(pageNum < noOfPages){
+            html += ' <a href="javascript:void(0);" class="client-service-page-link" data-page="' + (pageNum + 1) + '">下一页</a>';
+        }
+        html += '</div>';
+        html += ' <span style="margin-left:15px;">共 ' + totalRow + ' 条记录，' + noOfPages + ' 页</span>';
+    }else if(totalRow > 0){
+        html = '<span>共 ' + totalRow + ' 条记录</span>';
+    }
+    paginationDiv.html(html);
+}
+
+$(document).off('click', '.client-service-page-link').on('click', '.client-service-page-link', function(){
+    var page = parseInt($(this).data('page'));
+    if(page > 0){
+        loadClientService(page);
+    }
+});
 
 function loadFlowAndStore(){
     var flowDiv = $('#clueFlowAndStore');

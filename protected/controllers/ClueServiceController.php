@@ -51,6 +51,7 @@ class ClueServiceController extends Controller
                     $title=Yii::t('clue','add clue service');
                 }
                 $model->validateID("id","");
+                // 按照旧逻辑：即使验证失败也显示表单，让表单内部处理错误显示
                 $html = $this->renderPartial('//clueService/ajaxForm',array('model'=>$model),true);
             }
             echo CJSON::encode(array('status'=>1,'html'=>$html,'title'=>$title));
@@ -67,15 +68,20 @@ class ClueServiceController extends Controller
                 $model->attributes = $_POST['ClueServiceForm'];
                 $model->validateID("id","");
                 $flowModel = new ClueFlowForm("new");
+                // 按照旧逻辑：只有当 clue_type==1 时才处理 ClueFlowForm 的数据
                 if(isset($model->clueHeadRow["clue_type"])&&$model->clueHeadRow["clue_type"]==1){
                     $flowModel->attributes = isset($_POST['ClueFlowForm'])?$_POST['ClueFlowForm']:array();
                     $flowModel->clue_id=$model->clue_id;
+                    // 旧代码中 validate() 会通过 validateClueID 设置 clue_type 和 clueHeadRow
+                    // 但为了确保第82行的检查能正常工作，显式设置这些值（更安全）
+                    $flowModel->clue_type=$model->clueHeadRow["clue_type"];
+                    $flowModel->clueHeadRow=$model->clueHeadRow;
                     $flowModel->validate();
                     $flowModel->clearErrors("clue_service_id");
                 }
                 if ($model->validate()&&!$flowModel->hasErrors()) {
                     $model->saveData();
-                    if($flowModel->clue_type==1){
+                    if(isset($flowModel->clue_type)&&$flowModel->clue_type==1){
                         $flowModel->clue_service_id=$model->id;
                         $flowModel->validateClueServiceID("clue_service_id","");
                         $flowModel->saveData();

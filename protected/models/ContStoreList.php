@@ -36,17 +36,17 @@ class ContStoreList extends CListPageModel
             return true;
         }
         
-        // 通过 sal_contract_sse 关联表查询合同的门店
+        // 通过 sal_contract_sse 关联表查询合同的门店 - 使用和老逻辑相同的方式
         $sql1 = "SELECT count(DISTINCT a.id)
-                FROM sal_clue_store a
-                INNER JOIN sal_contract_sse b ON a.id = b.clue_store_id
-                WHERE b.cont_id = :cont_id
+                FROM sal_contract_sse sse
+                LEFT JOIN sal_clue_store a ON sse.clue_store_id = a.id
+                WHERE sse.cont_id = :cont_id
         ";
         
-        $sql2 = "SELECT a.*, b.cont_id
-                FROM sal_clue_store a
-                INNER JOIN sal_contract_sse b ON a.id = b.clue_store_id
-                WHERE b.cont_id = :cont_id
+        $sql2 = "SELECT a.*, sse.cont_id
+                FROM sal_contract_sse sse
+                LEFT JOIN sal_clue_store a ON sse.clue_store_id = a.id
+                WHERE sse.cont_id = :cont_id
         ";
         
         $clause = "";

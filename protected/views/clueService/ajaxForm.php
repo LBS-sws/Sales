@@ -57,6 +57,7 @@ echo $js;
 </script>
 
 <?php
+// 按照旧逻辑：直接检查 clue_type，如果为 1 则显示跟进表单
 if($model->clue_type==1){
     $flowModel = new ClueFlowForm("new");
     $flowModel->clue_id=$model->clue_id;

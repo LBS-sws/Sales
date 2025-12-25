@@ -94,6 +94,7 @@ function loadContStores(page, search) {
                 
                 if(response.data && response.data.length > 0){
                     $.each(response.data, function(index, row){
+                        
                         html += '<tr>';
                         html += '<td>';
                         if(row.can_check){

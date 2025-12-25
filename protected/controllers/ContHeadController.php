@@ -300,21 +300,21 @@ class ContHeadController extends Controller
         $storeModel->retrieveDataByPage($pageNum);
         
         $storeList = array();
+        
         foreach ($storeModel->attr as $row) {
             $person = $row["cust_person"];
             $person.= !empty($row["cust_person_role"])?" ({$row["cust_person_role"]})":"";
             $person.= !empty($row["cust_tel"])?" {$row["cust_tel"]}":"";
             
             $virLists = CGetName::getContractVirRowsByContIDAndStoreID($row["cont_id"],$row["id"]);
-            $checkID = array();
+            $callShow = false; // 直接改成和老逻辑一样的变量名和初始值
             $virtualCodes = array();
             
             if($virLists){
                 foreach ($virLists as $virList){
+                    // 直接判断，符合就设置true，和老逻辑一样
                     if($virList["service_fre_type"]==3&&in_array($virList["vir_status"],array(10,30))){
-                        if(!in_array($row["id"],$checkID)){
-                            $checkID[]=$row["id"];
-                        }
+                        $callShow = true;
                     }
                     $virtualCodes[] = array(
                         'id' => $virList['id'],
@@ -333,8 +333,8 @@ class ContHeadController extends Controller
                 'person' => $person,
                 'store_status' => CGetName::getClueStoreStatusByKey($row['store_status']),
                 'virtual_codes' => $virtualCodes,
-                'can_check' => !empty($checkID),
-                'check_id' => implode(',', $checkID)
+                'can_check' => $callShow, // 直接改成和老逻辑一样的判断
+                'check_id' => $callShow ? $row['id'] : '' // 如果有符合条件的，check_id就是store_id
             );
         }
 

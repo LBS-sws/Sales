@@ -468,7 +468,7 @@ class ClueStoreController extends Controller
 	}
 	
 	public static function allowStoreTransfer() {
-		return Yii::app()->user->validRWFunction('CM11');
+		return Yii::app()->user->validRWFunction('CM02')||Yii::app()->user->validRWFunction('CM10');
 	}
 	
 	public static function allowStoreReadWrite() {

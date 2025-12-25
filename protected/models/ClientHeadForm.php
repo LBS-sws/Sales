@@ -127,6 +127,7 @@ class ClientHeadForm extends ClueForm
             "group_bool"=>$this->clue_type==1?$this->group_bool:"Y",
             "clue_level_id"=>empty($this->clue_level_id) ? null : $this->clue_level_id,
             "clue_tag"=>is_array($this->clue_tag_ids) ? implode(',', $this->clue_tag_ids) : $this->clue_tag_ids,
+            "rec_employee_id"=>CGetName::getNumberNull($this->rec_employee_id),
         );
         //client_code
         if($this->getScenario()=="new"){

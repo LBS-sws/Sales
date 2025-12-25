@@ -232,7 +232,7 @@ foreach($model->serviceDefinition() as $gid=>$items) {
         $content .=TbHtml::dropDownList('pest_'.$gid,$pestOnList,$pestList,array(
             "readonly"=>$model->isReadOnly(),
             "data-name"=>$inputLeftName,
-            "class"=>"select2 changePestMethod changePest",
+            "class"=>"select2 changePestMethod",
             'multiple'=>'multiple'
         ));
         $content .="</div>";

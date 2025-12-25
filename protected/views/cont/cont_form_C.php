@@ -14,8 +14,8 @@ $modelClass = get_class($model);
 
             <div class="col-lg-3">
                 <?php
-                if(!$model->isReadonly()&&$model->clueHeadRow["clue_type"]==1){
-                    echo $form->dropDownList($model, 'sales_id',CGetName::getAssignEmployeeCityList($model->clueHeadRow["city"],$model->sales_id),
+                if(!$model->isReadonly()){
+                    echo $form->dropDownList($model, 'sales_id',CGetName::getAssignEmployeeAllList($model->sales_id),
                         array('readonly'=>$model->isReadonly(),'id'=>'sales_id','empty'=>'')
                     );
                 }else{
@@ -56,7 +56,7 @@ $modelClass = get_class($model);
                         'readonly'=>true,'id'=>'other_sales_id_text'
                     ));
                 }else{
-                    $saleslist = CGetName::getVEmployeeListByCity($model->city,$model->other_sales_id);
+                    $saleslist = CGetName::getAssignEmployeeAllList($model->other_sales_id);
                     echo $form->dropDownList($model, 'other_sales_id',$saleslist,
                         array('readonly'=>$model->isReadonly(),'id'=>'other_sales_id','empty'=>'')
                     );

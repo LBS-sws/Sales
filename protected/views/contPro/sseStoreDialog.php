@@ -234,7 +234,7 @@ function renderMainStoreRows(stores) {
         html += '<td>' + escapeHtml(s.invoice_header || '') + '</td>';
         html += '<td>' + escapeHtml(s.tax_id || '') + '</td>';
         html += '<td>' + escapeHtml(s.invoice_address || '') + '</td>';
-        html += '<td>' + escapeHtml(s.busine_text || '') + '</td>';
+        html += '<td>' + (s.busine_text || '') + '</td>';
         html += '<td>' + escapeHtml(s.sales || '') + '</td>';
         html += '<td class="area">' + escapeHtml(s.area_text || '') + '</td>';
         html += '</tr>';
@@ -302,6 +302,29 @@ function loadMainStoreRows(storeIds, callback) {
                         fillMainStoreForm(s.id, s.service || {});
                     }
                 }
+                // 重新初始化 select2（标靶虫害、设备、洁具等）
+                // 先销毁已存在的 select2 实例，避免重复初始化
+                $('.changePestMethod,.changeDevice,.changeWare').each(function(){
+                    if ($(this).data('select2')) {
+                        $(this).select2('destroy');
+                    }
+                });
+                setTimeout(function(){
+                    $('.changePestMethod,.changeDevice,.changeWare').select2({
+                        tags: false,
+                        multiple: true,
+                        allowClear: true,
+                        closeOnSelect: false,
+                        disabled: false,
+                        dropdownParent: $('body'),
+                        language: 'zh-CN',
+                        width: '100%',
+                        templateSelection: function(state) {
+                            var rtn = $('<span style="color:black">'+state.text+'</span>');
+                            return rtn;
+                        }
+                    });
+                }, 100);
             }
             if (callback) {
                 callback();

@@ -3,6 +3,7 @@
 class CallServiceList extends CListPageModel
 {
     public $flow_odds="";
+    public $noOfPages = 1;
     /**
      * Declares customized attribute labels.
      * If not declared here, an attribute would have a label that is
@@ -75,7 +76,7 @@ class CallServiceList extends CListPageModel
             //'mh_remark'=>"cont.mh_remark",
             'mh_id'=>"scll.mh_id",
         );
-        if (!Yii::app()->user->isSingleCity()) $search['city'] = "(select city.name form security{$suffix}.sec_city city where city.code=scll.city)";
+        if (!Yii::app()->user->isSingleCity()) $search['city'] = "(select city.name from security{$suffix}.sec_city city where city.code=scll.city)";
         return $search;
     }
 
@@ -126,8 +127,24 @@ class CallServiceList extends CListPageModel
             $order .= " order by scll.id desc ";
         }
 
+        $this->pageNum = $pageNum;
+
         $sql = $sql2.$clause;
         $this->totalRow = Yii::app()->db->createCommand($sql)->queryScalar();
+        if (empty($this->totalRow)) {
+            $this->totalRow = 0;
+        }
+        if (empty($this->noOfItem)) {
+            $this->noOfPages = 1;
+        } else {
+            $this->noOfPages = $this->totalRow > 0 ? ceil($this->totalRow / $this->noOfItem) : 1;
+        }
+        if ($this->pageNum > $this->noOfPages) {
+            $this->pageNum = $this->noOfPages;
+        }
+        if ($this->pageNum < 1) {
+            $this->pageNum = 1;
+        }
 
         $sql = $sql1.$clause.$order;
         $sql = $this->sqlWithPageCriteria($sql, $this->pageNum);

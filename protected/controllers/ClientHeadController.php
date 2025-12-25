@@ -1,6 +1,6 @@
 <?php
 
-class ClientHeadController extends Controller 
+class ClientHeadController extends Controller
 {
 	public $function_id='CM10';
 
@@ -8,7 +8,7 @@ class ClientHeadController extends Controller
 	{
 		return array(
 			'enforceRegisteredStation',
-			'enforceSessionExpiration', 
+			'enforceSessionExpiration',
 			'enforceNoConcurrentLogin',
 			'accessControl', // perform access control for CRUD operations
 			'postOnly + delete', // we only allow deletion via POST request
@@ -23,11 +23,11 @@ class ClientHeadController extends Controller
 	public function accessRules()
 	{
 		return array(
-			array('allow', 
+			array('allow',
 				'actions'=>array('new','edit','delete','save','backClientBox'),
 				'expression'=>array('ClientHeadController','allowReadWrite'),
 			),
-		array('allow', 
+		array('allow',
 			'actions'=>array('index','view','ajaxLoadService','ajaxLoadFlowAndStore','ajaxLoadReport','ajaxLoadContract','ajaxLoadStore','ajaxLoadPerson','ajaxLoadOperation','ajaxLoadInvoice','ajaxLoadUStaff','ajaxLoadUArea'),
 			'expression'=>array('ClientHeadController','allowReadOnly'),
 		),
@@ -41,7 +41,7 @@ class ClientHeadController extends Controller
 		);
 	}
 
-	public function actionIndex($pageNum=0) 
+	public function actionIndex($pageNum=0)
 	{
 		$model = new ClientHeadList;
         $session = Yii::app()->session;
@@ -113,7 +113,7 @@ class ClientHeadController extends Controller
 			$this->render('detail',array('model'=>$model,'clueDetail'=>$clueDetail));
 		}
 	}
-	
+
 	public function actionNew($city,$clue_type)
 	{
 		$model = new ClientHeadForm('new');
@@ -131,7 +131,7 @@ class ClientHeadController extends Controller
             $this->render('form',array('model'=>$model,));
         }
 	}
-	
+
 	public function actionEdit($index)
 	{
 		$model = new ClientHeadForm('edit');
@@ -141,7 +141,7 @@ class ClientHeadController extends Controller
 			$this->render('form',array('model'=>$model,));
 		}
 	}
-	
+
 	public function actionDelete()
 	{
 		$model = new ClientHeadForm('delete');
@@ -158,7 +158,7 @@ class ClientHeadController extends Controller
 			}
 		}
 	}
-	
+
 	public static function allowReadWrite() {
 		return Yii::app()->user->validRWFunction('CM10');
 	}
@@ -166,7 +166,7 @@ class ClientHeadController extends Controller
 	public static function allowNew() {
 		return Yii::app()->user->validRWFunction('CM10');
 	}
-	
+
 	public static function allowReadOnly() {
 		return Yii::app()->user->validFunction('CM10');
 	}
@@ -179,27 +179,115 @@ class ClientHeadController extends Controller
 		try {
 			$clue_id = isset($_GET['clue_id']) ? intval($_GET['clue_id']) : 0;
 			$service_id = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
-			
+            $pageNum = isset($_GET['page']) ? intval($_GET['page']) : 0;
+            $pageSize = 3;
+
 			if (empty($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户ID不能为空'));
 				Yii::app()->end();
 			}
-			
+
 			$model = new ClientHeadForm('view');
 			if (!$model->retrieveData($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户不存在'));
 				Yii::app()->end();
 			}
-			
+
 			// 设置当前商机ID（即使没有也会显示默认tab结构）
 			$model->setClueServiceID($service_id);
-			
-			// 使用原来的方法渲染商机卡片HTML，保持原有样式
-			$html = ClueServiceForm::printClueServiceBox($this, $model);
-			
+
+            $activeServiceId = isset($model->clue_service_id) ? intval($model->clue_service_id) : 0;
+            $staff_id = CGetName::getEmployeeIDByMy();
+            $canSelectAny = Yii::app()->user->validRWFunction('CM02') || Yii::app()->user->validRWFunction('CM10');
+            $whereSql = "";
+            if(!ClientHeadList::isReadAll() && !$canSelectAny){
+                $groupIds = CGetName::getGroupStaffIDByStaffID($staff_id);
+                $groupIds[] = $staff_id;
+                $groupIds = array_values(array_unique(array_filter($groupIds)));
+                if(!empty($groupIds)){
+                    $whereSql = " and create_staff in (".implode(",", $groupIds).")";
+                }else{
+                    $whereSql = " and create_staff=".$staff_id;
+                }
+            }
+
+            $totalRow = Yii::app()->db->createCommand()
+                ->select("count(*)")
+                ->from("sal_clue_service")
+                ->where("clue_id=:clue_id {$whereSql}", array(":clue_id"=>$model->id))
+                ->queryScalar();
+            $totalRow = empty($totalRow) ? 0 : intval($totalRow);
+            $noOfPages = $pageSize > 0 ? ($totalRow > 0 ? ceil($totalRow / $pageSize) : 1) : 1;
+
+            if($pageNum <= 0){
+                if($activeServiceId > 0){
+                    $rank = Yii::app()->db->createCommand()
+                        ->select("count(*)")
+                        ->from("sal_clue_service")
+                        ->where("clue_id=:clue_id {$whereSql} and id>:id", array(":clue_id"=>$model->id, ":id"=>$activeServiceId))
+                        ->queryScalar();
+                    $rank = empty($rank) ? 0 : intval($rank);
+                    $pageNum = intval(floor($rank / $pageSize) + 1);
+                }else{
+                    $pageNum = 1;
+                }
+            }
+            if($pageNum < 1) $pageNum = 1;
+            if($pageNum > $noOfPages) $pageNum = $noOfPages;
+
+            $offset = ($pageNum - 1) * $pageSize;
+            $rows = Yii::app()->db->createCommand()
+                ->select("*")
+                ->from("sal_clue_service")
+                ->where("clue_id=:clue_id {$whereSql}", array(":clue_id"=>$model->id))
+                ->order("id desc")
+                ->limit($pageSize, $offset)
+                ->queryAll();
+
+            $html = "";
+            if($rows){
+                foreach ($rows as $row){
+                    $row["activeBool"] = $activeServiceId > 0 && $activeServiceId == intval($row["id"]);
+                    $row["box_class"] = $row["activeBool"]?"box-active box-info":"";
+                    $row["rpt_bool"] = false;
+                    $row["contract_bool"] = false;
+                    $row["status_text"] = "";
+                    if(in_array($row["service_status"],array(2,4,5))){
+                        $row["rpt_bool"] = true;
+                    }elseif (in_array($row["service_status"],array(6,8))){
+                        $row["contract_bool"] = true;
+                    }elseif (!in_array($row["service_status"],array(0,1))){
+                        $row["status_text"]=CGetName::getServiceStatusStrByKey($row["service_status"]);
+                    }
+                    $html .= $this->renderPartial("//clue/clue_service_box", array("row"=>$row), true);
+                }
+            }
+            if(Yii::app()->user->validRWFunction('CM02')||Yii::app()->user->validRWFunction('CM10')){
+                $html .= '<div class="mpr-0 col-lg-4 mpr-add">';
+                $html .= '<div class="box box-clue-service">';
+                $html .= TbHtml::tag("div",array(
+                    'data-load'=>Yii::app()->createUrl('clueService/ajaxShow'),
+                    'data-submit'=>Yii::app()->createUrl('clueService/ajaxSave'),
+                    'data-serialize'=>"ClueServiceForm[scenario]=new&ClueServiceForm[clue_id]=".$model->id,
+                    'data-obj'=>"#clue_service_row",
+                    'data-fun'=>"clickServiceRow",
+                    'id'=>"clue-service-add",
+                    'class'=>'openDialogForm'
+                ),false,false);
+                $html .= '<a>'.Yii::t('clue',"add client service").'</a>';
+                $html .= '</div>';
+                $html .= '</div>';
+                $html .= '</div>';
+            }
+
 			echo CJSON::encode(array(
 				'status' => 1,
-				'html' => $html
+				'html' => $html,
+                'pageNum' => $pageNum,
+                'totalRow' => $totalRow,
+                'noOfPages' => $noOfPages,
+                'pageSize' => $pageSize,
+                'activeServiceId' => $activeServiceId,
 			));
 			Yii::app()->end();
 		} catch (Exception $e) {
@@ -219,21 +307,21 @@ class ClientHeadController extends Controller
 		try {
 			$clue_id = isset($_GET['clue_id']) ? intval($_GET['clue_id']) : 0;
 			$service_id = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
-			
+
 			if (empty($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户ID不能为空'));
 				Yii::app()->end();
 			}
-			
+
 			$model = new ClientHeadForm('view');
 			if (!$model->retrieveData($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户不存在'));
 				Yii::app()->end();
 			}
-			
+
 			// 设置当前商机ID（即使没有也会显示默认tab结构）
 			$model->setClueServiceID($service_id);
-			
+
 			// 确保clueServiceRow已初始化
 			if (!isset($model->clueServiceRow) || !is_array($model->clueServiceRow)) {
 				$model->clueServiceRow = array(
@@ -242,9 +330,9 @@ class ClientHeadController extends Controller
 					'total_amt' => 0
 				);
 			}
-			
+
 			$html = ClueFlowForm::printClueFlowAndStoreBox($this, $model);
-			
+
 			echo CJSON::encode(array(
 				'status' => 1,
 				'html' => $html ? $html : ''
@@ -269,18 +357,18 @@ class ClientHeadController extends Controller
 			$clue_id = isset($_GET['clue_id']) ? intval($_GET['clue_id']) : 0;
 			$pageNum = isset($_GET['page']) ? intval($_GET['page']) : 1;
 			$searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
-			
+
 			if (empty($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户ID不能为空'));
 				Yii::app()->end();
 			}
-			
+
 			// 使用分页模型查询
 			$reportModel = new ClientReportList();
 			$reportModel->clue_id = $clue_id;
 			$reportModel->searchKeyword = $searchKeyword;
 			$reportModel->retrieveDataByPage($pageNum);
-			
+
 			$rows = array();
 			if ($reportModel->attr) {
 				foreach ($reportModel->attr as $row) {
@@ -300,7 +388,7 @@ class ClientHeadController extends Controller
 					);
 				}
 			}
-			
+
 			echo CJSON::encode(array(
 				'status' => 1,
 				'data' => $rows,
@@ -327,18 +415,18 @@ class ClientHeadController extends Controller
 			$clue_id = isset($_GET['clue_id']) ? intval($_GET['clue_id']) : 0;
 			$pageNum = isset($_GET['page']) ? intval($_GET['page']) : 1;
 			$searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
-			
+
 			if (empty($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户ID不能为空'));
 				Yii::app()->end();
 			}
-			
+
 			// 使用分页模型查询
 			$contractModel = new ClientContractList();
 			$contractModel->clue_id = $clue_id;
 			$contractModel->searchKeyword = $searchKeyword;
 			$contractModel->retrieveDataByPage($pageNum);
-			
+
 			$rows = array();
 			if ($contractModel->attr) {
 				foreach ($contractModel->attr as $row) {
@@ -361,7 +449,7 @@ class ClientHeadController extends Controller
 					);
 				}
 			}
-			
+
 			echo CJSON::encode(array(
 				'status' => 1,
 				'data' => $rows,
@@ -388,27 +476,27 @@ class ClientHeadController extends Controller
 			$clue_id = isset($_GET['clue_id']) ? intval($_GET['clue_id']) : 0;
 			$pageNum = isset($_GET['page']) ? intval($_GET['page']) : 1;
 			$searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
-			
+
 			if (empty($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户ID不能为空'));
 				Yii::app()->end();
 			}
-			
+
 			// 使用分页模型查询
 			$storeModel = new ClientStoreList();
 			$storeModel->clue_id = $clue_id;
 			$storeModel->searchKeyword = $searchKeyword;
 			$storeModel->retrieveDataByPage($pageNum);
-			
+
 			$rows = array();
 			$updateBool = Yii::app()->user->validRWFunction('CM10');
-			
+
 			if ($storeModel->attr) {
 				foreach ($storeModel->attr as $row) {
 					$person = $row['cust_person'];
 					$person .= !empty($row['cust_person_role']) ? " ({$row['cust_person_role']})" : "";
 					$person .= !empty($row['cust_tel']) ? " {$row['cust_tel']}" : "";
-					
+
 					$rows[] = array(
 						'store_code' => $row['store_code'],
 						'store_name' => $row['store_name'],
@@ -421,7 +509,7 @@ class ClientHeadController extends Controller
 					);
 				}
 			}
-			
+
 			echo CJSON::encode(array(
 				'status' => 1,
 				'data' => $rows,
@@ -448,21 +536,21 @@ class ClientHeadController extends Controller
 			$clue_id = isset($_GET['clue_id']) ? intval($_GET['clue_id']) : 0;
 			$pageNum = isset($_GET['page']) ? intval($_GET['page']) : 1;
 			$searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
-			
+
 			if (empty($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户ID不能为空'));
 				Yii::app()->end();
 			}
-			
+
 			// 使用分页模型查询
 			$personModel = new ClientPersonList();
 			$personModel->clue_id = $clue_id;
 			$personModel->searchKeyword = $searchKeyword;
 			$personModel->retrieveDataByPage($pageNum);
-			
+
 			$rows = array();
 			$updateBool = Yii::app()->user->validRWFunction('CM10');
-			
+
 			if ($personModel->attr) {
 				foreach ($personModel->attr as $row) {
 					$rows[] = array(
@@ -478,7 +566,7 @@ class ClientHeadController extends Controller
 					);
 				}
 			}
-			
+
 			echo CJSON::encode(array(
 				'status' => 1,
 				'data' => $rows,
@@ -505,18 +593,18 @@ class ClientHeadController extends Controller
 			$clue_id = isset($_GET['clue_id']) ? intval($_GET['clue_id']) : 0;
 			$pageNum = isset($_GET['page']) ? intval($_GET['page']) : 1;
 			$searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
-			
+
 			if (empty($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户ID不能为空'));
 				Yii::app()->end();
 			}
-			
+
 			// 使用分页模型查询
 			$operationModel = new ClientOperationList();
 			$operationModel->clue_id = $clue_id;
 			$operationModel->searchKeyword = $searchKeyword;
 			$operationModel->retrieveDataByPage($pageNum);
-			
+
 			$rows = array();
 			if ($operationModel->attr) {
 				foreach ($operationModel->attr as $row) {
@@ -528,7 +616,7 @@ class ClientHeadController extends Controller
 					);
 				}
 			}
-			
+
 			echo CJSON::encode(array(
 				'status' => 1,
 				'data' => $rows,
@@ -553,16 +641,37 @@ class ClientHeadController extends Controller
 	{
 		try {
 			$clue_id = isset($_GET['clue_id']) ? intval($_GET['clue_id']) : 0;
-			
+			$pageNum = isset($_GET['page']) ? intval($_GET['page']) : 1;
+			$pageSize = 10;
+
 			if (empty($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户ID不能为空'));
 				Yii::app()->end();
 			}
-			
-			$list = CGetName::getClueInvoiceRows($clue_id);
+
+			$totalRow = Yii::app()->db->createCommand()
+				->select("count(*)")
+				->from("sal_clue_invoice")
+				->where("clue_id=:clue_id", array(":clue_id"=>$clue_id))
+				->queryScalar();
+			$totalRow = empty($totalRow) ? 0 : intval($totalRow);
+			$noOfPages = $pageSize > 0 ? ($totalRow > 0 ? ceil($totalRow / $pageSize) : 1) : 1;
+
+			if ($pageNum < 1) $pageNum = 1;
+			if ($pageNum > $noOfPages) $pageNum = $noOfPages;
+
+			$offset = ($pageNum - 1) * $pageSize;
+			$list = Yii::app()->db->createCommand()
+				->select("*")
+				->from("sal_clue_invoice")
+				->where("clue_id=:clue_id", array(":clue_id"=>$clue_id))
+				->order("lcd desc")
+				->limit($pageSize, $offset)
+				->queryAll();
+
 			$rows = array();
 			$updateBool = Yii::app()->user->validRWFunction('CM10');
-			
+
 			if ($list) {
 				foreach ($list as $row) {
 					$rows[] = array(
@@ -579,8 +688,15 @@ class ClientHeadController extends Controller
 					);
 				}
 			}
-			
-			echo CJSON::encode(array('status' => 1, 'data' => $rows));
+
+			echo CJSON::encode(array(
+				'status' => 1,
+				'data' => $rows,
+				'pageNum' => $pageNum,
+				'totalRow' => $totalRow,
+				'noOfPages' => $noOfPages,
+				'pageSize' => $pageSize,
+			));
 			Yii::app()->end();
 		} catch (Exception $e) {
 			echo CJSON::encode(array(
@@ -600,21 +716,21 @@ class ClientHeadController extends Controller
 			$clue_id = isset($_GET['clue_id']) ? intval($_GET['clue_id']) : 0;
 			$pageNum = isset($_GET['page']) ? intval($_GET['page']) : 1;
 			$searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
-			
+
 			if (empty($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户ID不能为空'));
 				Yii::app()->end();
 			}
-			
+
 			// 使用分页模型查询
 			$staffModel = new ClientUStaffList();
 			$staffModel->clue_id = $clue_id;
 			$staffModel->searchKeyword = $searchKeyword;
 			$staffModel->retrieveDataByPage($pageNum);
-			
+
 			$rows = array();
 			$updateBool = Yii::app()->user->validRWFunction('CM10');
-			
+
 			if ($staffModel->attr) {
 				foreach ($staffModel->attr as $row) {
 					$employee_type = empty($row['employee_type']) ? Yii::t('clue', 'other u staff') : Yii::t('clue', 'local u staff');
@@ -631,7 +747,7 @@ class ClientHeadController extends Controller
 					);
 				}
 			}
-			
+
 			echo CJSON::encode(array(
 				'status' => 1,
 				'data' => $rows,
@@ -656,16 +772,16 @@ class ClientHeadController extends Controller
 	{
 		try {
 			$clue_id = isset($_GET['clue_id']) ? intval($_GET['clue_id']) : 0;
-			
+
 			if (empty($clue_id)) {
 				echo CJSON::encode(array('status' => 0, 'error' => '客户ID不能为空'));
 				Yii::app()->end();
 			}
-			
+
 			$list = CGetName::getClueUAreaRows($clue_id);
 			$rows = array();
 			$updateBool = Yii::app()->user->validRWFunction('CM10');
-			
+
 			if ($list) {
 				foreach ($list as $row) {
 					$city_type = empty($row['city_type']) ? Yii::t('clue', 'other u area') : Yii::t('clue', 'local u area');
@@ -682,7 +798,7 @@ class ClientHeadController extends Controller
 					);
 				}
 			}
-			
+
 			echo CJSON::encode(array('status' => 1, 'data' => $rows));
 			Yii::app()->end();
 		} catch (Exception $e) {

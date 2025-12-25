@@ -5,7 +5,6 @@
 <?php echo $form->hiddenField($model, 'table_type'); ?>
 <?php echo $form->hiddenField($model, 'city',array("id"=>"clue_city")); ?>
 <?php echo $form->hiddenField($model, 'rec_type'); ?>
-<?php echo $form->hiddenField($model, 'rec_employee_id'); ?>
 <?php
 $modelClass = get_class($model);
 ?>
@@ -39,8 +38,8 @@ $modelClass = get_class($model);
         <?php echo $form->labelEx($model,'rec_employee_id',array('class'=>"col-lg-1 control-label")); ?>
         <div class="col-lg-2">
             <?php
-            echo TbHtml::textField("rec_employee_id",CGetName::getEmployeeNameByKey($model->rec_employee_id),
-                array('readonly'=>true)
+            echo $form->dropDownList($model, 'rec_employee_id', CGetName::getAssignEmployeeList($model->rec_employee_id),
+                array('readonly'=>$model->isReadonly(),'id'=>'rec_employee_id','empty'=>'')
             );
             ?>
         </div>
@@ -94,7 +93,7 @@ $modelClass = get_class($model);
                 );
             }else{
                 echo $form->dropDownList($model, 'yewudalei',CGetName::getYewudaleiListByEmployee($model->rec_employee_id),
-                    array('readonly'=>$model->isReadonly(),'empty'=>'')
+                    array('readonly'=>$model->isReadonly(),'empty'=>'','id'=>'yewudalei')
                 );
             }
             ?>
@@ -416,12 +415,16 @@ $modelClass = get_class($model);
 
 $link3 = Yii::app()->createAbsoluteUrl("clueHead/getcusttypelist");
 $ajaxYewudalei = Yii::app()->createAbsoluteUrl("clueHead/ajaxYewudalei");
+$ajaxEmployee = Yii::app()->createUrl("clueStore/searchAssignEmployee");
 switch(Yii::app()->language) {
     case 'zh_cn': $lang = 'zh-CN'; break;
     case 'zh_tw': $lang = 'zh-TW'; break;
     default: $lang = Yii::app()->language;
 }
 $disabled = $model->isReadonly()? 'true':'false';
+// 准备初始员工数据
+$initialEmployeeId = !empty($model->rec_employee_id) ? $model->rec_employee_id : '';
+$initialEmployeeText = !empty($model->rec_employee_id) ? json_encode(CGetName::getEmployeeNameByKey($model->rec_employee_id)) : '""';
 $js = <<<EOF
 
 $('#popover-a').popover({
@@ -485,7 +488,61 @@ $('#clue_level_id').select2({
 	language: '$lang',
 	disabled: $disabled
 });
+$('#rec_employee_id').select2({
+	multiple: false,
+	maximumInputLength: 10,
+	language: '$lang',
+	disabled: $disabled,
+	ajax: {
+		url: '$ajaxEmployee',
+		type: 'POST',
+		dataType: 'json',
+		delay: 250,
+		data: function (params) {
+			return {
+				keyword: params.term
+			};
+		},
+		processResults: function (data) {
+			return {
+				results: data.results
+			};
+		},
+		cache: true
+	},
+	placeholder: '请输入员工姓名或编号搜索'
+});
+// 当跟进员工改变时，更新业务大类选项
+$('#rec_employee_id').on('change', function(){
+	if($('#yewudalei').prop('tagName')=='SELECT'){
+		var employeeId = $(this).val();
+		var url = '$ajaxYewudalei?employee_id=' + employeeId;
+		$.ajax({
+			type: 'GET',
+			url: url,
+			success: function(data) {
+				$('#yewudalei').html(data);
+			},
+			error: function(data) {
+				console.error('更新业务大类失败');
+			},
+			dataType:'html'
+		});
+	}
+});
 EOF;
+// 设置初始值（在 select2 初始化之后）
+if(!empty($initialEmployeeId)){
+	$initialEmployeeJs = "if($('#rec_employee_id').length){";
+	$initialEmployeeJs .= "var initialEmployeeId = " . $initialEmployeeId . ";";
+	$initialEmployeeJs .= "var initialEmployeeText = " . $initialEmployeeText . ";";
+	$initialEmployeeJs .= "if(initialEmployeeId && initialEmployeeText){";
+	$initialEmployeeJs .= "var option = new Option(initialEmployeeText, initialEmployeeId, true, true);";
+	$initialEmployeeJs .= "$('#rec_employee_id').append(option).trigger('change');";
+	$initialEmployeeJs .= "}";
+	$initialEmployeeJs .= "}";
+	Yii::app()->clientScript->registerScript('rec_employee_initial', $initialEmployeeJs, CClientScript::POS_READY);
+}
 if($model->clue_type==2){
     $js.="
 $('#support_user').select2({

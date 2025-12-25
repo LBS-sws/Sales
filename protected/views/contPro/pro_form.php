@@ -41,6 +41,12 @@ $('.information-header').on('click',function(){
         }
     }
 });
+$('#sales_id').select2({
+    multiple: false,
+    maximumInputLength: 10,
+	language: '$lang',
+	disabled: {$disabled}
+});
 $('#other_sales_id').select2({
     multiple: false,
     maximumInputLength: 10,
@@ -186,13 +192,35 @@ $('#other_sales_id').change(function(){
             dataType:'html'
         });
 	}else{
-	    $('#other_yewudalei').val($('#yewudalei').val());
+	    // 当other_yewudalei不是SELECT标签时的处理逻辑
 	    if($('#other_sales_id').val()==''){
 	        $('#other_yewudalei_name').val('');
-	    }else{
-	        $('#other_yewudalei_name').val($('#yewudalei_name').val());
 	    }
 	}
+});
+
+$('#sales_id').change(function(){
+    if($('#yewudalei').prop('tagName')=='SELECT'){
+        var url = '{$ajaxYewudalei}?employee_id='+$(this).val();
+        $.ajax({
+            type: 'GET',
+            url: url,
+            success: function(data) {
+                $('#yewudalei').html(data);
+            },
+            error: function(data) { // if error occured
+                var x = 1;
+            },
+            dataType:'html'
+        });
+    }else{
+        $('#yewudalei').val($('#yewudalei').val());
+        if($('#sales_id').val()==''){
+            $('#yewudalei_name').val('');
+        }else{
+            $('#yewudalei_name').val($('#yewudalei_name').val());
+        }
+    }
 });
 
 $('#sign_date').change(function(){

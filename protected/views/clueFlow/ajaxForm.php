@@ -193,12 +193,14 @@ $minDate = date("Y/m/d",strtotime("-1 day"));
 $thisDate = date("Y/m/d");
 $js="
 $('#win_visit_obj').select2({
+    dropdownParent: $('#open-form-Dialog'),
 	tags: false,
 	multiple: true,
 	maximumInputLength: 0,
 	maximumSelectionLength: 10,
 	allowClear: true,
 	language: 'zh-CN',
+    width: '100%',
 	disabled: false,
 	templateSelection: function(state) {
         var rtn = $('<span style=\"color:black\">'+state.text+'</span>');
