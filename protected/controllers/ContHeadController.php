@@ -428,13 +428,24 @@ class ContHeadController extends Controller
                         $relatedData = $model->getRelatedDataStat($source_id);
                         $relatedDetail = $model->getRelatedDataDetail($source_id);
                         
-                        // 累加统计数据
+                        // 累加统计数据（getRelatedDataStat 返回的是包含 count/name/table 的数组）
                         if (is_array($relatedData)) {
                             foreach ($relatedData as $key => $value) {
-                                if (!isset($totalRelatedData[$key])) {
-                                    $totalRelatedData[$key] = 0;
+                                if (!is_array($value)) {
+                                    continue;
                                 }
-                                $totalRelatedData[$key] += $value;
+                                $cnt = isset($value['count']) ? intval($value['count']) : 0;
+                                if (!isset($totalRelatedData[$key])) {
+                                    $totalRelatedData[$key] = array(
+                                        'count' => 0,
+                                        'name' => isset($value['name']) ? $value['name'] : '',
+                                        'table' => isset($value['table']) ? $value['table'] : '',
+                                    );
+                                }
+                                if (!isset($totalRelatedData[$key]['count'])) {
+                                    $totalRelatedData[$key]['count'] = 0;
+                                }
+                                $totalRelatedData[$key]['count'] += $cnt;
                             }
                         }
                         
