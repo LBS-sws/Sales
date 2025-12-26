@@ -16,9 +16,9 @@ $this->pageTitle=Yii::app()->name . ' - 确认主合同合并删除';
 </section>
 
 <section class="content">
-    <div class="box box-danger">
+    <div class="box box-success">
         <div class="box-header with-border">
-            <h3 class="box-title">要删除的主合同信息</h3>
+            <h3 class="box-title">要保留的目标主合同（正确主合同）</h3>
         </div>
         <div class="box-body">
             <div class="row">
@@ -26,19 +26,19 @@ $this->pageTitle=Yii::app()->name . ' - 确认主合同合并删除';
                     <table class="table table-bordered">
                         <tr>
                             <th width="150">主合同编号：</th>
-                            <td><?php echo $model->sourceContRow['cont_code']; ?></td>
+                            <td><?php echo isset($model->targetContRow['cont_code']) ? $model->targetContRow['cont_code'] : ''; ?></td>
                         </tr>
                         <tr>
                             <th>合同状态：</th>
-                            <td><?php echo CGetName::getContTopStatusStrByKey($model->sourceContRow['cont_status']); ?></td>
+                            <td><?php echo isset($model->targetContRow['cont_status']) ? CGetName::getContTopStatusStrByKey($model->targetContRow['cont_status']) : ''; ?></td>
                         </tr>
                         <tr>
                             <th>合同金额：</th>
-                            <td class="text-danger"><strong>￥<?php echo number_format($model->sourceContRow['total_amt'], 2); ?></strong></td>
+                            <td class="text-success"><strong>￥<?php echo isset($model->targetContRow['total_amt']) ? number_format($model->targetContRow['total_amt'], 2) : '0.00'; ?></strong></td>
                         </tr>
                         <tr>
                             <th>门店数量：</th>
-                            <td><?php echo $model->sourceContRow['store_sum']; ?></td>
+                            <td><?php echo isset($model->targetContRow['store_sum']) ? $model->targetContRow['store_sum'] : ''; ?></td>
                         </tr>
                     </table>
                 </div>
@@ -46,23 +46,38 @@ $this->pageTitle=Yii::app()->name . ' - 确认主合同合并删除';
                     <table class="table table-bordered">
                         <tr>
                             <th width="150">业务大类：</th>
-                            <td><?php echo CGetName::getYewudaleiStrByKey($model->sourceContRow['yewudalei'],'name'); ?></td>
+                            <td><?php echo isset($model->targetContRow['yewudalei']) ? CGetName::getYewudaleiStrByKey($model->targetContRow['yewudalei'],'name') : ''; ?></td>
                         </tr>
                         <tr>
                             <th>主体公司：</th>
-                            <td><?php echo CGetName::getLbsMainNameByKey($model->sourceContRow['lbs_main']); ?></td>
+                            <td><?php echo isset($model->targetContRow['lbs_main']) ? CGetName::getLbsMainNameByKey($model->targetContRow['lbs_main']) : ''; ?></td>
                         </tr>
                         <tr>
                             <th>合约开始时间：</th>
-                            <td><?php echo $model->sourceContRow['cont_start_dt']; ?></td>
+                            <td><?php echo isset($model->targetContRow['cont_start_dt']) ? $model->targetContRow['cont_start_dt'] : ''; ?></td>
                         </tr>
                         <tr>
                             <th>合约结束时间：</th>
-                            <td><?php echo $model->sourceContRow['cont_end_dt']; ?></td>
+                            <td><?php echo isset($model->targetContRow['cont_end_dt']) ? $model->targetContRow['cont_end_dt'] : ''; ?></td>
                         </tr>
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="box box-danger">
+        <div class="box-header with-border">
+            <h3 class="box-title">将要合并删除的主合同（来源主合同）</h3>
+        </div>
+        <div class="box-body">
+            <p class="text-danger">
+                将把以下主合同的所有关联数据迁移到目标主合同，然后删除这些主合同（仅允许草稿/未生效）。
+            </p>
+            <p>
+                <strong>来源主合同ID：</strong>
+                <?php echo !empty($model->source_cont_ids) && is_array($model->source_cont_ids) ? implode(', ', $model->source_cont_ids) : $model->source_cont_id; ?>
+            </p>
         </div>
     </div>
 
@@ -319,7 +334,7 @@ $this->pageTitle=Yii::app()->name . ' - 确认主合同合并删除';
                 </table>
             </div>
 
-            <?php 
+            <?php
             // 传递多个源合同ID
             if (!empty($model->source_cont_ids) && is_array($model->source_cont_ids)) {
                 echo CHtml::hiddenField('ContMergeForm[source_cont_ids]', implode(',', $model->source_cont_ids));
@@ -327,12 +342,13 @@ $this->pageTitle=Yii::app()->name . ' - 确认主合同合并删除';
                 echo CHtml::hiddenField('ContMergeForm[source_cont_id]', $model->source_cont_id);
             }
             ?>
-            <?php echo CHtml::hiddenField('ContMergeForm[clue_id]', $model->sourceContRow['clue_id']); ?>
+            <?php echo CHtml::hiddenField('ContMergeForm[target_cont_id]', $model->target_cont_id); ?>
+            <?php echo CHtml::hiddenField('ContMergeForm[clue_id]', !empty($model->sourceContRow['clue_id']) ? $model->sourceContRow['clue_id'] : $model->clue_id); ?>
             <?php echo CHtml::hiddenField('ContMergeForm[step]', 'merge'); ?>
 
             <div class="form-group">
                 <div class="text-center">
-                    <?php echo TbHtml::submitButton('确认合并并删除', array(
+                    <?php echo TbHtml::submitButton('确认迁移到目标主合同并删除来源主合同', array(
                         'color'=>TbHtml::BUTTON_COLOR_DANGER,
                         'size'=>TbHtml::BUTTON_SIZE_LARGE,
                         'onclick'=>'return confirmMerge();'
@@ -353,17 +369,12 @@ $this->pageTitle=Yii::app()->name . ' - 确认主合同合并删除';
 <script>
 function confirmMerge() {
     var selected = $('input[name="ContMergeForm[target_cont_id]"]:checked').val();
-    if (!selected) {
-        alert('请选择要保留的目标主合同');
-        return false;
-    }
-    
     var msg = '确认要执行以下操作吗？\n\n';
     <?php if (!empty($model->source_cont_ids) && is_array($model->source_cont_ids)): ?>
-    msg += '1. 将 <?php echo count($model->source_cont_ids); ?> 个主合同（ID: <?php echo implode(', ', $model->source_cont_ids); ?>）的所有关联数据迁移到主合同 #' + selected + '\n';
-    msg += '2. 删除这 <?php echo count($model->source_cont_ids); ?> 个主合同\n\n';
+    msg += '1. 将 <?php echo count($model->source_cont_ids); ?> 个主合同（ID: <?php echo implode(', ', $model->source_cont_ids); ?>）的所有关联数据迁移到目标主合同 #<?php echo $model->target_cont_id; ?>\n';
+    msg += '2. 删除这 <?php echo count($model->source_cont_ids); ?> 个来源主合同\n\n';
     <?php else: ?>
-    msg += '1. 将主合同 #<?php echo $model->source_cont_id; ?> 的所有关联数据迁移到主合同 #' + selected + '\n';
+    msg += '1. 将主合同 #<?php echo $model->source_cont_id; ?> 的所有关联数据迁移到目标主合同 #<?php echo $model->target_cont_id; ?>\n';
     msg += '2. 删除主合同 #<?php echo $model->source_cont_id; ?>\n\n';
     <?php endif; ?>
     msg += '此操作不可撤销，请谨慎操作！';

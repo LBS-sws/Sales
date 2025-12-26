@@ -65,7 +65,7 @@ $this->pageTitle=Yii::app()->name . ' - Contract List';
 <?php
 
 $url = Yii::app()->createUrl('contHead/index',array("pageNum"=>1));
-$mergeUrl = Yii::app()->createUrl('contHead/mergeConfirm');
+$mergeUrl = Yii::app()->createUrl('contHead/merge');
 $js = "
     $('.btn_submit').on('click',function(){
         var key=$(this).data('key');
@@ -135,10 +135,10 @@ $js = "
             }
         });
         
-        // 创建表单并提交
-        var form = $('<form method=\"post\" action=\"{$mergeUrl}\"></form>');
+        // 新流程：先进入选择页（选择目标主合同 + 勾选来源主合同）
+        var form = $('<form method=\"post\" action=\"{$mergeUrl}?clue_id=' + clueId + '\"></form>');
         form.append('<input type=\"hidden\" name=\"ContMergeForm[clue_id]\" value=\"' + clueId + '\" />');
-        form.append('<input type=\"hidden\" name=\"ContMergeForm[step]\" value=\"confirm\" />');
+        form.append('<input type=\"hidden\" name=\"ContMergeForm[step]\" value=\"select\" />');
         $.each(contractIds, function(i, id){
             form.append('<input type=\"hidden\" name=\"ContMergeForm[source_cont_ids][]\" value=\"' + id + '\" />');
         });

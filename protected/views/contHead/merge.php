@@ -46,7 +46,51 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
 
             <hr/>
 
-            <h3>选择要删除的主合同</h3>
+            <h3>第一步：选择要保留的正确主合同（目标主合同）</h3>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr class="bg-success">
+                            <th width="80">选择</th>
+                            <th width="120">主合同编号</th>
+                            <th width="100">合同状态</th>
+                            <th width="150">业务大类</th>
+                            <th width="150">主体公司</th>
+                            <th width="100">销售员</th>
+                            <th width="100">合同金额</th>
+                            <th width="100">门店数量</th>
+                            <th width="150">合约开始时间</th>
+                            <th width="150">合约结束时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($contractList as $contract): ?>
+                        <tr>
+                            <td class="text-center">
+                                <?php echo TbHtml::radioButton('ContMergeForm[target_cont_id]', false, array(
+                                    'value'=>$contract['id'],
+                                    'class'=>'select-target',
+                                    'uncheckValue'=>null
+                                )); ?>
+                            </td>
+                            <td><?php echo $contract['cont_code']; ?></td>
+                            <td><?php echo CGetName::getContTopStatusStrByKey($contract['cont_status']); ?></td>
+                            <td><?php echo $contract['yewudalei_name']; ?></td>
+                            <td><?php echo $contract['lbs_main_name']; ?></td>
+                            <td><?php echo $contract['employee_name']; ?></td>
+                            <td class="text-right"><?php echo number_format($contract['total_amt'], 2); ?></td>
+                            <td class="text-center"><?php echo $contract['store_sum']; ?></td>
+                            <td><?php echo $contract['cont_start_dt']; ?></td>
+                            <td><?php echo $contract['cont_end_dt']; ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <hr/>
+
+            <h3>第二步：勾选要合并删除的其它主合同（来源主合同）</h3>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead>
@@ -72,7 +116,7 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
                         <tr>
                             <td class="text-center">
                                 <?php if ($contract['cont_status'] < 10): ?>
-                                    <?php echo TbHtml::checkBox('ContMergeForm[source_cont_ids][]', false, array(
+                                    <?php echo TbHtml::checkBox('ContMergeForm[source_cont_ids][]', !empty($model->source_cont_ids) && is_array($model->source_cont_ids) && in_array($contract['id'], $model->source_cont_ids), array(
                                         'value'=>$contract['id'],
                                         'class'=>'select-contract',
                                         'uncheckValue'=>null
@@ -129,9 +173,27 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
 
 <script>
 $(document).ready(function(){
+    // 目标主合同选择后，自动取消其在来源列表中的勾选，并禁用该来源checkbox
+    function refreshSourceDisableByTarget() {
+        var targetId = $('input[name="ContMergeForm[target_cont_id]"]:checked').val();
+        $('.select-contract').each(function(){
+            var $cb = $(this);
+            if (targetId && $cb.val() == targetId) {
+                $cb.prop('checked', false);
+                $cb.prop('disabled', true);
+            } else {
+                $cb.prop('disabled', false);
+            }
+        });
+    }
+
+    $(document).on('change', 'input[name="ContMergeForm[target_cont_id]"]', function(){
+        refreshSourceDisableByTarget();
+    });
+
     // 全选/取消全选
     $('#select-all').click(function(){
-        $('.select-contract').prop('checked', $(this).prop('checked'));
+        $('.select-contract:not(:disabled)').prop('checked', $(this).prop('checked'));
     });
     
     // 单个选择框变化时，更新全选状态
@@ -143,13 +205,21 @@ $(document).ready(function(){
     
     // 表单提交验证
     $('#cont-merge-form').submit(function(){
+        var target = $('input[name="ContMergeForm[target_cont_id]"]:checked').val();
         var selected = $('input[name="ContMergeForm[source_cont_ids][]"]:checked');
+        if (!target) {
+            alert('请先选择要保留的目标主合同');
+            return false;
+        }
         if (selected.length === 0) {
             alert('请至少选择一个要删除的主合同');
             return false;
         }
         return true;
     });
+
+    // 初始化一次
+    refreshSourceDisableByTarget();
 });
 </script>
 
