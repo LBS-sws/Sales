@@ -1,5 +1,15 @@
-<tr class='clickable-row' data-href='<?php echo $this->getLink('CM36', 'contHead/detail', 'contHead/detail', array('index'=>$this->record['id']));?>'>
-	<td><?php echo $this->drawEditButton('CM36', 'contHead/detail', 'contHead/detail', array('index'=>$this->record['id'])); ?></td>
+<tr class='clickable-row contract-row' data-href='<?php echo $this->getLink('CM36', 'contHead/detail', 'contHead/detail', array('index'=>$this->record['id']));?>'>
+	<td onclick="event.stopPropagation();">
+        <?php 
+        // 获取原始状态值（从数据库的 cont_status 字段）
+        $statusValue = isset($this->record['cont_status_value']) ? $this->record['cont_status_value'] : 0;
+        if ($statusValue < 10): 
+        ?>
+        <input type="checkbox" class="select-contract-item" value="<?php echo $this->record['id']; ?>" data-clue-id="<?php echo isset($this->record['clue_id']) ? $this->record['clue_id'] : ''; ?>" />
+        <?php else: ?>
+        <span class="text-muted" title="已生效的合同不可操作">-</span>
+        <?php endif; ?>
+    </td>
 	<td><?php echo $this->record['cont_code']; ?></td>
 	<td><?php echo $this->record['cont_type']; ?></td>
 	<td><?php echo $this->record['busine_id_text']; ?></td>

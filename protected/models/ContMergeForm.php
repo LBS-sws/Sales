@@ -6,7 +6,8 @@
  */
 class ContMergeForm extends CFormModel
 {
-    public $source_cont_id; // 源主合同ID（要删除的）
+    public $source_cont_id; // 源主合同ID（要删除的，单个）
+    public $source_cont_ids; // 源主合同ID数组（要删除的，多个）
     public $target_cont_id; // 目标主合同ID（保留的）
     public $clue_id; // 客户ID
     public $step = 'select'; // 步骤：select-选择, confirm-确认, merge-合并
@@ -21,8 +22,8 @@ class ContMergeForm extends CFormModel
     public function rules()
     {
         return array(
-            array('source_cont_id, target_cont_id, clue_id, step', 'safe'),
-            array('source_cont_id', 'required', 'on'=>'confirm,merge'),
+            array('source_cont_id, source_cont_ids, target_cont_id, clue_id, step', 'safe'),
+            array('source_cont_id', 'required', 'on'=>'merge'),
             array('target_cont_id', 'required', 'on'=>'merge'),
             array('source_cont_id', 'validateSourceCont'),
             array('target_cont_id', 'validateTargetCont', 'on'=>'merge'),

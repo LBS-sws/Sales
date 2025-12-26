@@ -319,7 +319,14 @@ $this->pageTitle=Yii::app()->name . ' - 确认主合同合并删除';
                 </table>
             </div>
 
-            <?php echo CHtml::hiddenField('ContMergeForm[source_cont_id]', $model->source_cont_id); ?>
+            <?php 
+            // 传递多个源合同ID
+            if (!empty($model->source_cont_ids) && is_array($model->source_cont_ids)) {
+                echo CHtml::hiddenField('ContMergeForm[source_cont_ids]', implode(',', $model->source_cont_ids));
+            } else {
+                echo CHtml::hiddenField('ContMergeForm[source_cont_id]', $model->source_cont_id);
+            }
+            ?>
             <?php echo CHtml::hiddenField('ContMergeForm[clue_id]', $model->sourceContRow['clue_id']); ?>
             <?php echo CHtml::hiddenField('ContMergeForm[step]', 'merge'); ?>
 
@@ -352,8 +359,13 @@ function confirmMerge() {
     }
     
     var msg = '确认要执行以下操作吗？\n\n';
+    <?php if (!empty($model->source_cont_ids) && is_array($model->source_cont_ids)): ?>
+    msg += '1. 将 <?php echo count($model->source_cont_ids); ?> 个主合同（ID: <?php echo implode(', ', $model->source_cont_ids); ?>）的所有关联数据迁移到主合同 #' + selected + '\n';
+    msg += '2. 删除这 <?php echo count($model->source_cont_ids); ?> 个主合同\n\n';
+    <?php else: ?>
     msg += '1. 将主合同 #<?php echo $model->source_cont_id; ?> 的所有关联数据迁移到主合同 #' + selected + '\n';
     msg += '2. 删除主合同 #<?php echo $model->source_cont_id; ?>\n\n';
+    <?php endif; ?>
     msg += '此操作不可撤销，请谨慎操作！';
     
     return confirm(msg);

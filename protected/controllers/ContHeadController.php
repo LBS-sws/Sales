@@ -383,24 +383,56 @@ class ContHeadController extends Controller
         if (isset($_POST['ContMergeForm'])) {
             $model = new ContMergeForm();
             $model->scenario = 'confirm';
-            $model->attributes = $_POST['ContMergeForm'];
+            
+            // 处理多选的源合同ID
+            if (isset($_POST['ContMergeForm']['source_cont_ids']) && is_array($_POST['ContMergeForm']['source_cont_ids'])) {
+                $model->source_cont_ids = $_POST['ContMergeForm']['source_cont_ids'];
+                // 取第一个作为主要源合同（用于获取客户ID）
+                $model->source_cont_id = $model->source_cont_ids[0];
+            }
+            $model->clue_id = isset($_POST['ContMergeForm']['clue_id']) ? $_POST['ContMergeForm']['clue_id'] : 0;
+            $model->step = 'confirm';
             
             if ($model->validate()) {
-                // 获取源主合同的关联数据
-                $model->relatedData = $model->getRelatedDataStat($model->source_cont_id);
-                $relatedDetail = $model->getRelatedDataDetail($model->source_cont_id);
+                // 汇总所有源主合同的关联数据
+                $totalRelatedData = array();
+                $allRelatedDetail = array();
+                
+                foreach ($model->source_cont_ids as $source_id) {
+                    $relatedData = $model->getRelatedDataStat($source_id);
+                    $relatedDetail = $model->getRelatedDataDetail($source_id);
+                    
+                    // 累加统计数据
+                    foreach ($relatedData as $key => $value) {
+                        if (!isset($totalRelatedData[$key])) {
+                            $totalRelatedData[$key] = 0;
+                        }
+                        $totalRelatedData[$key] += $value;
+                    }
+                    
+                    // 合并详细数据
+                    foreach ($relatedDetail as $key => $items) {
+                        if (!isset($allRelatedDetail[$key])) {
+                            $allRelatedDetail[$key] = array();
+                        }
+                        $allRelatedDetail[$key] = array_merge($allRelatedDetail[$key], $items);
+                    }
+                }
+                
+                $model->relatedData = $totalRelatedData;
                 
                 // 获取该客户下的其他主合同列表（用于选择目标主合同）
                 $targetContractList = $model->getContractListByClueId($model->sourceContRow['clue_id']);
                 
-                // 过滤掉源主合同
-                $targetContractList = array_filter($targetContractList, function($item) use ($model) {
-                    return $item['id'] != $model->source_cont_id;
+                // 过滤掉所有源主合同
+                $sourceIds = $model->source_cont_ids;
+                $targetContractList = array_filter($targetContractList, function($item) use ($sourceIds) {
+                    return !in_array($item['id'], $sourceIds);
                 });
                 
                 $this->render('merge_confirm', array(
                     'model' => $model,
-                    'relatedDetail' => $relatedDetail,
+                    'relatedDetail' => $allRelatedDetail,
                     'targetContractList' => $targetContractList
                 ));
             } else {
@@ -421,15 +453,44 @@ class ContHeadController extends Controller
         if (isset($_POST['ContMergeForm'])) {
             $model = new ContMergeForm();
             $model->scenario = 'merge';
-            $model->attributes = $_POST['ContMergeForm'];
+            
+            // 处理多选的源合同ID
+            if (isset($_POST['ContMergeForm']['source_cont_ids'])) {
+                if (is_string($_POST['ContMergeForm']['source_cont_ids'])) {
+                    // 如果是逗号分隔的字符串，转为数组
+                    $model->source_cont_ids = explode(',', $_POST['ContMergeForm']['source_cont_ids']);
+                } else {
+                    $model->source_cont_ids = $_POST['ContMergeForm']['source_cont_ids'];
+                }
+            }
+            $model->target_cont_id = isset($_POST['ContMergeForm']['target_cont_id']) ? $_POST['ContMergeForm']['target_cont_id'] : 0;
+            $model->clue_id = isset($_POST['ContMergeForm']['clue_id']) ? $_POST['ContMergeForm']['clue_id'] : 0;
             
             if ($model->validate()) {
-                if ($model->mergeSave()) {
-                    Dialog::message(Yii::t('dialog','Information'), '主合同合并删除成功');
+                $successCount = 0;
+                $failedContracts = array();
+                
+                // 逐个处理源主合同的合并
+                foreach ($model->source_cont_ids as $source_cont_id) {
+                    $model->source_cont_id = $source_cont_id;
+                    
+                    if ($model->mergeSave()) {
+                        $successCount++;
+                    } else {
+                        $failedContracts[] = $source_cont_id;
+                    }
+                }
+                
+                if ($successCount > 0) {
+                    $message = "成功合并删除 {$successCount} 个主合同";
+                    if (!empty($failedContracts)) {
+                        $message .= "，失败：" . implode(',', $failedContracts);
+                    }
+                    Dialog::message(Yii::t('dialog','Information'), $message);
                     $this->redirect(Yii::app()->createUrl('contHead/detail', array('index'=>$model->target_cont_id)));
                 } else {
                     $message = CHtml::errorSummary($model);
-                    Dialog::message(Yii::t('dialog','Validation Message'), $message);
+                    Dialog::message(Yii::t('dialog','Validation Message'), '所有主合同合并失败：'.$message);
                     $this->redirect(Yii::app()->createUrl('contHead/merge', array('clue_id'=>$model->clue_id)));
                 }
             } else {

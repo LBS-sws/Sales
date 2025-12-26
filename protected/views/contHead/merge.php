@@ -4,6 +4,7 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
 
 <?php $form=$this->beginWidget('TbActiveForm', array(
     'id'=>'cont-merge-form',
+    'action'=>Yii::app()->createUrl('contHead/mergeConfirm'),
     'enableClientValidation'=>true,
     'clientOptions'=>array('validateOnSubmit'=>true,),
     'layout'=>TbHtml::FORM_LAYOUT_HORIZONTAL,
@@ -50,7 +51,10 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
                 <table class="table table-bordered table-hover">
                     <thead>
                         <tr class="bg-primary">
-                            <th width="80">选择</th>
+                            <th width="80">
+                                <input type="checkbox" id="select-all" />
+                                全选
+                            </th>
                             <th width="120">主合同编号</th>
                             <th width="100">合同状态</th>
                             <th width="150">业务大类</th>
@@ -68,8 +72,9 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
                         <tr>
                             <td class="text-center">
                                 <?php if ($contract['cont_status'] < 10): ?>
-                                    <?php echo TbHtml::radioButton('ContMergeForm[source_cont_id]', false, array(
+                                    <?php echo TbHtml::checkBox('ContMergeForm[source_cont_ids][]', false, array(
                                         'value'=>$contract['id'],
+                                        'class'=>'select-contract',
                                         'uncheckValue'=>null
                                     )); ?>
                                 <?php else: ?>
@@ -124,10 +129,23 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
 
 <script>
 $(document).ready(function(){
+    // 全选/取消全选
+    $('#select-all').click(function(){
+        $('.select-contract').prop('checked', $(this).prop('checked'));
+    });
+    
+    // 单个选择框变化时，更新全选状态
+    $('.select-contract').click(function(){
+        var total = $('.select-contract').length;
+        var checked = $('.select-contract:checked').length;
+        $('#select-all').prop('checked', total === checked);
+    });
+    
+    // 表单提交验证
     $('#cont-merge-form').submit(function(){
-        var selected = $('input[name="ContMergeForm[source_cont_id]"]:checked').val();
-        if (!selected) {
-            alert('请选择要删除的主合同');
+        var selected = $('input[name="ContMergeForm[source_cont_ids][]"]:checked');
+        if (selected.length === 0) {
+            alert('请至少选择一个要删除的主合同');
             return false;
         }
         return true;
