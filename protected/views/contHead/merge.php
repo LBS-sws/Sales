@@ -112,7 +112,7 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
                     <?php echo TbHtml::button('返回', array(
                         'color'=>TbHtml::BUTTON_COLOR_DEFAULT,
                         'size'=>TbHtml::BUTTON_SIZE_LARGE,
-                        'submit'=>Yii::app()->createUrl('contHead/index')
+                        'onclick'=>'window.location.href="'.Yii::app()->createUrl('contHead/index').'"; return false;'
                     )); ?>
                 </div>
             </div>
