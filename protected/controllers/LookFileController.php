@@ -102,13 +102,30 @@ class LookFileController extends Controller
         if (!$model->retrieveData($model->id)) {
             throw new CHttpException(404,'The requested page does not exist.'.$model->id);
         } else {
-            $fileExt = $model->lookFileRow["phy_file_name"];
-            $fileExt = explode(".",$fileExt);
-            $fileExt =".".end($fileExt);
+            // 获取文件扩展名
+            $phyFileName = $model->lookFileRow["phy_file_name"];
+            $fileExt = pathinfo($phyFileName, PATHINFO_EXTENSION);
+            if (!empty($fileExt)) {
+                $fileExt = '.' . $fileExt;
+            }
+            // 获取原始文件名
             $fileName = $model->lookFileRow["file_name"];
-            $fileName = str_replace("&","_",$fileName);
-            $fileName = strpos($fileName,$fileExt)!==false?$fileName:($fileName.$fileExt);
-            $fileName= iconv('utf-8','gbk//ignore',$fileName);
+            $fileName = str_replace(array('&', '?', '#', '%', '+', ' '), '_', $fileName);
+            if (!empty($fileExt)) {
+                // 检查文件名是否已经有扩展名
+                $currentExt = '.' . pathinfo($fileName, PATHINFO_EXTENSION);
+                // 如果没有扩展名或扩展名不匹配，则添加正确的扩展名
+                if (empty($currentExt) || $currentExt === '.' || strcasecmp($currentExt, $fileExt) !== 0) {
+                    // 移除可能存在的错误扩展名
+                    if ($currentExt !== '.') {
+                        $fileName = pathinfo($fileName, PATHINFO_FILENAME);
+                    }
+                    $fileName = $fileName . $fileExt;
+                }
+            }
+            // URL编码文件名（保留扩展名）
+            $fileName = urlencode($fileName);
+            
             $file_path = $model->lookFileRow["phy_path_name"]."/".$model->lookFileRow["phy_file_name"];
             //$fileUrl = "https://lbs-file.lbsapps.cn/".$file_path."?attname=".$fileName;
             $fileUrl = "https://files.lbsapps.cn/".$file_path."?attname=".$fileName;
