@@ -162,7 +162,7 @@ class ClueRptForm extends CFormModel
                     $fileSize = floatval($_FILES['ClueRptForm']['size'][$attribute][$key]["fileVal"]);
                     $fileTmpName = $_FILES['ClueRptForm']['tmp_name'][$attribute][$key]["fileVal"];
                     $ext = pathinfo($fileName,PATHINFO_EXTENSION);
-                    if(in_array($ext,array("jpeg","jpg","png","xlsx","xls","pdf","docx","txt"))){
+                    if(in_array($ext,array("jpeg","jpg","png","xlsx","xls","pdf","docx","txt","doc","wps"))){
                         if($fileSize>$this->docMaxSize){
                             $this->addError($attribute,'文件大小不能大于10M'.$fileSize);
                             break;
@@ -408,7 +408,7 @@ class ClueRptForm extends CFormModel
             $this->setScenario('edit');
         }
     }
-	
+
 	public function saveData()
 	{
 		$connection = Yii::app()->db;

@@ -221,7 +221,7 @@ class VirtualBatchForm extends CFormModel
                     $fileSize = floatval($_FILES[$modelClass]['size']['fileJson'][$key]["fileVal"]);
                     $fileTmpName = $_FILES[$modelClass]['tmp_name']['fileJson'][$key]["fileVal"];
                     $ext = pathinfo($fileName,PATHINFO_EXTENSION);
-                    if(in_array($ext,array("jpeg","jpg","png","xlsx","xls","pdf","docx","txt"))){
+                    if(in_array($ext,array("jpeg","jpg","png","xlsx","xls","pdf","docx","txt","doc","wps"))){
                         if($fileSize>$this->docMaxSize){
                             $this->addError($attribute,'文件大小不能大于10M'.$fileSize);
                             break;
