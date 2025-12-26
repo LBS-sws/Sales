@@ -24,7 +24,7 @@ class ContHeadController extends Controller
     {
         return array(
             array('allow',
-                'actions'=>array('save','edit','new','delete','saveSeal','sendU','sendNewU'),
+                'actions'=>array('save','edit','new','delete','saveSeal','sendU','sendNewU','merge','mergeConfirm','mergeSave'),
                 'expression'=>array('ContHeadController','allowReadWrite'),
             ),
             array('allow',
@@ -346,6 +346,100 @@ class ContHeadController extends Controller
             'noOfPages' => $storeModel->noOfPages
         ));
         Yii::app()->end();
+    }
+
+    /**
+     * 主合同合并-选择页面
+     */
+    public function actionMerge($clue_id=0)
+    {
+        $model = new ContMergeForm();
+        $model->scenario = 'select';
+        $model->clue_id = $clue_id;
+        
+        if (empty($clue_id)) {
+            Dialog::message(Yii::t('dialog','Validation Message'), '客户ID不能为空');
+            $this->redirect(Yii::app()->createUrl('contHead/index'));
+            return;
+        }
+        
+        // 获取该客户下的所有主合同
+        $contractList = $model->getContractListByClueId($clue_id);
+        
+        if (empty($contractList)) {
+            Dialog::message(Yii::t('dialog','Validation Message'), '该客户没有主合同');
+            $this->redirect(Yii::app()->createUrl('contHead/index'));
+            return;
+        }
+        
+        $this->render('merge',array('model'=>$model, 'contractList'=>$contractList));
+    }
+    
+    /**
+     * 主合同合并-确认页面
+     */
+    public function actionMergeConfirm()
+    {
+        if (isset($_POST['ContMergeForm'])) {
+            $model = new ContMergeForm();
+            $model->scenario = 'confirm';
+            $model->attributes = $_POST['ContMergeForm'];
+            
+            if ($model->validate()) {
+                // 获取源主合同的关联数据
+                $model->relatedData = $model->getRelatedDataStat($model->source_cont_id);
+                $relatedDetail = $model->getRelatedDataDetail($model->source_cont_id);
+                
+                // 获取该客户下的其他主合同列表（用于选择目标主合同）
+                $targetContractList = $model->getContractListByClueId($model->sourceContRow['clue_id']);
+                
+                // 过滤掉源主合同
+                $targetContractList = array_filter($targetContractList, function($item) use ($model) {
+                    return $item['id'] != $model->source_cont_id;
+                });
+                
+                $this->render('merge_confirm', array(
+                    'model' => $model,
+                    'relatedDetail' => $relatedDetail,
+                    'targetContractList' => $targetContractList
+                ));
+            } else {
+                $message = CHtml::errorSummary($model);
+                Dialog::message(Yii::t('dialog','Validation Message'), $message);
+                $this->redirect(Yii::app()->createUrl('contHead/merge', array('clue_id'=>$model->clue_id)));
+            }
+        } else {
+            $this->redirect(Yii::app()->createUrl('contHead/index'));
+        }
+    }
+    
+    /**
+     * 主合同合并-执行合并
+     */
+    public function actionMergeSave()
+    {
+        if (isset($_POST['ContMergeForm'])) {
+            $model = new ContMergeForm();
+            $model->scenario = 'merge';
+            $model->attributes = $_POST['ContMergeForm'];
+            
+            if ($model->validate()) {
+                if ($model->mergeSave()) {
+                    Dialog::message(Yii::t('dialog','Information'), '主合同合并删除成功');
+                    $this->redirect(Yii::app()->createUrl('contHead/detail', array('index'=>$model->target_cont_id)));
+                } else {
+                    $message = CHtml::errorSummary($model);
+                    Dialog::message(Yii::t('dialog','Validation Message'), $message);
+                    $this->redirect(Yii::app()->createUrl('contHead/merge', array('clue_id'=>$model->clue_id)));
+                }
+            } else {
+                $message = CHtml::errorSummary($model);
+                Dialog::message(Yii::t('dialog','Validation Message'), $message);
+                $this->redirect(Yii::app()->createUrl('contHead/merge', array('clue_id'=>$model->clue_id)));
+            }
+        } else {
+            $this->redirect(Yii::app()->createUrl('contHead/index'));
+        }
     }
 
     public static function allowReadWrite() {

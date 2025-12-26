@@ -68,6 +68,15 @@ $this->pageTitle=Yii::app()->name . ' - Clue Head Form';
                     ?>
                 <?php endif ?>
                 <?php
+                // 合并删除按钮（仅草稿状态可见）
+                if(in_array($model->cont_status,array(0,9))){
+                    echo TbHtml::button('<span class="fa fa-trash"></span> 合并删除', array(
+                        'color'=>TbHtml::BUTTON_COLOR_DANGER,
+                        'submit'=>Yii::app()->createUrl('contHead/merge',array("clue_id"=>$model->clue_id))
+                    ));
+                }
+                ?>
+                <?php
                 if(in_array($model->cont_status,array(0,9))){
                     echo TbHtml::button('<span class="fa fa-edit"></span> '.Yii::t('clue','update'), array(
                             'color'=>TbHtml::BUTTON_COLOR_PRIMARY,
