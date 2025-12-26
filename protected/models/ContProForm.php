@@ -110,6 +110,11 @@ class ContProForm extends ContHeadForm
 
     public function validateID($attribute, $param) {
         $this->login_employee_id=CGetName::getEmployeeIDByMy();
+        $row = Yii::app()->db->createCommand()->select("mh_id")->from("sal_contpro")
+            ->where("id=:id",array(":id"=>$this->id))->queryRow();
+        if($row){//防止流程回到起始节点后，生成新的流程id
+            $this->mh_id = $row["mh_id"];
+        }
     }
 
     public function validateContID($attribute, $param) {
