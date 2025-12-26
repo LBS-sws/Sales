@@ -142,7 +142,6 @@ class ContHeadList extends CListPageModel
             foreach ($records as $k=>$record) {
                 $this->attr[] = array(
                     'id'=>$record['id'],
-                    'clue_id'=>$record['clue_id'], // 客户ID，用于批量操作
                     'cont_code'=>$record['cont_code'],
                     'cont_type'=>CGetName::getContactTypeStrByKey($record['cont_type']),
                     'busine_id_text'=>CGetName::getBusineStrByText($record['busine_id_text']),
@@ -158,11 +157,12 @@ class ContHeadList extends CListPageModel
                     'cont_end_dt'=>$record['cont_end_dt'],
                     'sales_id'=>$record['employee_name'],
                     'cont_status'=>CGetName::getContTopStatusStrByKey($record['cont_status']),
-                    'cont_status_value'=>$record['cont_status'], // 保留原始状态值用于判断
                     'lcd'=>$record['lcd'],
                     'lud'=>$record['lud'],
                     'luu'=>$record['luu'],
                     'lcu'=>$record['lcu'],
+                    'clue_id'=>$record['clue_id'], // 客户ID，用于批量操作
+                    'cont_status_value'=>$record['cont_status'], // 保留原始状态值用于判断
                 );
             }
         }

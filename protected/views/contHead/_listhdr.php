@@ -2,6 +2,7 @@
     <th width="30px">
         <input type="checkbox" id="select-all-contracts" title="全选" />
     </th>
+    <th width="30px"></th>
     <th width="150px">
         <?php echo TbHtml::link($this->getLabelName('cont_code').$this->drawOrderArrow('cont.cont_code'),'#',$this->createOrderLink('code-list','cont.cont_code'))
         ;
