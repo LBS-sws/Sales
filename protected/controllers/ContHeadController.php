@@ -388,8 +388,15 @@ class ContHeadController extends Controller
             if (isset($_POST['ContMergeForm']['source_cont_ids']) && is_array($_POST['ContMergeForm']['source_cont_ids'])) {
                 $model->source_cont_ids = $_POST['ContMergeForm']['source_cont_ids'];
                 // 取第一个作为主要源合同（用于获取客户ID）
-                $model->source_cont_id = $model->source_cont_ids[0];
+                if (!empty($model->source_cont_ids)) {
+                    $model->source_cont_id = $model->source_cont_ids[0];
+                }
+            } elseif (isset($_POST['ContMergeForm']['source_cont_id'])) {
+                // 兼容单选模式
+                $model->source_cont_id = $_POST['ContMergeForm']['source_cont_id'];
+                $model->source_cont_ids = array($model->source_cont_id);
             }
+            
             $model->clue_id = isset($_POST['ContMergeForm']['clue_id']) ? $_POST['ContMergeForm']['clue_id'] : 0;
             $model->step = 'confirm';
             
@@ -398,24 +405,26 @@ class ContHeadController extends Controller
                 $totalRelatedData = array();
                 $allRelatedDetail = array();
                 
-                foreach ($model->source_cont_ids as $source_id) {
-                    $relatedData = $model->getRelatedDataStat($source_id);
-                    $relatedDetail = $model->getRelatedDataDetail($source_id);
-                    
-                    // 累加统计数据
-                    foreach ($relatedData as $key => $value) {
-                        if (!isset($totalRelatedData[$key])) {
-                            $totalRelatedData[$key] = 0;
+                if (!empty($model->source_cont_ids) && is_array($model->source_cont_ids)) {
+                    foreach ($model->source_cont_ids as $source_id) {
+                        $relatedData = $model->getRelatedDataStat($source_id);
+                        $relatedDetail = $model->getRelatedDataDetail($source_id);
+                        
+                        // 累加统计数据
+                        foreach ($relatedData as $key => $value) {
+                            if (!isset($totalRelatedData[$key])) {
+                                $totalRelatedData[$key] = 0;
+                            }
+                            $totalRelatedData[$key] += $value;
                         }
-                        $totalRelatedData[$key] += $value;
-                    }
-                    
-                    // 合并详细数据
-                    foreach ($relatedDetail as $key => $items) {
-                        if (!isset($allRelatedDetail[$key])) {
-                            $allRelatedDetail[$key] = array();
+                        
+                        // 合并详细数据
+                        foreach ($relatedDetail as $key => $items) {
+                            if (!isset($allRelatedDetail[$key])) {
+                                $allRelatedDetail[$key] = array();
+                            }
+                            $allRelatedDetail[$key] = array_merge($allRelatedDetail[$key], $items);
                         }
-                        $allRelatedDetail[$key] = array_merge($allRelatedDetail[$key], $items);
                     }
                 }
                 
@@ -425,10 +434,12 @@ class ContHeadController extends Controller
                 $targetContractList = $model->getContractListByClueId($model->sourceContRow['clue_id']);
                 
                 // 过滤掉所有源主合同
-                $sourceIds = $model->source_cont_ids;
-                $targetContractList = array_filter($targetContractList, function($item) use ($sourceIds) {
-                    return !in_array($item['id'], $sourceIds);
-                });
+                if (!empty($model->source_cont_ids)) {
+                    $sourceIds = $model->source_cont_ids;
+                    $targetContractList = array_filter($targetContractList, function($item) use ($sourceIds) {
+                        return !in_array($item['id'], $sourceIds);
+                    });
+                }
                 
                 $this->render('merge_confirm', array(
                     'model' => $model,
