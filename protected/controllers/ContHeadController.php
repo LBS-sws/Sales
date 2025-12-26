@@ -381,8 +381,9 @@ class ContHeadController extends Controller
     public function actionMergeConfirm()
     {
         if (isset($_POST['ContMergeForm'])) {
-            $model = new ContMergeForm();
-            $model->scenario = 'confirm';
+            try {
+                $model = new ContMergeForm();
+                $model->scenario = 'confirm';
             
             // 处理多选的源合同ID
             if (isset($_POST['ContMergeForm']['source_cont_ids']) && is_array($_POST['ContMergeForm']['source_cont_ids'])) {
@@ -400,7 +401,24 @@ class ContHeadController extends Controller
             $model->clue_id = isset($_POST['ContMergeForm']['clue_id']) ? $_POST['ContMergeForm']['clue_id'] : 0;
             $model->step = 'confirm';
             
+            if (empty($model->source_cont_id) && !empty($model->source_cont_ids)) {
+                $model->source_cont_id = $model->source_cont_ids[0];
+            }
+            
             if ($model->validate()) {
+                // 检查必要数据
+                if (empty($model->source_cont_id)) {
+                    Dialog::message(Yii::t('dialog','Validation Message'), '源主合同ID不能为空');
+                    $this->redirect(Yii::app()->createUrl('contHead/index'));
+                    return;
+                }
+                
+                if (empty($model->sourceContRow)) {
+                    Dialog::message(Yii::t('dialog','Validation Message'), '无法获取源主合同信息');
+                    $this->redirect(Yii::app()->createUrl('contHead/index'));
+                    return;
+                }
+                
                 // 汇总所有源主合同的关联数据
                 $totalRelatedData = array();
                 $allRelatedDetail = array();
@@ -411,27 +429,36 @@ class ContHeadController extends Controller
                         $relatedDetail = $model->getRelatedDataDetail($source_id);
                         
                         // 累加统计数据
-                        foreach ($relatedData as $key => $value) {
-                            if (!isset($totalRelatedData[$key])) {
-                                $totalRelatedData[$key] = 0;
+                        if (is_array($relatedData)) {
+                            foreach ($relatedData as $key => $value) {
+                                if (!isset($totalRelatedData[$key])) {
+                                    $totalRelatedData[$key] = 0;
+                                }
+                                $totalRelatedData[$key] += $value;
                             }
-                            $totalRelatedData[$key] += $value;
                         }
                         
                         // 合并详细数据
-                        foreach ($relatedDetail as $key => $items) {
-                            if (!isset($allRelatedDetail[$key])) {
-                                $allRelatedDetail[$key] = array();
+                        if (is_array($relatedDetail)) {
+                            foreach ($relatedDetail as $key => $items) {
+                                if (!isset($allRelatedDetail[$key])) {
+                                    $allRelatedDetail[$key] = array();
+                                }
+                                if (is_array($items)) {
+                                    $allRelatedDetail[$key] = array_merge($allRelatedDetail[$key], $items);
+                                }
                             }
-                            $allRelatedDetail[$key] = array_merge($allRelatedDetail[$key], $items);
                         }
                     }
                 }
                 
                 $model->relatedData = $totalRelatedData;
                 
+                // 获取客户ID（如果 sourceContRow 为空，从第一个源合同获取）
+                $clue_id = !empty($model->sourceContRow['clue_id']) ? $model->sourceContRow['clue_id'] : $model->clue_id;
+                
                 // 获取该客户下的其他主合同列表（用于选择目标主合同）
-                $targetContractList = $model->getContractListByClueId($model->sourceContRow['clue_id']);
+                $targetContractList = $model->getContractListByClueId($clue_id);
                 
                 // 过滤掉所有源主合同
                 if (!empty($model->source_cont_ids)) {
@@ -450,6 +477,13 @@ class ContHeadController extends Controller
                 $message = CHtml::errorSummary($model);
                 Dialog::message(Yii::t('dialog','Validation Message'), $message);
                 $this->redirect(Yii::app()->createUrl('contHead/merge', array('clue_id'=>$model->clue_id)));
+            }
+            } catch (Exception $e) {
+                // 捕获异常并显示详细错误信息
+                $errorMsg = '错误: ' . $e->getMessage() . '<br/>文件: ' . $e->getFile() . '<br/>行号: ' . $e->getLine();
+                Dialog::message('系统错误', $errorMsg);
+                Yii::log($e->getMessage() . "\n" . $e->getTraceAsString(), 'error', 'contHead.mergeConfirm');
+                $this->redirect(Yii::app()->createUrl('contHead/index'));
             }
         } else {
             $this->redirect(Yii::app()->createUrl('contHead/index'));

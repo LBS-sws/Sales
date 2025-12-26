@@ -23,9 +23,9 @@ class ContMergeForm extends CFormModel
     {
         return array(
             array('source_cont_id, source_cont_ids, target_cont_id, clue_id, step', 'safe'),
-            array('source_cont_id', 'required', 'on'=>'merge'),
+            array('source_cont_id', 'required', 'on'=>'confirm,merge'),
             array('target_cont_id', 'required', 'on'=>'merge'),
-            array('source_cont_id', 'validateSourceCont'),
+            array('source_cont_id', 'validateSourceCont', 'on'=>'confirm,merge'),
             array('target_cont_id', 'validateTargetCont', 'on'=>'merge'),
         );
     }
