@@ -52,7 +52,7 @@
                         $html.=TbHtml::link("<span class='glyphicon glyphicon-pencil'></span>",'javascript:void(0);',array(
                             'data-load'=>Yii::app()->createUrl('clueStorePerson/ajaxShow'),
                             'data-submit'=>Yii::app()->createUrl('clueStorePerson/ajaxSave'),
-                            'data-serialize'=>"ClueStorePersonForm[scenario]=edit&ClueStorePersonForm[id]=".$row["id"],
+                            'data-serialize'=>"ClueStorePersonForm[scenario]=edit&ClueStorePersonForm[id]=".$row["id"]."&ClueStorePersonForm[clue_id]=".$model->clue_id."&ClueStorePersonForm[clue_store_id]=".$model->id,
                             'data-obj'=>"#store_dv_person",
                             'class'=>'openDialogForm',
                         ));
@@ -60,7 +60,7 @@
                         $html.=TbHtml::link("<span class='glyphicon glyphicon-trash'></span>",'javascript:void(0);',array(
                             'data-load'=>Yii::app()->createUrl('clueStorePerson/ajaxDelete'),
                             'data-submit'=>Yii::app()->createUrl('clueStorePerson/ajaxSave'),
-                            'data-serialize'=>"ClueStorePersonForm[scenario]=delete&ClueStorePersonForm[id]=".$row["id"],
+                            'data-serialize'=>"ClueStorePersonForm[scenario]=delete&ClueStorePersonForm[id]=".$row["id"]."&ClueStorePersonForm[clue_id]=".$model->clue_id."&ClueStorePersonForm[clue_store_id]=".$model->id,
                             'data-obj'=>"#store_dv_person",
                             'class'=>'openDialogForm',
                         ));
