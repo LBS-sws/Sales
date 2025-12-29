@@ -1,6 +1,8 @@
 <tr class='clickable-row' data-href='<?php echo $this->getLink('CM36', 'contHead/detail', 'contHead/detail', array('index'=>$this->record['id']));?>'>
 	<td>
-        <input type="checkbox" class="select-contract-item" value="<?php echo $this->record['id']; ?>" data-clue-id="<?php echo isset($this->record['clue_id']) ? $this->record['clue_id'] : ''; ?>" onclick="event.stopPropagation();" />
+        <?php if(Yii::app()->user->validRWFunction('CM38')): ?>
+            <input type="checkbox" class="select-contract-item" value="<?php echo $this->record['id']; ?>" data-clue-id="<?php echo isset($this->record['clue_id']) ? $this->record['clue_id'] : ''; ?>" onclick="event.stopPropagation();" />
+        <?php endif; ?>
     </td>
 	<td><?php echo $this->drawEditButton('CM36', 'contHead/detail', 'contHead/detail', array('index'=>$this->record['id'])); ?></td>
 	<td><?php echo $this->record['cont_code']; ?></td>

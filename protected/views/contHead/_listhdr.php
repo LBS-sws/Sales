@@ -1,6 +1,8 @@
 <tr>
     <th width="30px">
-        <input type="checkbox" id="select-all-contracts" title="全选" />
+        <?php if(Yii::app()->user->validRWFunction('CM38')): ?>
+            <input type="checkbox" id="select-all-contracts" title="全选" />
+        <?php endif; ?>
     </th>
     <th width="30px"></th>
     <th width="150px">

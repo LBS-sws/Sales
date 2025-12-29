@@ -24,7 +24,7 @@ class ContHeadController extends Controller
     {
         return array(
             array('allow',
-                'actions'=>array('save','edit','new','delete','saveSeal','sendU','sendNewU','merge','mergeConfirm','mergeSave'),
+                'actions'=>array('save','edit','new','delete','saveSeal','sendU','sendNewU','merge','mergeConfirm','mergeSave','ajaxExecuteMerge','ajaxGetTaskStatus'),
                 'expression'=>array('ContHeadController','allowReadWrite'),
             ),
             array('allow',
@@ -353,6 +353,13 @@ class ContHeadController extends Controller
      */
     public function actionMerge($clue_id=0)
     {
+        // CM38: 主合同批量合并删除权限验证
+        if(!Yii::app()->user->validRWFunction('CM38')){
+            Dialog::message(Yii::t('dialog','Validation Message'), "没有权限执行批量合并删除操作");
+            $this->redirect(Yii::app()->createUrl('contHead/index'));
+            return;
+        }
+        
         $model = new ContMergeForm();
         $model->scenario = 'select';
         $model->clue_id = $clue_id;
@@ -380,6 +387,13 @@ class ContHeadController extends Controller
      */
     public function actionMergeConfirm()
     {
+        // CM38: 主合同批量合并删除权限验证
+        if(!Yii::app()->user->validRWFunction('CM38')){
+            Dialog::message(Yii::t('dialog','Validation Message'), "没有权限执行批量合并删除操作");
+            $this->redirect(Yii::app()->createUrl('contHead/index'));
+            return;
+        }
+        
         if (isset($_POST['ContMergeForm'])) {
             try {
                 $model = new ContMergeForm();
@@ -508,6 +522,13 @@ class ContHeadController extends Controller
      */
     public function actionMergeSave()
     {
+        // CM38: 主合同批量合并删除权限验证
+        if(!Yii::app()->user->validRWFunction('CM38')){
+            Dialog::message(Yii::t('dialog','Validation Message'), "没有权限执行批量合并删除操作");
+            $this->redirect(Yii::app()->createUrl('contHead/index'));
+            return;
+        }
+        
         if (isset($_POST['ContMergeForm'])) {
             $model = new ContMergeForm();
             $model->scenario = 'merge';
@@ -552,6 +573,12 @@ class ContHeadController extends Controller
      */
     public function actionAjaxExecuteMerge()
     {
+        // CM38: 主合同批量合并删除权限验证
+        if(!Yii::app()->user->validRWFunction('CM38')){
+            echo CJSON::encode(array('success' => false, 'error' => '没有权限'));
+            Yii::app()->end();
+        }
+        
         if (Yii::app()->request->isAjaxRequest && isset($_POST['task_id'])) {
             $taskId = $_POST['task_id'];
             $result = ContMergeTask::executeTask($taskId);
@@ -565,6 +592,12 @@ class ContHeadController extends Controller
      */
     public function actionAjaxGetTaskStatus()
     {
+        // CM38: 主合同批量合并删除权限验证
+        if(!Yii::app()->user->validRWFunction('CM38')){
+            echo CJSON::encode(array('status' => 'no_permission'));
+            Yii::app()->end();
+        }
+        
         if (Yii::app()->request->isAjaxRequest && isset($_GET['task_id'])) {
             $taskId = $_GET['task_id'];
             $task = ContMergeTask::getTask($taskId);

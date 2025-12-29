@@ -3,6 +3,13 @@ $this->pageTitle=Yii::app()->name . ' - Contract List';
 ?>
 <style>
     .table-fixed { table-layout: fixed;}
+    .select-contract-item {
+        cursor: pointer !important;
+        pointer-events: auto !important;
+    }
+    .clickable-row td:first-child {
+        pointer-events: auto !important;
+    }
 </style>
 
 <?php $form=$this->beginWidget('TbActiveForm', array(
@@ -23,13 +30,16 @@ $this->pageTitle=Yii::app()->name . ' - Contract List';
         <div class="box-body">
             <div class="btn-group pull-left" role="group">
                 <?php
-                echo TbHtml::button('<i class="fa fa-object-group"></i> 批量合并删除', array(
-                    'color'=>TbHtml::BUTTON_COLOR_DANGER,
-                    'id'=>'batch-merge-btn',
-                    'disabled'=>true
-                ));
+                // CM38: 主合同批量合并删除权限
+                if(Yii::app()->user->validRWFunction('CM38')){
+                    echo TbHtml::button('<i class="fa fa-object-group"></i> 批量合并删除', array(
+                        'color'=>TbHtml::BUTTON_COLOR_DANGER,
+                        'id'=>'batch-merge-btn',
+                        'disabled'=>true
+                    ));
+                    echo '<span id="selected-count" class="text-muted" style="margin-left:10px;"></span>';
+                }
                 ?>
-                <span id="selected-count" class="text-muted" style="margin-left:10px;"></span>
             </div>
             <div class="btn-group pull-right" role="group">
                 <?php
@@ -115,17 +125,17 @@ $js = "
             console.log('涉及客户数量:', clueIds.length);
             
             if (clueIds.length === 1 && count >= 1) {
-                $('#batch-merge-btn').prop('disabled', false);
+                $('#batch-merge-btn').prop('disabled', false).removeClass('disabled');
                 $('#selected-count').html('<span class=\"text-success\">已选择 <strong>' + count + '</strong> 个主合同</span>');
             } else if (clueIds.length > 1) {
-                $('#batch-merge-btn').prop('disabled', true);
+                $('#batch-merge-btn').prop('disabled', true).addClass('disabled');
                 $('#selected-count').html('<span class=\"text-danger\">只能选择同一个客户下的主合同（当前选中了 ' + clueIds.length + ' 个不同客户）</span>');
             } else {
-                $('#batch-merge-btn').prop('disabled', true);
+                $('#batch-merge-btn').prop('disabled', true).addClass('disabled');
                 $('#selected-count').html('<span class=\"text-warning\">请选择至少1个主合同</span>');
             }
         } else {
-            $('#batch-merge-btn').prop('disabled', true);
+            $('#batch-merge-btn').prop('disabled', true).addClass('disabled');
             $('#selected-count').text('');
         }
     }
@@ -168,9 +178,9 @@ Yii::app()->clientScript->registerScript('calcFunction',$js,CClientScript::POS_R
 
 	// 修改行点击事件，排除checkbox点击
 	$jsRowClick = "
-$('.clickable-row').click(function(e) {
-    // 如果点击的是checkbox或其父元素，不跳转
-    if ($(e.target).hasClass('select-contract-item') || $(e.target).closest('td').find('.select-contract-item').length > 0) {
+$(document).on('click', '.clickable-row', function(e) {
+    // 如果点击的是checkbox或其父td，不跳转
+    if ($(e.target).hasClass('select-contract-item') || $(e.target).is('input[type=checkbox]') || $(e.target).closest('td').has('input[type=checkbox]').length > 0) {
         return false;
     }
 	window.document.location = $(this).data('href');
