@@ -57,18 +57,13 @@ class ClueStorePersonForm extends ClientPersonForm{
     public function sendDataByU(){
         if(in_array($this->getScenario(),array("new","edit","delete"))){
             $uStoreModel = new CurlNotesByStore();
-            if(empty($this->clientStoreRow["u_id"])){//客户未同步，则同步客户信息
-                //$uStoreModel->putDataByClientID($this->clue_id);
-            }else{
-                if($this->getScenario()==="delete"){
-                    $personRow = Yii::app()->db->createCommand()->select("u_id")->from("sal_clue_person")
-                        ->where("id=:id",array(":id"=>$this->id))->queryRow();
-                    if(empty($personRow) || empty($personRow["u_id"])){
-                        return;
-                    }
-                }
-                $uStoreModel->putPersonDataByPersonID($this->id,$this->clientStoreRow);
-            }
+            // 获取联络人的u_id，判断是否是新增（u_id为空）
+            $personRow = Yii::app()->db->createCommand()->select("u_id")->from("sal_clue_person")
+                ->where("id=:id",array(":id"=>$this->id))->queryRow();
+            $isNewPerson = empty($personRow) || empty($personRow["u_id"]);
+            // 传递scenario信息：根据u_id是否为空判断是新增还是编辑
+            $scenario = $isNewPerson ? "new" : ($this->getScenario()==="delete" ? "delete" : "edit");
+            $uStoreModel->putPersonDataByPersonID($this->id,$this->clientStoreRow,$scenario);
             $uStoreModel->setOutContentByData();
             $uStoreModel->saveCurlToApi();
         }

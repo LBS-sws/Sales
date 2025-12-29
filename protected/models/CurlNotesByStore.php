@@ -292,8 +292,12 @@ class CurlNotesByStore extends CurlNotesModel {
     }
 
     //将门店联系人数据保存到api内
-    public function putPersonDataByPersonID($person_id,$clientHeadRow){
-        $data = $this->getPersonDataByPersonID($person_id,$clientHeadRow);
+    public function putPersonDataByPersonID($person_id,$clientHeadRow,$scenario=null){
+        $data = $this->getPersonDataByPersonID($person_id,$clientHeadRow,$scenario);
+        // 如果返回空数组，说明无法同步（如编辑操作但u_id为空），跳过
+        if(empty($data)){
+            return;
+        }
         $this->data=array(
             "operation_type"=>$this->operation_type,
             "data"=>array(),
@@ -302,13 +306,25 @@ class CurlNotesByStore extends CurlNotesModel {
         $this->data["data"]=json_encode($data,JSON_UNESCAPED_UNICODE);
     }
     //获取门店联系人数据
-    public function getPersonDataByPersonID($person_id,$clueStoreRow){
+    public function getPersonDataByPersonID($person_id,$clueStoreRow,$scenario=null){
         $suffix = Yii::app()->params['envSuffix'];
         $data=array();
         $personRow = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_clue_person")
             ->where("id=:id",array(":id"=>$person_id))->queryRow();
         if($personRow){
-            $this->operation_type = empty($personRow["u_id"])?"insert":"update";
+            // 根据scenario和u_id判断操作类型
+            // 如果是编辑操作，必须要有u_id才能update；如果是新增操作，根据u_id判断
+            if($scenario === "edit"){
+                // 编辑操作：必须有u_id才能update
+                if(!empty($personRow["u_id"])){
+                    $this->operation_type = "update";
+                }else{
+                    return array();
+                }
+            }else{
+                // 新增操作：根据u_id判断
+                $this->operation_type = empty($personRow["u_id"])?"insert":"update";
+            }
             $data = array(
                 "contact_id"=>$personRow["person_code"],
                 "customer_id"=>isset($clueStoreRow["u_id"])?$clueStoreRow["u_id"]:null,//项目分组id
@@ -326,7 +342,7 @@ class CurlNotesByStore extends CurlNotesModel {
                 "password"=>null,//
                 "sort"=>null,//
             );
-            if(!empty($personRow["u_id"])){
+            if($this->operation_type === "update"){
                 $this->sendDataSetByUpdateStorePerson();
                 $data["id"]=$personRow["u_id"];
                 $data["update_time"]=$personRow["lcd"];
