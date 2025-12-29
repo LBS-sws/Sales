@@ -110,6 +110,11 @@ class ContProForm extends ContHeadForm
 
     public function validateID($attribute, $param) {
         $this->login_employee_id=CGetName::getEmployeeIDByMy();
+        $row = Yii::app()->db->createCommand()->select("mh_id")->from("sal_contpro")
+            ->where("id=:id",array(":id"=>$this->id))->queryRow();
+        if($row){//防止流程回到起始节点后，生成新的流程id
+            $this->mh_id = $row["mh_id"];
+        }
     }
 
     public function validateContID($attribute, $param) {
@@ -720,7 +725,7 @@ class ContProForm extends ContHeadForm
         Yii::app()->db->createCommand()->update("sal_contpro",array("pro_change"=>$this->pro_change),"id=".$this->id);
     }
 
-    protected function getSaveVirExprData($row,$virtualRow,$busine_id,$newData){
+    protected function getSaveVirExprData($row,$virtualRow,$busine_id,$newData,$proNum=1){
         $virRow = Yii::app()->db->createCommand()->select("*")->from("sal_contract_virtual")
             ->where("cont_id=:cont_id and clue_store_id=:clue_store_id and busine_id=:busine_id",array(
                 ":cont_id"=>$this->cont_id,
@@ -768,7 +773,7 @@ class ContProForm extends ContHeadForm
                 "pro_status"=>$this->pro_status,
                 "pro_change"=>$pro_change,
             );
-            $virCode = $this->computeVirCode($this->cont_id);
+            $virCode = $this->computeVirCode($this->cont_id,$proNum);
             $storeRow = Yii::app()->db->createCommand()->select("*")->from("sal_clue_store")
                 ->where("id=:id",array(":id"=>$row["clue_store_id"]))->queryRow();
             $service_type = Yii::app()->db->createCommand()->select("service_type")->from("sal_service_type")
@@ -794,7 +799,9 @@ class ContProForm extends ContHeadForm
     protected function addVirtual($row,$sseId){
         $uid = Yii::app()->user->id;
         if(!empty($row["list"])){//
+            $proNum=0;//增加多个门店时，需要自增数量（暂时写在这里，没时间查数据表）
             foreach ($row["list"] as $busine_id=>$virtualRow){
+                $proNum++;
                 $updateRow = Yii::app()->db->createCommand()->select("id")->from("sal_contpro_virtual")
                     ->where("pro_id=:pro_id and clue_store_id=:clue_store_id and busine_id=:busine_id",array(
                         ":pro_id"=>$this->id,
@@ -802,7 +809,7 @@ class ContProForm extends ContHeadForm
                         ":busine_id"=>$busine_id,
                     ))->queryRow();
                 $virSaveArr = $this->getSaveVirData($row,$virtualRow);
-                $virSaveExprArr = $this->getSaveVirExprData($row,$virtualRow,$busine_id,$virSaveArr);
+                $virSaveExprArr = $this->getSaveVirExprData($row,$virtualRow,$busine_id,$virSaveArr,$proNum);
                 $virSaveArr = $virSaveExprArr;
                 $virSaveArr["effect_date"] = $this->pro_date;
                 if($updateRow){

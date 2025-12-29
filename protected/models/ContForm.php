@@ -612,12 +612,12 @@ class ContForm extends CFormModel
         return $this->cont_code;
 	}
 
-	public function computeVirCode($cont_id=0) {
+	public function computeVirCode($cont_id=0,$proNum=1) {
         $cont_id=empty($cont_id)?$this->id:$cont_id;
         $row = Yii::app()->db->createCommand()->select("count(*) as sum")
             ->from("sal_contract_virtual")->where("cont_id=:id",array(":id"=>$cont_id))->queryRow();
         $num = $row?$row["sum"]:0;
-        $num++;
+        $num+=$proNum;
         if($num<10000){
             $num = $num<10000?$num+10000:$num;
             $num = "".$num;

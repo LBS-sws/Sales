@@ -29,6 +29,7 @@
                 <th><?php echo Yii::t('clue',"person tel"); ?></th>
                 <th><?php echo Yii::t('clue',"person email"); ?></th>
                 <th><?php echo Yii::t('clue',"person pws"); ?></th>
+                <th>状态</th>
                 <th></th>
             </tr>
             </thead>
@@ -39,7 +40,9 @@
                 $html ="";
                 $updateBool = Yii::app()->user->validRWFunction('CM10');
                 foreach ($list as $row){
-                    $html.="<tr>";
+                    // 已删除的记录用灰色显示
+                    $rowStyle = ($row["status"]==4) ? " style='color:#999;text-decoration:line-through;'" : "";
+                    $html.="<tr{$rowStyle}>";
                     $html.="<td>".$row["person_code"]."</td>";
                     $html.="<td>".$row["cust_person"]."</td>";
                     $html.="<td>".CGetName::getPersonSexStrByKey($row["sex"])."</td>";
@@ -47,12 +50,14 @@
                     $html.="<td>".$row["cust_tel"]."</td>";
                     $html.="<td>".$row["cust_email"]."</td>";
                     $html.="<td>".CGetName::getClientPersonPwsStrByKey($row["person_pws"])."</td>";
+                    $html.="<td>".CGetName::getClientPersonStatusStrByKey($row["status"])."</td>";
                     $html.="<td>";
-                    if($updateBool){
+                    // 已删除的记录不显示操作按钮
+                    if($updateBool && $row["status"]!=4){
                         $html.=TbHtml::link("<span class='glyphicon glyphicon-pencil'></span>",'javascript:void(0);',array(
                             'data-load'=>Yii::app()->createUrl('clueStorePerson/ajaxShow'),
                             'data-submit'=>Yii::app()->createUrl('clueStorePerson/ajaxSave'),
-                            'data-serialize'=>"ClueStorePersonForm[scenario]=edit&ClueStorePersonForm[id]=".$row["id"],
+                            'data-serialize'=>"ClueStorePersonForm[scenario]=edit&ClueStorePersonForm[id]=".$row["id"]."&ClueStorePersonForm[clue_id]=".$model->clue_id."&ClueStorePersonForm[clue_store_id]=".$model->id,
                             'data-obj'=>"#store_dv_person",
                             'class'=>'openDialogForm',
                         ));
@@ -60,7 +65,7 @@
                         $html.=TbHtml::link("<span class='glyphicon glyphicon-trash'></span>",'javascript:void(0);',array(
                             'data-load'=>Yii::app()->createUrl('clueStorePerson/ajaxDelete'),
                             'data-submit'=>Yii::app()->createUrl('clueStorePerson/ajaxSave'),
-                            'data-serialize'=>"ClueStorePersonForm[scenario]=delete&ClueStorePersonForm[id]=".$row["id"],
+                            'data-serialize'=>"ClueStorePersonForm[scenario]=delete&ClueStorePersonForm[id]=".$row["id"]."&ClueStorePersonForm[clue_id]=".$model->clue_id."&ClueStorePersonForm[clue_store_id]=".$model->id,
                             'data-obj'=>"#store_dv_person",
                             'class'=>'openDialogForm',
                         ));

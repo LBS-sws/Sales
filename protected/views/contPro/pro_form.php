@@ -41,17 +41,11 @@ $('.information-header').on('click',function(){
         }
     }
 });
-$('#sales_id').select2({
-    multiple: false,
-    maximumInputLength: 10,
-	language: '$lang',
-	disabled: {$disabled}
-});
 $('#other_sales_id').select2({
     multiple: false,
     maximumInputLength: 10,
-	language: '$lang',
-	disabled: {$disabled}
+    language: '$lang',
+    disabled: {$disabled}
 });
 $('#busine_id').select2({
 	tags: false,
@@ -74,6 +68,16 @@ $('#service_type').select2({
 	templateSelection: formatState
 });
 EOF;
+if($model->isReadonly()===false){//由于只读模式的select的控件是input，所以只读模式不需要执行
+    $js.="
+$('#sales_id').select2({
+    multiple: false,
+    maximumInputLength: 10,
+	language: '$lang',
+	disabled: {$disabled}
+});
+    ";
+}
 Yii::app()->clientScript->registerScript('select2_1',$js,CClientScript::POS_READY);
 $ClueSSEFormStr ="ContProSSEForm";
 if($model->isReadonly()===false){

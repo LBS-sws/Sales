@@ -40,21 +40,24 @@ class CurlNotesModel extends CurlNotesApi {
     }
 
     public static function getUStatusByStoreStatus($store_status){
-        //状态 1 服务中 2 停止服务 3 其他
+        //派单系统状态: 1 服务中 2 停止服务 3 其他
+        //CRM门店状态: 0未生效 1未服务 2服务中 3已停止 10服务中 30服务中 40已暂停 50已终止
         switch ($store_status){
-            case 0:
-            case 1:
-            case 3:
-            case 10:
-            case 30:
-                return 1;
-            case 2:
-            case 40:
-                return 2;
-            case 50:
-                return 3;
+            case 0:  // 未生效
+            case 1:  // 未服务
+            case 2:  // 服务中
+            case 10: // 服务中
+            case 30: // 服务中
+                return 1; // 派单: 服务中
+            case 3:  // 已停止
+            case 40: // 已暂停
+            case 50: // 已终止
+                return 2; // 派单: 停止服务
+//                return 3; // 派单: 其他（未开始服务）
             default:
-                return 3;
+                // 未知状态，记录日志
+                Yii::log("未知的门店状态: {$store_status}，默认返回状态3(其他)", 'warning', 'CurlNotesModel');
+                return 3; // 派单: 其他
         }
     }
 

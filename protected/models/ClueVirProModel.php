@@ -318,6 +318,11 @@ class ClueVirProModel
                     "luu"=>$uid
                 ),"id=".$saveData["id"]);//修改状态
                 Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contract_history",$this->historyArr);
+                // 恢复操作审批通过后立即生效
+                if($saveData["virBatchRow"]["pro_type"]=="R"){
+                    $this->copyContractProForVir($saveData);//合同正式生效允许续约变更等操作
+                    $this->sendContractVirForU($saveData);//虚拟合约发送给派单系统
+                }
                 break;
             default:
                 $returnList=array('code'=>400,'msg'=>"保存数据异常");
@@ -571,12 +576,13 @@ class ClueVirProModel
                 $saveData["virBatchRow"]["vir_id_text"] = $vir_id_text;
             }
 
-            $this->proTypeChange($proRow,$virRows,$oldVirRows);
+            $this->proTypeChange($proRow,$virRows,$oldVirRows,$saveData);
         }
     }
 
-    protected function proTypeChange($proRow,$virRows,$oldVirRows){
+    protected function proTypeChange($proRow,$virRows,$oldVirRows,$saveData=null){
         $suffix = Yii::app()->params['envSuffix'];
+        $uid = isset($saveData["username"]) ? $saveData["username"] : "admin";
         switch ($proRow["pro_type"]){
             case "A"://合同内容调整
                 if($proRow['pro_change']>0){//金额增加
@@ -586,6 +592,39 @@ class ClueVirProModel
                     if($virRow&&$virRow["clue_type"]==1){//地推
                         $this->serviceVisitQian($proRow,$virRows,$oldVirRows);
                     }
+                }
+                break;
+            case "R"://恢复
+                // 恢复虚拟合约后，更新对应的主合约和门店状态为"生效中"
+                $contIds = array();//主合约ID集合
+                $storeIds = array();//门店ID集合
+                foreach ($virRows as $virRow) {
+                    $virInfo = Yii::app()->db->createCommand()->select("cont_id,clue_store_id")
+                        ->from("sales{$suffix}.sal_contract_virtual")
+                        ->where("id=:id",array(":id"=>$virRow["vir_id"]))->queryRow();
+                    if($virInfo){
+                        if(!empty($virInfo["cont_id"]) && !in_array($virInfo["cont_id"],$contIds)){
+                            $contIds[] = $virInfo["cont_id"];
+                        }
+                        if(!empty($virInfo["clue_store_id"]) && !in_array($virInfo["clue_store_id"],$storeIds)){
+                            $storeIds[] = $virInfo["clue_store_id"];
+                        }
+                    }
+                }
+                // 更新主合约状态为30（生效中）
+                if(!empty($contIds)){
+                    $contIdStr = implode(",",$contIds);
+                    Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract",array(
+                        "cont_status"=>30,
+                        "luu"=>$uid
+                    ),"id in ({$contIdStr})");
+                }
+                // 更新门店状态为2（服务中）
+                if(!empty($storeIds)){
+                    $storeIdStr = implode(",",$storeIds);
+                    Yii::app()->db->createCommand()->update("sales{$suffix}.sal_clue_store",array(
+                        "store_status"=>2
+                    ),"id in ({$storeIdStr})");
                 }
                 break;
         }
