@@ -46,7 +46,10 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
 
             <hr/>
 
-            <h3>第一步：选择要保留的正确主合同（目标主合同）</h3>
+            <h3><span class="label label-danger" style="font-size:14px;">⚠️ 必选</span> 第一步：选择要保留的正确主合同（目标主合同）</h3>
+            <div class="alert alert-warning">
+                <i class="fa fa-hand-o-right"></i> <strong>请点击下方表格中的单选按钮（⭘），选择一个要保留的主合同</strong>
+            </div>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead>
@@ -64,10 +67,13 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($contractList as $contract): ?>
+                        <?php 
+                        $isFirst = true;
+                        foreach ($contractList as $contract): 
+                        ?>
                         <tr>
                             <td class="text-center">
-                                <?php echo TbHtml::radioButton('ContMergeForm[target_cont_id]', false, array(
+                                <?php echo TbHtml::radioButton('ContMergeForm[target_cont_id]', $isFirst, array(
                                     'value'=>$contract['id'],
                                     'class'=>'select-target',
                                     'uncheckValue'=>null
@@ -83,14 +89,18 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
                             <td><?php echo $contract['cont_start_dt']; ?></td>
                             <td><?php echo $contract['cont_end_dt']; ?></td>
                         </tr>
-                        <?php endforeach; ?>
+                        <?php 
+                        $isFirst = false;
+                        endforeach; 
+                        ?>
                     </tbody>
                 </table>
             </div>
 
             <hr/>
 
-            <h3>第二步：勾选要合并删除的其它主合同（来源主合同）</h3>
+            <h3><span class="label label-warning">可选</span> 第二步：勾选要合并删除的其它主合同（来源主合同）</h3>
+            <p class="text-info"><i class="fa fa-info-circle"></i> 勾选要删除的主合同，这些主合同的数据将合并到第一步选择的目标主合同中</p>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead>
@@ -115,15 +125,11 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
                         <?php foreach ($contractList as $contract): ?>
                         <tr>
                             <td class="text-center">
-                                <?php if ($contract['cont_status'] < 10): ?>
-                                    <?php echo TbHtml::checkBox('ContMergeForm[source_cont_ids][]', !empty($model->source_cont_ids) && is_array($model->source_cont_ids) && in_array($contract['id'], $model->source_cont_ids), array(
-                                        'value'=>$contract['id'],
-                                        'class'=>'select-contract',
-                                        'uncheckValue'=>null
-                                    )); ?>
-                                <?php else: ?>
-                                    <span class="text-muted">不可选</span>
-                                <?php endif; ?>
+                                <?php echo TbHtml::checkBox('ContMergeForm[source_cont_ids][]', !empty($model->source_cont_ids) && is_array($model->source_cont_ids) && in_array($contract['id'], $model->source_cont_ids), array(
+                                    'value'=>$contract['id'],
+                                    'class'=>'select-contract',
+                                    'uncheckValue'=>null
+                                )); ?>
                             </td>
                             <td><?php echo $contract['cont_code']; ?></td>
                             <td>
@@ -139,9 +145,7 @@ $this->pageTitle=Yii::app()->name . ' - 主合同合并删除';
                             <td><?php echo $contract['cont_start_dt']; ?></td>
                             <td><?php echo $contract['cont_end_dt']; ?></td>
                             <td>
-                                <?php if ($contract['cont_status'] >= 10): ?>
-                                    <span class="text-danger">已生效，不可删除</span>
-                                <?php endif; ?>
+                                <!-- 已放开所有状态限制 -->
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -208,11 +212,11 @@ $(document).ready(function(){
         var target = $('input[name="ContMergeForm[target_cont_id]"]:checked').val();
         var selected = $('input[name="ContMergeForm[source_cont_ids][]"]:checked');
         if (!target) {
-            alert('请先选择要保留的目标主合同');
+            alert('请先在第一步选择要保留的目标主合同（点击单选按钮）');
             return false;
         }
         if (selected.length === 0) {
-            alert('请至少选择一个要删除的主合同');
+            alert('请在第二步勾选至少一个要删除的来源主合同（点击复选框）');
             return false;
         }
         return true;

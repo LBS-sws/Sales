@@ -74,8 +74,13 @@ $js = "
         jQuery.yii.submitForm(this,'{$url}',{});
     });
     
+    // 单个复选框点击（阻止冒泡）
+    $(document).on('click', '.select-contract-item', function(e){
+        e.stopPropagation();
+    });
+    
     // 全选/取消全选
-    $('#select-all-contracts').on('change', function(){
+    $(document).on('change', '#select-all-contracts', function(){
         $('.select-contract-item').prop('checked', $(this).prop('checked'));
         updateBatchButton();
     });
@@ -94,22 +99,30 @@ $js = "
         var checked = $('.select-contract-item:checked');
         var count = checked.length;
         
+        console.log('更新按钮状态：选中' + count + '个');
+        
         if (count > 0) {
             // 检查是否都属于同一个客户
             var clueIds = [];
             checked.each(function(){
                 var clueId = $(this).data('clue-id');
-                if (clueIds.indexOf(clueId) === -1) {
+                console.log('合同ID:', $(this).val(), '客户ID:', clueId);
+                if (clueId && clueIds.indexOf(clueId) === -1) {
                     clueIds.push(clueId);
                 }
             });
             
-            if (clueIds.length === 1) {
+            console.log('涉及客户数量:', clueIds.length);
+            
+            if (clueIds.length === 1 && count >= 1) {
                 $('#batch-merge-btn').prop('disabled', false);
                 $('#selected-count').html('<span class=\"text-success\">已选择 <strong>' + count + '</strong> 个主合同</span>');
-            } else {
+            } else if (clueIds.length > 1) {
                 $('#batch-merge-btn').prop('disabled', true);
                 $('#selected-count').html('<span class=\"text-danger\">只能选择同一个客户下的主合同（当前选中了 ' + clueIds.length + ' 个不同客户）</span>');
+            } else {
+                $('#batch-merge-btn').prop('disabled', true);
+                $('#selected-count').html('<span class=\"text-warning\">请选择至少1个主合同</span>');
             }
         } else {
             $('#batch-merge-btn').prop('disabled', true);
@@ -145,11 +158,25 @@ $js = "
         $('body').append(form);
         form.submit();
     });
+    
+    // 页面加载后初始化一次按钮状态
+    setTimeout(function(){
+        updateBatchButton();
+    }, 500);
 ";
 Yii::app()->clientScript->registerScript('calcFunction',$js,CClientScript::POS_READY);
 
-	$js = Script::genTableRowClick();
-	Yii::app()->clientScript->registerScript('rowClick',$js,CClientScript::POS_READY);
+	// 修改行点击事件，排除checkbox点击
+	$jsRowClick = "
+$('.clickable-row').click(function(e) {
+    // 如果点击的是checkbox或其父元素，不跳转
+    if ($(e.target).hasClass('select-contract-item') || $(e.target).closest('td').find('.select-contract-item').length > 0) {
+        return false;
+    }
+	window.document.location = $(this).data('href');
+});
+";
+	Yii::app()->clientScript->registerScript('rowClick',$jsRowClick,CClientScript::POS_READY);
 ?>
 <?php
 echo TbHtml::button("",array("submit"=>"","class"=>"hide"));

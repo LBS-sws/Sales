@@ -398,6 +398,8 @@ class ContHeadController extends Controller
                 $model->source_cont_ids = array($model->source_cont_id);
             }
             
+            // 接收目标主合同ID
+            $model->target_cont_id = isset($_POST['ContMergeForm']['target_cont_id']) ? $_POST['ContMergeForm']['target_cont_id'] : 0;
             $model->clue_id = isset($_POST['ContMergeForm']['clue_id']) ? $_POST['ContMergeForm']['clue_id'] : 0;
             $model->step = 'confirm';
             
@@ -518,37 +520,23 @@ class ContHeadController extends Controller
                 } else {
                     $model->source_cont_ids = $_POST['ContMergeForm']['source_cont_ids'];
                 }
+                // 设置第一个作为主要源合同（用于验证）
+                if (!empty($model->source_cont_ids)) {
+                    $model->source_cont_id = $model->source_cont_ids[0];
+                }
             }
             $model->target_cont_id = isset($_POST['ContMergeForm']['target_cont_id']) ? $_POST['ContMergeForm']['target_cont_id'] : 0;
             $model->clue_id = isset($_POST['ContMergeForm']['clue_id']) ? $_POST['ContMergeForm']['clue_id'] : 0;
             
             if ($model->validate()) {
-                $successCount = 0;
-                $failedContracts = array();
+                // 创建异步任务
+                $taskId = ContMergeTask::createTask($model->target_cont_id, $model->source_cont_ids, $model->clue_id);
                 
-                // 逐个处理源主合同的合并
-                foreach ($model->source_cont_ids as $source_cont_id) {
-                    $model->source_cont_id = $source_cont_id;
-                    
-                    if ($model->mergeSave()) {
-                        $successCount++;
-                    } else {
-                        $failedContracts[] = $source_cont_id;
-                    }
-                }
-                
-                if ($successCount > 0) {
-                    $message = "成功合并删除 {$successCount} 个主合同";
-                    if (!empty($failedContracts)) {
-                        $message .= "，失败：" . implode(',', $failedContracts);
-                    }
-                    Dialog::message(Yii::t('dialog','Information'), $message);
-                    $this->redirect(Yii::app()->createUrl('contHead/detail', array('index'=>$model->target_cont_id)));
-                } else {
-                    $message = CHtml::errorSummary($model);
-                    Dialog::message(Yii::t('dialog','Validation Message'), '所有主合同合并失败：'.$message);
-                    $this->redirect(Yii::app()->createUrl('contHead/merge', array('clue_id'=>$model->clue_id)));
-                }
+                // 渲染进度页面
+                $this->render('merge_progress', array(
+                    'taskId' => $taskId,
+                    'model' => $model,
+                ));
             } else {
                 $message = CHtml::errorSummary($model);
                 Dialog::message(Yii::t('dialog','Validation Message'), $message);
@@ -557,6 +545,43 @@ class ContHeadController extends Controller
         } else {
             $this->redirect(Yii::app()->createUrl('contHead/index'));
         }
+    }
+
+    /**
+     * AJAX: 执行合并任务
+     */
+    public function actionAjaxExecuteMerge()
+    {
+        if (Yii::app()->request->isAjaxRequest && isset($_POST['task_id'])) {
+            $taskId = $_POST['task_id'];
+            $result = ContMergeTask::executeTask($taskId);
+            echo CJSON::encode(array('success' => $result));
+        }
+        Yii::app()->end();
+    }
+    
+    /**
+     * AJAX: 查询任务状态
+     */
+    public function actionAjaxGetTaskStatus()
+    {
+        if (Yii::app()->request->isAjaxRequest && isset($_GET['task_id'])) {
+            $taskId = $_GET['task_id'];
+            $task = ContMergeTask::getTask($taskId);
+            if ($task) {
+                echo CJSON::encode(array(
+                    'status' => $task['status'],
+                    'progress' => $task['progress'],
+                    'current_step' => $task['current_step'],
+                    'logs' => $task['logs'],
+                    'error_message' => $task['error_message'],
+                    'target_cont_id' => $task['target_cont_id'],
+                ));
+            } else {
+                echo CJSON::encode(array('status' => 'not_found'));
+            }
+        }
+        Yii::app()->end();
     }
 
     public static function allowReadWrite() {
