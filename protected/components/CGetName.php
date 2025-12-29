@@ -94,6 +94,24 @@ class CGetName {
         }
     }
 
+    public static function getClientPersonStatusList() {
+        return array(
+            1=>"任职中",
+            2=>"已离职",
+            3=>"辞退",
+            4=>"删除",
+        );
+    }
+
+    public static function getClientPersonStatusStrByKey($status) {
+        $list = self::getClientPersonStatusList();
+        if(isset($list[$status])){
+            return $list[$status];
+        }else{
+            return $status;
+        }
+    }
+
     public static function getPersonSexList() {
         return array(
             "man"=>Yii::t("clue","man"),
@@ -1511,7 +1529,7 @@ class CGetName {
     public static function getClientPersonRows($clue_id,$clue_store_id=0){
         $rows = Yii::app()->db->createCommand()->select("*")
             ->from("sal_clue_person")
-            ->where("clue_id=:clue_id and clue_store_id=:clue_store_id and z_display=1",array(
+            ->where("clue_id=:clue_id and clue_store_id=:clue_store_id",array(
                 ":clue_id"=>$clue_id,
                 ":clue_store_id"=>$clue_store_id
             ))->order("lcd desc")->queryAll();

@@ -14,7 +14,7 @@ class ClueStorePersonForm extends ClientPersonForm{
     {
         $list = array();
         $list[]=array('id,person_code,cust_email,person_pws,z_display','safe');
-        $list[]=array('clue_id','required');
+        $list[]=array('clue_id','required','on'=>array("new","edit"));
         $list[]=array('clue_store_id,cust_person,cust_tel,cust_person_role,sex','required','on'=>array("new","edit"));
         $list[]=array('clue_id','validateStoreID');
         $list[]=array('id','validateID');
@@ -45,6 +45,15 @@ class ClueStorePersonForm extends ClientPersonForm{
     }
 
     public function validateStoreID($attribute, $param) {
+        // 删除操作时，从联络人记录中获取门店ID
+        if($this->getScenario()==="delete" && !empty($this->id)){
+            $personRow = Yii::app()->db->createCommand()->select("clue_store_id")->from("sal_clue_person")
+                ->where("id=:id",array(":id"=>$this->id))->queryRow();
+            if($personRow){
+                $this->clue_store_id = $personRow["clue_store_id"];
+            }
+        }
+        
         $clueStoreModel = new ClueStoreForm("view");
         if($clueStoreModel->retrieveData($this->clue_store_id)){
             $this->clientStoreRow = $clueStoreModel->getAttributes();
