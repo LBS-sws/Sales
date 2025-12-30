@@ -566,7 +566,13 @@ class ContProController extends Controller
             $model->attributes = $_POST["ContProForm"];
             if ($model->validate()) {
                 $model->pro_status = $type=="audit"?1:0;
-                $bool = $model->saveData();
+                try {
+                    $bool = $model->saveData();
+                } catch (CHttpException $e) {
+                    // 避免上传失败等异常直接跳404页，统一弹框提示并返回编辑页
+                    $bool = false;
+                    Dialog::message(Yii::t('dialog','Validation Message'), $e->getMessage());
+                }
                 if($bool){
                     if(!empty($model->goMhWebUrl)){
                         $this->redirect($model->goMhWebUrl);
