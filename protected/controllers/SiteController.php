@@ -159,8 +159,11 @@ class SiteController extends Controller
                     break;
                 case "rpt":
                     $model = new ClueRptForm('view');
-                    $model->retrieveData($id);
-                    $model->validateClueServiceID("clue_service_id","");
+                    if (!$model->retrieveData($id)) {
+                        throw new CHttpException(404,'The requested page does not exist.');
+                    }
+                    // 门户/审批查看：使用不带团队/城市过滤的校验，避免“线索不存在”
+                    $model->validateClueServiceIDByView("clue_service_id","");
                     $model->getAllFileJson();
                     if($model->hasErrors()){
                         $message = CHtml::errorSummary($model);

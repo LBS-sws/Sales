@@ -873,10 +873,27 @@ class ContProForm extends ContHeadForm
                         "busine_id_text"=>$virtualRow["name"],
                         "lcu"=>$uid,
                     );
-                    $virSaveArr = array_merge($virSaveArr,$virSaveExpr);
-                    $virSaveArr["lcd"]=date("Y-m-d H:i:s");
-                    Yii::app()->db->createCommand()->insert("sal_contpro_virtual",$virSaveArr);
-                    $virtualId = Yii::app()->db->getLastInsertID();
+                    // 冲突则重试取号
+                    $virSaveArrBase = array_merge($virSaveArr,$virSaveExpr);
+                    $virSaveArrBase["lcd"]=date("Y-m-d H:i:s");
+                    $virtualId = 0;
+                    for ($try=0; $try<5; $try++) {
+                        // 每次重试重新取一个 vir_code
+                        $virSaveArr = $virSaveArrBase;
+                        $virSaveArr["vir_code"] = $this->computeVirCode($this->cont_id, $try+1);
+                        try {
+                            Yii::app()->db->createCommand()->insert("sal_contpro_virtual",$virSaveArr);
+                            $virtualId = Yii::app()->db->getLastInsertID();
+                            break;
+                        } catch (CDbException $e) {
+                            if (strpos($e->getMessage(), 'Duplicate') === false && strpos($e->getMessage(), '23000') === false) {
+                                throw $e;
+                            }
+                        }
+                    }
+                    if (empty($virtualId)) {
+                        throw new Exception("生成虚拟合约编号失败：请稍后重试");
+                    }
                     Yii::app()->db->createCommand()->update("sal_contpro_virtual",array(
                         "pro_code"=>"VPR".(10000+$virtualId)
                     ),"id=".$virtualId);

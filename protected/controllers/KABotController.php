@@ -230,8 +230,7 @@ class KABotController extends Controller
     }
 	
 	public static function allowReadWrite() {
-		return false;
-		//return Yii::app()->user->validRWFunction('KA01');
+		return Yii::app()->user->validRWFunction('KA01');
 	}
 	
 	public static function allowReadOnly() {
