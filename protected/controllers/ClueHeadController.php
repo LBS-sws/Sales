@@ -28,7 +28,7 @@ class ClueHeadController extends Controller
 				'expression'=>array('ClueHeadController','allowReadWrite'),
 			),
 			array('allow', 
-				'actions'=>array('index','view'),
+				'actions'=>array('index','view','ajaxStoreList'),
 				'expression'=>array('ClueHeadController','allowReadOnly'),
 			),
 			array('allow',
@@ -41,6 +41,41 @@ class ClueHeadController extends Controller
 			),
 		);
 	}
+
+    /**
+     * 门店列表弹窗：AJAX加载线索门店（支持搜索/分页）
+     * 返回：{status, rows, totalCount, pageNum, pageSize, totalPages}
+     */
+    public function actionAjaxStoreList()
+    {
+        if(Yii::app()->request->isAjaxRequest) {
+            $clue_id = isset($_POST['clue_id']) ? intval($_POST['clue_id']) : 0;
+            $search = isset($_POST['search']) ? trim($_POST['search']) : '';
+            $pageNum = isset($_POST['page']) ? intval($_POST['page']) : 1;
+            $pageSize = isset($_POST['pageSize']) ? intval($_POST['pageSize']) : 20;
+
+            if($clue_id <= 0){
+                echo CJSON::encode(array('status'=>0,'message'=>'参数错误'));
+                Yii::app()->end();
+            }
+            if($pageNum <= 0) $pageNum = 1;
+            if($pageSize <= 0) $pageSize = 20;
+
+            $result = CGetName::getClueStoreRowsWithPagination($clue_id, $search, $pageNum, $pageSize);
+
+            echo CJSON::encode(array(
+                'status'=>1,
+                'rows'=>$result['rows'],
+                'totalCount'=>$result['totalCount'],
+                'pageNum'=>$result['pageNum'],
+                'pageSize'=>$result['pageSize'],
+                'totalPages'=>$result['totalPages'],
+            ));
+        } else {
+            $this->redirect(Yii::app()->createUrl('site/index'));
+        }
+        Yii::app()->end();
+    }
 
 	public function actionIndex($pageNum=0) 
 	{

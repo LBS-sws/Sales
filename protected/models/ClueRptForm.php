@@ -235,6 +235,32 @@ class ClueRptForm extends CFormModel
         }
     }
 
+    // 门户/审批查看专用：不受 ClueHeadForm 的团队/城市权限过滤影响
+    public function validateClueServiceIDByView($attribute, $param) {
+        $clueServiceModel = new ClueServiceForm("view");
+        if($clueServiceModel->retrieveData($this->clue_service_id)){
+            $this->clue_id = $clueServiceModel->clue_id;
+            $this->clueServiceRow = $clueServiceModel->getAttributes();
+            $clueModel = new ClueForm("view");
+            if($clueModel->retrieveData($this->clue_id)){
+                $this->cust_level=$clueModel->cust_level;
+                $this->cust_class=$clueModel->cust_class;
+                $this->cust_name=$clueModel->cust_name;
+                $this->clue_type=$clueModel->clue_type;
+                $this->sales_id=$clueModel->rec_employee_id;
+                $this->city=$clueModel->city;
+                $this->clueHeadRow = $clueModel->getAttributes();
+                if(empty($clueModel->yewudalei)){
+                    $this->addError($attribute, "请先填写客户的业务大类");
+                }
+            }else{
+                $this->addError($attribute, "线索不存在，请刷新重试");
+            }
+        }else{
+            $this->addError($attribute, "商机不存在，请刷新重试");
+        }
+    }
+
     public function getModelIDByFileID($fileID){
         $row = Yii::app()->db->createCommand()->select("*")->from("sal_clue_rpt_file")
             ->where("id=:id",array(":id"=>$fileID))->queryRow();//
