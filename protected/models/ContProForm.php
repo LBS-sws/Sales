@@ -73,7 +73,7 @@ class ContProForm extends ContHeadForm
         foreach ($this->fileJson as $k => $row) {
             if (!is_array($row)) continue;
 
-            // 有选择文件但没填“文件名称”时，自动带出文件名（减少手工维护）
+            // 有选择文件但没填“文件名称”时，自动带出文件名（
             if (empty($this->fileJson[$k]['fileName']) && isset($row['file']) && isset($row['file']['fileName'])) {
                 $this->fileJson[$k]['fileName'] = $row['file']['fileName'];
             }
@@ -83,7 +83,7 @@ class ContProForm extends ContHeadForm
             $id = isset($row['id']) ? $row['id'] : '';
             if (!empty($id)) continue; // 有ID是更新/已有记录，允许只改名称不重新上传
             $fileName = isset($row['fileName']) ? trim($row['fileName']) : '';
-            // 新增行：如果填了名称但没选文件，则不允许保存
+            //如果填了名称但没选文件，则不允许保存
             if ($fileName !== '' && !isset($row['file'])) {
                 $this->addError($attribute, "附件【{$fileName}】未选择文件，请先选择文件再保存。");
                 break;
@@ -659,7 +659,7 @@ class ContProForm extends ContHeadForm
                             "file_name"=>$row["fileName"],
                         );
                         if(isset($row["file"])){
-                            // 兜底：若没填文件名称，用上传文件名补齐
+                            // 若没填文件名称，用上传文件名补齐
                             if (empty($saveList["file_name"]) && isset($row["file"]["fileName"])) {
                                 $saveList["file_name"] = $row["file"]["fileName"];
                             }
@@ -678,7 +678,7 @@ class ContProForm extends ContHeadForm
                         }
                         switch ($row["uflag"]){
                             case "Y"://修改，新增
-                                // 防线：新增行未选文件时不允许插入，避免只保存 file_name
+                                // 新增行未选文件时不允许插入，避免只保存 file_name
                                 if (empty($row["id"]) && !isset($row["file"])) {
                                     continue;
                                 }
