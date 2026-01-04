@@ -53,6 +53,9 @@ class LookFileController extends Controller
             case "clue":
                 $model = new ClueForm('edit');
                 break;
+            case "virtualBatch":
+                $model = new VirtualBatchForm('edit');
+                break;
             default:
                 throw new CHttpException(404,'The requested page does not exist.');
 
@@ -93,6 +96,9 @@ class LookFileController extends Controller
                 break;
             case "clue":
                 $model = new ClueForm('edit');
+                break;
+            case "virtualBatch":
+                $model = new VirtualBatchForm('edit');
                 break;
             default:
                 throw new CHttpException(404,'The requested page does not exist.');

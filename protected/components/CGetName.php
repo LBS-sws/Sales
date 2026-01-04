@@ -2677,6 +2677,10 @@ class CGetName {
                 $model = new ClueForm('edit');
                 $model->getModelIDByFileID($index);
                 return $model->lookFileRow;
+            case "virtualBatch":
+                $model = new VirtualBatchForm('edit');
+                $model->getModelIDByFileID($index);
+                return $model->lookFileRow;
             default:
                 return array();
         }
