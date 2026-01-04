@@ -136,6 +136,10 @@ class ClientPersonForm extends CFormModel
         $city = Yii::app()->user->city;
 	    switch ($this->getScenario()){
             case "new":
+                //如果手机号码为空，则不创建联络人
+                if(empty($this->cust_tel)){
+                    return true;
+                }
                 $connection->createCommand()->insert("sal_clue_person",array(
                     "clue_id"=>$this->clue_id,
                     "clue_store_id"=>$this->clue_store_id,
@@ -152,8 +156,13 @@ class ClientPersonForm extends CFormModel
                     "person_code"=>$this->person_code,
                 ),"id=:id",array(":id"=>$this->id));
                 $this->setScenario("edit");
+                $this->sendDataByU();
                 break;
             case "edit":
+                //如果手机号码为空，则不更新联络人
+                if(empty($this->cust_tel)){
+                    return true;
+                }
                 $connection->createCommand()->update("sal_clue_person",array(
                     "cust_person"=>$this->cust_person,
                     "cust_tel"=>$this->cust_tel,
@@ -162,6 +171,7 @@ class ClientPersonForm extends CFormModel
                     "sex"=>$this->sex,
                     "luu"=>$uid,
                 ),"id=:id",array(":id"=>$this->id));
+                $this->sendDataByU();
                 break;
             case "delete":
                 $connection->createCommand()->update("sal_clue_person",array(
@@ -169,13 +179,14 @@ class ClientPersonForm extends CFormModel
                     "status"=>4,
                     "luu"=>$uid,
                 ),"id=:id",array(":id"=>$this->id));
+                break;
         }
-        $this->sendDataByU();
 		return true;
 	}
 
     public static function saveUPersonDataByClueModel($model,$uid=''){
-	    if(empty($model->cust_person)&&empty($model->cust_tel)){
+	    //如果手机号码为空，则不创建联络人
+        if(empty($model->cust_tel)){
             return false;
         }
         $uid = empty($uid)?Yii::app()->user->id:$uid;
@@ -208,7 +219,8 @@ class ClientPersonForm extends CFormModel
     }
 
     public static function saveUPersonDataByStoreModel($model){
-        if(empty($model->cust_person)&&empty($model->cust_tel)){
+        //如果手机号码为空，则不创建联络人
+        if(empty($model->cust_tel)){
             return false;
         }
         $uid = Yii::app()->user->id;
