@@ -197,8 +197,61 @@ class CurlNotesModel extends CurlNotesApi {
                 $html.="\n><font color=\"comment\">模块：{$info_type}</font>";
                 $lbsUrl= self::getAbsoluteUrl("curlReceive/index");
         }
-        $html.="\n><font color=\"comment\">{$message}</font>";
-        $html.="\n><font color=\"comment\">{$lbsUrl}</font>";
+        $html.="\n><font color=\"comment\">错误信息：{$message}</font>";
+        // 获取详细的返回内容和发送数据
+        $suffix = Yii::app()->params['envSuffix'];
+        $curlRow = Yii::app()->db->createCommand()
+            ->select("out_content,data_content,info_url")
+            ->from("sales{$suffix}.sal_api_curl")
+            ->where("id=:id",array(":id"=>$id))
+            ->queryRow();
+
+        if($curlRow){
+            // 请求URL
+            if(!empty($curlRow["info_url"])){
+                $html.="\n><font color=\"comment\">请求URL：{$curlRow['info_url']}</font>";
+            }
+
+            // 返回内容
+            if(!empty($curlRow["out_content"])){
+                $outContent = $curlRow["out_content"];
+                // 如果是JSON，尝试格式化
+                $outJson = json_decode($outContent, true);
+                if($outJson !== null){
+                    $outContent = json_encode($outJson, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                }
+                // 限制长度，避免消息过长
+                if(mb_strlen($outContent) > 1000){
+                    $outContent = mb_substr($outContent, 0, 1000, 'UTF-8') . "...(内容过长，已截断)";
+                }
+                $html.="\n><font color=\"warning\">返回内容：</font>";
+                $html.="\n>```\n{$outContent}\n```";
+            }
+
+            // 发送数据
+            if(!empty($curlRow["data_content"])){
+                $dataContent = $curlRow["data_content"];
+                $dataJson = json_decode($dataContent, true);
+                if($dataJson !== null){
+                    // 只显示operation_type和data的数量
+                    $operationType = isset($dataJson["operation_type"]) ? $dataJson["operation_type"] : "";
+                    $dataCount = 0;
+                    if(isset($dataJson["data"])){
+                        if(is_array($dataJson["data"])){
+                            $dataCount = count($dataJson["data"]);
+                        }else{
+                            $dataArr = json_decode($dataJson["data"], true);
+                            if($dataArr !== null){
+                                $dataCount = count($dataArr);
+                            }
+                        }
+                    }
+                    $html.="\n><font color=\"comment\">发送数据：操作类型={$operationType}, 数据条数={$dataCount}</font>";
+                }
+            }
+        }
+
+        $html.="\n><font color=\"comment\">详情链接：{$lbsUrl}</font>";
         $data=array(
             "msgtype"=>"markdown",
             "markdown"=>array(
