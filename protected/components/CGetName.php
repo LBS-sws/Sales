@@ -631,9 +631,13 @@ class CGetName {
     public static function getServiceTypeStrByList($list){
         if(empty($list)){
             return "";
-        }else{
-            $ids=implode(",",$list);
         }
+        $quotedIds = array();
+        foreach ($list as $id) {
+            $quotedIds[] = "'" . str_replace("'", "\\'", $id) . "'";
+        }
+        $ids = implode(",", $quotedIds);
+        
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()->select("GROUP_CONCAT(description) as name")->from("swoper$suffix.swo_customer_type")
             ->where("id in ({$ids})")->queryRow();
