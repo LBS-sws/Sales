@@ -345,11 +345,32 @@ class TimerCommand extends CConsoleCommand {
                                         "pro_code"=>"CCR".(10000+$proVirRow["id"])
                                     ),"id=:id",array(":id"=>$proVirRow["id"]));//
 
-                                    Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract_virtual",array(
+                                    // 计算 month_amt：从 service_fre_json 中解析 fre_month
+                                    $month_amt = null;
+                                    if(!empty($proVirRow["service_fre_json"])){
+                                        $freJson = json_decode($proVirRow["service_fre_json"], true);
+                                        if(isset($freJson["fre_month"]) && !empty($freJson["fre_month"])){
+                                            $month_amt = floatval($freJson["fre_month"]);
+                                        }
+                                    }
+                                    // 如果 service_fre_json 中没有 fre_month，且 service_fre_type=1（固定频次）则使用 year_amt 计算
+                                    if($month_amt === null && intval($proVirRow["service_fre_type"]) == 1){
+                                        // 固定频次：month_amt = year_amt / 12
+                                        if(!empty($proVirRow["year_amt"])){
+                                            $month_amt = round(floatval($proVirRow["year_amt"]) / 12, 2);
+                                        }
+                                    }
+
+                                    $updateData = array(
                                         "sign_type"=>$proVirRow["sign_type"],
                                         "cont_start_dt"=>$proVirRow["cont_start_dt"],
                                         "cont_end_dt"=>$proVirRow["cont_end_dt"],
-                                    ),"id=:id",array(":id"=>$proVirRow["vir_id"]));//
+                                    );
+                                    // 计算出了 month_amt，则更新
+                                    if($month_amt !== null){
+                                        $updateData["month_amt"] = $month_amt;
+                                    }
+                                    Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract_virtual", $updateData, "id=:id", array(":id"=>$proVirRow["vir_id"]));//
                                 }
                             }
 

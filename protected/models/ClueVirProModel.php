@@ -415,7 +415,7 @@ class ClueVirProModel
 				}
 				$uStoreModel->saveCurlToApi();
 			}
-				
+
         }
     }
 
@@ -520,6 +520,33 @@ class ClueVirProModel
                 foreach ($oldVir as $keyStr=>$value){
                     if (!in_array($keyStr,$notSaveKey)&&key_exists($keyStr,$virRow)){
                         $updateRow[$keyStr]=$virRow[$keyStr];
+                    }
+                }
+                // 续约操作（pro_type="C"），需要重新计算 month_amt
+                // 或者如果 updateRow 中没有 month_amt，也需要计算
+                if($proRow["pro_type"]=="C" || empty($updateRow["month_amt"]) || $updateRow["month_amt"] === null){
+                    $month_amt = null;
+                    // 优先从 service_fre_json 中解析 fre_month
+                    $service_fre_json = !empty($virRow["service_fre_json"]) ? $virRow["service_fre_json"] : (!empty($updateRow["service_fre_json"]) ? $updateRow["service_fre_json"] : null);
+                    if(!empty($service_fre_json)){
+                        $freJson = json_decode($service_fre_json, true);
+                        if(isset($freJson["fre_month"]) && !empty($freJson["fre_month"])){
+                            $month_amt = floatval($freJson["fre_month"]);
+                        }
+                    }
+                    // 如果 service_fre_json 中没有 fre_month，且 service_fre_type=1（固定频次），从 year_amt 计算
+                    $service_fre_type = isset($virRow["service_fre_type"]) ? intval($virRow["service_fre_type"]) : (isset($updateRow["service_fre_type"]) ? intval($updateRow["service_fre_type"]) : 0);
+                    if($month_amt === null && $service_fre_type == 1){
+                        // 固定频次：month_amt = year_amt / 12
+                        if(!empty($virRow["year_amt"])){
+                            $month_amt = round(floatval($virRow["year_amt"]) / 12, 2);
+                        } elseif(!empty($updateRow["year_amt"])){
+                            $month_amt = round(floatval($updateRow["year_amt"]) / 12, 2);
+                        }
+                    }
+                    // 如果计算出了 month_amt，则添加到更新数据中
+                    if($month_amt !== null){
+                        $updateRow["month_amt"] = $month_amt;
                     }
                 }
                 Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract_virtual",$updateRow,"id=".$virRow["vir_id"]);

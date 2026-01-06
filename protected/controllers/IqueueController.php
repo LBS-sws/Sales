@@ -32,7 +32,12 @@ class IqueueController extends Controller
 
 	public function actionRemove($index) {
 		$model = new IqueueList('view');
-        $model->remove($index);
+        $result = $model->remove($index);
+        if ($result !== false) {
+            echo json_encode(array('status' => 'success', 'message' => $result));
+        } else {
+            echo json_encode(array('status' => 'error', 'message' => '删除失败'));
+        }
         Yii::app()->end();
     }
 
@@ -42,7 +47,7 @@ class IqueueController extends Controller
 			$model->attributes = $_POST['IqueueList'];
 		} else {
 			$session = Yii::app()->session;
-			if (isset($session['criteria_xf01']) && !empty($session['criteria_xe01'])) {
+			if (isset($session['criteria_xf01']) && !empty($session['criteria_xf01'])) {
 				$criteria = $session['criteria_xf01'];
 				$model->setCriteria($criteria);
 			}
@@ -86,7 +91,7 @@ class IqueueController extends Controller
 	}
 
 	public static function allowRemove() {
-		return Yii::app()->user->id=="shenchao";
+		return Yii::app()->user->id=="xiangsong";
 	}
 }
 ?>
