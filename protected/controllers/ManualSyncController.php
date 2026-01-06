@@ -18,8 +18,8 @@ class ManualSyncController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('index','getStoreList','getStorePersonList','getContractList','syncStore','syncStorePerson','syncContract'),
-				'expression'=>array('ManualSyncController','allowReadWrite'),
+				'actions'=>array('index','getStoreList','getStorePersonList','getContractList','syncStore','syncStorePerson','syncContract','getUnsyncedClients'),
+				'users'=>array('xiangsong'),
 			),
 			array('deny',
 				'users'=>array('*'),
@@ -514,8 +514,43 @@ class ManualSyncController extends Controller
 		}
 	}
 
-	public static function allowReadWrite() {
-		return Yii::app()->user->validRWFunction('ZC03');
+	/**
+	 * 获取未同步到派单系统的客户列表（u_id为空）
+	 */
+	public function actionGetUnsyncedClients()
+	{
+		if(Yii::app()->request->isAjaxRequest){
+			$suffix = Yii::app()->params['envSuffix'];
+			
+			// 查询 u_id 为空的客户（table_type=2 表示客户，table_type=1 表示线索）
+			$clients = Yii::app()->db->createCommand()
+				->select("id,clue_code,cust_name,city,entry_date,lcd")
+				->from("sales{$suffix}.sal_clue")
+				->where("(u_id IS NULL OR u_id = '') AND table_type = 2")
+				->order("id DESC")
+				->limit(100) // 限制返回100条
+				->queryAll();
+
+			$list = array();
+			foreach($clients as $client){
+				$list[] = array(
+					'id' => $client['id'],
+					'clue_code' => $client['clue_code'],
+					'cust_name' => $client['cust_name'],
+					'city' => $client['city'],
+					'entry_date' => $client['entry_date'],
+					'lcd' => $client['lcd'],
+				);
+			}
+
+			echo CJSON::encode(array(
+				'status'=>1,
+				'data'=>$list,
+				'count'=>count($list)
+			));
+		}else{
+			$this->redirect(Yii::app()->createUrl('manualSync/index'));
+		}
 	}
 }
 

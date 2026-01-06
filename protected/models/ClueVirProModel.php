@@ -516,7 +516,7 @@ class ClueVirProModel
 
                 $oldVirRows[$virRow["vir_id"]]=$oldVir;
                 $updateRow = array();
-                $notSaveKey = array("id");
+                $notSaveKey = array("id", "vir_code"); // 续约时不应修改虚拟合同编号
                 foreach ($oldVir as $keyStr=>$value){
                     if (!in_array($keyStr,$notSaveKey)&&key_exists($keyStr,$virRow)){
                         $updateRow[$keyStr]=$virRow[$keyStr];

@@ -495,6 +495,7 @@ class ClueProModel
                 }
                 $updateRow["sse_id"]=$oldSeeIDToNowSseID[$virRow["sse_id"]];
                 if(empty($virRow["vir_id"])){
+                    // 新增虚拟合约：按照原逻辑，vir_code 如果存在会被包含
                     $updateRow["vir_status"]=30;
                     Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contract_virtual",$updateRow);
                     $vir_id = Yii::app()->db->getLastInsertID();
@@ -509,6 +510,7 @@ class ClueProModel
                     $contUpdateList["store_sum"]++;
                     $contUpdateList["total_amt"]+=$updateRow["year_amt"];
                 }else{
+                    // 更新已存在的虚拟合约（续约）：绝对不能修改 vir_code
                     $oldVirRow = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract_virtual")
                         ->where("id=:id",array(":id"=>$virRow["vir_id"]))->order("id asc")->queryRow();//
                     if($oldVirRow){
@@ -540,6 +542,8 @@ class ClueProModel
                                 $updateRow["month_amt"] = $month_amt;
                             }
                         }
+                        // 续约时绝对不能修改 vir_code
+                        unset($updateRow["vir_code"]);
                         Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract_virtual",$updateRow,"id=".$virRow["vir_id"]);
                     }
                 }

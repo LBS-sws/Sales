@@ -76,6 +76,38 @@ $this->pageTitle=Yii::app()->name . ' - 手动同步';
 		</div>
 	</div>
 
+	<div class="box box-warning">
+		<div class="box-header with-border">
+			<h3 class="box-title">未同步客户列表</h3>
+		</div>
+		<div class="box-body">
+			<div style="margin-bottom: 15px;">
+				<button type="button" class="btn btn-warning" id="btn_load_unsynced_clients">
+					<i class="fa fa-search"></i> 查看未同步到派单系统的客户（u_id为空）
+				</button>
+			</div>
+			<div id="unsynced_clients_container" style="display:none; margin-top: 20px;">
+				<div class="table-responsive">
+					<table class="table table-bordered table-striped">
+						<thead>
+							<tr>
+								<th>客户ID</th>
+								<th>客户编号</th>
+								<th>客户名称</th>
+								<th>城市</th>
+								<th>录入日期</th>
+								<th>创建时间</th>
+								<th>操作</th>
+							</tr>
+						</thead>
+						<tbody id="unsynced_clients_tbody">
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<div class="box box-default">
 		<div class="box-header with-border">
 			<h3 class="box-title">说明</h3>
@@ -114,6 +146,7 @@ $this->pageTitle=Yii::app()->name . ' - 手动同步';
 
 <script>
 $(document).ready(function(){
+	var currentDataType = null; // 当前数据类型：store, store_person, contract
 	var searchUrl = '<?php echo Yii::app()->createUrl('ajax/getClientInfo'); ?>';
 	var getStoreListUrl = '<?php echo Yii::app()->createUrl('manualSync/getStoreList'); ?>';
 	var getStorePersonListUrl = '<?php echo Yii::app()->createUrl('manualSync/getStorePersonList'); ?>';
@@ -121,6 +154,7 @@ $(document).ready(function(){
 	var syncStoreUrl = '<?php echo Yii::app()->createUrl('manualSync/syncStore'); ?>';
 	var syncStorePersonUrl = '<?php echo Yii::app()->createUrl('manualSync/syncStorePerson'); ?>';
 	var syncContractUrl = '<?php echo Yii::app()->createUrl('manualSync/syncContract'); ?>';
+	var getUnsyncedClientsUrl = '<?php echo Yii::app()->createUrl('manualSync/getUnsyncedClients'); ?>';
 
 	// 搜索客户
 	$('#btn_search').click(function(){
@@ -143,6 +177,12 @@ $(document).ready(function(){
 					$('#client_info').show();
 					$('#data_selection_box').show();
 					$('#sync_result').html('');
+					// 清空并隐藏数据列表容器
+					$('#data_list_container').hide();
+					$('#data_list_thead').html('');
+					$('#data_list_tbody').html('');
+					$('#btn_sync_selected').hide();
+					currentDataType = null;
 					// 隐藏所有列表
 					$('#store_list_container').hide();
 					$('#store_person_list_container').hide();
@@ -151,6 +191,12 @@ $(document).ready(function(){
 					alert(data.message || '未找到客户');
 					$('#client_info').hide();
 					$('#data_selection_box').hide();
+					// 清空数据列表
+					$('#data_list_container').hide();
+					$('#data_list_thead').html('');
+					$('#data_list_tbody').html('');
+					$('#btn_sync_selected').hide();
+					currentDataType = null;
 				}
 			},
 			error: function(){
@@ -491,6 +537,67 @@ $(document).ready(function(){
 				$btn.prop('disabled', false).html(btnText);
 			}
 		});
+	});
+
+	// 查看未同步客户列表
+	$('#btn_load_unsynced_clients').click(function(){
+		$(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> 加载中...');
+		$.ajax({
+			type: 'POST',
+			url: getUnsyncedClientsUrl,
+			dataType: 'json',
+			success: function(data){
+				$('#btn_load_unsynced_clients').prop('disabled', false).html('<i class="fa fa-search"></i> 查看未同步到派单系统的客户（u_id为空）');
+				if(data && data.status == 1){
+					var html = '';
+					if(!data.data || data.count == 0){
+						html = '<tr><td colspan="7" class="text-center">没有未同步的客户</td></tr>';
+					}else{
+						$.each(data.data, function(index, item){
+							html += '<tr>';
+							html += '<td>' + (item.id || '') + '</td>';
+							html += '<td>' + (item.clue_code || '') + '</td>';
+							html += '<td>' + (item.cust_name || '') + '</td>';
+							html += '<td>' + (item.city || '') + '</td>';
+							html += '<td>' + (item.entry_date || '') + '</td>';
+							html += '<td>' + (item.lcd || '') + '</td>';
+							html += '<td><button type="button" class="btn btn-xs btn-primary btn-select-client" data-clue-id="' + item.id + '" data-clue-code="' + (item.clue_code || '') + '" data-cust-name="' + (item.cust_name || '') + '">选择此客户</button></td>';
+							html += '</tr>';
+						});
+					}
+					$('#unsynced_clients_tbody').html(html);
+					$('#unsynced_clients_container').show();
+				}else{
+					var errorMsg = (data && data.message) ? data.message : '加载失败';
+					alert(errorMsg);
+				}
+			},
+			error: function(xhr, status, error){
+				$('#btn_load_unsynced_clients').prop('disabled', false).html('<i class="fa fa-search"></i> 查看未同步到派单系统的客户（u_id为空）');
+				alert('加载失败，请重试');
+			}
+		});
+	});
+
+	// 从未同步客户列表中选择客户
+	$(document).on('click', '.btn-select-client', function(){
+		var clueId = $(this).data('clue-id');
+		var clueCode = $(this).data('clue-code');
+		var custName = $(this).data('cust-name');
+		
+		$('#clue_id').val(clueId);
+		$('#clue_search').val(clueCode + ' ' + custName);
+		$('#client_name').text('客户名称：' + custName);
+		$('#client_code').text('客户编号：' + clueCode);
+		$('#client_info').show();
+		$('#data_selection_box').show();
+		$('#sync_result').html('');
+		// 清空并隐藏数据列表容器
+		$('#data_list_container').hide();
+		$('#data_list_thead').html('');
+		$('#data_list_tbody').html('');
+		$('#btn_sync_selected').hide();
+		currentDataType = null;
 	});
 
 	// 同步选中的虚拟合约（保留兼容，但已废弃）
