@@ -22,11 +22,11 @@ class ClientPersonList extends CListPageModel
         
         $sql1 = "SELECT count(DISTINCT a.id)
                 FROM sal_clue_person a
-                WHERE a.clue_id = :clue_id";
+                WHERE a.clue_id = :clue_id AND a.status != 4";
         
         $sql2 = "SELECT a.*
                 FROM sal_clue_person a
-                WHERE a.clue_id = :clue_id";
+                WHERE a.clue_id = :clue_id AND a.status != 4";
         
         $clause = "";
         $params = array(':clue_id' => $this->clue_id);

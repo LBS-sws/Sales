@@ -24,7 +24,7 @@ class ClientPersonController extends Controller
 	{
 		return array(
 			array('allow', 
-				'actions'=>array('ajaxShow','ajaxSave'),
+				'actions'=>array('ajaxShow','ajaxSave','ajaxDelete'),
 				'expression'=>array('ClientPersonController','allowStoreReadWrite'),
 			),
             /*
@@ -76,6 +76,33 @@ class ClientPersonController extends Controller
                     echo CJSON::encode(array('status'=>0,'error'=>$message));
                 }
             }
+        }else{
+            $this->redirect(Yii::app()->createUrl('site/index'));
+        }
+	}
+
+	public function actionAjaxDelete(){
+        if(Yii::app()->request->isAjaxRequest) {//是否ajax请求
+            $html = "数据异常";
+            if (isset($_POST['ClientPersonForm'])) {
+                $model = new ClientPersonForm($_POST['ClientPersonForm']['scenario']);
+                $model->attributes = $_POST['ClientPersonForm'];
+                if($model->getScenario()=="delete" && !empty($model->id)){
+                    $model->retrieveData($model->id);
+                    if($model->id){
+                        $html = "确定删除该联系人？";
+                        $html .= TbHtml::hiddenField("ClientPersonForm[scenario]", "delete");
+                        $html .= TbHtml::hiddenField("ClientPersonForm[id]", $model->id);
+                        $html .= TbHtml::hiddenField("ClientPersonForm[clue_id]", $model->clue_id);
+                        $html .= TbHtml::hiddenField("ClientPersonForm[clue_store_id]", $model->clue_store_id);
+                    }else{
+                        $html = "数据异常，请刷新重试";
+                    }
+                }else{
+                    $html = "数据异常，请刷新重试";
+                }
+            }
+            echo CJSON::encode(array('status'=>1,'html'=>$html,'title'=>Yii::t('clue','delete')));
         }else{
             $this->redirect(Yii::app()->createUrl('site/index'));
         }

@@ -127,8 +127,9 @@ class CurlNotesByClient extends CurlNotesModel {
                     $data["project_staff"][]=$temp;
                 }
             }
+            // 只同步未删除的联络人（status!=4）
             $personRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_clue_person")
-                ->where("clue_id=:id and clue_store_id=0",array(":id"=>$client_id))->queryAll();
+                ->where("clue_id=:id and clue_store_id=0 and status!=4",array(":id"=>$client_id))->queryAll();
             if($personRows){
                 foreach ($personRows as $personRow){
                     if($this->operation_type=="insert"&&!empty($personRow["u_id"])){//如果新增时，有id则跳过
@@ -245,8 +246,12 @@ class CurlNotesByClient extends CurlNotesModel {
     }
 
     //将客户联系人数据保存到api内
-    public function putPersonDataByPersonID($person_id,$clientHeadRow){
-        $data = $this->getPersonDataByPersonID($person_id,$clientHeadRow);
+    public function putPersonDataByPersonID($person_id,$clientHeadRow,$scenario=null){
+        $data = $this->getPersonDataByPersonID($person_id,$clientHeadRow,$scenario);
+        // 如果返回空数组，说明无法同步（如删除操作但u_id为空），跳过
+        if(empty($data)){
+            return;
+        }
         $this->data=array(
             "operation_type"=>$this->operation_type,
             "data"=>array(),
@@ -255,13 +260,23 @@ class CurlNotesByClient extends CurlNotesModel {
         $this->data["data"]=json_encode($data,JSON_UNESCAPED_UNICODE);
     }
     //获取客户联系人数据
-    public function getPersonDataByPersonID($person_id,$clientHeadRow){
+    public function getPersonDataByPersonID($person_id,$clientHeadRow,$scenario=null){
         $suffix = Yii::app()->params['envSuffix'];
         $data=array();
         $personRow = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_clue_person")
             ->where("id=:id",array(":id"=>$person_id))->queryRow();
         if($personRow){
-            $this->operation_type = empty($personRow["u_id"])?"insert":"update";
+            // 删除操作：必须有u_id才能同步删除
+            if($scenario === "delete"){
+                if(empty($personRow["u_id"])){
+                    // 如果删除时u_id为空，说明未同步到派单系统，不需要同步删除
+                    return array();
+                }
+                $this->operation_type = "update";
+            }else{
+                // 新增或编辑操作：根据u_id判断
+                $this->operation_type = empty($personRow["u_id"])?"insert":"update";
+            }
             $data = array(
                 "lbs_id"=>$personRow["id"],
                 "project_id"=>$clientHeadRow["u_id"],//项目分组id
@@ -280,7 +295,7 @@ class CurlNotesByClient extends CurlNotesModel {
             if(!empty($personRow["u_id"])){
                 $this->sendDataSetByUpdateClientPerson();
                 $data["id"]=$personRow["u_id"];
-                $data["update_at"]=$personRow["lcd"];
+                $data["update_at"]=$personRow["lud"];
                 $data["update_uid"]=self::getEmployeeStrByUsername("code",$personRow["luu"]);
             }else{
                 $this->sendDataSetByAddClientPerson();
