@@ -82,6 +82,8 @@ class ContProController extends Controller
                 Yii::app()->end();
             }
             $model->getUpdateClueServiceRow();
+            // 获取业务大类
+            $yewudalei = isset($model->yewudalei) ? intval($model->yewudalei) : 0;
         } else {
             $model = new ContProForm('new');
             $model->cont_id = $cont_id;
@@ -99,9 +101,18 @@ class ContProController extends Controller
                 echo CJSON::encode(array('status' => 'error', 'message' => $firstMsg));
                 Yii::app()->end();
             }
+            // 获取业务大类
+            $yewudalei = isset($model->contHeadRow['yewudalei']) ? intval($model->contHeadRow['yewudalei']) : 0;
 
-            if (empty($pro_type) && !empty($type)) {
-                $pro_type = $type;
+            // 地推不需要判断
+            if ($yewudalei == 1) {
+                // 获取业务大类=1时，不使用前端传入的pro_type
+                $pro_type = '';
+            } else {
+                // 否则按照原来的方式使用前端传入的pro_type
+                if (empty($pro_type) && !empty($type)) {
+                    $pro_type = $type;
+                }
             }
 
             if (!empty($pro_type)) {
@@ -153,7 +164,9 @@ class ContProController extends Controller
         $storeModel->retrieveDataByPage($pageNum);
 
         $storeList = array();
+        $foundStoreIds = array();
         foreach ($storeModel->attr as $storeInfo) {
+            $foundStoreIds[] = intval($storeInfo['id']);
             $storeList[] = array(
                 'id' => $storeInfo['id'],
                 'store_name' => $storeInfo['store_name'],
@@ -163,8 +176,19 @@ class ContProController extends Controller
                 'invoice_header' => $storeInfo['invoice_header'],
                 'tax_id' => $storeInfo['tax_id'],
                 'invoice_address' => $storeInfo['invoice_address'],
-                'checked' => in_array($storeInfo['id'], $model->showStore)
+                'checked' => isset($model->showStore) && in_array($storeInfo['id'], $model->showStore)
             );
+        }
+
+        // 找出那些在storeIds中但查询结果中找不到的门店ID
+        $notFound = array();
+        if (!empty($storeIds)) {
+            foreach ($storeIds as $storeId) {
+                $storeId = intval($storeId);
+                if ($storeId > 0 && !in_array($storeId, $foundStoreIds)) {
+                    $notFound[] = $storeId;
+                }
+            }
         }
 
         echo CJSON::encode(array(
@@ -172,7 +196,8 @@ class ContProController extends Controller
             'data' => $storeList,
             'pageNum' => $storeModel->pageNum,
             'totalRow' => $storeModel->totalRow,
-            'noOfPages' => $storeModel->noOfPages
+            'noOfPages' => $storeModel->noOfPages,
+            'notFound' => $notFound
         ));
         Yii::app()->end();
     }
@@ -209,21 +234,15 @@ class ContProController extends Controller
             Yii::app()->end();
         }
 
-        if (empty($pro_type) && !empty($type)) {
-            $pro_type = $type;
-        }
-        if (empty($pro_type)) {
-            $pro_type = 'C';
-        }
-
+        // 如果有pro_id，加载变更记录；否则根据cont_id新建
         if (!empty($pro_id)) {
             $model = new ContProForm('view');
             if (!$model->retrieveData($pro_id)) {
                 echo CJSON::encode(array('status' => 'error', 'message' => '变更记录不存在'));
                 Yii::app()->end();
             }
-            $model->pro_type = $pro_type;
-            $model->getUpdateClueServiceRow();
+            // 获取yewudalei
+            $yewudalei = isset($model->yewudalei) ? intval($model->yewudalei) : 0;
         } else {
             $model = new ContProForm('new');
             $model->cont_id = $cont_id;
@@ -241,8 +260,40 @@ class ContProController extends Controller
                 echo CJSON::encode(array('status' => 'error', 'message' => $firstMsg));
                 Yii::app()->end();
             }
+            // 获取yewudalei（从合同数据中）
+            $yewudalei = isset($model->contHeadRow['yewudalei']) ? intval($model->contHeadRow['yewudalei']) : 0;
+        }
+
+        // 根据业务大类是否使用前端传入的pro_type
+        if ($yewudalei == 1) {
+            // yewudalei=1时，不使用前端传入的pro_type，尝试所有类型
+            $pro_type = '';
+        } else {
+            // yewudalei>2时，按照原来的方式使用前端传入的pro_type
+            if (empty($pro_type) && !empty($type)) {
+                $pro_type = $type;
+            }
+            if (empty($pro_type)) {
+                $pro_type = 'C';
+            }
+        }
+
+        // 设置pro_type并更新clueSSERow
+        if (!empty($pro_type)) {
             $model->pro_type = $pro_type;
             $model->getUpdateClueServiceRow();
+        } else {
+            // 当pro_type为空时（业务大类=1），尝试所有类型来查找门店
+            // 先尝试'C'类型
+            $model->pro_type = 'C';
+            $model->getUpdateClueServiceRow();
+            $rowsC = $model->clueSSERow;
+
+            // 再尝试'NA'类型
+            $model->pro_type = 'NA';
+            $model->getUpdateClueServiceRow();
+            $rowsNA = $model->clueSSERow;
+            $model->clueSSERow = $rowsC + $rowsNA;
         }
 
         $rows = $model->clueSSERow;

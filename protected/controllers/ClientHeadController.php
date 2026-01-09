@@ -198,17 +198,13 @@ class ClientHeadController extends Controller
 
             $activeServiceId = isset($model->clue_service_id) ? intval($model->clue_service_id) : 0;
             $staff_id = CGetName::getEmployeeIDByMy();
-            $canSelectAny = Yii::app()->user->validRWFunction('CM02') || Yii::app()->user->validRWFunction('CM10');
+            $groupIdStr = CGetName::getGroupStaffIDByStaffID($staff_id);
+            $groupIdStr = implode(",",$groupIdStr);
             $whereSql = "";
-            if(!ClientHeadList::isReadAll() && !$canSelectAny){
-                $groupIds = CGetName::getGroupStaffIDByStaffID($staff_id);
-                $groupIds[] = $staff_id;
-                $groupIds = array_values(array_unique(array_filter($groupIds)));
-                if(!empty($groupIds)){
-                    $whereSql = " and create_staff in (".implode(",", $groupIds).")";
-                }else{
-                    $whereSql = " and create_staff=".$staff_id;
-                }
+            // 权限：只显示当前销售相关的商机（避免看到别个的数据）
+            if(!ClientHeadList::isReadAll()){
+                // 只显示当前销售团队创建的商机
+                $whereSql = " and create_staff in ({$groupIdStr})";
             }
 
             $totalRow = Yii::app()->db->createCommand()

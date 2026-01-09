@@ -42,7 +42,8 @@ class ClientHeadForm extends ClueForm
             $user_id = Yii::app()->user->id;
             $groupIdStr = CGetName::getGroupStaffIDByStaffID($staff_id);
             $groupIdStr = implode(",",$groupIdStr);
-            $whereSql.=" and (a.rec_employee_id in ({$groupIdStr}) or FIND_IN_SET('{$user_id}',a.extra_user)) ";
+            // 客户的销售或门店关联客户的销售都能看到该客户数据
+            $whereSql.=" and (a.rec_employee_id in ({$groupIdStr}) or FIND_IN_SET('{$user_id}',a.extra_user) or EXISTS(SELECT 1 FROM sal_clue_store s WHERE s.clue_id=a.id AND s.create_staff in ({$groupIdStr}))) ";
         }
         return $whereSql;
     }

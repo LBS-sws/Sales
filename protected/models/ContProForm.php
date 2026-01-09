@@ -248,28 +248,36 @@ class ContProForm extends ContHeadForm
     protected function getGoingVirByContID(){
         $sseRows=array();
         $rows = Yii::app()->db->createCommand()->select("*")->from("sal_contract_virtual")
-            ->where("cont_id=:cont_id and vir_status in (10,30)",array(":cont_id"=>$this->cont_id))->queryAll();
+            ->where("cont_id=:cont_id and vir_status in (10,30,50)",array(":cont_id"=>$this->cont_id))->queryAll();
         if($rows){
             foreach ($rows as $row){
-                //查询是否有进行中的虚拟合同变更
-                $proBool = Yii::app()->db->createCommand()->select("id,pro_status")->from("sal_contpro_virtual")
-                    ->where("pro_id!=:pro_id and vir_id=:vir_id and pro_status not in (0,10,30)",array(":pro_id"=>$this->id,":vir_id"=>$row["id"]))->queryRow();
-                if(!$proBool){
-                    $clue_store_id = "".$row["clue_store_id"];
-                    if(!key_exists($clue_store_id,$sseRows)){
-                        $sseRows[$clue_store_id]=array(
-                            "a_id"=>$row["id"],
-                            "clue_store_id"=>$row["clue_store_id"],
-                            "sales_id"=>$row["sales_id"],
-                            "busine_id"=>array(),
-                            "busine_id_text"=>array(),
-                            "detail_json"=>array(),
-                        );
+                // 对于已终止的虚拟合约（vir_status=50），跳过变更记录检查，允许续约时显示
+                $skipCheck = ($row["vir_status"] == 50);
+                
+                if(!$skipCheck){
+                    //查询是否有进行中的虚拟合同变更
+                    $proBool = Yii::app()->db->createCommand()->select("id,pro_status")->from("sal_contpro_virtual")
+                        ->where("pro_id!=:pro_id and vir_id=:vir_id and pro_status not in (0,10,30)",array(":pro_id"=>$this->id,":vir_id"=>$row["id"]))->queryRow();
+                    if($proBool){
+                        // 有进行中的变更记录，跳过此虚拟合约
+                        continue;
                     }
-                    $sseRows[$clue_store_id]["busine_id"][]=$row["busine_id"];
-                    $sseRows[$clue_store_id]["busine_id_text"][]=$row["busine_id_text"];
-                    $sseRows[$clue_store_id]["detail_json"][$row["busine_id"]]=json_decode($row["detail_json"],true);
                 }
+                
+                $clue_store_id = "".$row["clue_store_id"];
+                if(!key_exists($clue_store_id,$sseRows)){
+                    $sseRows[$clue_store_id]=array(
+                        "a_id"=>$row["id"],
+                        "clue_store_id"=>$row["clue_store_id"],
+                        "sales_id"=>$row["sales_id"],
+                        "busine_id"=>array(),
+                        "busine_id_text"=>array(),
+                        "detail_json"=>array(),
+                    );
+                }
+                $sseRows[$clue_store_id]["busine_id"][]=$row["busine_id"];
+                $sseRows[$clue_store_id]["busine_id_text"][]=$row["busine_id_text"];
+                $sseRows[$clue_store_id]["detail_json"][$row["busine_id"]]=json_decode($row["detail_json"],true);
             }
         }
         return $sseRows;

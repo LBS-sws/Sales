@@ -20,6 +20,10 @@ class ClientStoreList extends CListPageModel
             return true;
         }
         
+        $staff_id = CGetName::getEmployeeIDByMy();
+        $groupIdStr = CGetName::getGroupStaffIDByStaffID($staff_id);
+        $groupIdStr = implode(",",$groupIdStr);
+        
         $sql1 = "SELECT count(DISTINCT a.id)
                 FROM sal_clue_store a
                 WHERE a.clue_id = :clue_id";
@@ -30,6 +34,14 @@ class ClientStoreList extends CListPageModel
         
         $clause = "";
         $params = array(':clue_id' => $this->clue_id);
+        
+        // 权限过滤：只显示当前销售相关的门店
+        if(ClientHeadList::isReadAll()){
+            // 如果有查看全部权限，不限制
+        }else{
+            // 只显示当前销售团队创建的门店
+            $clause .= " AND a.create_staff in ({$groupIdStr})";
+        }
         
         // 如果有搜索关键词
         if (!empty($this->searchKeyword)) {

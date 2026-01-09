@@ -10,7 +10,7 @@ class ClientHeadList extends CListPageModel
 	 */
 	public function attributeLabels()
 	{
-		return array(	
+		return array(
 			'clue_code'=>Yii::t('clue','client code'),//客户编号
             'clue_type'=>Yii::t('clue','client type'),//客户类型
 			'cust_name'=>Yii::t('clue','customer name'),//客户名
@@ -64,14 +64,15 @@ class ClientHeadList extends CListPageModel
         if (!Yii::app()->user->isSingleCity()) $search['city'] = 'b.name';
         return $search;
     }
-	
+
 	public function retrieveDataByPage($pageNum=1)
 	{
         $suffix = Yii::app()->params['envSuffix'];
         $staff_id = CGetName::getEmployeeIDByMy();
         $groupIdStr = CGetName::getGroupStaffIDByStaffID($staff_id);
         $groupIdStr = implode(",",$groupIdStr);
-		$sql1 = "select a.*,sra.pro_name as clue_source_name,b.name as city_name,concat(f.name,' (',f.code,')') as employee_name,
+        // 客户列表显示门店销售关联的数据
+		$sql1 = "select DISTINCT a.*,sra.pro_name as clue_source_name,b.name as city_name,concat(f.name,' (',f.code,')') as employee_name,
                 (case a.clue_type when 1 then '地推' else 'KA' end) as clue_type_name,
                 g.name as cust_class_name 
 				from sal_clue a
@@ -79,13 +80,15 @@ class ClientHeadList extends CListPageModel
 				LEFT JOIN hr{$suffix}.hr_employee f ON a.rec_employee_id=f.id
 				LEFT JOIN swoper{$suffix}.swo_nature_type g ON a.cust_class=g.id
 				LEFT JOIN sal_ka_sra sra ON sra.id=a.clue_source 
+				LEFT JOIN sal_clue_store s ON s.clue_id=a.id
 				where a.del_num=0 and a.table_type=2 and a.rec_type=1 ";
-		$sql2 = "select count(a.id)
+		$sql2 = "select count(DISTINCT a.id)
 				from sal_clue a
 				LEFT JOIN security{$suffix}.sec_city b ON a.city=b.code
 				LEFT JOIN hr{$suffix}.hr_employee f ON a.rec_employee_id=f.id
 				LEFT JOIN swoper{$suffix}.swo_nature_type g ON a.cust_class=g.id
 				LEFT JOIN sal_ka_sra sra ON sra.id=a.clue_source 
+				LEFT JOIN sal_clue_store s ON s.clue_id=a.id
 				where a.del_num=0 and a.table_type=2 and a.rec_type=1 ";
 		$clause = "";
 		if(self::isReadAll()){
@@ -93,7 +96,8 @@ class ClientHeadList extends CListPageModel
 		    $clause.=" and a.city in ({$citylist}) ";
         }else{
             $user_id = Yii::app()->user->id;
-            $clause.=" and (a.rec_employee_id in ({$groupIdStr}) or FIND_IN_SET('{$user_id}',a.extra_user)) ";
+            // 客户的销售或门店关联客户的销售都能看到该客户数据
+            $clause.=" and (a.rec_employee_id in ({$groupIdStr}) or FIND_IN_SET('{$user_id}',a.extra_user) or s.create_staff in ({$groupIdStr})) ";
         }
         $static = $this->staticSearchColumns();
         $columns = $this->searchColumns();
@@ -107,7 +111,7 @@ class ClientHeadList extends CListPageModel
                 $clause .= General::getSqlConditionClause($columns[$this->searchField],$svalue);
             }
         }
-		
+
 		$order = "";
 		if (!empty($this->orderField)) {
 			$order .= " order by ".$this->orderField." ";
@@ -116,11 +120,11 @@ class ClientHeadList extends CListPageModel
 
 		$sql = $sql2.$clause;
 		$this->totalRow = Yii::app()->db->createCommand($sql)->queryScalar();
-		
+
 		$sql = $sql1.$clause.$order;
 		$sql = $this->sqlWithPageCriteria($sql, $this->pageNum);
 		$records = Yii::app()->db->createCommand($sql)->queryAll();
-		
+
 		$list = array();
 		$this->attr = array();
 		if (count($records) > 0) {
