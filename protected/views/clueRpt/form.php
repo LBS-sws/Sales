@@ -19,6 +19,105 @@ $this->pageTitle=Yii::app()->name . ' - Clue Head Form';
     .select2-container--default .select2-selection--multiple .select2-selection__choice{ padding: 0px 7px;}
     .select2-container .select2-selection--single{ height: 34px;}
 
+    /* 印章类型复选框容器 */
+    .seal-checkbox-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 5px 0;
+    }
+
+    /* 每个复选框项 */
+    .seal-checkbox-item {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border: 2px solid #d2d6de;
+        border-radius: 6px;
+        background-color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 0;
+        font-weight: normal;
+        min-width: 120px;
+    }
+
+    .seal-checkbox-item:hover {
+        border-color: #3c8dbc;
+        background-color: #f8f9fa;
+        box-shadow: 0 2px 4px rgba(60, 141, 188, 0.1);
+    }
+
+    .seal-checkbox-item.checked {
+        border-color: #3c8dbc;
+        background-color: #e8f4f8;
+    }
+
+    /* 隐藏原始复选框 */
+    .seal-checkbox-input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    /* 自定义复选框图标 */
+    .seal-checkbox-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #adb5bd;
+        border-radius: 4px;
+        background-color: #fff;
+        margin-right: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .seal-checkbox-icon .fa-check {
+        font-size: 12px;
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    /* 选中状态 */
+    .seal-checkbox-item.checked .seal-checkbox-icon {
+        background-color: #3c8dbc;
+        border-color: #3c8dbc;
+    }
+
+    .seal-checkbox-item.checked .seal-checkbox-icon .fa-check {
+        opacity: 1;
+    }
+
+    /* 文字标签 */
+    .seal-checkbox-label {
+        color: #333;
+        font-size: 14px;
+        user-select: none;
+    }
+
+    .seal-checkbox-item.checked .seal-checkbox-label {
+        color: #3c8dbc;
+        font-weight: 500;
+    }
+
+    /* 禁用状态 */
+    .seal-checkbox-item:has(input:disabled) {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background-color: #f5f5f5;
+    }
+
+    .seal-checkbox-item:has(input:disabled):hover {
+        border-color: #d2d6de;
+        background-color: #f5f5f5;
+        box-shadow: none;
+    }
 </style>
 <section class="content-header">
 	<h1>
@@ -305,15 +404,39 @@ $this->pageTitle=Yii::app()->name . ' - Clue Head Form';
                     ));
                     ?>
                 </div>
-                <div id="seal_type_div" class="<?php echo $model->is_seal=="N"?"hide":"";?>">
-                    <?php echo TbHtml::label($model->getAttributeLabel("seal_type_id"),'seal_type_id',array('class'=>"col-lg-1 control-label",'required'=>true)); ?>
+            </div>
+            <div class="form-group" id="seal_type_div" style="<?php echo $model->is_seal=="N"?"display:none;":"";?>">
+                <?php echo TbHtml::label($model->getAttributeLabel("seal_type_id"),'seal_type_id',array('class'=>"col-lg-2 control-label",'required'=>true)); ?>
 
-                    <div class="col-lg-3">
+                <div class="col-lg-8">
+                    <div class="seal-checkbox-container">
                         <?php
-                        echo $form->dropDownList($model, 'seal_type_id',CGetName::getSealTypeList(),array(
-                            'readonly'=>$model->isReadonly(),'empty'=>'','id'=>'seal_type_id'
-                        ));
+                        // 将seal_type_id从逗号分隔的字符串转换为数组以便显示选中状态
+                        $sealTypeArray = !empty($model->seal_type_id) ? explode(',', $model->seal_type_id) : array();
+                        $sealTypeList = CGetName::getSealTypeList();
+                        $isReadonly = $model->isReadonly();
+                        
+                        foreach($sealTypeList as $key => $value):
+                            $checked = in_array($key, $sealTypeArray) ? 'checked' : '';
+                            $disabled = $isReadonly ? 'disabled' : '';
+                            $checkboxId = 'seal_type_'.$key;
                         ?>
+                            <div class="seal-checkbox-item <?php echo $checked ? 'checked' : ''; ?>" data-checkbox-id="<?php echo $checkboxId; ?>">
+                                <input 
+                                    type="checkbox" 
+                                    id="<?php echo $checkboxId; ?>" 
+                                    name="ClueRptForm[seal_type_id][]" 
+                                    value="<?php echo $key; ?>" 
+                                    <?php echo $checked; ?> 
+                                    <?php echo $disabled; ?>
+                                    class="seal-checkbox-input"
+                                />
+                                <span class="seal-checkbox-icon">
+                                    <i class="fa fa-check"></i>
+                                </span>
+                                <span class="seal-checkbox-label"><?php echo $value; ?></span>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>
@@ -379,15 +502,47 @@ $('table').on('click','.table_del', function() {
 });
 EOF;
 Yii::app()->clientScript->registerScript('removeRow',$js,CClientScript::POS_READY);
+
 $js = <<<EOF
-$('#ClueRptForm_is_seal input').change(function(){
-    if($(this).val()=="Y"){
-        $('#seal_type_div').removeClass('hide');
-    }else{
-        $('#seal_type_div').addClass('hide');
-        $('#seal_type_id').val('');
+// 印章类型复选框样式交互
+$(document).on('change', '.seal-checkbox-input', function() {
+    if($(this).is(':checked')) {
+        $(this).closest('.seal-checkbox-item').addClass('checked');
+    } else {
+        $(this).closest('.seal-checkbox-item').removeClass('checked');
     }
 });
+
+// 点击label区域切换复选框（排除直接点击checkbox的情况）
+$(document).on('click', '.seal-checkbox-item', function(e) {
+    // 如果直接点击的是checkbox，让它自然触发
+    if($(e.target).hasClass('seal-checkbox-input')) {
+        return true;
+    }
+    
+    // 点击其他区域时，手动切换checkbox
+    e.preventDefault();
+    var checkbox = $(this).find('.seal-checkbox-input');
+    if(!checkbox.prop('disabled')) {
+        checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+    }
+});
+
+// 是否用印的切换
+$('#ClueRptForm_is_seal input').change(function(){
+    if($(this).val()=="Y"){
+        $('#seal_type_div').show();
+    }else{
+        $('#seal_type_div').hide();
+        $('#seal_type_div input[type="checkbox"]').prop('checked', false).each(function(){
+            $(this).closest('.seal-checkbox-item').removeClass('checked');
+        });
+    }
+});
+EOF;
+Yii::app()->clientScript->registerScript('sealCheckbox',$js,CClientScript::POS_READY);
+
+$js = <<<EOF
 $('table').on('change','.fileVal',function() {
     var fileInput = $(this);
     var filename = fileInput.val();

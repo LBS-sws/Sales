@@ -200,10 +200,10 @@ $this->pageTitle=Yii::app()->name . ' - Clue Head Form';
                 <div id="seal_type_div" class="<?php echo $model->is_seal=="N"?"hide":"";?>">
                     <?php echo TbHtml::label($model->getAttributeLabel("seal_type_id"),'seal_type_id',array('class'=>"col-lg-1 control-label",'required'=>true)); ?>
 
-                    <div class="col-lg-3">
+                    <div class="col-lg-6">
                         <?php
-                        echo $form->dropDownList($model, 'seal_type_id',CGetName::getSealTypeList(),array(
-                            'readonly'=>$model->isReadonly(),'empty'=>'','id'=>'seal_type_id'
+                        echo TbHtml::textField("seal_type_id",CGetName::getSealTypeStrByIDs($model->seal_type_id),array(
+                            'readonly'=>true
                         ));
                         ?>
                     </div>

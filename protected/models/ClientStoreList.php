@@ -26,21 +26,24 @@ class ClientStoreList extends CListPageModel
         
         $sql1 = "SELECT count(DISTINCT a.id)
                 FROM sal_clue_store a
+                LEFT JOIN sal_clue c ON a.clue_id = c.id
                 WHERE a.clue_id = :clue_id";
         
         $sql2 = "SELECT a.*
                 FROM sal_clue_store a
+                LEFT JOIN sal_clue c ON a.clue_id = c.id
                 WHERE a.clue_id = :clue_id";
         
         $clause = "";
         $params = array(':clue_id' => $this->clue_id);
         
-        // 权限过滤：只显示当前销售相关的门店
+        // 权限过滤：地推类型所有人可见，其他类型只显示当前销售相关的门店
         if(ClientHeadList::isReadAll()){
             // 如果有查看全部权限，不限制
         }else{
-            // 只显示当前销售团队创建的门店
-            $clause .= " AND a.create_staff in ({$groupIdStr})";
+            // 地推类型（clue_type=1）：所有人都可以看到
+            // 其他类型：只显示当前销售团队创建的门店
+            $clause .= " AND (c.clue_type = 1 OR a.create_staff in ({$groupIdStr}))";
         }
         
         // 如果有搜索关键词
