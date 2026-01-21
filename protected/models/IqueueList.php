@@ -117,103 +117,204 @@ class IqueueList extends CListPageModel
                 $message = "";
                 switch ($row["import_type"]){
                     case "clientStore":
-                        // 先检查是否有要删除的数据
+                        // 检查本次导入的客户数据
                         $checkClientRows = $connection->createCommand()->select("id")->from("sal_clue")
                             ->where("report_id=:report_id".$this->removeEpx,array(":report_id"=>$index))->queryAll();
-                        $checkStoreRows = $connection->createCommand()->select("id")->from("sal_clue_store")
-                            ->where("report_id=:report_id".$this->removeEpx,array(":report_id"=>$index))->queryAll();
-                        if (empty($checkClientRows) && empty($checkStoreRows)) {
-                            $message = "未找到要删除的客户和门店数据（可能已被删除）";
+                        
+                        if (!empty($checkClientRows)) {
+                            // 有客户数据，调用 removeClient 级联删除所有关联数据
+                            $clientCount = $this->removeClient($index, $connection);
+                            $message = "已删除客户门店导入记录，共删除 {$clientCount} 条客户及其所有关联数据（包括其他批次导入的门店、合同、虚拟合约）";
                         } else {
-                            $this->removeClient($index, $connection);
-                            // 查询门店记录
-                            $storeRows = $connection->createCommand()->select("id")->from("sal_clue_store")
+                            // 没有客户数据，删除本次导入的门店及其所有关联数据
+                            $storeRows = $connection->createCommand()->select("id,clue_id")->from("sal_clue_store")
                                 ->where("report_id=:report_id".$this->removeEpx,array(":report_id"=>$index))->queryAll();
                             if($storeRows) {
                                 $storeIds = array();
+                                $orphanClueIds = array(); // 孤立的客户ID
+                                
                                 foreach($storeRows as $row) {
                                     $storeIds[] = $row['id'];
+                                    // 检查这个门店关联的客户是否还存在
+                                    if (!empty($row['clue_id'])) {
+                                        $clueExists = $connection->createCommand()
+                                            ->select("id")
+                                            ->from("sal_clue")
+                                            ->where("id=:id", array(":id"=>$row['clue_id']))
+                                            ->queryRow();
+                                        if (!$clueExists) {
+                                            $orphanClueIds[] = $row['clue_id'];
+                                        }
+                                    }
                                 }
+                                
                                 if (!empty($storeIds)) {
                                     $storeIdsStr = implode(',', $storeIds);
-                                    // 注意：以下关联表没有 report_id 字段，通过 clue_store_id 关联删除
-                                    // 这是合理的，因为门店记录被删除后，其关联数据也应该被删除（级联删除逻辑）
-                                    // 删除门店关联的联络人
+                                    
+                                    // 1. 删除虚拟合约（因为虚拟合约依赖主合同和门店）
+                                    $virtualRows = $connection->createCommand()
+                                        ->select("id")
+                                        ->from("sal_contract_virtual")
+                                        ->where("clue_store_id IN ({$storeIdsStr})")
+                                        ->queryAll();
+                                    if (!empty($virtualRows)) {
+                                        $virIds = array();
+                                        foreach($virtualRows as $vrow) {
+                                            $virIds[] = $vrow['id'];
+                                        }
+                                        $virIdsStr = implode(',', $virIds);
+                                        $connection->createCommand("DELETE FROM sal_contract_vir_info WHERE virtual_id IN ({$virIdsStr})")->execute();
+                                        $connection->createCommand("DELETE FROM sal_contract_vir_staff WHERE vir_id IN ({$virIdsStr})")->execute();
+                                        $connection->createCommand("DELETE FROM sal_contract_vir_week WHERE vir_id IN ({$virIdsStr})")->execute();
+                                        $connection->createCommand("DELETE FROM sal_contpro_virtual WHERE vir_id IN ({$virIdsStr})")->execute();
+                                        $connection->createCommand("DELETE FROM sal_contract_history WHERE (table_type=7 OR table_type=8) AND table_id IN ({$virIdsStr})")->execute();
+                                        $connection->createCommand("DELETE FROM sal_contract_virtual WHERE clue_store_id IN ({$storeIdsStr})")->execute();
+                                    }
+                                    
+                                    // 2. 删除与门店关联的合约门店关系
+                                    $connection->createCommand("DELETE FROM sal_contpro_sse WHERE clue_store_id IN ({$storeIdsStr})")->execute();
+                                    $connection->createCommand("DELETE FROM sal_contract_sse WHERE clue_store_id IN ({$storeIdsStr})")->execute();
+                                    
+                                    // 3. 删除门店关联的其他数据
                                     $connection->createCommand("DELETE FROM sal_clue_person WHERE clue_store_id IN ({$storeIdsStr}) AND clue_store_id!=0")->execute();
-                                    // 删除门店关联的商机门店表
                                     $connection->createCommand("DELETE FROM sal_clue_sre_soe WHERE clue_store_id IN ({$storeIdsStr})")->execute();
-                                    // 删除门店历史记录（table_type=2:门店记录）
                                     $connection->createCommand("DELETE FROM sal_clue_history WHERE table_type=2 AND table_id IN ({$storeIdsStr})")->execute();
                                 }
-                                // 删除门店主表
+                                
+                                // 4. 删除门店主表
                                 $connection->createCommand()->delete("sal_clue_store","report_id=:report_id".$this->removeEpx,array(":report_id"=>$index));
+                                
+                                $orphanCount = count(array_unique($orphanClueIds));
+                                if ($orphanCount > 0) {
+                                    $message = "已删除门店导入记录，共删除 " . count($storeRows) . " 条门店及其所有关联数据（包括虚拟合约、合约门店关系等）。其中 {$orphanCount} 个门店的客户数据已不存在，属于孤立数据";
+                                } else {
+                                    $message = "已删除门店导入记录，共删除 " . count($storeRows) . " 条门店及其所有关联数据（包括虚拟合约、合约门店关系等）";
+                                }
+                            } else {
+                                $message = "未找到要删除的数据（可能已被删除）";
                             }
-                            $removeRows = $connection->createCommand()->select("id")->from("sal_clue")
-                                ->where("report_id=:report_id".$this->removeEpx,array(":report_id"=>$index))->queryAll();
-                            $message = "已删除门店导入记录，共删除 " . count($checkClientRows) . " 条客户记录，" . count($checkStoreRows) . " 条门店记录";
                         }
                         break;
                     case "client":
-                        // 先检查是否有要删除的数据
-                        $checkRows = $connection->createCommand()->select("id")->from("sal_clue")
+                        // 检查本次导入的客户数据
+                        $checkClientRows = $connection->createCommand()->select("id")->from("sal_clue")
                             ->where("report_id=:report_id".$this->removeEpx,array(":report_id"=>$index))->queryAll();
-                        if (empty($checkRows)) {
+                        
+                        if (empty($checkClientRows)) {
                             $message = "未找到要删除的客户数据（可能已被删除）";
                         } else {
-                            $count = $this->removeClient($index, $connection);
-                            $message = "已删除客户导入记录，共删除 " . $count . " 条客户记录";
+                            // 删除客户数据（会级联删除所有 clue_id 匹配的门店、合同、虚拟合约）
+                            $clientCount = $this->removeClient($index, $connection);
+                            $message = "已删除客户导入记录，共删除 {$clientCount} 条客户及其所有关联数据（包括其他批次导入的门店、合同、虚拟合约）";
                         }
                         break;
                     case "cont":
-                        // 先检查是否有要删除的数据
-                        $checkRows = $connection->createCommand()->select("id")->from("sal_contract")
+                        // 检查本次导入的客户数据
+                        $checkClientRows = $connection->createCommand()->select("id")->from("sal_clue")
                             ->where("report_id=:report_id".$this->removeEpx,array(":report_id"=>$index))->queryAll();
-                        if (empty($checkRows)) {
-                            $message = "未找到要删除的合约数据（可能已被删除）";
+                        
+                        if (!empty($checkClientRows)) {
+                            // 有客户数据，调用 removeClient 级联删除所有关联数据
+                            $clientCount = $this->removeClient($index, $connection);
+                            $message = "已删除合约导入记录，共删除 {$clientCount} 条客户及其所有关联数据（包括其他批次导入的门店、合同、虚拟合约）";
                         } else {
-                            $removeCount = $this->removeCont($index, $connection);
-                            $message = "已删除合约导入记录，共删除 " . $removeCount . " 条合约记录";
+                            // 没有客户数据，检查并删除本次导入的合同数据（包括孤立数据）
+                            $contractRows = $connection->createCommand()->select("id,clue_id")->from("sal_contract")
+                                ->where("report_id=:report_id".$this->removeEpx,array(":report_id"=>$index))->queryAll();
+                            if (!empty($contractRows)) {
+                                $orphanClueIds = array();
+                                foreach($contractRows as $row) {
+                                    // 检查合同关联的客户是否还存在
+                                    if (!empty($row['clue_id'])) {
+                                        $clueExists = $connection->createCommand()
+                                            ->select("id")
+                                            ->from("sal_clue")
+                                            ->where("id=:id", array(":id"=>$row['clue_id']))
+                                            ->queryRow();
+                                        if (!$clueExists) {
+                                            $orphanClueIds[] = $row['clue_id'];
+                                        }
+                                    }
+                                }
+                                
+                                $contractCount = $this->removeCont($index, $connection);
+                                $orphanCount = count(array_unique($orphanClueIds));
+                                if ($orphanCount > 0) {
+                                    $message = "已删除合约导入记录，共删除 {$contractCount} 条主合同（其中 {$orphanCount} 个合同的客户数据已不存在，属于孤立数据）";
+                                } else {
+                                    $message = "已删除合约导入记录，共删除 {$contractCount} 条主合同";
+                                }
+                            } else {
+                                $message = "未找到要删除的数据（可能已被删除）";
+                            }
                         }
                         break;
                     case "vir":
-                        $removeCount = $this->removeCont($index, $connection);
-                        $removeRows = $connection->createCommand()->select("id,cont_id,clue_id,clue_service_id,clue_store_id")->from("sal_contract_virtual")
+                        // 检查本次导入的客户数据
+                        $checkClientRows = $connection->createCommand()->select("id")->from("sal_clue")
                             ->where("report_id=:report_id".$this->removeEpx,array(":report_id"=>$index))->queryAll();
-                        if($removeRows){
-                            $virIds = array();
-                            foreach($removeRows as $row) {
-                                $virIds[] = $row['id'];
-                            }
-                            if (!empty($virIds)) {
-                                $virIdsStr = implode(',', $virIds);
-                                // 注意：以下关联表没有 report_id 字段，通过 virtual_id/vir_id 关联删除
-                                // 这是合理的，因为虚拟合约记录被删除后，其关联数据也应该被删除（级联删除逻辑）
-                                // 先删除虚拟合约的关联表
-                                $connection->createCommand("DELETE FROM sal_contract_vir_info WHERE virtual_id IN ({$virIdsStr})")->execute();
-                                $connection->createCommand("DELETE FROM sal_contract_vir_staff WHERE vir_id IN ({$virIdsStr})")->execute();
-                                $connection->createCommand("DELETE FROM sal_contract_vir_week WHERE vir_id IN ({$virIdsStr})")->execute();
-                                $connection->createCommand("DELETE FROM sal_contpro_virtual WHERE vir_id IN ({$virIdsStr})")->execute();
-                                // 删除虚拟合约历史记录（table_type=7:虚拟合约记录, table_type=8:虚拟合约变更记录）
-                                $connection->createCommand("DELETE FROM sal_contract_history WHERE (table_type=7 OR table_type=8) AND table_id IN ({$virIdsStr})")->execute();
-                            }
-                            // 删除虚拟合约主表
-                            $connection->createCommand()->delete("sal_contract_virtual","report_id=:report_id".$this->removeEpx,array(":report_id"=>$index));
-                            foreach ($removeRows as $removeRow){
-                                $connection->createCommand()->delete("sal_contpro_sse","cont_id=:cont_id and clue_store_id=:clue_store_id",array(":cont_id"=>$removeRow["cont_id"],":clue_store_id"=>$removeRow["clue_store_id"]));
-                                $connection->createCommand()->delete("sal_contract_sse","cont_id=:cont_id and clue_store_id=:clue_store_id",array(":cont_id"=>$removeRow["cont_id"],":clue_store_id"=>$removeRow["clue_store_id"]));
-                                if (!empty($removeRow["clue_id"])) {
-                                    $connection->createCommand()->update("sal_clue",array(
-                                        "clue_status"=>ClueVirProModel::getClientStatusByClueID($removeRow["clue_id"]),
-                                    ),"id=:id",array(":id"=>$removeRow["clue_id"]));
+                        
+                        if (!empty($checkClientRows)) {
+                            // 有客户数据，调用 removeClient 级联删除所有关联数据
+                            $clientCount = $this->removeClient($index, $connection);
+                            $message = "已删除虚拟合约导入记录，共删除 {$clientCount} 条客户及其所有关联数据（包括其他批次导入的门店、合同、虚拟合约）";
+                        } else {
+                            // 没有客户数据，检查并删除本次导入的虚拟合约数据（包括孤立数据）
+                            $removeRows = $connection->createCommand()->select("id,cont_id,clue_id,clue_service_id,clue_store_id")->from("sal_contract_virtual")
+                                ->where("report_id=:report_id".$this->removeEpx,array(":report_id"=>$index))->queryAll();
+                            if($removeRows){
+                                $virIds = array();
+                                $orphanClueIds = array();
+                                
+                                foreach($removeRows as $row) {
+                                    $virIds[] = $row['id'];
+                                    // 检查虚拟合约关联的客户是否还存在
+                                    if (!empty($row['clue_id'])) {
+                                        $clueExists = $connection->createCommand()
+                                            ->select("id")
+                                            ->from("sal_clue")
+                                            ->where("id=:id", array(":id"=>$row['clue_id']))
+                                            ->queryRow();
+                                        if (!$clueExists) {
+                                            $orphanClueIds[] = $row['clue_id'];
+                                        }
+                                    }
                                 }
-                                if (!empty($removeRow["clue_store_id"])) {
-                                    $connection->createCommand()->update("sal_clue_store",array(
-                                        "store_status"=>ClueVirProModel::getStoreStatusByStoreID($removeRow["clue_store_id"]),
-                                    ),"id=:id",array(":id"=>$removeRow["clue_store_id"]));
+                                
+                                if (!empty($virIds)) {
+                                    $virIdsStr = implode(',', $virIds);
+                                    $connection->createCommand("DELETE FROM sal_contract_vir_info WHERE virtual_id IN ({$virIdsStr})")->execute();
+                                    $connection->createCommand("DELETE FROM sal_contract_vir_staff WHERE vir_id IN ({$virIdsStr})")->execute();
+                                    $connection->createCommand("DELETE FROM sal_contract_vir_week WHERE vir_id IN ({$virIdsStr})")->execute();
+                                    $connection->createCommand("DELETE FROM sal_contpro_virtual WHERE vir_id IN ({$virIdsStr})")->execute();
+                                    $connection->createCommand("DELETE FROM sal_contract_history WHERE (table_type=7 OR table_type=8) AND table_id IN ({$virIdsStr})")->execute();
                                 }
+                                $connection->createCommand()->delete("sal_contract_virtual","report_id=:report_id".$this->removeEpx,array(":report_id"=>$index));
+                                foreach ($removeRows as $removeRow){
+                                    $connection->createCommand()->delete("sal_contpro_sse","cont_id=:cont_id and clue_store_id=:clue_store_id",array(":cont_id"=>$removeRow["cont_id"],":clue_store_id"=>$removeRow["clue_store_id"]));
+                                    $connection->createCommand()->delete("sal_contract_sse","cont_id=:cont_id and clue_store_id=:clue_store_id",array(":cont_id"=>$removeRow["cont_id"],":clue_store_id"=>$removeRow["clue_store_id"]));
+                                    if (!empty($removeRow["clue_id"])) {
+                                        $connection->createCommand()->update("sal_clue",array(
+                                            "clue_status"=>ClueVirProModel::getClientStatusByClueID($removeRow["clue_id"]),
+                                        ),"id=:id",array(":id"=>$removeRow["clue_id"]));
+                                    }
+                                    if (!empty($removeRow["clue_store_id"])) {
+                                        $connection->createCommand()->update("sal_clue_store",array(
+                                            "store_status"=>ClueVirProModel::getStoreStatusByStoreID($removeRow["clue_store_id"]),
+                                        ),"id=:id",array(":id"=>$removeRow["clue_store_id"]));
+                                    }
+                                }
+                                
+                                $orphanCount = count(array_unique($orphanClueIds));
+                                if ($orphanCount > 0) {
+                                    $message = "已删除虚拟合约导入记录，共删除 " . count($removeRows) . " 条虚拟合约（其中 {$orphanCount} 个虚拟合约的客户数据已不存在，属于孤立数据）";
+                                } else {
+                                    $message = "已删除虚拟合约导入记录，共删除 " . count($removeRows) . " 条虚拟合约";
+                                }
+                            } else {
+                                $message = "未找到要删除的数据（可能已被删除）";
                             }
                         }
-                        $message = "已删除虚拟合约导入记录，共删除 " . count($removeRows) . " 条记录";
                         break;
                     default:
                         $transaction->rollback();
@@ -228,10 +329,11 @@ class IqueueList extends CListPageModel
                 return $message;
             } catch (Exception $e) {
                 $transaction->rollback();
-                return false;
+                // 重新抛出异常，让 Controller 能够捕获到具体的错误信息
+                throw $e;
             }
         }else{
-            return false;
+            throw new Exception("未找到要删除的导入记录（ID: {$index}）");
         }
     }
 
@@ -257,16 +359,82 @@ class IqueueList extends CListPageModel
             }
             if (!empty($clueIds)) {
                 $clueIdsStr = implode(',', $clueIds);
-                // 删除关联表数据（这些表没有 report_id 字段，通过 clue_id 关联删除）
-                // 注意：这里的 clue_id 都是通过 report_id 查询出来的（第226-227行），所以都是导入的数据
-                // 删除这些关联数据是安全的，不会误删其他数据
-                // 这是合理的，因为客户记录被删除后，其关联数据也应该被删除（级联删除逻辑）
+                
+                // 【级联删除】删除所有引用这些客户的数据（不管 report_id）
+                // 1. 先删除虚拟合约（因为虚拟合约依赖主合同）
+                $virtualRows = $connection->createCommand()
+                    ->select("id")
+                    ->from("sal_contract_virtual")
+                    ->where("clue_id IN ({$clueIdsStr})")
+                    ->queryAll();
+                if (!empty($virtualRows)) {
+                    $virIds = array();
+                    foreach($virtualRows as $row) {
+                        $virIds[] = $row['id'];
+                    }
+                    $virIdsStr = implode(',', $virIds);
+                    // 删除虚拟合约的关联表
+                    $connection->createCommand("DELETE FROM sal_contract_vir_info WHERE virtual_id IN ({$virIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contract_vir_staff WHERE vir_id IN ({$virIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contract_vir_week WHERE vir_id IN ({$virIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contpro_virtual WHERE vir_id IN ({$virIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contract_history WHERE (table_type=7 OR table_type=8) AND table_id IN ({$virIdsStr})")->execute();
+                    // 删除虚拟合约主表
+                    $connection->createCommand("DELETE FROM sal_contract_virtual WHERE clue_id IN ({$clueIdsStr})")->execute();
+                }
+                
+                // 2. 删除主合同
+                $contractRows = $connection->createCommand()
+                    ->select("id")
+                    ->from("sal_contract")
+                    ->where("clue_id IN ({$clueIdsStr})")
+                    ->queryAll();
+                if (!empty($contractRows)) {
+                    $contIds = array();
+                    foreach($contractRows as $row) {
+                        $contIds[] = $row['id'];
+                    }
+                    $contIdsStr = implode(',', $contIds);
+                    // 删除主合同的关联表
+                    $connection->createCommand("DELETE FROM sal_contpro WHERE cont_id IN ({$contIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contpro_virtual WHERE cont_id IN ({$contIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contract_file WHERE cont_id IN ({$contIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contpro_file WHERE cont_id IN ({$contIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contpro_sse WHERE cont_id IN ({$contIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contract_sse WHERE cont_id IN ({$contIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contract_call WHERE cont_id IN ({$contIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_contract_history WHERE (table_type=5 OR table_type=6) AND table_id IN ({$contIdsStr})")->execute();
+                    // 删除主合同主表
+                    $connection->createCommand("DELETE FROM sal_contract WHERE clue_id IN ({$clueIdsStr})")->execute();
+                }
+                
+                // 3. 删除门店
+                $storeRows = $connection->createCommand()
+                    ->select("id")
+                    ->from("sal_clue_store")
+                    ->where("clue_id IN ({$clueIdsStr})")
+                    ->queryAll();
+                if (!empty($storeRows)) {
+                    $storeIds = array();
+                    foreach($storeRows as $row) {
+                        $storeIds[] = $row['id'];
+                    }
+                    $storeIdsStr = implode(',', $storeIds);
+                    // 删除门店的关联表
+                    $connection->createCommand("DELETE FROM sal_clue_person WHERE clue_store_id IN ({$storeIdsStr}) AND clue_store_id!=0")->execute();
+                    $connection->createCommand("DELETE FROM sal_clue_sre_soe WHERE clue_store_id IN ({$storeIdsStr})")->execute();
+                    $connection->createCommand("DELETE FROM sal_clue_history WHERE table_type=2 AND table_id IN ({$storeIdsStr})")->execute();
+                    // 删除门店主表
+                    $connection->createCommand("DELETE FROM sal_clue_store WHERE clue_id IN ({$clueIdsStr})")->execute();
+                }
+                
+                // 4. 删除商机
+                $connection->createCommand("DELETE FROM sal_clue_service WHERE clue_id IN ({$clueIdsStr})")->execute();
+                
+                // 5. 删除客户的其他关联表数据
                 $connection->createCommand("DELETE FROM sal_clue_u_staff WHERE clue_id IN ({$clueIdsStr})")->execute();
                 $connection->createCommand("DELETE FROM sal_clue_u_area WHERE clue_id IN ({$clueIdsStr})")->execute();
-                $connection->createCommand("DELETE FROM sal_clue_person WHERE clue_id IN ({$clueIdsStr})")->execute();
-                // 注意：sal_clue_store 有 report_id 字段，但不在 removeClient 中删除
-                // 原因：1) client 导入类型中，门店可能没有 report_id（手动添加），不应该删除
-                //       2) clientStore 导入类型中，门店会在 case 中单独通过 report_id 删除（第141行）
+                $connection->createCommand("DELETE FROM sal_clue_person WHERE clue_id IN ({$clueIdsStr}) AND clue_id!=0")->execute();
                 $connection->createCommand("DELETE FROM sal_clue_rpt WHERE clue_id IN ({$clueIdsStr})")->execute();
                 $connection->createCommand("DELETE FROM sal_clue_rpt_file WHERE clue_id IN ({$clueIdsStr})")->execute();
                 $connection->createCommand("DELETE FROM sal_clue_file WHERE clue_id IN ({$clueIdsStr})")->execute();
@@ -274,11 +442,8 @@ class IqueueList extends CListPageModel
                 $connection->createCommand("DELETE FROM sal_clue_invoice WHERE clue_id IN ({$clueIdsStr})")->execute();
                 $connection->createCommand("DELETE FROM sal_clue_sre_soe WHERE clue_id IN ({$clueIdsStr})")->execute();
                 $connection->createCommand("DELETE FROM sal_clue_history WHERE table_type=1 AND table_id IN ({$clueIdsStr})")->execute();
-                // 删除客户标签映射表（如果存在）
-                $connection->createCommand("DELETE FROM sal_clue_tag_map WHERE clue_id IN ({$clueIdsStr})")->execute();
+                // $connection->createCommand("DELETE FROM sal_clue_tag_map WHERE clue_id IN ({$clueIdsStr})")->execute(); // 表不存在，已注释
             }
-            // 删除商机表（通过 report_id 关联）
-            $connection->createCommand()->delete("sal_clue_service","report_id=:report_id".$this->removeEpx,array(":report_id"=>$report_id));
         }
         
         // 最后删除主表数据
@@ -302,7 +467,9 @@ class IqueueList extends CListPageModel
             }
             if (!empty($contIds)) {
                 $contIdsStr = implode(',', $contIds);
-                $connection->createCommand("DELETE FROM sal_contract_virtual WHERE cont_id IN ({$contIdsStr})")->execute();
+                // 注意：不能直接通过 cont_id 删除虚拟合约，因为虚拟合约可能有自己的 report_id
+                // 虚拟合约应该在外层通过 report_id 删除
+                // $connection->createCommand("DELETE FROM sal_contract_virtual WHERE cont_id IN ({$contIdsStr})")->execute();
                 $connection->createCommand("DELETE FROM sal_contpro WHERE cont_id IN ({$contIdsStr})")->execute();
                 // 注意：以下关联表没有 report_id 字段，通过 cont_id 关联删除
                 // 这是合理的，因为合约记录被删除后，其关联数据也应该被删除（级联删除逻辑）
@@ -323,9 +490,11 @@ class IqueueList extends CListPageModel
             $connection->createCommand()->delete("sal_contract","report_id=:report_id".$this->removeEpx,array(":report_id"=>$index));
             // 更新关联的线索状态
             foreach ($removeRows as $removeRow){
-                if (!empty($removeRow["clue_service_id"])) {
-                    $connection->createCommand()->delete("sal_clue_service","id=:id",array(":id"=>$removeRow["clue_service_id"]));
-                }
+                // 注意：不能直接删除商机，因为商机可能有自己的 report_id
+                // 商机应该在外层通过 report_id 删除
+                // if (!empty($removeRow["clue_service_id"])) {
+                //     $connection->createCommand()->delete("sal_clue_service","id=:id",array(":id"=>$removeRow["clue_service_id"]));
+                // }
                 if (!empty($removeRow["clue_id"])) {
                     $connection->createCommand()->update("sal_clue",array(
                         "clue_status"=>ClueVirProModel::getClientStatusByClueID($removeRow["clue_id"]),

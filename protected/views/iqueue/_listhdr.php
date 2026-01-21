@@ -25,6 +25,11 @@
 		?>
 	</th>
 	<th>
+		<?php echo TbHtml::link($this->getLabelName('username').$this->drawOrderArrow('username'),'#',$this->createOrderLink('queue-list','username'))
+			;
+		?>
+	</th>
+	<th>
 		<?php echo TbHtml::link($this->getLabelName('message').$this->drawOrderArrow('message'),'#',$this->createOrderLink('queue-list','message'))
 			;
 		?>
@@ -49,4 +54,5 @@
 			;
 		?>
 	</th>
+	<th>操作</th>
 </tr>

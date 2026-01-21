@@ -23,6 +23,10 @@ $this->pageTitle=Yii::app()->name . ' - Import Manager';
 				echo TbHtml::button('<span class="fa fa-refresh"></span> '.Yii::t('misc','Refresh'), array(
 					'submit'=>Yii::app()->createUrl('iqueue/index'), 
 				)); 
+				echo TbHtml::button('<span class="fa fa-search"></span> 检测孤立数据', array(
+					'id'=>'btnCheckOrphan',
+					'color'=>TbHtml::BUTTON_COLOR_WARNING,
+				));
 		?>
 	</div>
             <div class="pull-right">
@@ -53,6 +57,7 @@ $this->pageTitle=Yii::app()->name . ' - Import Manager';
 <?php
 	$link = Yii::app()->createUrl('iqueue/downExcel');
 	$removeUrl = Yii::app()->createUrl('iqueue/remove');
+	$checkOrphanUrl = Yii::app()->createUrl('iqueue/checkOrphan');
 	$js = <<<EOF
 function downExcel(id,type) {
     var url = '{$link}';
@@ -194,6 +199,114 @@ $('#btnConfirmRemove').on('click', function() {
         });
     }
 });
+
+// 清理孤立数据
+$(document).on('click', '#btnCleanOrphan', function() {
+    var confirmMsg = "确定要清理所有孤立数据吗？\\n\\n这将删除所有客户已不存在的门店、合同、虚拟合约和商机数据。\\n\\n此操作不可恢复！";
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+    
+    var btn = $(this);
+    btn.prop('disabled', true).html('<span class="fa fa-spinner fa-spin"></span> 清理中...');
+    
+    var cleanUrl = '{$checkOrphanUrl}'.replace('checkOrphan', 'cleanOrphan');
+    
+    $.ajax({
+        type: 'GET',
+        url: cleanUrl,
+        dataType: 'json',
+        success: function(data) {
+            $('#orphanCheckDialog').modal('hide');
+            
+            if (data.status === 'success') {
+                var msg = '清理完成！\\n';
+                msg += '已删除孤立门店：' + data.deletedStores + ' 条\\n';
+                msg += '已删除孤立主合同：' + data.deletedContracts + ' 条\\n';
+                msg += '已删除孤立虚拟合约：' + data.deletedVirtuals + ' 条\\n';
+                msg += '已删除孤立商机：' + data.deletedServices + ' 条';
+                
+                if (typeof toastr !== 'undefined') {
+                    toastr.success(msg);
+                } else {
+                    alert(msg);
+                }
+                
+                // 重新检测
+                $('#btnCheckOrphan').click();
+            } else {
+                alert('清理失败：' + (data.message || '未知错误'));
+            }
+        },
+        error: function(xhr, status, error) {
+            $('#orphanCheckDialog').modal('hide');
+            alert('清理失败，请重试。错误信息：' + error);
+        }
+    });
+});
+
+// 检测孤立数据
+$('#btnCheckOrphan').on('click', function() {
+    var btn = $(this);
+    btn.prop('disabled', true).html('<span class="fa fa-spinner fa-spin"></span> 检测中...');
+    
+    $.ajax({
+        type: 'GET',
+        url: '{$checkOrphanUrl}',
+        dataType: 'json',
+        success: function(data) {
+            btn.prop('disabled', false).html('<span class="fa fa-search"></span> 检测孤立数据');
+            
+            if (data.status === 'success') {
+                var html = '<div class="alert alert-info"><strong>孤立数据检测结果</strong></div>';
+                html += '<table class="table table-bordered table-striped" style="margin-bottom: 0;">';
+                html += '<tr><th style="width: 150px;">数据类型</th><th>数量</th><th>说明</th></tr>';
+                
+                var hasOrphan = false;
+                if (data.orphanStores > 0) {
+                    hasOrphan = true;
+                    html += '<tr class="warning"><td><strong>孤立门店</strong></td><td>' + data.orphanStores + ' 条</td><td>门店的客户数据已不存在</td></tr>';
+                }
+                if (data.orphanContracts > 0) {
+                    hasOrphan = true;
+                    html += '<tr class="warning"><td><strong>孤立主合同</strong></td><td>' + data.orphanContracts + ' 条</td><td>主合同的客户数据已不存在</td></tr>';
+                }
+                if (data.orphanVirtuals > 0) {
+                    hasOrphan = true;
+                    html += '<tr class="warning"><td><strong>孤立虚拟合约</strong></td><td>' + data.orphanVirtuals + ' 条</td><td>虚拟合约的客户数据已不存在</td></tr>';
+                }
+                if (data.orphanServices > 0) {
+                    hasOrphan = true;
+                    html += '<tr class="warning"><td><strong>孤立商机</strong></td><td>' + data.orphanServices + ' 条</td><td>商机的客户数据已不存在</td></tr>';
+                }
+                
+                if (!hasOrphan) {
+                    html += '<tr class="success"><td colspan="3" style="text-align:center;"><strong>太棒了！系统中没有发现孤立数据。</strong></td></tr>';
+                }
+                
+                html += '</table>';
+                
+                if (hasOrphan) {
+                    html += '<div class="alert alert-warning" style="margin-top: 15px; margin-bottom: 5px;">';
+                    html += '<strong>提示：</strong>这些孤立数据的客户已被删除，但关联数据还在。您可以点击下方按钮清理这些孤立数据。';
+                    html += '</div>';
+                    html += '<div style="text-align: center; margin-top: 10px;">';
+                    html += '<button class="btn btn-danger" id="btnCleanOrphan"><i class="fa fa-trash"></i> 清理所有孤立数据</button>';
+                    html += '</div>';
+                }
+                
+                $('#orphanCheckDialog .modal-body').html(html);
+                $('#orphanCheckDialog').modal('show');
+            } else {
+                alert('检测失败：' + (data.message || '未知错误'));
+            }
+        },
+        error: function(xhr, status, error) {
+            btn.prop('disabled', false).html('<span class="fa fa-search"></span> 检测孤立数据');
+            alert('检测失败，请重试。错误信息：' + error);
+        }
+    });
+});
 EOF;
 	Yii::app()->clientScript->registerScript('iqueueActions',$js,CClientScript::POS_READY);
 ?>
@@ -207,6 +320,19 @@ $this->widget('bootstrap.widgets.TbModal', array(
     'footer'=>array(
         TbHtml::button('确定删除', array('id'=>'btnConfirmRemove','color'=>TbHtml::BUTTON_COLOR_DANGER)),
         TbHtml::button('取消', array('data-dismiss'=>'modal','color'=>TbHtml::BUTTON_COLOR_DEFAULT)),
+    ),
+    'show'=>false,
+));
+?>
+
+<?php
+// 孤立数据检测结果对话框
+$this->widget('bootstrap.widgets.TbModal', array(
+    'id'=>'orphanCheckDialog',
+    'header'=>'孤立数据检测结果',
+    'content'=>'<div class="modal-body"></div>',
+    'footer'=>array(
+        TbHtml::button('关闭', array('data-dismiss'=>'modal','color'=>TbHtml::BUTTON_COLOR_DEFAULT)),
     ),
     'show'=>false,
 ));
