@@ -1,8 +1,8 @@
 <?php
 
 class CurlNotesByVir extends CurlNotesModel {
-	public $pro_type="N";
-	public $update_effective_date="";
+    public $pro_type="N";
+    public $update_effective_date="";
 
     public function sendAllVirByContID($cont_id){//
         $this->sendAllVirByContIDAndNew($cont_id);
@@ -83,7 +83,7 @@ class CurlNotesByVir extends CurlNotesModel {
             "deposit"=>empty($virRow["deposit_need"])?0:floatval($virRow["deposit_need"]),//押金 没有就传0
             "deposit_paid"=>empty($virRow["deposit_amt"])?0:floatval($virRow["deposit_amt"]),//已付押金 没有就传0
             "deposit_rmk"=>$virRow["deposit_rmk"],//押金备注 没有就传空
-            "one_time_fee"=>0,//一次性费用 没有就传0
+            "one_time_fee"=> isset($virRow['amt_install']) ? $virRow['amt_install'] : null,//安装费用 没有就传0
             "crm_remarks"=>$virRow["remark"],//备注 没有就传空
             "tech_remarks"=>null,//技术员备注 没有就传空
             "status"=>self::getUStatusByVirStatus($virRow["vir_status"]),//合约状态 1 生效中 2 暂停 3 结束 4 删除 5 暂停生效
@@ -115,7 +115,7 @@ class CurlNotesByVir extends CurlNotesModel {
         $data["invoice_amount"]=self::getUInvoiceAmt($data["set_frequency"],$virRow);
         $data["week_invoice_amount"]=$data["set_frequency"]==4?$data["invoice_amount"]:null;
         if(!empty($virRow["u_id"])){
-			$staffCode = self::getEmployeeStrByUsername("code",$virRow["lcu"]);
+            $staffCode = self::getEmployeeStrByUsername("code",$virRow["lcu"]);
             //$data["update_effective_date"]=$this->update_effective_date;
             $data["update_effective_date"]=empty($virRow["effect_date"])?$this->update_effective_date:$virRow["effect_date"];
             $data["update_by"]=$staffCode;
@@ -125,7 +125,7 @@ class CurlNotesByVir extends CurlNotesModel {
             $data["contract_id"]=$virRow["u_id"];
             $data["operation_event"]=self::getUOperationEvent($this->pro_type);//合约变更事件 1 编辑 2续约 3暂停 4终止 5恢复
         }else{
-			$staffCode = self::getEmployeeStrByUsername("code",$virRow["lcu"]);
+            $staffCode = self::getEmployeeStrByUsername("code",$virRow["lcu"]);
             $data["create_uid"]=$staffCode;
             $data["create_by"]=$staffCode;
             $data["create_at"]=$virRow["lcd"];
@@ -243,7 +243,7 @@ class CurlNotesByVir extends CurlNotesModel {
 				return 4;
 			case "R":
 				return 5;
-			
+
 		}
 		return 1;
 	}
