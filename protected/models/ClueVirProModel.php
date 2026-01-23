@@ -471,7 +471,27 @@ class ClueVirProModel
             ->where("a.clue_store_id={$store_id} and a.vir_status in (10,30,40,50)")->group("a.vir_status")->queryRow();//
 		$status=1;
 		if($statusRow){
-			$status=$statusRow["min_status"];
+			// ✅ 修复：将虚拟合约状态映射为门店状态
+			// 虚拟合约状态：10=待生效, 30=生效中, 40=已暂停, 50=已终止
+			// 门店状态：0=未生效, 1=未服务, 2=服务中, 3=已停止, 4=其他
+			$virStatus = $statusRow["min_status"];
+			switch($virStatus) {
+				case 10:  // 待生效
+					$status = 1;  // 未服务
+					break;
+				case 30:  // 生效中
+					$status = 2;  // 服务中
+					break;
+				case 40:  // 已暂停
+					$status = 3;  // 已停止
+					break;
+				case 50:  // 已终止
+					$status = 3;  // 已停止
+					break;
+				default:
+					Yii::log("门店{$store_id}的虚拟合约状态异常: {$virStatus}，已设置为默认值1(未服务)", 'warning', 'ClueVirProModel');
+					$status = 1;  // 默认未服务
+			}
 		}
 		return $status;
     }

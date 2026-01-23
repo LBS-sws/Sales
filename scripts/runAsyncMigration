@@ -1,0 +1,41 @@
+#!/bin/bash
+###############################################################################
+# 异步数据迁移守护进程脚本
+# 
+# 功能：持续监控并自动重启异步数据迁移处理器
+# 
+# 使用方法：
+#   nohup ./scripts/runAsyncMigration > /dev/null 2>&1 &
+#   或
+#   ./scripts/async-migration.sh start  (推荐)
+#
+###############################################################################
+# 配置参数（请根据实际情况修改）
+CMDDIR=/var/www/bin/sa/uat
+LOGDIR=/var/log/dms/sa/uat
+# 确保日志目录存在
+mkdir -p $LOGDIR
+while true; do
+    # 检查进程是否运行
+    PROCS=`ps aux | grep 'yii_console_sau.php AsyncDataMigration process' | grep -v grep`
+    if [ -z "$PROCS" ]; then
+        # 进程未运行，启动它
+        LOGFILE=`date +"%Y%m%d"`
+        LOGFILE_LOC=$LOGDIR/async_migration_$LOGFILE.log
+        # 记录重启信息
+        echo "[`date '+%Y-%m-%d %H:%M:%S'`] 异步数据迁移处理器启动" >> $LOGFILE_LOC
+        # 启动处理器
+        php $CMDDIR/yii_console_sau.php AsyncDataMigration process --daemon < /dev/null >> $LOGFILE_LOC 2>&1 &
+        # 等待1秒确保启动成功
+        sleep 1
+        # 再次检查是否启动成功
+        PROCS_CHECK=`ps aux | grep 'yii_console_sau.php AsyncDataMigration process' | grep -v grep`
+        if [ -z "$PROCS_CHECK" ]; then
+            echo "[`date '+%Y-%m-%d %H:%M:%S'`] 启动失败，请检查日志" >> $LOGFILE_LOC
+        else
+            echo "[`date '+%Y-%m-%d %H:%M:%S'`] 启动成功，PID: $!" >> $LOGFILE_LOC
+        fi
+    fi
+    # 每5秒检查一次（更快响应）
+    sleep 5
+done

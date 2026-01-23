@@ -3,7 +3,7 @@
 class ContHeadForm extends ContForm
 {
     public $goMhWebUrl;//
-    public $docMaxSize = 10485760;//1024*1024*10 = 10M
+    public $docMaxSize = 15728640;//1024*1024*15 = 15M
     protected $virtual=array();//虚拟合同
     public $lookFileRow=array();
 
@@ -89,7 +89,7 @@ class ContHeadForm extends ContForm
                     $ext = pathinfo($fileName,PATHINFO_EXTENSION);
                     if(in_array($ext,array("jpeg","jpg","png","xlsx","xls","pdf","docx","txt","doc","wps"))){
                         if($fileSize>$this->docMaxSize){
-                            $this->addError($attribute,'文件大小不能大于10M'.$fileSize);
+                            $this->addError($attribute,'文件大小不能大于15M'.$fileSize);
                             break;
                         }else{
                             $this->fileJson[$key]["file"]=array(

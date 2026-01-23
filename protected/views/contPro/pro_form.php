@@ -257,7 +257,7 @@ $('table').on('change','.fileVal',function() {
     filename = filename.substring(pos, filename.length);
     //验证文件
     if(this.files[0].size>{$model->docMaxSize}){
-        showFormErrorHtml("文件大小不能超过10M");
+        showFormErrorHtml("文件大小不能超过15M");
         $(this).val('');
         return false;
     }

@@ -243,6 +243,9 @@ class TimerCommand extends CConsoleCommand {
 
     //CRM合约自动续约
 	public function actionRenewal(){
+        // 【临时关闭】2026-01-19 因为 fre_month 数据问题，临时关闭自动续约功能
+        return false;
+
         $suffix = Yii::app()->params['envSuffix'];
         $setDay = Yii::app()->db->createCommand()->select("set_name")->from("sales{$suffix}.sal_set_menu")
             ->where("set_type='computeRenewal'")->order("id desc")->queryRow();

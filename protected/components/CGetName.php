@@ -1933,6 +1933,19 @@ class CGetName {
         return $list;
     }
 
+    public static function getPayWeekLists() {
+        $suffix = Yii::app()->params['envSuffix'];
+        $list = array();
+        $rows = Yii::app()->db->createCommand()->select("id,description")
+            ->from("swoper{$suffix}.swo_payweek")->order("id asc")->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $list[$row["id"]]=$row["description"];
+            }
+        }
+        return $list;
+    }
+
     public static function getPayWeekStrByKey($key,$str="description") {
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()->select($str)->from("swoper{$suffix}.swo_payweek")
@@ -2330,6 +2343,17 @@ class CGetName {
         $list = array();
         $rows = Yii::app()->db->createCommand()->select("*")->from("sal_pay")
             ->where("z_display=1 or id=:id",array(":id"=>$pay_id))->order("id asc")->queryAll();
+        if($rows){
+            foreach ($rows as $row){
+                $list[$row["id"]]=$row["name"];
+            }
+        }
+        return $list;
+    }
+
+    public static function getPayTypeLists() {
+        $list = array();
+        $rows = Yii::app()->db->createCommand()->select("*")->from("sal_pay")->order("id asc")->queryAll();
         if($rows){
             foreach ($rows as $row){
                 $list[$row["id"]]=$row["name"];
