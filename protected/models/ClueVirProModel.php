@@ -415,7 +415,7 @@ class ClueVirProModel
 				}
 				$uStoreModel->saveCurlToApi();
 			}
-				
+
         }
     }
 
@@ -494,7 +494,7 @@ class ClueVirProModel
         $proRow = $saveData["virBatchRow"];
         $suffix = Yii::app()->params['envSuffix'];
         $virRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contpro_virtual")
-            ->where("pro_vir_type=2 and vir_batch_id=:id",array(
+            ->where("pro_vir_type=2 and vir_batch_id=:id and vir_id in ({$saveData["virBatchRow"]["vir_id_text"]})",array(
                 ":id"=>$saveData["id"]
             ))->queryAll();
         $historyArr = array(
@@ -506,7 +506,6 @@ class ClueVirProModel
         );
         if($virRows) {
             $oldVirRows=array();//旧合约信息
-            $newVirIds=array();//新创建的虚拟合约ID列表
             foreach ($virRows as $virRow) {
                 Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contpro_virtual",array(
                     "pro_status"=>30
@@ -515,46 +514,42 @@ class ClueVirProModel
                 $oldVir = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract_virtual")
                     ->where("id=:id",array(":id"=>$virRow["vir_id"]))->queryRow();
 
+                $oldVirRows[$virRow["vir_id"]]=$oldVir;
                 $updateRow = array();
-                $notSaveKey = array("id");
-                if($oldVir){
-                    //旧合约存在，准备更新数据
-                    $oldVirRows[$virRow["vir_id"]]=$oldVir;
-                    foreach ($oldVir as $keyStr=>$value){
-                        if (!in_array($keyStr,$notSaveKey)&&key_exists($keyStr,$virRow)){
-                            $updateRow[$keyStr]=$virRow[$keyStr];
-                        }
-                    }
-                }else{
-                    //旧合约不存在（新增门店场景），准备插入数据
-                    foreach ($virRow as $keyStr=>$value){
-                        if (!in_array($keyStr,$notSaveKey)){
-                            $updateRow[$keyStr]=$value;
-                        }
+                $notSaveKey = array("id", "vir_code"); // 续约时不应修改虚拟合同编号
+                foreach ($oldVir as $keyStr=>$value){
+                    if (!in_array($keyStr,$notSaveKey)&&key_exists($keyStr,$virRow)){
+                        $updateRow[$keyStr]=$virRow[$keyStr];
                     }
                 }
-                
-                //判断是新增还是更新虚拟合约
-                if(empty($virRow["vir_id"]) || !$oldVir){
-                    //虚拟合约还不存在，需要先创建
-                    $updateRow["vir_status"]=30;
-                    Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contract_virtual",$updateRow);
-                    $vir_id = Yii::app()->db->getLastInsertID();
-                    $virRow['vir_id']=$vir_id;
-                    $newVirIds[]=$vir_id;//收集新创建的虚拟合约ID
-                    //更新 sal_contpro_virtual 表中的 vir_id
-                    Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contpro_virtual",array(
-                        "vir_id"=>$vir_id,
-                        "vir_status"=>30,
-                    ),"id=".$virRow["id"]);
-                    //更新门店状态
-                    Yii::app()->db->createCommand()->update("sales{$suffix}.sal_clue_store",array(
-                        "store_status"=>$this->getStoreStatusByStoreID($virRow["clue_store_id"])
-                    ),"id=".$virRow["clue_store_id"]);
-                }else{
-                    //虚拟合约已存在，只需要更新
-                    Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract_virtual",$updateRow,"id=".$virRow["vir_id"]);
+                // 续约操作（pro_type="C"），需要重新计算 month_amt
+                // 或者如果 updateRow 中没有 month_amt，也需要计算
+                if($proRow["pro_type"]=="C" || empty($updateRow["month_amt"]) || $updateRow["month_amt"] === null){
+                    $month_amt = null;
+                    // 优先从 service_fre_json 中解析 fre_month
+                    $service_fre_json = !empty($virRow["service_fre_json"]) ? $virRow["service_fre_json"] : (!empty($updateRow["service_fre_json"]) ? $updateRow["service_fre_json"] : null);
+                    if(!empty($service_fre_json)){
+                        $freJson = json_decode($service_fre_json, true);
+                        if(isset($freJson["fre_month"]) && !empty($freJson["fre_month"])){
+                            $month_amt = floatval($freJson["fre_month"]);
+                        }
+                    }
+                    // 如果 service_fre_json 中没有 fre_month，且 service_fre_type=1（固定频次），从 year_amt 计算
+                    $service_fre_type = isset($virRow["service_fre_type"]) ? intval($virRow["service_fre_type"]) : (isset($updateRow["service_fre_type"]) ? intval($updateRow["service_fre_type"]) : 0);
+                    if($month_amt === null && $service_fre_type == 1){
+                        // 固定频次：month_amt = year_amt / 12
+                        if(!empty($virRow["year_amt"])){
+                            $month_amt = round(floatval($virRow["year_amt"]) / 12, 2);
+                        } elseif(!empty($updateRow["year_amt"])){
+                            $month_amt = round(floatval($updateRow["year_amt"]) / 12, 2);
+                        }
+                    }
+                    // 如果计算出了 month_amt，则添加到更新数据中
+                    if($month_amt !== null){
+                        $updateRow["month_amt"] = $month_amt;
+                    }
                 }
+                Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract_virtual",$updateRow,"id=".$virRow["vir_id"]);
 
                 $historyArr["table_id"] = $virRow['vir_id'];
                 $historyArr["lcu"] = $virRow['lcu'];
@@ -562,18 +557,6 @@ class ClueVirProModel
                 Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contract_history",$historyArr);
                 $this->saveVirInfo($virRow);
 				CGetName::resetVirStaffAndWeek($virRow['vir_id']);
-            }
-            
-            //如果有新创建的虚拟合约，需要更新批次表中的 vir_id_text
-            if(!empty($newVirIds)){
-                $this->vir_id_arr = array_merge($this->vir_id_arr,$newVirIds);
-                $vir_id_text = implode(",",$this->vir_id_arr);
-                Yii::app()->db->createCommand()->update("sales{$suffix}.sal_virtual_batch",array(
-                    "vir_id_text"=>$vir_id_text,
-                    "vir_id"=>$this->vir_id_arr[0],//第一个虚拟合约ID作为主ID
-                ),"id=".$saveData["id"]);
-                //更新 saveData 中的 vir_id_text，供后续使用
-                $saveData["virBatchRow"]["vir_id_text"] = $vir_id_text;
             }
 
             $this->proTypeChange($proRow,$virRows,$oldVirRows,$saveData);

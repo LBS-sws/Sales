@@ -631,9 +631,13 @@ class CGetName {
     public static function getServiceTypeStrByList($list){
         if(empty($list)){
             return "";
-        }else{
-            $ids=implode(",",$list);
         }
+        $quotedIds = array();
+        foreach ($list as $id) {
+            $quotedIds[] = "'" . str_replace("'", "\\'", $id) . "'";
+        }
+        $ids = implode(",", $quotedIds);
+
         $suffix = Yii::app()->params['envSuffix'];
         $row = Yii::app()->db->createCommand()->select("GROUP_CONCAT(description) as name")->from("swoper$suffix.swo_customer_type")
             ->where("id in ({$ids})")->queryRow();
@@ -1356,6 +1360,53 @@ class CGetName {
         return $rows;
     }
 
+    //获取线索内的门店（支持搜索和分页）
+    public static function getClueStoreRowsWithPagination($clue_id, $search = '', $pageNum = 1, $pageSize = 20){
+        $params = array(":clue_id" => $clue_id);
+        $whereSql = "a.clue_id=:clue_id and a.z_display=1";
+
+        if(!empty($search)){
+            $whereSql .= " and (a.store_code like :search or a.store_name like :search or a.address like :search"
+                ." or a.cust_person like :search or a.cust_tel like :search"
+                ." or b.invoice_header like :search or b.tax_id like :search or b.invoice_address like :search"
+                ." or CAST(a.id AS CHAR) like :search)";
+            $params[":search"] = "%{$search}%";
+        }
+
+        $totalCount = Yii::app()->db->createCommand()
+            ->select("count(*)")
+            ->from("sal_clue_store a")
+            ->leftJoin("sal_clue_invoice b","a.invoice_id=b.id")
+            ->where($whereSql, $params)
+            ->queryScalar();
+        $totalCount = intval($totalCount);
+
+        if($pageSize <= 0) $pageSize = 20;
+        $totalPages = $totalCount > 0 ? intval(ceil($totalCount / $pageSize)) : 1;
+        if($totalPages < 1) $totalPages = 1;
+        if($pageNum < 1) $pageNum = 1;
+        if($pageNum > $totalPages) $pageNum = $totalPages;
+
+        $offset = ($pageNum - 1) * $pageSize;
+
+        $rows = Yii::app()->db->createCommand()
+            ->select("a.*,b.invoice_header,b.tax_id,b.invoice_address")
+            ->from("sal_clue_store a")
+            ->leftJoin("sal_clue_invoice b","a.invoice_id=b.id")
+            ->where($whereSql, $params)
+            ->order("a.lcd asc")
+            ->limit($pageSize, $offset)
+            ->queryAll();
+
+        return array(
+            'rows' => $rows ? $rows : array(),
+            'totalCount' => $totalCount,
+            'pageNum' => intval($pageNum),
+            'pageSize' => intval($pageSize),
+            'totalPages' => intval($totalPages),
+        );
+    }
+
     //获取线索内的门店
     public static function getClueStoreRowsByContID($cont_id){
         $rows = Yii::app()->db->createCommand()
@@ -1449,17 +1500,17 @@ class CGetName {
             ->leftJoin("sal_clue_invoice f","b.invoice_id=f.id")
             ->where("a.clue_service_id=:id",array(":id"=>$clue_service_id))
             ->order("a.id asc");
-        
+
         // 如果page大于0，说明需要分页
         if($page > 0 && $pageSize > 0){
             $offset = ($page - 1) * $pageSize;
             $query->limit($pageSize, $offset);
         }
-        
+
         $rows = $query->queryAll();
         return $rows;
     }
-    
+
     // 获取关联门店总数
     public static function getClueSSeCountByClueServiceID($clue_service_id){
         $count = Yii::app()->db->createCommand()
@@ -1642,32 +1693,34 @@ class CGetName {
                 $idStr.=",".$sseRow["clue_store_id"];
             }
         }
-        
+
         $whereSql = "a.clue_id=:clue_id and a.id not in ($idStr) and a.z_display=1";
         $params = array(":clue_id"=>$clue_id);
-        
-        // 添加搜索条件
+
+        // 添加搜索条件（门店名称/编号/地址/联系人/电话/开票信息）
         if(!empty($search)){
-            $whereSql .= " and (a.store_name like :search or a.address like :search or a.cust_person like :search or a.cust_tel like :search)";
+            $whereSql .= " and (a.store_code like :search or a.store_name like :search or a.address like :search or a.cust_person like :search or a.cust_tel like :search"
+                ." or b.invoice_header like :search or b.tax_id like :search or b.invoice_address like :search"
+                ." or CAST(a.id AS CHAR) like :search)";
             $params[":search"] = "%".$search."%";
         }
-        
+
         $query = Yii::app()->db->createCommand()->select("a.*,b.invoice_header,b.tax_id,b.invoice_address")
             ->from("sal_clue_store a")
             ->leftJoin("sal_clue_invoice b","a.invoice_id=b.id")
             ->where($whereSql, $params)
-            ->order("lcd desc");
-        
+            ->order("a.lcd desc");
+
         // 如果page大于0，说明需要分页
         if($page > 0 && $pageSize > 0){
             $offset = ($page - 1) * $pageSize;
             $query->limit($pageSize, $offset);
         }
-        
+
         $rows = $query->queryAll();
         return $rows;
     }
-    
+
     // 获取未绑定门店总数
     public static function getClueStoreNotSSECount($clue_id,$clue_service_id,$search=''){
         $idStr="0";
@@ -1679,18 +1732,21 @@ class CGetName {
                 $idStr.=",".$sseRow["clue_store_id"];
             }
         }
-        
+
         $whereSql = "a.clue_id=:clue_id and a.id not in ($idStr) and a.z_display=1";
         $params = array(":clue_id"=>$clue_id);
-        
-        // 添加搜索条件
+
+        // 添加搜索条件（门店名称/编号/地址/联系人/电话/开票信息）
         if(!empty($search)){
-            $whereSql .= " and (a.store_name like :search or a.address like :search or a.cust_person like :search or a.cust_tel like :search)";
+            $whereSql .= " and (a.store_code like :search or a.store_name like :search or a.address like :search or a.cust_person like :search or a.cust_tel like :search"
+                ." or b.invoice_header like :search or b.tax_id like :search or b.invoice_address like :search"
+                ." or CAST(a.id AS CHAR) like :search)";
             $params[":search"] = "%".$search."%";
         }
-        
+
         $count = Yii::app()->db->createCommand()->select("COUNT(a.id) as total")
             ->from("sal_clue_store a")
+            ->leftJoin("sal_clue_invoice b","a.invoice_id=b.id")
             ->where($whereSql, $params)
             ->queryScalar();
         return $count ? $count : 0;
@@ -2253,6 +2309,23 @@ class CGetName {
         return $row?$row["name"]:$seal_id;
     }
 
+    public static function getSealTypeStrByIDs($seal_ids) {
+        if(empty($seal_ids)){
+            return "";
+        }
+        if(is_string($seal_ids)){
+            $seal_ids = explode(',', $seal_ids);
+        }
+        $names = array();
+        foreach($seal_ids as $seal_id){
+            $seal_id = trim($seal_id);
+            if(!empty($seal_id)){
+                $names[] = self::getSealTypeStrByID($seal_id);
+            }
+        }
+        return implode(',', $names);
+    }
+
     public static function getPayTypeList($pay_id=0) {
         $list = array();
         $rows = Yii::app()->db->createCommand()->select("*")->from("sal_pay")
@@ -2619,6 +2692,10 @@ class CGetName {
                 return $model->lookFileRow;
             case "clue":
                 $model = new ClueForm('edit');
+                $model->getModelIDByFileID($index);
+                return $model->lookFileRow;
+            case "virtualBatch":
+                $model = new VirtualBatchForm('edit');
                 $model->getModelIDByFileID($index);
                 return $model->lookFileRow;
             default:

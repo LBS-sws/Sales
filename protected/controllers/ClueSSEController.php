@@ -45,7 +45,7 @@ class ClueSSEController extends Controller
             $title = "跟进表单";
             $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
             $search = isset($_POST['search']) ? trim($_POST['search']) : '';
-            
+
             if (isset($_POST['ClueSSEForm'])) {
                 $model = new ClueSSEForm($_POST['ClueSSEForm']['scenario']);
                 $model->attributes = $_POST['ClueSSEForm'];

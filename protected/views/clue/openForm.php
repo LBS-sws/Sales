@@ -43,27 +43,67 @@ $this->renderPartial("//clue/errorDialog");
     <div id="clue_dv_u_area_dummy"></div>
 </div>
 
+<style>
+/* 移动端优化：确保可点击元素在触摸设备上正常工作 */
+.openDialogForm {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    touch-action: manipulation; /* 优化触摸响应 */
+    position: relative; /* 确保可以正常定位 */
+}
+/* 确保按钮在移动端有足够的点击区域（仅对非按钮元素） */
+.openDialogForm:not(button):not(.btn) {
+    min-height: 44px; /* iOS推荐的最小触摸目标 */
+    display: inline-block; /* 确保min-height生效 */
+}
+/* 确保链接在移动端有足够的点击区域 */
+.openDialogForm a {
+    min-height: 44px;
+    display: inline-block;
+    padding: 8px 12px; /* 增加内边距以提高点击区域 */
+}
+</style>
+
 <?php
 //$('body').on('click','#yt1',function(){
 //$(this).css('pointer-events','none');
 //jQuery.yii.submitForm(this,'/sales/clientHead/save',{});return false;
 //});
-$js = <<<EOF
+$js = <<<'EOF'
 $('#open-form-Dialog').on('shown.bs.modal',function(){
     $('.modal.fade.in').not('#open-form-Dialog').css('display','none');
 });
 $('#open-form-Dialog').on('hidden.bs.modal',function(){
     $('.modal.fade.in').css('display','block');
 });
-$('body').on('click','.openDialogForm',function(e){
-    var loadUrl = $(this).data('load');
-    var submitUrl = $(this).data('submit');
-    var funExpr = $(this).data('fun');
-    var formData = $(this).data('serialize');
-    if(formData===undefined){
-        formData = $(this).attr('data-serialize');
+// 处理弹框打开的统一函数
+function handleOpenDialogForm(elem, e) {
+    if(!elem) {
+        console.error('handleOpenDialogForm: elem is undefined');
+        return false;
     }
-    var obj = $(this).data('obj');
+    var $elem = $(elem);
+    if($elem.length === 0) {
+        console.error('handleOpenDialogForm: elem not found');
+        return false;
+    }
+    if(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    var loadUrl = $elem.data('load');
+    var submitUrl = $elem.data('submit');
+    var funExpr = $elem.data('fun');
+    var formData = $elem.data('serialize');
+    if(formData===undefined){
+        formData = $elem.attr('data-serialize');
+    }
+    var obj = $elem.data('obj');
     var ajaxBool = $('#open-form-Dialog').data('ajax');
     if(ajaxBool==1){
         return false;//已经在加载了
@@ -100,6 +140,68 @@ $('body').on('click','.openDialogForm',function(e){
             $('#open-form-Dialog').data('ajax',0);
         }
     });
+    return false;
+}
+
+// 支持移动端的点击事件处理
+$('body').on('touchstart','.openDialogForm',function(e){
+    var $elem = $(this);
+    if($elem.length === 0) {
+        return false;
+    }
+    
+    // 检查是否有触摸事件
+    if(!e.originalEvent || !e.originalEvent.touches || e.originalEvent.touches.length === 0) {
+        return false;
+    }
+    
+    var touchStartTime = Date.now();
+    var touchStartX = e.originalEvent.touches[0].clientX;
+    var touchStartY = e.originalEvent.touches[0].clientY;
+    
+    // 标记这个元素已经处理了touchstart
+    $elem.data('touchHandled', false);
+    
+    var touchendHandler = function(e2){
+        $elem.off('touchend', touchendHandler);
+        
+        // 检查是否有触摸结束事件
+        if(!e2.originalEvent || !e2.originalEvent.changedTouches || e2.originalEvent.changedTouches.length === 0) {
+            return;
+        }
+        
+        var touchEndTime = Date.now();
+        var touchEndX = e2.originalEvent.changedTouches[0].clientX;
+        var touchEndY = e2.originalEvent.changedTouches[0].clientY;
+        var timeDiff = touchEndTime - touchStartTime;
+        var xDiff = Math.abs(touchEndX - touchStartX);
+        var yDiff = Math.abs(touchEndY - touchStartY);
+        
+        // 判断是否为点击（不是滑动），时间小于300ms，移动距离小于10px
+        if(timeDiff < 300 && xDiff < 10 && yDiff < 10) {
+            e2.preventDefault();
+            e2.stopPropagation();
+            $elem.data('touchHandled', true);
+            var domElem = $elem[0];
+            if(domElem) {
+                handleOpenDialogForm(domElem, e2);
+            }
+        }
+    };
+    
+    $elem.on('touchend', touchendHandler);
+});
+
+$('body').on('click','.openDialogForm',function(e){
+    var $elem = $(this);
+    // 如果touchstart已经处理了，忽略click事件（避免重复触发）
+    if($elem.data('touchHandled')) {
+        $elem.removeData('touchHandled');
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+    return handleOpenDialogForm(this, e);
 });
 $('#open-form-btn-ok').click(function(){
     var submitUrl = $(this).data('submit');

@@ -613,18 +613,54 @@ class ContForm extends CFormModel
 	}
 
 	public function computeVirCode($cont_id=0,$proNum=1) {
-        $cont_id=empty($cont_id)?$this->id:$cont_id;
-        $row = Yii::app()->db->createCommand()->select("count(*) as sum")
-            ->from("sal_contract_virtual")->where("cont_id=:id",array(":id"=>$cont_id))->queryRow();
-        $num = $row?$row["sum"]:0;
-        $num+=$proNum;
-        if($num<10000){
-            $num = $num<10000?$num+10000:$num;
-            $num = "".$num;
-            $num = mb_substr($num,1);
+        $cont_id = empty($cont_id) ? $this->id : $cont_id;
+
+        // 兜底：若 cont_code 为空，尝试从主合同取
+        if (empty($this->cont_code) && !empty($cont_id)) {
+            $row = Yii::app()->db->createCommand()->select("cont_code")->from("sal_contract")
+                ->where("id=:id", array(":id"=>$cont_id))->queryRow();
+            if ($row && !empty($row["cont_code"])) {
+                $this->cont_code = $row["cont_code"];
+            }
         }
-        $vir_code=$this->cont_code."-".$num;
-        return $vir_code;
+
+        $prefix = $this->cont_code . "-%";
+        // 同时考虑：已生效虚拟合约（sal_contract_virtual） + 变更中的虚拟合约（sal_contpro_virtual）
+        $sql = "SELECT MAX(seq) AS max_seq FROM (
+                    SELECT CAST(SUBSTRING_INDEX(vir_code,'-',-1) AS UNSIGNED) AS seq
+                      FROM sal_contract_virtual
+                     WHERE cont_id=:id AND vir_code LIKE :prefix
+                    UNION ALL
+                    SELECT CAST(SUBSTRING_INDEX(vir_code,'-',-1) AS UNSIGNED) AS seq
+                      FROM sal_contpro_virtual
+                     WHERE cont_id=:id AND vir_code LIKE :prefix
+                ) t";
+        $maxSeq = Yii::app()->db->createCommand($sql)->queryScalar(array(
+            ":id"=>$cont_id,
+            ":prefix"=>$prefix,
+        ));
+
+        // 兼容同一次保存里批量生成多个虚拟合约：用 proNum 进行偏移，尽量避免同一事务内重复取号
+        $seq = intval($maxSeq) + intval($proNum);
+        if ($seq < 1) $seq = 1;
+
+        // 避免历史脏数据（已存在重复号）时仍撞号：循环找下一个可用号
+        while (true) {
+            $suffix = ($seq < 10000) ? sprintf('%04d', $seq) : strval($seq);
+            $vir_code = $this->cont_code . "-" . $suffix;
+            $existsSql = "SELECT (
+                            EXISTS(SELECT 1 FROM sal_contract_virtual WHERE cont_id=:id AND vir_code=:code)
+                            OR EXISTS(SELECT 1 FROM sal_contpro_virtual WHERE cont_id=:id AND vir_code=:code)
+                          ) AS ex";
+            $exists = Yii::app()->db->createCommand($existsSql)->queryScalar(array(
+                ":id"=>$cont_id,
+                ":code"=>$vir_code,
+            ));
+            if (intval($exists) === 0) {
+                return $vir_code;
+            }
+            $seq++;
+        }
 	}
 
 	public function isOccupied($index) {

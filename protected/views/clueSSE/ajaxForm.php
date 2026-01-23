@@ -143,14 +143,14 @@ $('.clue_store_delete').on('click',function(){
     $('#confirmDialog2').modal('show');
 });
 
-// 搜索功能
-$('#btn_store_search').on('click',function(){
+// 搜索功能 - 使用事件委托
+$(document).off('click', '#btn_store_search').on('click', '#btn_store_search', function(){
     var search = $('#store_search_input').val();
     loadStorePage(1, search);
 });
 
-// 回车搜索
-$('#store_search_input').on('keypress',function(e){
+// 回车搜索 - 使用事件委托
+$(document).off('keypress', '#store_search_input').on('keypress', '#store_search_input', function(e){
     if(e.which == 13){
         var search = $(this).val();
         loadStorePage(1, search);
@@ -158,14 +158,14 @@ $('#store_search_input').on('keypress',function(e){
     }
 });
 
-// 重置搜索
-$('#btn_store_reset').on('click',function(){
+// 重置搜索 - 使用事件委托
+$(document).off('click', '#btn_store_reset').on('click', '#btn_store_reset', function(){
     $('#store_search_input').val('');
     loadStorePage(1, '');
 });
 
-// 分页点击
-$('#store_pagination a').on('click',function(){
+// 分页点击 - 使用事件委托
+$(document).off('click', '#store_pagination a').on('click', '#store_pagination a', function(){
     var page = $(this).data('page');
     if(page){
         loadStorePage(page, currentSearch);
@@ -174,10 +174,12 @@ $('#store_pagination a').on('click',function(){
 
 // 加载指定页的门店列表
 function loadStorePage(page, search){
-    var modal = $('#extendModal');
-    var modalBody = modal.find('.modal-body');
-    
-    modalBody.html('<div style="text-align:center; padding: 40px;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>加载中...</p></div>');
+    // 这里的弹窗容器来自 `//clue/openForm.php`
+    // 内容放在 #open-form-div 内，而不是 #extendModal
+    var dialog = $('#open-form-Dialog');
+    var dialogBody = $('#open-form-div');
+
+    dialogBody.html('<div style="text-align:center; padding: 40px;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>加载中...</p></div>');
     
     $.ajax({
         url: '{$ajaxShowUrl}',
@@ -191,16 +193,19 @@ function loadStorePage(page, search){
         },
         dataType: 'json',
         success: function(response){
-            if(response.status === 1){
-                modalBody.html(response.html);
+            if(response && response.html){
+                if(response.title){
+                    dialog.find('.modal-title').html(response.title);
+                }
+                dialogBody.html(response.html);
                 currentPage = page;
                 currentSearch = search;
             } else {
-                modalBody.html('<div class="alert alert-danger">加载失败，请重试</div>');
+                dialogBody.html('<div class="alert alert-danger">加载失败，请重试</div>');
             }
         },
         error: function(){
-            modalBody.html('<div class="alert alert-danger">网络错误，请重试</div>');
+            dialogBody.html('<div class="alert alert-danger">网络错误，请重试</div>');
         }
     });
 }

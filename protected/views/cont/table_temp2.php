@@ -21,7 +21,12 @@ $row = isset($row)?$row:array(
     <td>
         <?php
         if(empty($row["fileID"])){
-            echo TbHtml::fileField("{$modelClass}[{$valueStr}][{$num}][fileVal]",$row['fileVal'],array("class"=>"form-control fileVal","readonly"=>$readonly));
+            // 文件未上传时：只读场景不应出现上传控件（file input 不支持 readonly）
+            if($readonly===false){
+                echo TbHtml::fileField("{$modelClass}[{$valueStr}][{$num}][fileVal]",$row['fileVal'],array("class"=>"form-control fileVal"));
+            }else{
+                echo '<span class="text-muted">未上传</span>';
+            }
         }else{
             $filePath='';
             if(isset($row['tableName'])){

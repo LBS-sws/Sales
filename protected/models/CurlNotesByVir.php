@@ -1,8 +1,8 @@
 <?php
 
 class CurlNotesByVir extends CurlNotesModel {
-	public $pro_type="N";
-	public $update_effective_date="";
+    public $pro_type="N";
+    public $update_effective_date="";
 
     public function sendAllVirByContID($cont_id){//
         $this->sendAllVirByContIDAndNew($cont_id);
@@ -83,7 +83,7 @@ class CurlNotesByVir extends CurlNotesModel {
             "deposit"=>empty($virRow["deposit_need"])?0:floatval($virRow["deposit_need"]),//押金 没有就传0
             "deposit_paid"=>empty($virRow["deposit_amt"])?0:floatval($virRow["deposit_amt"]),//已付押金 没有就传0
             "deposit_rmk"=>$virRow["deposit_rmk"],//押金备注 没有就传空
-            "one_time_fee"=>0,//一次性费用 没有就传0
+            "one_time_fee"=> isset($virRow['amt_install']) ? $virRow['amt_install'] : null,//安装费用 没有就传0
             "crm_remarks"=>$virRow["remark"],//备注 没有就传空
             "tech_remarks"=>null,//技术员备注 没有就传空
             "status"=>self::getUStatusByVirStatus($virRow["vir_status"]),//合约状态 1 生效中 2 暂停 3 结束 4 删除 5 暂停生效
@@ -109,13 +109,13 @@ class CurlNotesByVir extends CurlNotesModel {
             "lbs_city_office_code"=>$virRow["city"],//办公室
             "lbs_office_office_id"=>self::getOfficeStrByKey($virRow["office_id"],'u_id'),//办事处
             "service_time"=>$virRow["service_timer"],//服务时长
-            "is_call"=>$virRow["service_fre_type"]==3?1:0,//是否是呼叫式合约 0 否 1 是
+            "is_call"=>intval($virRow["service_fre_type"])==3?1:0,//是否是呼叫式合约 0 否 1 是
             "contract_file"=>$this->getContFileByVirRow($virRow),//当前合同附件地址
         );
         $data["invoice_amount"]=self::getUInvoiceAmt($data["set_frequency"],$virRow);
         $data["week_invoice_amount"]=$data["set_frequency"]==4?$data["invoice_amount"]:null;
         if(!empty($virRow["u_id"])){
-			$staffCode = self::getEmployeeStrByUsername("code",$virRow["lcu"]);
+            $staffCode = self::getEmployeeStrByUsername("code",$virRow["lcu"]);
             //$data["update_effective_date"]=$this->update_effective_date;
             $data["update_effective_date"]=empty($virRow["effect_date"])?$this->update_effective_date:$virRow["effect_date"];
             $data["update_by"]=$staffCode;
@@ -125,7 +125,7 @@ class CurlNotesByVir extends CurlNotesModel {
             $data["contract_id"]=$virRow["u_id"];
             $data["operation_event"]=self::getUOperationEvent($this->pro_type);//合约变更事件 1 编辑 2续约 3暂停 4终止 5恢复
         }else{
-			$staffCode = self::getEmployeeStrByUsername("code",$virRow["lcu"]);
+            $staffCode = self::getEmployeeStrByUsername("code",$virRow["lcu"]);
             $data["create_uid"]=$staffCode;
             $data["create_by"]=$staffCode;
             $data["create_at"]=$virRow["lcd"];
@@ -160,6 +160,8 @@ class CurlNotesByVir extends CurlNotesModel {
         $virRow["month_amt"]=empty($virRow["month_amt"])?0:floatval($virRow["month_amt"]);
         //$invoiceAmt=empty($virRow["invoice_amount"])?0:floatval($virRow["invoice_amount"]);
         $invoiceAmt=0;
+        //  set_frequency 是整数类型，避免类型不匹配问题
+        $set_frequency = intval($set_frequency);
         switch ($set_frequency){//派单系统的频次类型
             case 1://固定频次
                 $invoiceAmt=$virRow["month_amt"];
@@ -172,18 +174,46 @@ class CurlNotesByVir extends CurlNotesModel {
                 break;
             case 4://固定频次非固定金额（周）
                 $freJson = json_decode($virRow['service_fre_json'],true);
-                if(isset($freJson["fre_list"])){
+                if(isset($freJson["fre_list"]) && is_array($freJson["fre_list"]) && !empty($freJson["fre_list"])){
                     $fre_list= current($freJson["fre_list"]);
-                    if(isset($fre_list['fre_amt'])){
-                        $invoiceAmt=round($fre_list['fre_amt'],2);
+                    if(isset($fre_list['fre_amt']) && !empty($fre_list['fre_amt'])){
+                        $invoiceAmt=round(floatval($fre_list['fre_amt']),2);
+                    }
+                }
+                break;
+            default:
+                Yii::log("getUInvoiceAmt: 未知的 set_frequency 值: {$set_frequency}, vir_id: ".$virRow["id"], 'warning', 'CurlNotesByVir');
+                // 如果数据库中有 invoice_amount 字段，使用它作为后备
+                if(isset($virRow["invoice_amount"]) && !empty($virRow["invoice_amount"])){
+                    $invoiceAmt = floatval($virRow["invoice_amount"]);
+                } else {
+                    // 如果数据库中没有，根据 service_fre_type 尝试计算
+                    if(isset($virRow["service_fre_type"])){
+                        // service_fre_type 是 unsigned zerofill，可能是字符串，需要转换为整数
+                        $service_fre_type = intval($virRow["service_fre_type"]);
+                        if($service_fre_type == 1 || $service_fre_type == 3){
+                            $invoiceAmt = $virRow["month_amt"];
+                        } else {
+                            $invoiceAmt = $virRow["year_amt"];
+                        }
                     }
                 }
                 break;
         }
+        // 如果计算出的金额为0，使用 invoice_amount 字段
+        if($invoiceAmt == 0 && isset($virRow["invoice_amount"]) && !empty($virRow["invoice_amount"])){
+            $dbInvoiceAmt = floatval($virRow["invoice_amount"]);
+            if($dbInvoiceAmt > 0){
+                Yii::log("getUInvoiceAmt: 计算金额为0，使用数据库中的 invoice_amount: {$dbInvoiceAmt}, vir_id: ".$virRow["id"].", set_frequency: {$set_frequency}, month_amt: ".$virRow["month_amt"].", year_amt: ".$virRow["year_amt"], 'warning', 'CurlNotesByVir');
+                $invoiceAmt = $dbInvoiceAmt;
+            }
+        }
         return $invoiceAmt;
     }
     public static function getUSetFrequency($virRow){
-        switch ($virRow["service_fre_type"]){
+        // service_fre_type 是 unsigned zerofill，可能是字符串，需要转换为整数
+        $service_fre_type = intval($virRow["service_fre_type"]);
+        switch ($service_fre_type){
             case 1://固定频次
                 $freJson = json_decode($virRow['service_fre_json'],true);
                 if(isset($freJson["fre_list"])){
@@ -213,7 +243,7 @@ class CurlNotesByVir extends CurlNotesModel {
 				return 4;
 			case "R":
 				return 5;
-			
+
 		}
 		return 1;
 	}
@@ -272,7 +302,7 @@ class CurlNotesByVir extends CurlNotesModel {
                     "update_uid"=>null,
                 );
                 // 需要判断 $virRow["service_fre_type"]==3 才传year_cycle
-                if($virRow["service_fre_type"]==3){
+                if(intval($virRow["service_fre_type"])==3){
                     $temp["year_cycle"]=$freeRow["year_cycle"];
                 }
                 if(!empty($virRow["u_id"])){

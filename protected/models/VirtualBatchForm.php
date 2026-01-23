@@ -379,7 +379,7 @@ class VirtualBatchForm extends CFormModel
         $row = Yii::app()->db->createCommand()->select("*")->from("sal_virtual_batch_file")
             ->where("id=:id",array(":id"=>$fileID))->queryRow();//
         if($row){
-            $this->id=$row["id"];
+            $this->id=$row["vir_batch_id"];
             $this->lookFileRow = $row;
         }else{
             $this->id=0;
@@ -389,7 +389,7 @@ class VirtualBatchForm extends CFormModel
     public function getFileJson(){
         $this->fileJson=array();
         $rows = Yii::app()->db->createCommand()->select("*")->from("sal_virtual_batch_file")
-            ->where("vir_batch_id=:id",array(":id"=>$this->id))->order("id asc")->queryAll();//
+            ->where("vir_batch_id=:id and group_id=0",array(":id"=>$this->id))->order("id asc")->queryAll();//
         if($rows){
             foreach ($rows as $row){
                 $this->fileJson[]=array(
@@ -399,7 +399,7 @@ class VirtualBatchForm extends CFormModel
                     "fileID"=>$row["phy_file_name"],
                     "fileVal"=>"",
                     "fileName"=>$row["file_name"],
-                    "tableName"=>"pro",
+                    "tableName"=>"virtualBatch",
                     "uflag"=>"N",
                 );
             }
@@ -419,7 +419,7 @@ class VirtualBatchForm extends CFormModel
                     "fileID"=>$row["phy_file_name"],
                     "fileVal"=>"",
                     "fileName"=>$row["file_name"],
-                    "tableName"=>"pro",
+                    "tableName"=>"virtualBatch",
                     "uflag"=>"N",
                 );
             }

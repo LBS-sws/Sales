@@ -59,6 +59,7 @@
 $ajaxUrl = Yii::app()->createUrl('clientHead/ajaxLoadPerson');
 $editUrl = Yii::app()->createUrl('clientPerson/ajaxShow');
 $saveUrl = Yii::app()->createUrl('clientPerson/ajaxSave');
+$deleteUrl = Yii::app()->createUrl('clientPerson/ajaxDelete');
 $clueId = $model->id;
 $js = <<<EOF
 var personLoaded = false;
@@ -142,7 +143,8 @@ function loadClientPerson(page, search){
                         html += '<td>' + (row.person_pws || '') + '</td>';
                         html += '<td>';
                         if(row.can_edit){
-                            html += '<a href="javascript:void(0);" class="openDialogForm" data-load="{$editUrl}" data-submit="{$saveUrl}" data-serialize="ClientPersonForm[scenario]=edit&ClientPersonForm[id]=' + row.id + '" data-obj="#clue_dv_person_dummy" data-fun="refreshPersonData"><span class="glyphicon glyphicon-pencil"></span></a>';
+                            html += '<a href="javascript:void(0);" class="openDialogForm" data-load="{$editUrl}" data-submit="{$saveUrl}" data-serialize="ClientPersonForm[scenario]=edit&ClientPersonForm[id]=' + row.id + '" data-obj="#clue_dv_person_dummy" data-fun="refreshPersonData" style="margin-right:5px;"><span class="glyphicon glyphicon-pencil"></span></a>';
+                            html += '<a href="javascript:void(0);" class="openDialogForm" data-load="{$deleteUrl}" data-submit="{$saveUrl}" data-serialize="ClientPersonForm[scenario]=delete&ClientPersonForm[id]=' + row.id + '&ClientPersonForm[clue_id]={$clueId}" data-obj="#clue_dv_person_dummy" data-fun="refreshPersonData"><span class="glyphicon glyphicon-trash" style="color:red;"></span></a>';
                         }
                         html += '</td>';
                         html += '</tr>';

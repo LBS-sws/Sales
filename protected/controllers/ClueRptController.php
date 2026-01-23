@@ -85,7 +85,8 @@ class ClueRptController extends Controller
         if (!$model->retrieveData($index)) {
             throw new CHttpException(404,'The requested page does not exist.');
         } else {
-            $model->validateClueServiceID("clue_service_id","");
+            // 门户/审批查看：使用不带团队/城市过滤的校验，避免“线索不存在”
+            $model->validateClueServiceIDByView("clue_service_id","");
             $model->getAllFileJson();
             $this->render('view',array('model'=>$model));
         }
@@ -97,7 +98,12 @@ class ClueRptController extends Controller
         if (!$model->retrieveData($index)) {
             throw new CHttpException(404,'The requested page does not exist.');
         } else {
-            $model->validateClueServiceID("clue_service_id","");
+            // 门户链接“返回CRM系统”会带 token，审批人可能不在销售团队范围内，避免误报“线索不存在”
+            if (!empty($_GET['token'])) {
+                $model->validateClueServiceIDByView("clue_service_id","");
+            } else {
+                $model->validateClueServiceID("clue_service_id","");
+            }
             $model->getAllFileJson();
             $this->render('form',array('model'=>$model));
         }

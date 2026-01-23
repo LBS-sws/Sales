@@ -58,6 +58,39 @@ class ContProForm extends ContHeadForm
         }
     }
 
+    /**
+     * 覆盖父类附件校验：避免“只保存文件名，物理文件字段为空”的脏数据
+     * 规则：新增/修改(uflag=Y) 且没有 id（即新增行）时，必须选择文件(fileVal)，否则报错
+     */
+    public function validateFileJson($attribute, $param) {
+        parent::validateFileJson($attribute, $param);
+        if ($this->hasErrors($attribute)) {
+            return;
+        }
+        if (empty($this->fileJson) || !is_array($this->fileJson)) {
+            return;
+        }
+        foreach ($this->fileJson as $k => $row) {
+            if (!is_array($row)) continue;
+
+            // 有选择文件但没填“文件名称”时，自动带出文件名（
+            if (empty($this->fileJson[$k]['fileName']) && isset($row['file']) && isset($row['file']['fileName'])) {
+                $this->fileJson[$k]['fileName'] = $row['file']['fileName'];
+            }
+
+            $uflag = isset($row['uflag']) ? $row['uflag'] : '';
+            if ($uflag !== 'Y') continue;
+            $id = isset($row['id']) ? $row['id'] : '';
+            if (!empty($id)) continue; // 有ID是更新/已有记录，允许只改名称不重新上传
+            $fileName = isset($row['fileName']) ? trim($row['fileName']) : '';
+            //如果填了名称但没选文件，则不允许保存
+            if ($fileName !== '' && !isset($row['file'])) {
+                $this->addError($attribute, "附件【{$fileName}】未选择文件，请先选择文件再保存。");
+                break;
+            }
+        }
+    }
+
     public function validateServiceJson($attribute, $param) {
         $serviceJson = json_decode($this->serviceJson,true);
         $this->total_amt=0;
@@ -215,28 +248,36 @@ class ContProForm extends ContHeadForm
     protected function getGoingVirByContID(){
         $sseRows=array();
         $rows = Yii::app()->db->createCommand()->select("*")->from("sal_contract_virtual")
-            ->where("cont_id=:cont_id and vir_status in (10,30)",array(":cont_id"=>$this->cont_id))->queryAll();
+            ->where("cont_id=:cont_id and vir_status in (10,30,50)",array(":cont_id"=>$this->cont_id))->queryAll();
         if($rows){
             foreach ($rows as $row){
-                //查询是否有进行中的虚拟合同变更
-                $proBool = Yii::app()->db->createCommand()->select("id,pro_status")->from("sal_contpro_virtual")
-                    ->where("pro_id!=:pro_id and vir_id=:vir_id and pro_status not in (0,10,30)",array(":pro_id"=>$this->id,":vir_id"=>$row["id"]))->queryRow();
-                if(!$proBool){
-                    $clue_store_id = "".$row["clue_store_id"];
-                    if(!key_exists($clue_store_id,$sseRows)){
-                        $sseRows[$clue_store_id]=array(
-                            "a_id"=>$row["id"],
-                            "clue_store_id"=>$row["clue_store_id"],
-                            "sales_id"=>$row["sales_id"],
-                            "busine_id"=>array(),
-                            "busine_id_text"=>array(),
-                            "detail_json"=>array(),
-                        );
+                // 对于已终止的虚拟合约（vir_status=50），跳过变更记录检查，允许续约时显示
+                $skipCheck = ($row["vir_status"] == 50);
+                
+                if(!$skipCheck){
+                    //查询是否有进行中的虚拟合同变更
+                    $proBool = Yii::app()->db->createCommand()->select("id,pro_status")->from("sal_contpro_virtual")
+                        ->where("pro_id!=:pro_id and vir_id=:vir_id and pro_status not in (0,10,30)",array(":pro_id"=>$this->id,":vir_id"=>$row["id"]))->queryRow();
+                    if($proBool){
+                        // 有进行中的变更记录，跳过此虚拟合约
+                        continue;
                     }
-                    $sseRows[$clue_store_id]["busine_id"][]=$row["busine_id"];
-                    $sseRows[$clue_store_id]["busine_id_text"][]=$row["busine_id_text"];
-                    $sseRows[$clue_store_id]["detail_json"][$row["busine_id"]]=json_decode($row["detail_json"],true);
                 }
+                
+                $clue_store_id = "".$row["clue_store_id"];
+                if(!key_exists($clue_store_id,$sseRows)){
+                    $sseRows[$clue_store_id]=array(
+                        "a_id"=>$row["id"],
+                        "clue_store_id"=>$row["clue_store_id"],
+                        "sales_id"=>$row["sales_id"],
+                        "busine_id"=>array(),
+                        "busine_id_text"=>array(),
+                        "detail_json"=>array(),
+                    );
+                }
+                $sseRows[$clue_store_id]["busine_id"][]=$row["busine_id"];
+                $sseRows[$clue_store_id]["busine_id_text"][]=$row["busine_id_text"];
+                $sseRows[$clue_store_id]["detail_json"][$row["busine_id"]]=json_decode($row["detail_json"],true);
             }
         }
         return $sseRows;
@@ -626,6 +667,10 @@ class ContProForm extends ContHeadForm
                             "file_name"=>$row["fileName"],
                         );
                         if(isset($row["file"])){
+                            // 若没填文件名称，用上传文件名补齐
+                            if (empty($saveList["file_name"]) && isset($row["file"]["fileName"])) {
+                                $saveList["file_name"] = $row["file"]["fileName"];
+                            }
                             $file_name = hash_file('md5',$row["file"]["fileTmpName"]);
                             $file_name = $file_name.".".$row["file"]["fileExt"];
                             $saveList["phy_file_name"] = $file_name;//文件名称（系统名）
@@ -633,11 +678,18 @@ class ContProForm extends ContHeadForm
                             $saveList["display_name"] = $row["file"]["fileName"];//文件名（上传名）
                             $saveList["file_type"] = $row["file"]["fileType"];
                             $saveList["group_id"] = $group_id;
-                            $qiNiuFile->uploadFile($path."/".$file_name,$row["file"]["fileTmpName"]);
+                            $ok = $qiNiuFile->uploadFile($path."/".$file_name,$row["file"]["fileTmpName"]);
+                            if(!$ok){
+                                throw new Exception("附件上传失败：".$saveList["display_name"]);
+                            }
                             //move_uploaded_file($row["file"]["fileTmpName"],$path."/".$file_name);
                         }
                         switch ($row["uflag"]){
                             case "Y"://修改，新增
+                                // 新增行未选文件时不允许插入，避免只保存 file_name
+                                if (empty($row["id"]) && !isset($row["file"])) {
+                                    continue;
+                                }
                                 if(empty($row["id"])){
                                     $saveList["lcu"]=$uid;
                                     Yii::app()->db->createCommand()->insert("sal_contpro_file",$saveList);
@@ -829,10 +881,27 @@ class ContProForm extends ContHeadForm
                         "busine_id_text"=>$virtualRow["name"],
                         "lcu"=>$uid,
                     );
-                    $virSaveArr = array_merge($virSaveArr,$virSaveExpr);
-                    $virSaveArr["lcd"]=date("Y-m-d H:i:s");
-                    Yii::app()->db->createCommand()->insert("sal_contpro_virtual",$virSaveArr);
-                    $virtualId = Yii::app()->db->getLastInsertID();
+                    // 冲突则重试取号
+                    $virSaveArrBase = array_merge($virSaveArr,$virSaveExpr);
+                    $virSaveArrBase["lcd"]=date("Y-m-d H:i:s");
+                    $virtualId = 0;
+                    for ($try=0; $try<5; $try++) {
+                        // 每次重试重新取一个 vir_code
+                        $virSaveArr = $virSaveArrBase;
+                        $virSaveArr["vir_code"] = $this->computeVirCode($this->cont_id, $try+1);
+                        try {
+                            Yii::app()->db->createCommand()->insert("sal_contpro_virtual",$virSaveArr);
+                            $virtualId = Yii::app()->db->getLastInsertID();
+                            break;
+                        } catch (CDbException $e) {
+                            if (strpos($e->getMessage(), 'Duplicate') === false && strpos($e->getMessage(), '23000') === false) {
+                                throw $e;
+                            }
+                        }
+                    }
+                    if (empty($virtualId)) {
+                        throw new Exception("生成虚拟合约编号失败：请稍后重试");
+                    }
                     Yii::app()->db->createCommand()->update("sal_contpro_virtual",array(
                         "pro_code"=>"VPR".(10000+$virtualId)
                     ),"id=".$virtualId);

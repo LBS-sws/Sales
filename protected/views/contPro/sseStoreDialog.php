@@ -8,8 +8,21 @@ $this->beginWidget('bootstrap.widgets.TbModal', array(
         TbHtml::button(Yii::t('dialog','OK'), array('id'=>'okBtnSseStore','data-dismiss'=>'modal','color'=>TbHtml::BUTTON_COLOR_PRIMARY,'type'=>'button')),
     ),
     'show'=>false,
+    'size'=>' modal-lg',
 ));
 ?>
+<style>
+#sseStoreDialog .modal-dialog {
+    width: 90%;
+    max-width: 1200px;
+}
+@media (max-width: 768px) {
+    #sseStoreDialog .modal-dialog {
+        width: 95%;
+        margin: 10px auto;
+    }
+}
+</style>
 <div class="form-group">
     <div class="col-lg-12">
         <div class="form-group" style="margin-bottom: 15px;">

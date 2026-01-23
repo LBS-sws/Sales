@@ -599,7 +599,8 @@ class ContHeadForm extends ContForm
                     $virSaveArr["luu"]=$uid;
                     Yii::app()->db->createCommand()->update("sal_contract_virtual",$virSaveArr,"id=".$virtualId);
                 }else{
-                    $virCode = $this->computeVirCode();
+                    // 不显式加锁：依赖数据库唯一索引拦截重复，冲突则重试取号
+                    $virCode = '';
                     $storeRow = Yii::app()->db->createCommand()->select("*")->from("sal_clue_store")
                         ->where("id=:id",array(":id"=>$row["clue_store_id"]))->queryRow();
                     $service_type = Yii::app()->db->createCommand()->select("service_type")->from("sal_service_type")
@@ -616,12 +617,28 @@ class ContHeadForm extends ContForm
                         "office_id"=>$storeRow["office_id"],
                         "service_type"=>$service_type?$service_type["service_type"]:0,
                         "busine_id_text"=>$virtualRow["name"],
-                        "vir_code"=>$virCode,
                         "lcu"=>$uid,
                     );
-                    $virSaveArr = array_merge($virSaveArr,$virSaveExpr);
-                    Yii::app()->db->createCommand()->insert("sal_contract_virtual",$virSaveArr);
-                    $virtualId = Yii::app()->db->getLastInsertID();
+                    $virSaveArrBase = array_merge($virSaveArr,$virSaveExpr);
+                    $virtualId = 0;
+                    for ($try=0; $try<5; $try++) {
+                        $virCode = $this->computeVirCode($this->id, $try+1);
+                        $virSaveArr = $virSaveArrBase;
+                        $virSaveArr["vir_code"] = $virCode;
+                        try {
+                            Yii::app()->db->createCommand()->insert("sal_contract_virtual",$virSaveArr);
+                            $virtualId = Yii::app()->db->getLastInsertID();
+                            break;
+                        } catch (CDbException $e) {
+                            // 需要配合数据库唯一索引(cont_id, vir_code)；冲突则重试
+                            if (strpos($e->getMessage(), 'Duplicate') === false && strpos($e->getMessage(), '23000') === false) {
+                                throw $e;
+                            }
+                        }
+                    }
+                    if (empty($virtualId)) {
+                        throw new Exception("生成虚拟合约编号失败：请稍后重试");
+                    }
                 }
                 $this->inVirList[]=$virtualId;
                 CGetName::resetVirStaffAndWeek($virtualId);

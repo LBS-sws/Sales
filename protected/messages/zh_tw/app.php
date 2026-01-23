@@ -205,6 +205,7 @@ return array(
     'CRM Curl Notes'=>'CRM同步記錄',
     'LBS To U'=>'CRM系統發給派單系統',
     'MH To LBS'=>'其它系統發給CRM系統',
+    'Manual Sync'=>'手動同步到派單系統',
     'S/T remark setting'=>'暫停/終止/無意向原因配置',
     'cont pay setting'=>'付款方式配置',
     'cont area setting'=>'區域關聯配置',

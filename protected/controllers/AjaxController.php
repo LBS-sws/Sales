@@ -23,7 +23,7 @@ class AjaxController extends Controller
 	{
 		return array(
 			array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('dummy','remotelogin','remoteloginonlib','notify','notifybadge'),
+				'actions'=>array('dummy','remotelogin','remoteloginonlib','notify','notifybadge','getClientInfo'),
 				'users'=>array('@'),
 			),
 			array('deny',  // deny all users
@@ -132,6 +132,52 @@ class AjaxController extends Controller
         //$list = Counter::countAuditMutual();
         //$rtn = array_merge($rtn,$list);
 		echo json_encode($rtn);
+		Yii::app()->end();
+	}
+
+	/**
+	 * 搜索客户信息
+	 */
+	public function actionGetClientInfo() {
+		$keyword = isset($_POST['keyword']) ? trim($_POST['keyword']) : '';
+		if(empty($keyword)){
+			echo CJSON::encode(array('status'=>0,'message'=>'请输入搜索关键词'));
+			Yii::app()->end();
+		}
+
+		$suffix = Yii::app()->params['envSuffix'];
+		
+		// 先尝试按ID搜索
+		if(is_numeric($keyword)){
+			$row = Yii::app()->db->createCommand()
+				->select("id,cust_name,clue_code")
+				->from("sales{$suffix}.sal_clue")
+				->where("id=:id",array(":id"=>intval($keyword)))
+				->queryRow();
+		}else{
+			// 按编号或名称搜索
+			$row = Yii::app()->db->createCommand()
+				->select("id,cust_name,clue_code")
+				->from("sales{$suffix}.sal_clue")
+				->where("clue_code=:code OR cust_name LIKE :name",array(
+					":code"=>$keyword,
+					":name"=>"%{$keyword}%"
+				))
+				->order("id DESC")
+				->limit(1)
+				->queryRow();
+		}
+
+		if($row){
+			echo CJSON::encode(array(
+				'status'=>1,
+				'clue_id'=>$row['id'],
+				'cust_name'=>$row['cust_name'],
+				'clue_code'=>$row['clue_code']
+			));
+		}else{
+			echo CJSON::encode(array('status'=>0,'message'=>'未找到客户'));
+		}
 		Yii::app()->end();
 	}
 }

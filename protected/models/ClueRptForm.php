@@ -141,6 +141,15 @@ class ClueRptForm extends CFormModel
 
     public function validateIsSeal($attribute, $param) {
 	    if($this->is_seal=="Y"){
+	        // 如果seal_type_id是数组，转换为逗号分隔的字符串
+	        if(is_array($this->seal_type_id)){
+	            $filteredIds = array_filter($this->seal_type_id, function($val){
+	                return $val !== '' && $val !== null;
+	            });
+	            $this->seal_type_id = !empty($filteredIds) ? implode(',', $filteredIds) : '';
+	        }
+	        $this->seal_type_id = trim($this->seal_type_id);
+
 	        if(empty($this->seal_type_id)){
                 $this->addError($attribute,'印章类型不能为空');
             }
@@ -225,6 +234,32 @@ class ClueRptForm extends CFormModel
                 $this->city=$clueHeadModel->city;
                 $this->clueHeadRow = $clueHeadModel->getAttributes();
                 if(empty($clueHeadModel->yewudalei)){
+                    $this->addError($attribute, "请先填写客户的业务大类");
+                }
+            }else{
+                $this->addError($attribute, "线索不存在，请刷新重试");
+            }
+        }else{
+            $this->addError($attribute, "商机不存在，请刷新重试");
+        }
+    }
+
+    // 门户/审批查看专用：不受 ClueHeadForm 的团队/城市权限过滤影响
+    public function validateClueServiceIDByView($attribute, $param) {
+        $clueServiceModel = new ClueServiceForm("view");
+        if($clueServiceModel->retrieveData($this->clue_service_id)){
+            $this->clue_id = $clueServiceModel->clue_id;
+            $this->clueServiceRow = $clueServiceModel->getAttributes();
+            $clueModel = new ClueForm("view");
+            if($clueModel->retrieveData($this->clue_id)){
+                $this->cust_level=$clueModel->cust_level;
+                $this->cust_class=$clueModel->cust_class;
+                $this->cust_name=$clueModel->cust_name;
+                $this->clue_type=$clueModel->clue_type;
+                $this->sales_id=$clueModel->rec_employee_id;
+                $this->city=$clueModel->city;
+                $this->clueHeadRow = $clueModel->getAttributes();
+                if(empty($clueModel->yewudalei)){
                     $this->addError($attribute, "请先填写客户的业务大类");
                 }
             }else{
@@ -340,7 +375,7 @@ class ClueRptForm extends CFormModel
                 $value = CGetName::getCustVipStrByKey($value);
                 break;
             case "seal_type_id":
-                $value = CGetName::getSealTypeStrByID($value);
+                $value = CGetName::getSealTypeStrByIDs($value);
                 break;
             case "cont_type_id":
                 $value = CGetName::getContTypeStrByKey($value);
@@ -365,8 +400,9 @@ class ClueRptForm extends CFormModel
     protected function whenEqual($key,$oldArr,$nowArr){
         $valueOne = $oldArr->$key;
         $valueTwo = $nowArr->$key;
+        // seal_type_id 可能是逗号分隔的字符串，不应该转换为数字
         $numberList = array('sales_id','lbs_main','cust_class','cust_level','total_amt','file_type','is_seal',
-            'seal_type_id','cont_type_id','service_type_id','bill_week','audit_type','cut_type','fee_add');
+            'cont_type_id','service_type_id','bill_week','audit_type','cut_type','fee_add');
         if(key_exists($key,$numberList)){
             $valueOne = CGetName::getNumberNull($valueOne);
             $valueTwo = CGetName::getNumberNull($valueTwo);
@@ -444,6 +480,15 @@ class ClueRptForm extends CFormModel
 	protected function save(&$connection)
 	{
         $uid = Yii::app()->user->id;
+
+        // 确保seal_type_id是字符串而不是数组（无论哪个场景都要处理）
+        if(is_array($this->seal_type_id)){
+            $filteredIds = array_filter($this->seal_type_id, function($val){
+                return $val !== '' && $val !== null;
+            });
+            $this->seal_type_id = !empty($filteredIds) ? implode(',', $filteredIds) : null;
+        }
+
         $saveArr = array(
             "clue_id"=>$this->clue_id,
             "clue_type"=>$this->clue_type,
@@ -457,7 +502,7 @@ class ClueRptForm extends CFormModel
             "total_amt"=>CGetName::getNumberNull($this->total_amt),
             "file_type"=>CGetName::getNumberNull($this->file_type),
             "is_seal"=>$this->is_seal,
-            "seal_type_id"=>CGetName::getNumberNull($this->seal_type_id),
+            "seal_type_id"=>empty($this->seal_type_id)?null:$this->seal_type_id, // 保存逗号分隔的字符串，不转换为数字
             "cont_type_id"=>CGetName::getNumberNull($this->cont_type_id),
             "service_type_id"=>CGetName::getNumberNull($this->service_type_id),
             "bill_week"=>CGetName::getNumberNull($this->bill_week),
@@ -614,6 +659,20 @@ class ClueRptForm extends CFormModel
 
     protected function getMHData(){
         $lbsCityCode = CGetName::getLbsCityCodeByClueService($this->clue_service_id);
+        // 处理多个印章类型ID
+        $sealCode = "";
+        if($this->is_seal=="Y" && !empty($this->seal_type_id)){
+            // 如果是数组，直接使用；如果是字符串，按逗号分隔
+            $sealIds = is_array($this->seal_type_id) ? $this->seal_type_id : explode(',', $this->seal_type_id);
+            $sealCodes = array();
+            foreach($sealIds as $sealId){
+                $sealId = trim($sealId);
+                if(!empty($sealId)){
+                    $sealCodes[] = CGetName::getSealCodeStrByKeyAndStr($sealId,'mh_code');
+                }
+            }
+            $sealCode = implode(',', $sealCodes);
+        }
         return array(
             "lbsMain"=>CGetName::getLbsMainStrByKeyAndStr($this->lbs_main,'mh_code'),//主体公司编码
             "lbsMainCityCode"=>$this->city,//主城市编码
@@ -623,7 +682,7 @@ class ClueRptForm extends CFormModel
             "totalAmt"=>floatval($this->total_amt),//报价总金额
             "contractType"=>CGetName::getContTypeStrByKey($this->cont_type_id,'mh_code'),//合同类型
             "isSeal"=>$this->is_seal,//是否用印
-            "sealCode"=>$this->is_seal=="Y"?CGetName::getSealCodeStrByKeyAndStr($this->seal_type_id,'mh_code'):"",//印章编码
+            "sealCode"=>$sealCode,//印章编码（多个用逗号分隔）
             "customerName"=>$this->clueHeadRow["cust_name"],
         );
     }

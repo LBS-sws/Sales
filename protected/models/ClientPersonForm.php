@@ -60,14 +60,18 @@ class ClientPersonForm extends CFormModel
     public function validateID($attribute, $param) {
         $scenario = $this->getScenario();
         if($scenario=="new"){
-            $storeRow = Yii::app()->db->createCommand()->select("id")
-                ->from("sal_clue_person")
-                ->where("cust_person=:cust_person and clue_id=:clue_id and clue_store_id=0",array(
-                    ":cust_person"=>$this->cust_person,
-                    ":clue_id"=>$this->clue_id
-                ))->queryRow();
-            if($storeRow){
-                $this->addError($attribute, "联系人名称已存在，无法重复添加");
+            // 检查同一客户下是否已存在相同电话的联络人（电话是唯一标识）
+            // 只检查未删除的记录（status!=4）
+            if(!empty($this->cust_tel)){
+                $storeRow = Yii::app()->db->createCommand()->select("id")
+                    ->from("sal_clue_person")
+                    ->where("cust_tel=:cust_tel and clue_id=:clue_id and clue_store_id=0 and status!=4",array(
+                        ":cust_tel"=>$this->cust_tel,
+                        ":clue_id"=>$this->clue_id
+                    ))->queryRow();
+                if($storeRow){
+                    $this->addError($attribute, "该电话号码已存在，无法重复添加");
+                }
             }
         }else{
             $storeRow = Yii::app()->db->createCommand()->select("a.*")
@@ -136,6 +140,10 @@ class ClientPersonForm extends CFormModel
         $city = Yii::app()->user->city;
 	    switch ($this->getScenario()){
             case "new":
+                //如果手机号码为空，则不创建联络人
+                if(empty($this->cust_tel)){
+                    return true;
+                }
                 $connection->createCommand()->insert("sal_clue_person",array(
                     "clue_id"=>$this->clue_id,
                     "clue_store_id"=>$this->clue_store_id,
@@ -152,8 +160,13 @@ class ClientPersonForm extends CFormModel
                     "person_code"=>$this->person_code,
                 ),"id=:id",array(":id"=>$this->id));
                 $this->setScenario("edit");
+                $this->sendDataByU();
                 break;
             case "edit":
+                //如果手机号码为空，则不更新联络人
+                if(empty($this->cust_tel)){
+                    return true;
+                }
                 $connection->createCommand()->update("sal_clue_person",array(
                     "cust_person"=>$this->cust_person,
                     "cust_tel"=>$this->cust_tel,
@@ -162,20 +175,30 @@ class ClientPersonForm extends CFormModel
                     "sex"=>$this->sex,
                     "luu"=>$uid,
                 ),"id=:id",array(":id"=>$this->id));
+                $this->sendDataByU();
                 break;
             case "delete":
+                // 删除前先获取客户信息（用于同步到派单系统）
+                if(empty($this->clientHeadRow) && !empty($this->clue_id)){
+                    $clientHeadModel = new ClientHeadForm("view");
+                    if($clientHeadModel->retrieveData($this->clue_id)){
+                        $this->clientHeadRow = $clientHeadModel->getAttributes();
+                    }
+                }
+                // 使用 status=4 标记删除（伪删除）
                 $connection->createCommand()->update("sal_clue_person",array(
-                    "z_display"=>0,
                     "status"=>4,
                     "luu"=>$uid,
                 ),"id=:id",array(":id"=>$this->id));
+                $this->sendDataByU();
+                break;
         }
-        $this->sendDataByU();
 		return true;
 	}
 
     public static function saveUPersonDataByClueModel($model,$uid=''){
-	    if(empty($model->cust_person)&&empty($model->cust_tel)){
+	    //如果手机号码为空，则不创建联络人
+        if(empty($model->cust_tel)){
             return false;
         }
         $uid = empty($uid)?Yii::app()->user->id:$uid;
@@ -208,7 +231,8 @@ class ClientPersonForm extends CFormModel
     }
 
     public static function saveUPersonDataByStoreModel($model){
-        if(empty($model->cust_person)&&empty($model->cust_tel)){
+        //如果手机号码为空，则不创建联络人
+        if(empty($model->cust_tel)){
             return false;
         }
         $uid = Yii::app()->user->id;
@@ -242,12 +266,13 @@ class ClientPersonForm extends CFormModel
 
     //发送数据至派单系统
     public function sendDataByU(){
-        if(in_array($this->getScenario(),array("new","edit"))){
+        if(in_array($this->getScenario(),array("new","edit","delete"))){
             $uClientModel = new CurlNotesByClient();
             if(empty($this->clientHeadRow["u_id"])){//客户未同步，则同步客户信息
                 $uClientModel->putDataByClientID($this->clue_id);
             }else{
-                $uClientModel->putPersonDataByPersonID($this->id,$this->clientHeadRow);
+                // 传递scenario参数，用于删除时判断是否需要同步
+                $uClientModel->putPersonDataByPersonID($this->id,$this->clientHeadRow,$this->getScenario());
             }
             $uClientModel->setOutContentByData();
             $uClientModel->saveCurlToApi();
