@@ -23,16 +23,17 @@ class DataMigrationVirtualContractProcessor
      */
     protected static function validateRequiredFields($data)
     {
+        //  放宽必填字段验证：合约时间和主体公司改为非必填
         $requiredFields = array(
             '虚拟合同编号' => 'vir_code',
             '服务项目' => 'busine_name',
             '门店编号' => 'store_code',
             '虚拟合同状态' => 'vir_status',
-            '签约时间' => 'sign_date',
-            '合约开始时间' => 'cont_start_dt',
-            '合约结束时间' => 'cont_end_dt',
+            //  移除：'签约时间' => 'sign_date',
+            //  移除：'合约开始时间' => 'cont_start_dt',
+            //  移除：'合约结束时间' => 'cont_end_dt',
             '业务大类' => 'yewudalei',
-            '主体公司' => 'lbs_main',
+            //  移除：'主体公司' => 'lbs_main',
             '销售员工编号' => 'sales_code',
             '销售关联合约的id' => 'sales_u_id',
             '合约月金额' => 'month_amt',
@@ -148,7 +149,7 @@ class DataMigrationVirtualContractProcessor
             }
         }
         
-        // 3. 主体公司转换
+        // 3. 主体公司转换（ 容错：如果不存在则记录警告并置空）
         if (isset($processed['lbs_main']) && !empty($processed['lbs_main'])) {
             if (!is_numeric($processed['lbs_main'])) {
                 //  优先：使用新字段 lbs_main_office（主体公司办公室代码）
@@ -160,21 +161,29 @@ class DataMigrationVirtualContractProcessor
                     $lbsMainId = DataMigrationHelper::getLbsMainFromPaidanData($paidanEntityInfo, $connection);
                     
                     if (empty($lbsMainId)) {
-                        throw new Exception(
-                            "找不到对应的主体公司！办公室代码: {$processed['lbs_main_office']}, 主体编码: {$processed['lbs_main']}。" .
-                            "请在 sal_main_lbs 表的 show_city 字段中添加该办公室代码，或在 mh_code 字段中添加主体编码。"
+                        //  不抛异常，记录警告并置空
+                        Yii::log(
+                            "找不到对应的主体公司！办公室代码: {$processed['lbs_main_office']}, 主体编码: {$processed['lbs_main']}，已置空",
+                            'warning', 'DataMigration'
                         );
+                        $processed['lbs_main'] = null;
+                    } else {
+                        $processed['lbs_main'] = $lbsMainId;
                     }
-                    $processed['lbs_main'] = $lbsMainId;
                 } else {
                     // 后备：兼容旧数据，直接按名称/编码查找
                     $lbsMainId = DataMigrationHelper::getLbsMainIdByName($processed['lbs_main'], $connection);
                     if (empty($lbsMainId)) {
-                        throw new Exception("找不到主体公司: {$processed['lbs_main']}");
+                        //  不抛异常，记录警告并置空
+                        Yii::log("找不到主体公司: {$processed['lbs_main']}，已置空", 'warning', 'DataMigration');
+                        $processed['lbs_main'] = null;
+                    } else {
+                        $processed['lbs_main'] = $lbsMainId;
                     }
-                    $processed['lbs_main'] = $lbsMainId;
                 }
             }
+        } else {
+            $processed['lbs_main'] = null;  //  确保为 null 而不是空字符串
         }
         
         // 4. 服务主体转换
@@ -209,7 +218,13 @@ class DataMigrationVirtualContractProcessor
             if ($empId) {
                 $processed['sales_id'] = $empId;
             } else {
-                throw new Exception('销售员工编号不存在：' . $processed['sales_code']);
+                //  销售员工不存在时跳过，不抛异常
+                Yii::log("销售员工编号不存在：{$processed['sales_code']}，已跳过此字段", 'warning', 'DataMigration');
+                unset($processed['sales_code']);
+                // 如果没有销售ID，后续逻辑可能依赖它，需要确保有默认值
+                if (!isset($processed['sales_id'])) {
+                    throw new Exception('销售员工编号不存在且无法获取默认销售员工：' . $processed['sales_code']);
+                }
             }
             unset($processed['sales_code']);
         }
@@ -220,10 +235,14 @@ class DataMigrationVirtualContractProcessor
         
         // 验证：两个字段必须同时有或同时无
         if ($hasOtherSales && !$hasOtherSalesUId) {
-            throw new Exception('被跨区业务员填写后，被跨区业务员关联合约的id不能为空');
+            Yii::log('被跨区业务员填写后，被跨区业务员关联合约的id不能为空，已跳过此字段', 'warning', 'DataMigration');
+            unset($processed['other_sales_code']);
+            $hasOtherSales = false;
         }
         if (!$hasOtherSales && $hasOtherSalesUId) {
-            throw new Exception('被跨区业务员关联合约的id填写后，被跨区业务员不能为空');
+            Yii::log('被跨区业务员关联合约的id填写后，被跨区业务员不能为空，已跳过此字段', 'warning', 'DataMigration');
+            unset($processed['other_sales_u_id']);
+            $hasOtherSalesUId = false;
         }
         
         if ($hasOtherSales) {
@@ -231,7 +250,9 @@ class DataMigrationVirtualContractProcessor
             if ($empId) {
                 $processed['other_sales_id'] = $empId;
             } else {
-                throw new Exception('被跨区业务员编号不存在：' . $processed['other_sales_code']);
+                //  被跨区业务员不存在时跳过，不抛异常
+                Yii::log("被跨区业务员编号不存在：{$processed['other_sales_code']}，已跳过此字段", 'warning', 'DataMigration');
+                unset($processed['other_sales_u_id']); // 同时移除关联ID
             }
             unset($processed['other_sales_code']);
         }
@@ -375,12 +396,18 @@ class DataMigrationVirtualContractProcessor
         // 12. 各种类型字段转换（付款方式、付款周期、收费方式、结算方式、账单日、应收期限）
         self::convertPaymentFields($processed);
         
-        // 13. 日期处理
+        // 13. 日期处理（ 容错处理：日期为空时允许为null）
         $dateFields = array('sign_date', 'cont_start_dt', 'cont_end_dt', 'first_date', 'fast_date', 'stop_date');
         foreach ($dateFields as $field) {
             if (isset($processed[$field]) && $processed[$field] !== '') {
                 $timestamp = strtotime($processed[$field]);
-                $processed[$field] = $timestamp ? date('Y-m-d', $timestamp) : null;
+                if ($timestamp) {
+                    $processed[$field] = date('Y-m-d', $timestamp);
+                } else {
+                    // 日期格式错误，记录警告并置空
+                    Yii::log("日期字段 {$field} 格式错误：{$processed[$field]}，已置空", 'warning', 'DataMigration');
+                    $processed[$field] = null;
+                }
             } else {
                 $processed[$field] = null;
             }
@@ -528,6 +555,23 @@ class DataMigrationVirtualContractProcessor
             throw new Exception('虚拟合约导入失败：门店未关联客户（store_code=' . $data['store_code'] . '）');
         }
         
+        //  确保 sales_id 存在，如果不存在则使用客户的默认销售员工
+        if (!isset($data['sales_id']) || empty($data['sales_id'])) {
+            // 查询客户的默认销售员工
+            $clueRow = $connection->createCommand()
+                ->select('rec_employee_id')
+                ->from('sal_clue')
+                ->where('id=:id', array(':id' => $storeRow['clue_id']))
+                ->queryRow();
+            
+            if ($clueRow && !empty($clueRow['rec_employee_id'])) {
+                $data['sales_id'] = $clueRow['rec_employee_id'];
+                Yii::log("虚拟合约导入时，销售员工不存在，使用客户的默认销售员工：{$data['sales_id']}", 'info', 'DataMigration');
+            } else {
+                throw new Exception('虚拟合约导入失败：销售员工不存在且客户没有默认销售员工（clue_id=' . $storeRow['clue_id'] . '）');
+            }
+        }
+        
         // 2. 计算合约月数
         $cont_month_len = DataMigrationHelper::computeMonthLen($data['cont_start_dt'], $data['cont_end_dt']);
         
@@ -585,6 +629,7 @@ class DataMigrationVirtualContractProcessor
         }
         
         // 7. 检查是否已存在相同 u_id 的虚拟合约（允许重复导入覆盖）
+        $oldVirId = null;  //  记录旧的 vir_id，用于后续清理
         if (!empty($data['u_id'])) {
             $existingVirRow = $connection->createCommand()
                 ->select('id, vir_code')
@@ -596,7 +641,7 @@ class DataMigrationVirtualContractProcessor
                 $oldVirId = $existingVirRow['id'];
                 Yii::log('发现已存在的虚拟合约（vir_id=' . $oldVirId . ', vir_code=' . $existingVirRow['vir_code'] . ', u_id=' . $data['u_id'] . '），将删除旧数据后重新导入', 'info', 'DataMigration');
                 
-                // 删除旧的虚拟合约相关数据
+                //  删除旧的虚拟合约相关数据（包括 vir_info）
                 $connection->createCommand()->delete('sal_contract_vir_info', 'virtual_id=:virtual_id', array(':virtual_id' => $oldVirId));
                 $connection->createCommand()->delete('sal_contract_vir_staff', 'vir_id=:vir_id', array(':vir_id' => $oldVirId));
                 $connection->createCommand()->delete('sal_contract_vir_week', 'vir_id=:vir_id', array(':vir_id' => $oldVirId));
@@ -677,9 +722,18 @@ class DataMigrationVirtualContractProcessor
         
         $connection->createCommand()->insert('sal_contpro_virtual', $proVirSave);
         
-        // 9. 插入虚拟合约详细信息
+        // 9. 插入虚拟合约详细信息（ 去重处理：避免唯一键冲突）
         if (!empty($data['virInfo'])) {
+            //  先按 field_id 去重（同一个 field_id 只保留最后一条）
+            $uniqueVirInfo = array();
             foreach ($data['virInfo'] as $virInfo) {
+                if (isset($virInfo['field_id'])) {
+                    $uniqueVirInfo[$virInfo['field_id']] = $virInfo;
+                }
+            }
+            
+            //  插入去重后的数据
+            foreach ($uniqueVirInfo as $virInfo) {
                 $virInfo['virtual_id'] = $vir_id;
                 $virInfo['lcu'] = $username;
                 $connection->createCommand()->insert('sal_contract_vir_info', $virInfo);
@@ -1183,6 +1237,26 @@ class DataMigrationVirtualContractProcessor
      */
     protected static function createContractForVirtual($data, $storeRow, $cont_month_len, $connection, $username, $reportId)
     {
+        //  确保 sales_id 存在，如果不存在则使用客户的默认销售员工
+        $salesId = null;
+        if (isset($data['sales_id']) && !empty($data['sales_id'])) {
+            $salesId = $data['sales_id'];
+        } else {
+            // 查询客户的默认销售员工
+            $clueRow = $connection->createCommand()
+                ->select('rec_employee_id')
+                ->from('sal_clue')
+                ->where('id=:id', array(':id' => $storeRow['clue_id']))
+                ->queryRow();
+                
+            if ($clueRow && !empty($clueRow['rec_employee_id'])) {
+                $salesId = $clueRow['rec_employee_id'];
+                Yii::log("虚拟合约创建主合约时，销售员工不存在，使用客户的默认销售员工：{$salesId}", 'info', 'DataMigration');
+            } else {
+                throw new Exception('虚拟合约创建主合约失败：销售员工不存在且客户没有默认销售员工（clue_id=' . $storeRow['clue_id'] . '）');
+            }
+        }
+            
         // 1. 首先创建销售回访记录（商机）
         $connection->createCommand()->insert('sal_clue_service', array(
             'clue_id' => $storeRow['clue_id'],
@@ -1190,12 +1264,12 @@ class DataMigrationVirtualContractProcessor
             'visit_type' => self::getDefaultVisitType($connection),
             'visit_obj' => self::getDefaultVisitObj($connection),
             'visit_obj_text' => self::getDefaultVisitObjText($connection),
-            'create_staff' => $data['sales_id'],
+            'create_staff' => $salesId,
             'busine_id' => $data['busine_id'],
             'busine_id_text' => $data['busine_id_text'],
             'sign_odds' => 100,
             'lbs_main' => $data['lbs_main'],
-            'predict_date' => $data['sign_date'],
+            'predict_date' => isset($data['sign_date']) ? $data['sign_date'] : null,  //  容错：日期可为空
             'predict_amt' => isset($data['year_amt']) ? $data['year_amt'] : 0,
             'total_amt' => isset($data['year_amt']) ? $data['year_amt'] : 0,
             'total_num' => 1,
@@ -1204,19 +1278,23 @@ class DataMigrationVirtualContractProcessor
             'report_id' => $reportId,
         ));
         $clue_service_id = $connection->getLastInsertID();
-        
+            
         // 2. 创建主合同
+        //  判断合同类型：如果有主合同编号（cont_code），说明是框架合同
+        $isFrameworkContract = !empty($data['cont_code']);
+        $contType = $isFrameworkContract ? 2 : 1;  // 2=框架合同, 1=普通合同
+            
         $contArr = array(
             'clue_id' => $storeRow['clue_id'],
             'clue_type' => $storeRow['clue_type'],
             'clue_service_id' => $clue_service_id,
             'city' => $storeRow['city'],
-            'cont_code' => 'DL-' . $data['vir_code'],
-            'sales_id' => $data['sales_id'],
+            'cont_code' => $isFrameworkContract ? $data['cont_code'] : ('DL-' . $data['vir_code']),
+            'sales_id' => $salesId,  //  使用确保后的 salesId
             'lbs_main' => $data['lbs_main'],
             'predict_amt' => isset($data['year_amt']) ? $data['year_amt'] : 0,
-            'store_sum' => 1,
-            'cont_type' => 1,
+            'store_sum' => 1,  //  每次导入一个虚拟合约关耔1个门店
+            'cont_type' => $contType,  //  修改：根据是否有主合同编号判断合同类型
             'sign_type' => 1,
             'total_sum' => isset($data['service_sum']) ? $data['service_sum'] : 0,
             'total_amt' => isset($data['year_amt']) ? $data['year_amt'] : 0,
@@ -1224,10 +1302,10 @@ class DataMigrationVirtualContractProcessor
             'stop_date' => isset($data['stop_date']) ? $data['stop_date'] : null,
             'surplus_num' => isset($data['surplus_num']) ? $data['surplus_num'] : null,
             'surplus_amt' => isset($data['surplus_amt']) ? $data['surplus_amt'] : null,
-            'cont_start_dt' => $data['cont_start_dt'],
-            'cont_end_dt' => $data['cont_end_dt'],
+            'cont_start_dt' => isset($data['cont_start_dt']) ? $data['cont_start_dt'] : null,  //  容错：日期可为空
+            'cont_end_dt' => isset($data['cont_end_dt']) ? $data['cont_end_dt'] : null,        //  容错：日期可为空
             'cont_month_len' => $cont_month_len,
-            'sign_date' => $data['sign_date'],
+            'sign_date' => isset($data['sign_date']) ? $data['sign_date'] : null,            //  容错：日期可为空
             //  派单系统没有的字段不赋值，保持 null（不强制赋值）
             'area_bool' => isset($data['area_bool']) && $data['area_bool'] !== '' ? $data['area_bool'] : null,
             'group_bool' => isset($data['group_bool']) && $data['group_bool'] !== '' ? $data['group_bool'] : null,
@@ -1255,19 +1333,19 @@ class DataMigrationVirtualContractProcessor
         );
         $connection->createCommand()->insert('sal_contract', $contArr);
         $cont_id = $connection->getLastInsertID();
-        
+            
         // 3. 创建主合同变更记录（初始执行状态）
         $contArr['cont_id'] = $cont_id;
         $contArr['pro_code'] = 'PDL-' . $data['vir_code'];
         $contArr['pro_type'] = DataMigrationHelper::proTypeByStatus($data['vir_status']);
-        $contArr['pro_date'] = $data['sign_date'];
+        $contArr['pro_date'] = isset($data['sign_date']) ? $data['sign_date'] : null;  //  容错：日期可为空
         $contArr['pro_remark'] = "导入虚拟合约自动生成\n导入id：{$reportId}";
         $contArr['pro_status'] = 30;
         $contArr['pro_change'] = $data['vir_status'] == 30 ? $data['year_amt'] : $data['surplus_amt'];
         $contArr['pro_change'] = empty($contArr['pro_change']) ? 0 : $contArr['pro_change'];
         $connection->createCommand()->insert('sal_contpro', $contArr);
         $pro_id = $connection->getLastInsertID();
-        
+            
         return array(
             'cont_id' => $cont_id,
             'clue_service_id' => $clue_service_id,

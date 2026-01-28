@@ -2883,7 +2883,7 @@ class DataMigrationForm extends CFormModel
             ->where('name=:name', array(':name' => $name))
             ->queryRow();
         
-        // ✅ 如果直接查询失败，尝试使用映射表转换后再查询
+        //  如果直接查询失败，尝试使用映射表转换后再查询
         if (!$row && isset(self::$serviceNameMapping[$name])) {
             $mappedName = self::$serviceNameMapping[$name];
             Yii::log("服务项目名称映射：'{$name}' => '{$mappedName}'", 'info', 'DataMigration');
@@ -3012,7 +3012,7 @@ class DataMigrationForm extends CFormModel
             $saveList["area"] = null;
         }
         $saveList["report_id"] = $this->id;
-        // ✅ 派单导入默认是客户（2），但如果派单明确传了table_type，则使用派单的值
+        //  派单导入默认是客户（2），但如果派单明确传了table_type，则使用派单的值
         $saveList["table_type"] = isset($data["table_type"]) ? $data["table_type"] : 2;
         // 使用预处理后的状态值（从派单系统读取），如果没有则默认为服务中
         if (!isset($saveList["clue_status"])) {
@@ -3110,7 +3110,7 @@ class DataMigrationForm extends CFormModel
      * 
      * 数据映射关系：
      * 派单 lbs_ka_project_management => CRM sal_clue
-     * - project_code => clue_code (客户编号) ✅
+     * - project_code => clue_code (客户编号) 
      * - project_name => cust_name (客户名称，从门店名称派生)
      * 
      * 派单 lbs_company_customer => CRM sal_clue_store
@@ -3150,7 +3150,7 @@ class DataMigrationForm extends CFormModel
             'cust_address' => isset($storeData['address']) ? $storeData['address'] : null,
             'clue_remark' => '门店导入自动生成',
             'report_id' => isset($storeData['report_id']) ? $storeData['report_id'] : null,
-            // ✅ 派单导入的都是客户（2），不是线索（1）
+            //  派单导入的都是客户（2），不是线索（1）
             // 但如果派单明确传了table_type，则使用派单的值
             'table_type' => isset($storeData['table_type']) ? $storeData['table_type'] : 2,
             'lcu' => $username,
@@ -3248,7 +3248,7 @@ class DataMigrationForm extends CFormModel
      * 插入门店数据（完全参考 ImportClientStoreForm::saveOneData）
      * 
      * 数据流向：
-     * 1. 派单 lbs_ka_project_management.project_code => CRM sal_clue.clue_code (客户编号) ✅
+     * 1. 派单 lbs_ka_project_management.project_code => CRM sal_clue.clue_code (客户编号) 
      * 2. 先根据 clue_code (=project_code) 查找或创建客户记录
      * 3. 派单 lbs_company_customer => CRM sal_clue_store (门店，关联到客户)
      */
@@ -3588,7 +3588,7 @@ class DataMigrationForm extends CFormModel
         $data['report_id'] = $this->id;
         
         // 6. 插入虚拟合约主表 sal_contract_virtual（完全按照 ImportVirForm::saveOneData 的 saveKey）
-        // ✅ 先检查是否已存在相同 u_id 的虚拟合约，如果存在则删除旧数据
+        //  先检查是否已存在相同 u_id 的虚拟合约，如果存在则删除旧数据
         if (!empty($data['u_id'])) {
             $existingVirRow = $connection->createCommand()
                 ->select('id')

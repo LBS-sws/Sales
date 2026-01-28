@@ -440,10 +440,9 @@ class DataMigrationClientProcessor
                 $oldName = $existingClue['cust_name'];
                 $newName = isset($data['cust_name']) ? $data['cust_name'] : '未提供';
                 
-                // ✅ 如果已经有 u_id，说明已经同步过了，跳过更新
+                // 修改逻辑：即使已经有 u_id，也要更新为派单系统的最新值
                 if (!empty($existingClue['u_id'])) {
-                    Yii::log("客户已存在且已有派单系统ID (u_id={$existingClue['u_id']})，跳过更新 - 客户编号：{$clueCode}，业务大类：{$yewudaleiName}，客户ID：{$existingClueId}", 'info', 'DataMigration');
-                    return $existingClueId;
+                    Yii::log("客户已存在且已有派单系统ID (u_id={$existingClue['u_id']})，但会执行更新操作，确保数据与派单系统一致 - 客户编号：{$clueCode}，业务大类：{$yewudaleiName}，客户ID：{$existingClueId}", 'info', 'DataMigration');
                 }
                 
                 Yii::log("检测到客户编号在该业务大类下已存在，将执行更新操作 - 客户编号：{$clueCode}，业务大类：{$yewudaleiName}，客户ID：{$existingClueId}，原客户名称：{$oldName}，新客户名称：{$newName}", 'info', 'DataMigration');
@@ -466,10 +465,9 @@ class DataMigrationClientProcessor
             if ($existingClue) {
                 $yewudaleiName = self::getYewudaleiName($yewudalei, $connection);
                 
-                // ✅ 如果已经有 u_id，说明已经同步过了，跳过
+                // 修改逻辑：即使已经有 u_id，也要更新为派单系统的最新值
                 if (!empty($existingClue['u_id'])) {
-                    Yii::log("客户已存在且已有派单系统ID (u_id={$existingClue['u_id']})，跳过处理 - 客户名称：{$custName}，业务大类：{$yewudaleiName}", 'info', 'DataMigration');
-                    return $existingClue['id'];
+                    Yii::log("客户已存在且已有派单系统ID (u_id={$existingClue['u_id']})，但会执行更新操作，确保数据与派单系统一致 - 客户名称：{$custName}，业务大类：{$yewudaleiName}", 'info', 'DataMigration');
                 }
                 
                 // 客户名称重复处理：
@@ -688,13 +686,12 @@ class DataMigrationClientProcessor
             
             $clueId = $existingClue['id'];
             
-            // ✅ 如果已经有 u_id，跳过更新
+            // 修改逻辑：即使已经有 u_id，也要更新为派单系统的最新值
             if (!empty($existingClue['u_id'])) {
-                Yii::log("客户已有派单系统ID (u_id={$existingClue['u_id']})，跳过更新 - 客户编号：{$clueCode}，客户ID：{$clueId}", 'info', 'DataMigration');
-                return $clueId;
+                Yii::log("客户已有派单系统ID (u_id={$existingClue['u_id']})，但会执行更新操作，确保数据与派单系统一致 - 客户编号：{$clueCode}，客户ID：{$clueId}", 'info', 'DataMigration');
             }
         } else {
-            // ✅ 如果提供了 clueId，也要检查是否已有 u_id
+            // 修改逻辑：即使提供了 clueId 且已有 u_id，也要更新为派单系统的最新值
             $existingClue = $connection->createCommand()
                 ->select('u_id')
                 ->from('sal_clue')
@@ -702,8 +699,7 @@ class DataMigrationClientProcessor
                 ->queryRow();
             
             if ($existingClue && !empty($existingClue['u_id'])) {
-                Yii::log("客户已有派单系统ID (u_id={$existingClue['u_id']})，跳过更新 - 客户ID：{$clueId}", 'info', 'DataMigration');
-                return $clueId;
+                Yii::log("客户已有派单系统ID (u_id={$existingClue['u_id']})，但会执行更新操作，确保数据与派单系统一致 - 客户ID：{$clueId}", 'info', 'DataMigration');
             }
         }
         

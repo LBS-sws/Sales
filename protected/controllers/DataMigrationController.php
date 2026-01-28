@@ -204,7 +204,7 @@ class DataMigrationController extends Controller
                 return;
             }
 
-            // ✅ 解析 JSON 参数
+            //  解析 JSON 参数
             $apiConfig = json_decode($apiConfigStr, true);
             $filterParams = json_decode($filterParamsStr, true);
 
@@ -215,7 +215,7 @@ class DataMigrationController extends Controller
                 $filterParams = array();
             }
 
-            // ✅ 从 filter_params 中提取 type 参数（用于任务表）
+            //  从 filter_params 中提取 type 参数（用于任务表）
             $projectType = isset($filterParams['type']) ? $filterParams['type'] : '';
 
             $params = array(

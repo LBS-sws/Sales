@@ -18,15 +18,15 @@ class IqueueNewController extends Controller
 		return array(
 			array('allow', 
 				'actions'=>array('index','downExcel'),
-				'expression'=>array('IqueueController','allowExecute'),
+				'expression'=>array('IqueueNewController','allowExecute'),
 			),
 			array('allow',
 				'actions'=>array('remove'),
-				'expression'=>array('IqueueController','allowRemove'),
+				'expression'=>array('IqueueNewController','allowRemove'),
 			),
 			array('allow',
 				'actions'=>array('superRemove'),
-				'expression'=>array('IqueueController','allowSuperRemove'),
+				'expression'=>array('IqueueNewController','allowSuperRemove'),
 			),
 			array('deny',  // deny all users
 				'users'=>array('*'),
@@ -35,7 +35,7 @@ class IqueueNewController extends Controller
 	}
 
 	public function actionRemove($index) {
-		$model = new IqueueList('view');
+		$model = new IqueueListNew('view');
         $result = $model->remove($index);
         if ($result !== false) {
             echo json_encode(array('status' => 'success', 'message' => $result));
@@ -60,7 +60,7 @@ class IqueueNewController extends Controller
 			Yii::app()->end();
 		}
 		
-		$model = new IqueueList('view');
+		$model = new IqueueListNew('view');
 		$result = $model->superRemove();
 		if ($result !== false) {
 			echo json_encode(array('status' => 'success', 'message' => $result));
@@ -71,9 +71,9 @@ class IqueueNewController extends Controller
 	}
 
 	public function actionIndex($pageNum=0) {
-		$model = new IqueueList;
-		if (isset($_POST['IqueueList'])) {
-			$model->attributes = $_POST['IqueueList'];
+		$model = new IqueueListNew;
+		if (isset($_POST['IqueueListNew'])) {
+			$model->attributes = $_POST['IqueueListNew'];
 		} else {
 			$session = Yii::app()->session;
 			if (isset($session['criteria_xf01']) && !empty($session['criteria_xf01'])) {

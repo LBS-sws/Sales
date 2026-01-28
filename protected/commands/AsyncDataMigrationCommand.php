@@ -32,7 +32,7 @@ class AsyncDataMigrationCommand extends CConsoleCommand
      */
     public function actionProcess()
     {
-        // ✅ 增加内存限制和执行时间
+        //  增加内存限制和执行时间
         ini_set('memory_limit', '1024M');
         set_time_limit(0);
 
@@ -242,12 +242,12 @@ class AsyncDataMigrationCommand extends CConsoleCommand
             // 构建过滤参数
             $filterParams = json_decode($task->filter_params, true);
 
-            // ✅ 如果 filter_params 中有 type 参数，设置到 form 对象中
+            //  如果 filter_params 中有 type 参数，设置到 form 对象中
             if (isset($filterParams['type'])) {
                 $form->type = $filterParams['type'];
             }
 
-            // ✅ 判断是否是全量导出（city_code='all'）
+            //  判断是否是全量导出（city_code='all'）
             $isFullExport = ($detail['city_code'] === 'all');
 
             if (!$isFullExport) {
@@ -257,7 +257,7 @@ class AsyncDataMigrationCommand extends CConsoleCommand
 
             $form->filter_params = json_encode($filterParams);
 
-            // ✅ Step 1: 获取数据（支持分页）
+            //  Step 1: 获取数据（支持分页）
             if ($isFullExport) {
                 // 全量导出：分页获取
                 $this->log("  └─ 全量导出模式，开始分页获取 {$detail['city_name']} 的数据...");
@@ -322,7 +322,7 @@ class AsyncDataMigrationCommand extends CConsoleCommand
                 $batchNum = $batchIndex + 1;
                 $this->log("  └─ 正在处理第 {$batchNum}/{$batchCount} 批（{$batchSize}条）...");
 
-                // ✅ 更新导入进度信息
+                //  更新导入进度信息
                 $connection->createCommand()->update(
                     'sal_data_migration_task_detail',
                     array('error_message' => "正在导入数据：第 {$batchNum}/{$batchCount} 批"),
@@ -361,7 +361,7 @@ class AsyncDataMigrationCommand extends CConsoleCommand
 
             $this->log("  └─ {$detail['city_name']} 导入完成！成功: {$totalSuccess}, 失败: {$totalErrors}");
 
-            // ✅ 清除进度信息
+            //  清除进度信息
             $connection->createCommand()->update(
                 'sal_data_migration_task_detail',
                 array('error_message' => ''),
@@ -403,7 +403,7 @@ class AsyncDataMigrationCommand extends CConsoleCommand
 
             $this->log("  └─ 正在获取第 {$currentPage} 页数据（每页 {$pageSize} 条）...");
 
-            // ✅ 更新任务详情的分页进度
+            //  更新任务详情的分页进度
             if ($detailId && $totalPages > 1) {
                 Yii::app()->db->createCommand()->update(
                     'sal_data_migration_task_detail',
@@ -451,7 +451,7 @@ class AsyncDataMigrationCommand extends CConsoleCommand
 
         $this->log("  └─ 所有数据获取完成，共 {$totalFetched} 条记录");
 
-        // ✅ 清除分页进度信息
+        //  清除分页进度信息
         if ($detailId) {
             Yii::app()->db->createCommand()->update(
                 'sal_data_migration_task_detail',

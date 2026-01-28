@@ -27,7 +27,7 @@ class DataMigrationTask extends CActiveRecord
     public function rules()
     {
         return array(
-            // ✅ 允许所有字段安全赋值（暂时性方案，方便调试）
+            //  允许所有字段安全赋值（暂时性方案，方便调试）
             array('task_code, migration_type, api_url, task_status, api_config, filter_params, type, priority, total_cities, completed_cities, total_records, success_count, error_count, retry_count, max_retry, current_city, start_time, end_time, error_message, created_by, created_at, updated_at, process_id', 'safe'),
         );
     }
@@ -60,7 +60,7 @@ class DataMigrationTask extends CActiveRecord
         $task->api_url = $params['api_url'];
         $task->api_config = is_array($params['api_config']) ? json_encode($params['api_config']) : $params['api_config'];
         $task->filter_params = is_array($params['filter_params']) ? json_encode($params['filter_params']) : $params['filter_params'];
-        $task->type = isset($params['type']) ? $params['type'] : ''; // ✅ 添加项目类型
+        $task->type = isset($params['type']) ? $params['type'] : ''; //  添加项目类型
         $task->task_status = self::STATUS_PENDING;
         $task->priority = isset($params['priority']) ? $params['priority'] : 5;
         $task->created_by = Yii::app()->user->id;
@@ -82,7 +82,7 @@ class DataMigrationTask extends CActiveRecord
         // 解析城市列表
         $filterParams = is_array($params['filter_params']) ? $params['filter_params'] : json_decode($params['filter_params'], true);
         
-        // ✅ 判断是否是全量导出
+        //  判断是否是全量导出
         $isFullExport = (isset($filterParams['export_mode']) && $filterParams['export_mode'] === 'type') 
                      || (empty($filterParams['office_code_ids']));
         
@@ -99,7 +99,7 @@ class DataMigrationTask extends CActiveRecord
         if ($task->save()) {
             // 创建城市明细
             if ($isFullExport) {
-                // ✅ 全量导出：创建一个虚拟城市明细（city_code='all'）
+                //  全量导出：创建一个虚拟城市明细（city_code='all'）
                 $typeText = isset($params['type']) && $params['type'] == '1' ? 'KA' : '地推';
                 $cityName = '全部' . $typeText . '项目';
                 self::createTaskDetails($task->id, array('all'), $cityName);
@@ -139,7 +139,7 @@ class DataMigrationTask extends CActiveRecord
             $detail->task_id = $taskId;
             $detail->city_code = $cityCode;
             
-            // ✅ 如果是虚拟城市（city_code='all'），使用传入的虚拟城市名称
+            //  如果是虚拟城市（city_code='all'），使用传入的虚拟城市名称
             if ($cityCode === 'all' && !empty($virtualCityName)) {
                 $detail->city_name = $virtualCityName;
             } else {
@@ -368,7 +368,7 @@ class DataMigrationTask extends CActiveRecord
         foreach ($details as $detail) {
             if ($detail['status'] == 1) { // 处理中
                 $currentCity = $detail['city_name'];
-                // ✅ 获取分页进度（从 error_message 字段读取）
+                //  获取分页进度（从 error_message 字段读取）
                 if (!empty($detail['error_message']) && strpos($detail['error_message'], '正在') !== false) {
                     $currentProgress = $detail['error_message'];
                 }
@@ -376,7 +376,7 @@ class DataMigrationTask extends CActiveRecord
             }
         }
         
-        // ✅ 组合当前城市和分页进度
+        //  组合当前城市和分页进度
         $currentCityDisplay = $currentCity;
         if (!empty($currentProgress)) {
             $currentCityDisplay .= ' (' . $currentProgress . ')';
@@ -387,14 +387,14 @@ class DataMigrationTask extends CActiveRecord
             'data' => array(
                 'task_id' => $task->id,
                 'task_status' => $task->task_status,
-                'status_text' => isset($statusText[$task->task_status]) ? $statusText[$task->task_status] : '未知',  // ✅ 前端期望的字段名
+                'status_text' => isset($statusText[$task->task_status]) ? $statusText[$task->task_status] : '未知',  //  前端期望的字段名
                 'migration_type' => $task->migration_type,
                 'total_cities' => $totalCities,
                 'completed_cities' => $completedCities,
                 'progress' => $totalCities > 0 ? round($completedCities / $totalCities * 100, 2) : 0,
-                'success_count' => $totalSuccess,  // ✅ 前端期望的字段名
-                'error_count' => $totalError,      // ✅ 前端期望的字段名
-                'current_city' => $currentCityDisplay,    // ✅ 当前正在处理的城市（包含分页进度）
+                'success_count' => $totalSuccess,  //  前端期望的字段名
+                'error_count' => $totalError,      //  前端期望的字段名
+                'current_city' => $currentCityDisplay,    //  当前正在处理的城市（包含分页进度）
                 'processed_records' => $processedRecords,
                 'created_at' => $task->created_at,
                 'start_time' => $task->start_time,
@@ -481,16 +481,16 @@ class DataMigrationTask extends CActiveRecord
             'status' => 1,
             'data' => array(
                 'task_id' => $task->id,
-                'task_code' => $task->task_code,  // ✅ 添加任务编号
+                'task_code' => $task->task_code,  //  添加任务编号
                 'task_status' => $task->task_status,
                 'task_status_text' => isset($taskStatusText[$task->task_status]) ? $taskStatusText[$task->task_status] : '未知',
                 'migration_type' => $task->migration_type,
                 'api_url' => $task->api_url,
-                'total_cities' => $totalCities,  // ✅ 添加总城市数
-                'completed_cities' => $completedCities,  // ✅ 添加已完成城市数
-                'progress' => $progress,  // ✅ 添加进度百分比
-                'success_count' => $totalSuccess,  // ✅ 添加总成功数
-                'error_count' => $totalError,  // ✅ 添加总失败数
+                'total_cities' => $totalCities,  //  添加总城市数
+                'completed_cities' => $completedCities,  //  添加已完成城市数
+                'progress' => $progress,  //  添加进度百分比
+                'success_count' => $totalSuccess,  //  添加总成功数
+                'error_count' => $totalError,  //  添加总失败数
                 'created_at' => $task->created_at,
                 'start_time' => $task->start_time,
                 'end_time' => $task->end_time,

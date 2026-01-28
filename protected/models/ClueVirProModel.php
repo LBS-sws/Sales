@@ -471,7 +471,7 @@ class ClueVirProModel
             ->where("a.clue_store_id={$store_id} and a.vir_status in (10,30,40,50)")->group("a.vir_status")->queryRow();//
 		$status=1;
 		if($statusRow){
-			// ✅ 修复：将虚拟合约状态映射为门店状态
+			//  修复：将虚拟合约状态映射为门店状态
 			// 虚拟合约状态：10=待生效, 30=生效中, 40=已暂停, 50=已终止
 			// 门店状态：0=未生效, 1=未服务, 2=服务中, 3=已停止, 4=其他
 			$virStatus = $statusRow["min_status"];
@@ -599,35 +599,46 @@ class ClueVirProModel
                 break;
             case "R"://恢复
                 // 恢复虚拟合约后，更新对应的主合约和门店状态为"生效中"
+                Yii::log("[恢复操作] 开始处理恢复逻辑，virRows数量: ".count($virRows), 'info', 'ClueVirProModel.Resume');
                 $contIds = array();//主合约ID集合
                 $storeIds = array();//门店ID集合
                 foreach ($virRows as $virRow) {
+                    Yii::log("[恢复操作] 处理虚拟合约ID: ".$virRow["vir_id"], 'info', 'ClueVirProModel.Resume');
                     $virInfo = Yii::app()->db->createCommand()->select("cont_id,clue_store_id")
                         ->from("sales{$suffix}.sal_contract_virtual")
                         ->where("id=:id",array(":id"=>$virRow["vir_id"]))->queryRow();
                     if($virInfo){
+                        Yii::log("[恢复操作] 查询到虚拟合约信息 - cont_id: ".$virInfo["cont_id"].", clue_store_id: ".$virInfo["clue_store_id"], 'info', 'ClueVirProModel.Resume');
                         if(!empty($virInfo["cont_id"]) && !in_array($virInfo["cont_id"],$contIds)){
                             $contIds[] = $virInfo["cont_id"];
                         }
                         if(!empty($virInfo["clue_store_id"]) && !in_array($virInfo["clue_store_id"],$storeIds)){
                             $storeIds[] = $virInfo["clue_store_id"];
                         }
+                    }else{
+                        Yii::log("[恢复操作] 警告：未找到虚拟合约ID ".$virRow["vir_id"]." 的信息", 'warning', 'ClueVirProModel.Resume');
                     }
                 }
                 // 更新主合约状态为30（生效中）
                 if(!empty($contIds)){
                     $contIdStr = implode(",",$contIds);
+                    Yii::log("[恢复操作] 更新主合约状态为30(生效中)，合约IDs: ".$contIdStr, 'info', 'ClueVirProModel.Resume');
                     Yii::app()->db->createCommand()->update("sales{$suffix}.sal_contract",array(
                         "cont_status"=>30,
                         "luu"=>$uid
                     ),"id in ({$contIdStr})");
+                }else{
+                    Yii::log("[恢复操作] 警告：没有找到需要更新的主合约", 'warning', 'ClueVirProModel.Resume');
                 }
                 // 更新门店状态为2（服务中）
                 if(!empty($storeIds)){
                     $storeIdStr = implode(",",$storeIds);
+                    Yii::log("[恢复操作] 更新门店状态为2(服务中)，门店IDs: ".$storeIdStr, 'info', 'ClueVirProModel.Resume');
                     Yii::app()->db->createCommand()->update("sales{$suffix}.sal_clue_store",array(
                         "store_status"=>2
                     ),"id in ({$storeIdStr})");
+                }else{
+                    Yii::log("[恢复操作] 警告：没有找到需要更新的门店", 'warning', 'ClueVirProModel.Resume');
                 }
                 break;
         }

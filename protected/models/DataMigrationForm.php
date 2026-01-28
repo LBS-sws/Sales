@@ -138,14 +138,14 @@ class DataMigrationForm extends CFormModel
             $data = isset($result['data']) ? $result['data'] : array();
             $headers = isset($data['headers']) ? $data['headers'] : array();
             $rows = isset($data['rows']) ? $data['rows'] : array();
-            $totalCount = isset($data['total_count']) ? $data['total_count'] : count($rows);  // ✅ 从API获取总数
+            $totalCount = isset($data['total_count']) ? $data['total_count'] : count($rows);  //  从API获取总数
             $currentCount = count($rows);  // 当前页数量
             
             if (empty($rows)) {
                 return array(
                     'status' => 0,
                     'message' => '未获取到任何数据',
-                    'total_count' => $totalCount,  // ✅ 返回总数，即使当前页为空
+                    'total_count' => $totalCount,  //  返回总数，即使当前页为空
                     'count' => 0,
                 );
             }
@@ -163,8 +163,8 @@ class DataMigrationForm extends CFormModel
                 'status' => 1,
                 'message' => '获取数据成功',
                 'log_id' => $logId,
-                'total_count' => $totalCount,  // ✅ API返回的总记录数
-                'count' => $currentCount,  // ✅ 当前页的记录数
+                'total_count' => $totalCount,  //  API返回的总记录数
+                'count' => $currentCount,  //  当前页的记录数
                 'headers' => $headers,
             );
             

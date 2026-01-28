@@ -1,6 +1,6 @@
 <?php
 
-// ✅ 导入依赖的类
+//  导入依赖的类
 Yii::import('application.models.DataMigrationHelper');
 Yii::import('application.models.processors.DataMigrationClientProcessor');
 
@@ -109,7 +109,7 @@ class DataMigrationStoreProcessor
             $clueTypeMap = array(
                 '地推' => 1, 
                 'KA' => 2,
-                '单门店' => 1,  // ✅ 新增：单门店也是地推类型
+                '单门店' => 1,  //  新增：单门店也是地推类型
             );
             if (isset($clueTypeMap[$processed['clue_type']])) {
                 $processed['clue_type'] = $clueTypeMap[$processed['clue_type']];
@@ -135,7 +135,7 @@ class DataMigrationStoreProcessor
                 // 未知文本状态，默认为服务中
                 $processed['store_status'] = 2;
             } else {
-                // ✅ 修复：如果是数字但不在标准范围(0-4)内，默认为服务中(2)
+                //  修复：如果是数字但不在标准范围(0-4)内，默认为服务中(2)
                 $numericStatus = intval($processed['store_status']);
                 if ($numericStatus < 0 || $numericStatus > 4) {
                     Yii::log("门店状态值异常: {$processed['store_status']}，已重置为默认值2(服务中)", 'warning', 'DataMigration');
@@ -154,7 +154,9 @@ class DataMigrationStoreProcessor
             if ($empId) {
                 $processed['create_staff'] = $empId;
             } else {
-                throw new Exception('跟进销售的员工编号不存在：' . $empCode);
+                //  员工不存在时跳过，不抛异常
+                Yii::log("跟进销售的员工编号不存在：{$empCode}，已跳过此字段", 'warning', 'DataMigration');
+                unset($processed['create_staff']);
             }
         }
         
@@ -195,7 +197,13 @@ class DataMigrationStoreProcessor
             if (!is_numeric($officeName)) {
                 $city = isset($processed['city']) ? $processed['city'] : '';
                 $officeId = DataMigrationHelper::getOfficeIdByNameAndCity($officeName, $city, $connection);
-                $processed['office_id'] = $officeId;
+                if ($officeId) {
+                    $processed['office_id'] = $officeId;
+                } else {
+                    //  办事处不存在时置空，不影响导入
+                    Yii::log("办事处不存在：{$officeName}（城市：{$city}），已置空", 'warning', 'DataMigration');
+                    $processed['office_id'] = 0;
+                }
             }
         } else {
             $processed['office_id'] = 0;
@@ -226,15 +234,33 @@ class DataMigrationStoreProcessor
         
         // 10. 城市名称转代码
         if (isset($processed['city'])) {
+            $originalCity = $processed['city'];
             if ($processed['city'] === '全国') {
                 $processed['city'] = '中国';
             }
             if (!preg_match('/^[A-Z]{2,3}$/', $processed['city'])) {
+                //  先尝试直接匹配城市
                 $cityCode = DataMigrationHelper::getCityCodeByName($processed['city'], $connection);
                 if ($cityCode) {
                     $processed['city'] = $cityCode;
                 } else {
-                    throw new Exception('城市不存在：' . $processed['city']);
+                    //  如果是"XXX办事处"格式，尝试提取城市名称
+                    $cityName = preg_replace('/办事处$/', '', $processed['city']);
+                    if ($cityName !== $processed['city']) {
+                        $cityCode = DataMigrationHelper::getCityCodeByName($cityName, $connection);
+                        if ($cityCode) {
+                            Yii::log("城市识别：'{$originalCity}' -> '{$cityName}' ({$cityCode})", 'info', 'DataMigration');
+                            $processed['city'] = $cityCode;
+                        } else {
+                            //  城市不存在时置空，不抛异常
+                            Yii::log("城市不存在：{$originalCity}，已置空", 'warning', 'DataMigration');
+                            $processed['city'] = null;
+                        }
+                    } else {
+                        //  城市不存在时置空，不抛异常
+                        Yii::log("城市不存在：{$originalCity}，已置空", 'warning', 'DataMigration');
+                        $processed['city'] = null;
+                    }
                 }
             }
         }
@@ -396,7 +422,7 @@ class DataMigrationStoreProcessor
             'clue_id', 'clue_type', 'store_code', 'store_name', 'store_full_name', 'create_staff', 
             'yewudalei', 'cust_class_group', 'cust_class', 'city', 'office_id', 'address', 'district',
             'invoice_id', 'latitude', 'longitude', 'u_id', 'cust_person', 'cust_tel', 'cust_email', 
-            'cust_person_role', 'area', 'store_remark', 'store_status'  // ✅ store_status 确实存在于 sal_clue_store 表中
+            'cust_person_role', 'area', 'store_remark', 'store_status'  //  store_status 确实存在于 sal_clue_store 表中
         );
         $saveList = array();
         foreach ($saveKey as $key) {

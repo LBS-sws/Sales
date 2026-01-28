@@ -663,7 +663,7 @@ $('#migration_type').on('change', function() {
     $('.api-config-item').hide();
     $('.api-config-item[data-type="' + migrationType + '"]').show();
     
-    // ✅ 项目类型对所有迁移类型都适用（客户、门店、主合约、虚拟合约都需要按项目类型过滤）
+    //  项目类型对所有迁移类型都适用（客户、门店、主合约、虚拟合约都需要按项目类型过滤）
     $('#project-type-group').show();
     
     // 注意：城市和负责人列表使用基础API，不需要在切换数据类型时重新加载
@@ -1069,7 +1069,7 @@ $(function() {
     $('.api-config-item').hide();
     $('.api-config-item[data-type="' + migrationType + '"]').show();
     
-    // ✅ 项目类型对所有迁移类型都适用（客户、门店、主合约、虚拟合约都需要按项目类型过滤）
+    //  项目类型对所有迁移类型都适用（客户、门店、主合约、虚拟合约都需要按项目类型过滤）
     $('#project-type-group').show();
     
     // 根据导出模式初始化选择器
@@ -1112,7 +1112,7 @@ $('#btn-fetch-data').on('click', function() {
     var officeCodeIds = $('#office_code_ids').val();
     var staffIds = $('#staff_ids').val();
     var searchKeyword = $('#search_keyword').val();
-    var projectType = $('#project_type').val(); // ✅ 获取项目类型
+    var projectType = $('#project_type').val(); //  获取项目类型
     
     var typeNames = {
         'client': '客户',
@@ -1139,7 +1139,7 @@ $('#btn-fetch-data').on('click', function() {
         page_size: 10000
     };
     
-    // ✅ 所有迁移类型都传递 type 参数（客户、门店、主合约、虚拟合约）
+    //  所有迁移类型都传递 type 参数（客户、门店、主合约、虚拟合约）
     if (projectType) {
         filterParams.type = projectType;
     }
@@ -1171,7 +1171,7 @@ $('#btn-fetch-data').on('click', function() {
             console.log('响应数据:', response);
             
             if (response.status == 1) {
-                // ✅ 添加安全检查
+                //  添加安全检查
                 if (response.data && response.data.log_id) {
                 currentLogId = response.data.log_id;
                 $('#stats-panel').show();
@@ -1308,7 +1308,7 @@ $('#btn-save-config').on('click', function() {
     // 先清理可能残留的backdrop
     cleanupModalBackdrop();
     saveConfig();
-    showMessage('✅ 配置已保存！<br><br>下次打开页面时将自动加载这些配置。', 'success');
+    showMessage(' 配置已保存！<br><br>下次打开页面时将自动加载这些配置。', 'success');
 });
 
 // 重置
@@ -1407,7 +1407,7 @@ $('#btn-fix-ui').on('click', function() {
     });
     
     console.log('界面修复完成');
-    showMessage('✅ 界面已修复！<br><br>已清理模态框遮罩层<br>已恢复所有按钮状态<br><br>如果问题仍然存在，请刷新页面。', 'success');
+    showMessage(' 界面已修复！<br><br>已清理模态框遮罩层<br>已恢复所有按钮状态<br><br>如果问题仍然存在，请刷新页面。', 'success');
 });
 
 // 添加键盘快捷键：Ctrl+Shift+R 修复界面
@@ -1777,7 +1777,7 @@ function saveConfig() {
         api_token: $('#api_token').val(),
         migration_type: $('#migration_type').val(),
         export_mode: $('#export_mode').val(),
-        project_type: $('#project_type').val(), // ✅ 改为 project_type
+        project_type: $('#project_type').val(), //  改为 project_type
         office_code_ids: $('#office_code_ids').val(),
         staff_ids: $('#staff_ids').val(),
         search_keyword: $('#search_keyword').val(),
@@ -1832,7 +1832,7 @@ function loadConfig() {
             $('#api_token').val(config.api_token || '');
             $('#migration_type').val(config.migration_type || 'client');
             $('#export_mode').val(config.export_mode || 'city');
-            $('#project_type').val(config.project_type || ''); // ✅ 改为 project_type
+            $('#project_type').val(config.project_type || ''); //  改为 project_type
             $('#office_code_ids').val(config.office_code_ids || '');
             $('#staff_ids').val(config.staff_ids || '');
             $('#search_keyword').val(config.search_keyword || '');
@@ -2256,9 +2256,9 @@ var batchImportState = {
 function startBatchImportByCity() {
     var migrationType = $('#migration_type').val();
     var exportMode = $('#export_mode').val();
-    var projectType = $('#project_type').val(); // ✅ 项目类型（1=KA, 2=地推）
+    var projectType = $('#project_type').val(); //  项目类型（1=KA, 2=地推）
     
-    // ✅ 验证：必须选择项目类型或城市
+    //  验证：必须选择项目类型或城市
     if (exportMode === 'type') {
         // 按项目类型导出：必须选择项目类型
         if (!projectType) {
@@ -2298,7 +2298,7 @@ function startBatchImportByCity() {
         }
     });
     } else if (projectType) {
-        // ✅ 全量导出模式，不需要城市列表
+        //  全量导出模式，不需要城市列表
         var typeText = projectType === '1' ? 'KA' : '地推';
         cityNames.push({ id: 'all', name: '全部' + typeText + '项目' });
     } else {
@@ -2306,7 +2306,7 @@ function startBatchImportByCity() {
         return;
     }
     
-    // ✅ 根据是否全量导出，显示不同的确认消息
+    //  根据是否全量导出，显示不同的确认消息
     var confirmMessage = '';
     if (cityIds.length > 0) {
         confirmMessage = '确定要批量导入 ' + cityIds.length + ' 个城市的数据吗？<br><br>将逐个城市执行：获取数据 → 导入数据<br><br>注意：此过程可能需要较长时间，请耐心等待。';
@@ -2432,10 +2432,10 @@ function processCitiesBatch(cities, index, migrationType, apiUrl, projectType) {
 function processSingleCity(city, migrationType, apiUrl, projectType, callback) {
     var apiToken = $('#api_token').val();
     
-    // ✅ 根据城市ID判断是全量导出还是单城市导出
+    //  根据城市ID判断是全量导出还是单城市导出
     var isFullExport = (city.id === 'all');
     
-    // ✅ 全量导出使用分页，单城市导出一次性拉取
+    //  全量导出使用分页，单城市导出一次性拉取
     // 注意：当前是内存分页，增大分页大小可以减少总页数，提高效率
     var pageSize = isFullExport ? 2000 : 10000;
     
@@ -2447,12 +2447,12 @@ function processSingleCity(city, migrationType, apiUrl, projectType, callback) {
         page_size: pageSize
     };
     
-    // ✅ 所有迁移类型都传递 type 参数
+    //  所有迁移类型都传递 type 参数
     if (projectType) {
         baseFilterParams.type = projectType;
     }
     
-    // ✅ 如果是全量导出，使用分页处理
+    //  如果是全量导出，使用分页处理
     if (isFullExport) {
         processCityWithPagination(city, migrationType, apiUrl, apiToken, baseFilterParams, callback);
     } else {
@@ -2762,9 +2762,9 @@ $('#btn-create-async-task').on('click', function() {
     
     var migrationType = $('#migration_type').val();
     var exportMode = $('#export_mode').val();
-    var projectType = $('#project_type').val(); // ✅ 项目类型（1=KA, 2=地推）
+    var projectType = $('#project_type').val(); //  项目类型（1=KA, 2=地推）
     
-    // ✅ 验证：必须选择项目类型或城市
+    //  验证：必须选择项目类型或城市
     if (exportMode === 'type') {
         // 按项目类型导出：必须选择项目类型
         if (!projectType) {
@@ -2793,7 +2793,7 @@ $('#btn-create-async-task').on('click', function() {
     var cityIds = officeCodeIds ? officeCodeIds.split(',').map(function(id) { return parseInt(id.trim()); }) : [];
     var btnAsync = $(this);
     
-    // ✅ 根据是否选择城市，显示不同的确认消息
+    //  根据是否选择城市，显示不同的确认消息
     var confirmMessage = '';
     if (projectType && cityIds.length === 0) {
         var typeText = projectType === '1' ? 'KA' : '地推';
@@ -2805,7 +2805,7 @@ $('#btn-create-async-task').on('click', function() {
     showConfirm(confirmMessage, function() {
         var apiToken = $('#api_token').val();
         
-        // ✅ 全量导出使用较小的分页大小（2000条/页），单城市导出使用较大的分页大小（10000条/页）
+        //  全量导出使用较小的分页大小（2000条/页），单城市导出使用较大的分页大小（10000条/页）
         // 注意：当前是内存分页，增大分页大小可以减少总页数，提高效率
         var isFullExport = (projectType && cityIds.length === 0);
         var pageSize = isFullExport ? 2000 : 10000;
@@ -2819,7 +2819,7 @@ $('#btn-create-async-task').on('click', function() {
             page_size: pageSize
         };
         
-        // ✅ 所有迁移类型都传递 type 参数
+        //  所有迁移类型都传递 type 参数
         if (projectType) {
             filterParams.type = projectType;
         }
@@ -2854,7 +2854,7 @@ $('#btn-create-async-task').on('click', function() {
                 if (response.status == 1) {
                     // 稍微延时，确保之前的遮罩完全清除后再显示新消息
                     setTimeout(function() {
-                        showMessage('✅ 任务创建成功！<br><br>📋 任务编号：' + response.data.task_code + '<br>🏙️ 总城市数：' + response.data.total_cities + '<br><br>💡 任务将在后台自动处理，您可以关闭页面<br>📊 稍后可在"任务列表"中查看进度', 'success');
+                        showMessage(' 任务创建成功！<br><br>📋 任务编号：' + response.data.task_code + '<br>🏙️ 总城市数：' + response.data.total_cities + '<br><br>💡 任务将在后台自动处理，您可以关闭页面<br>📊 稍后可在"任务列表"中查看进度', 'success');
                         
                         // 记录当前类型下已请求过的城市ID
                         if (officeCodeIds && requestedData[migrationType]) {

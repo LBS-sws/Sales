@@ -410,7 +410,7 @@ class DataMigrationHelper
         $showCityValue = isset($currentShowCity['show_city']) ? $currentShowCity['show_city'] : '';
         $companyName = isset($currentShowCity['name']) ? $currentShowCity['name'] : '';
         
-        // ✅ 解析现有城市列表（过滤空值）
+        //  解析现有城市列表（过滤空值）
         $existingCities = !empty($showCityValue) ? explode(',', $showCityValue) : array();
         $existingCities = array_filter($existingCities, function($city) {
             return !empty(trim($city)); // 过滤空字符串
@@ -421,7 +421,7 @@ class DataMigrationHelper
             return; // 已存在，无需添加
         }
         
-        // ✅ 追加新代码（在原有基础上添加，不覆盖）
+        //  追加新代码（在原有基础上添加，不覆盖）
         $existingCities[] = $officeCode;
         $newShowCity = implode(',', $existingCities);
         
@@ -490,7 +490,7 @@ class DataMigrationHelper
             ->where('name=:name', array(':name' => $name))
             ->queryRow();
         
-        // ✅ 如果直接查询失败，尝试使用映射表转换后再查询
+        //  如果直接查询失败，尝试使用映射表转换后再查询
         if (!$row && isset(self::$serviceNameMapping[$name])) {
             $mappedName = self::$serviceNameMapping[$name];
             Yii::log("服务项目名称映射：'{$name}' => '{$mappedName}'", 'info', 'DataMigration');
@@ -865,7 +865,7 @@ class DataMigrationHelper
             $connection = Yii::app()->db;
         }
         
-        // ✅ 修复：根据虚拟合约状态计算门店状态（参考 ClueVirProModel::getStoreStatusByStoreID）
+        //  修复：根据虚拟合约状态计算门店状态（参考 ClueVirProModel::getStoreStatusByStoreID）
         // 查询该门店的所有虚拟合约状态（只查询有效状态：10=待生效, 30=生效中, 40=已暂停, 50=已终止）
         $statusRow = $connection->createCommand()
             ->select('MIN(vir_status) as min_status')
@@ -1063,13 +1063,13 @@ class DataMigrationHelper
                 $data = CGetName::getSettleTypeList();
                 break;
             case 'pay_week':
-                $data = CGetName::getPayWeekList();
+                $data = CGetName::getPayWeekLists();  
                 break;
             case 'receivable_day':
                 $data = CGetName::getReceivableDayList();
                 break;
             case 'pay_type':
-                $data = CGetName::getPayTypeList();
+                $data = CGetName::getPayTypeLists();
                 break;
             default:
                 Yii::log("未知的枚举类型: {$type}", 'warning', 'DataMigration');

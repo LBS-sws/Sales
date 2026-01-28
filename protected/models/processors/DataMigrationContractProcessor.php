@@ -1,6 +1,6 @@
 <?php
 
-// ✅ 导入依赖的类
+//  导入依赖的类
 Yii::import('application.models.DataMigrationHelper');
 
 /**
@@ -57,7 +57,7 @@ class DataMigrationContractProcessor
             '剩余金额' => 'surplus_amt',
             '终止或暂停日期' => 'stop_date',
             '派单系统合约id' => 'u_id',
-            '主体公司办公室代码' => 'lbs_main_office',  // ✅ 新增
+            '主体公司办公室代码' => 'lbs_main_office',  //  新增
         );
         
         foreach ($fieldMap as $chineseKey => $englishKey) {
@@ -83,10 +83,10 @@ class DataMigrationContractProcessor
         if (isset($processed['lbs_main']) && !empty($processed['lbs_main'])) {
             $lbsMainValue = $processed['lbs_main'];
             if (!is_numeric($lbsMainValue)) {
-                // ✅ 优先：使用新字段 lbs_main_office（主体公司办公室代码）
+                //  优先：使用新字段 lbs_main_office（主体公司办公室代码）
                 if (isset($processed['lbs_main_office']) && !empty($processed['lbs_main_office'])) {
                     $paidanEntityInfo = array(
-                        'office_code' => $processed['lbs_main_office'],  // ✅ 新字段
+                        'office_code' => $processed['lbs_main_office'],  //  新字段
                         'entity_code' => $processed['lbs_main'],
                     );
                     $lbsMainId = DataMigrationHelper::getLbsMainFromPaidanData($paidanEntityInfo, $connection);
@@ -119,13 +119,15 @@ class DataMigrationContractProcessor
             if ($empId) {
                 $processed['sales_id'] = $empId;
             } else {
-                throw new Exception('销售员工编号不存在：' . $empCode);
+                //  销售员工不存在时跳过，不抛异常
+                Yii::log("销售员工编号不存在：{$empCode}，已跳过此字段", 'warning', 'DataMigration');
+                // 注意：不设置 sales_id，后续会使用客户的 rec_employee_id 作为默认值
             }
         }
         
         // 5. 处理服务项目（可能是逗号分隔的多个）
         if (isset($processed['busine_name'])) {
-            // ✅ 统一替换中文逗号为英文逗号
+            //  统一替换中文逗号为英文逗号
             $processed['busine_name'] = str_replace('，', ',', $processed['busine_name']);
             
             $busineNames = explode(',', $processed['busine_name']);
@@ -134,7 +136,7 @@ class DataMigrationContractProcessor
             foreach ($busineNames as $name) {
                 $name = trim($name);
                 if (!empty($name)) {
-                    // ✅ 统一转换英文括号为中文括号（兼容处理）
+                    //  统一转换英文括号为中文括号（兼容处理）
                     $name = str_replace('(', '（', $name);
                     $name = str_replace(')', '）', $name);
                     
@@ -159,7 +161,7 @@ class DataMigrationContractProcessor
             }
         }
         
-        // 7. 日期处理
+        // 7. 日期处理（ 容错处理：日期为空时允许为null）
         $dateFields = array('sign_date', 'cont_start_dt', 'cont_end_dt', 'stop_date');
         foreach ($dateFields as $field) {
             if (isset($processed[$field]) && $processed[$field] !== '') {
@@ -167,6 +169,8 @@ class DataMigrationContractProcessor
                 if ($timestamp) {
                     $processed[$field] = date('Y-m-d', $timestamp);
                 } else {
+                    // 日期格式错误，记录警告并置空
+                    Yii::log("日期字段 {$field} 格式错误：{$processed[$field]}，已置空", 'warning', 'DataMigration');
                     $processed[$field] = null;
                 }
             } else {
@@ -209,7 +213,7 @@ class DataMigrationContractProcessor
         if (isset($processed['pay_type']) && !empty($processed['pay_type'])) {
             $payType = $processed['pay_type'];
             if (!is_numeric($payType)) {
-                $list = CGetName::getPayTypeList();
+                $list = CGetName::getPayTypeLists();
                 $key = array_search($payType, $list);
                 if ($key !== false) {
                     $processed['pay_type'] = $key;
@@ -224,7 +228,7 @@ class DataMigrationContractProcessor
         if (isset($processed['pay_week']) && !empty($processed['pay_week'])) {
             $payWeek = $processed['pay_week'];
             if (!is_numeric($payWeek)) {
-                $list = CGetName::getPayWeekList();
+                $list = CGetName::getPayWeekLists();
                 $key = array_search($payWeek, $list);
                 if ($key !== false) {
                     $processed['pay_week'] = $key;
@@ -342,7 +346,7 @@ class DataMigrationContractProcessor
      */
     public static function insert($data, $connection, $username, $reportId)
     {
-        // 1. 查找客户（优先使用缓存）✅
+        // 1. 查找客户（优先使用缓存）
         $clueRow = DataMigrationForm::getCachedClue($data['clue_code'], $connection);
         
         if (!$clueRow) {

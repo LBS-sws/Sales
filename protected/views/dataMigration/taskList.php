@@ -625,13 +625,13 @@ window.viewTaskDetail = function(taskId, page) {
         success: function(response) {
             if (response.status == 1) {
                 totalTaskPages = response.total_pages || 1;
-                // ✅ 修复：从 response.data.details 获取城市列表
+                //  修复：从 response.data.details 获取城市列表
                 var details = (response.data && Array.isArray(response.data.details)) ? response.data.details : [];
                 var failedRecords = response.failed_records || [];
                 var totalFailed = response.total_failed || 0;
                 var currentPage = response.current_page || 1;
                 var totalPages = response.total_pages || 1;
-                // ✅ 任务信息从 response.data 获取
+                //  任务信息从 response.data 获取
                 var taskInfo = response.data || null;
                 
                 renderTaskDetail(details, failedRecords, totalFailed, currentPage, totalPages, taskInfo);
@@ -647,7 +647,7 @@ window.viewTaskDetail = function(taskId, page) {
 
 // 渲染任务详情
 function renderTaskDetail(details, failedRecords, totalFailed, currentPage, totalPages, taskInfo) {
-    // ✅ 安全检查：确保 details 是数组
+    //  安全检查：确保 details 是数组
     if (!Array.isArray(details)) {
         console.error('renderTaskDetail: details 不是数组', details);
         details = [];
