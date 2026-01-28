@@ -243,10 +243,19 @@ class TimerCommand extends CConsoleCommand {
 
     //CRM合约自动续约
 	public function actionRenewal(){
-        // 【临时关闭】2026-01-19 因为 fre_month 数据问题，临时关闭自动续约功能
-        return false;
-
         $suffix = Yii::app()->params['envSuffix'];
+        $nowTime = date("Y-m-d H:i:s");        // 初始化
+        $logFile = dirname(__FILE__).'/../../logs/auto_renewal_'.date("Ym").'.log';
+        $csvFile = dirname(__FILE__).'/../../logs/auto_renewal_'.date("YmdHis").'.csv';
+        $logDir = dirname($logFile);
+        if(!is_dir($logDir)){
+            mkdir($logDir, 0777, true);
+        }
+        // 初始化CSV数据数组
+        $csvData = array();
+        
+        $this->writeRenewalLog($logFile, "\n========== 自动续约开始: {$nowTime} ==========");
+        
         $setDay = Yii::app()->db->createCommand()->select("set_name")->from("sales{$suffix}.sal_set_menu")
             ->where("set_type='computeRenewal'")->order("id desc")->queryRow();
         $pro_remark = "CRM系统自动续约";
@@ -254,18 +263,28 @@ class TimerCommand extends CConsoleCommand {
             $setDay = intval($setDay["set_name"]);
             $setDay = is_numeric($setDay)?$setDay:0;
             $rDate = date("Y-m-d",strtotime("+{$setDay} days"));
+            $this->writeRenewalLog($logFile, "配置提前天数: {$setDay} 天");
+            $this->writeRenewalLog($logFile, "续约截止日期: {$rDate} (合约结束日期 <= 该日期的将被续约)");
+            
+            // 只续约正常状态(10,30)的合约，排除暂停(40)和终止(50)等其他状态
+            // 即使is_renewal='Y'，如果是终止状态也不续约
             $virRows = Yii::app()->db->createCommand()->select("*")->from("sales{$suffix}.sal_contract_virtual")
                 ->where("is_renewal='Y' and vir_status in (10,30) and DATE_FORMAT(cont_end_dt,'%Y-%m-%d')<='{$rDate}'")
                 ->queryAll();
+            
+            $this->writeRenewalLog($logFile, "查询到符合条件的虚拟合约数量: ".count($virRows));
+            
             if($virRows){
                 $virIDs=array();
                 $contIDs=array();
                 $renewalList=array();
+                $renewalCount = 0;
                 foreach ($virRows as $key=>$virRow){
                     $boolRow = Yii::app()->db->createCommand()->select("id")->from("sales{$suffix}.sal_contpro_virtual")
                         ->where("vir_id=:id and pro_status>=1 and pro_status<30",array(":id"=>$virRow["id"]))
                         ->queryRow();
                     if($boolRow){//存在变更中的操作
+                        $this->writeRenewalLog($logFile, "  跳过虚拟合约ID: {$virRow['id']} (存在进行中的变更操作)");
                         unset($virRows[$key]);
                         continue;
                     }
@@ -287,8 +306,28 @@ class TimerCommand extends CConsoleCommand {
                     $proVirRow["pro_change"]=empty($virRow["year_amt"])?0:$virRow["year_amt"];
                     $proVirRow["sign_type"]=2;//续约
                     $proVirRow["effect_date"]=$proVirRow["pro_date"];
-                    $proVirRow["cont_start_dt"]=date("Y-m-01",strtotime($proVirRow['pro_date']));
-                    $proVirRow["cont_end_dt"]=date("Y-m-t",strtotime($proVirRow['cont_start_dt']."+1 year -1 days"));
+                    $proVirRow["is_auto_renewal"]=1;//标识为自动续约
+                    // 续约开始日期 = 原合约结束日期 + 1天，续约结束日期 = 续约开始日期 + 1年 - 1天
+                    $proVirRow["cont_start_dt"]=$proVirRow["pro_date"];
+                    $proVirRow["cont_end_dt"]=date("Y-m-d",strtotime($proVirRow['cont_start_dt']."+1 year -1 days"));
+                    
+                    $this->writeRenewalLog($logFile, "  虚拟合约ID: {$virRow['id']}, 原结束日期: {$virRow['cont_end_dt']}, 新开始: {$proVirRow['cont_start_dt']}, 新结束: {$proVirRow['cont_end_dt']}, 金额: {$virRow['year_amt']}");
+                    $csvData[] = array(
+                        'type' => '虚拟合约',
+                        'cont_id' => $virRow["cont_id"],
+                        'vir_id' => $virRow["id"],
+                        'company_name' => isset($virRow["company_name"]) ? $virRow["company_name"] : '',
+                        'product_name' => isset($virRow["product_name"]) ? $virRow["product_name"] : '',
+                        'old_start_dt' => $virRow["cont_start_dt"],
+                        'old_end_dt' => $virRow["cont_end_dt"],
+                        'new_start_dt' => $proVirRow["cont_start_dt"],
+                        'new_end_dt' => $proVirRow["cont_end_dt"],
+                        'year_amt' => $virRow["year_amt"],
+                        'month_amt' => isset($virRow["month_amt"]) ? $virRow["month_amt"] : '',
+                        'vir_status' => $virRow["vir_status"],
+                        'renewal_time' => $nowTime
+                    );
+                    
                     if($renewalList[$virRow["cont_id"]]['maxDate']<$proVirRow["cont_end_dt"]){
                         $renewalList[$virRow["cont_id"]]['minDate']=$proVirRow["cont_start_dt"];
                         $renewalList[$virRow["cont_id"]]['maxDate']=$proVirRow["cont_end_dt"];
@@ -318,10 +357,32 @@ class TimerCommand extends CConsoleCommand {
                             $proRow["cont_status"]=30;
                             $proRow["pro_change"]=empty($proRow["total_amt"])?0:$proRow["total_amt"];
                             $proRow["sign_type"]=2;//续约
+                            $proRow["is_auto_renewal"]=1;//标识为自动续约
                             $proRow["cont_start_dt"]=$renewalList[$cont_id]["minDate"];//
                             $proRow["cont_end_dt"]=$renewalList[$cont_id]["maxDate"];//
+                            
+                            $this->writeRenewalLog($logFile, "\n主合约ID: {$cont_id}, 客户: {$contRow['cust_name']}, 原结束: {$contRow['cont_end_dt']}, 新开始: {$proRow['cont_start_dt']}, 新结束: {$proRow['cont_end_dt']}");
+                            
+                            // 收集主合约CSV数据
+                            $csvData[] = array(
+                                'type' => '主合约',
+                                'cont_id' => $cont_id,
+                                'vir_id' => '',
+                                'company_name' => $contRow["cust_name"],
+                                'product_name' => '主合约汇总',
+                                'old_start_dt' => $contRow["cont_start_dt"],
+                                'old_end_dt' => $contRow["cont_end_dt"],
+                                'new_start_dt' => $proRow["cont_start_dt"],
+                                'new_end_dt' => $proRow["cont_end_dt"],
+                                'year_amt' => isset($contRow["total_amt"]) ? $contRow["total_amt"] : '',
+                                'month_amt' => '',
+                                'vir_status' => $contRow["cont_status"],
+                                'renewal_time' => $nowTime
+                            );
+                            
                             Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contpro",$proRow);
                             $proRow["id"] = Yii::app()->db->getLastInsertID();
+                            $renewalCount++;
                             Yii::app()->db->createCommand()->insert("sales{$suffix}.sal_contract_history",array(
                                 "table_type"=>5,
                                 "history_type"=>2,
@@ -388,11 +449,32 @@ class TimerCommand extends CConsoleCommand {
                 }
 
                 //发送续约消息给派单系统
+                $this->writeRenewalLog($logFile, "\n开始发送续约消息到派单系统...");
                 $uVirModel = new CurlNotesByVirPro();
                 $uVirModel->pro_type="C";
                 $virIDs = implode(",",$virIDs);
                 $uVirModel->sendAllVirByIDsAndUpdate($virIDs);
+                $this->writeRenewalLog($logFile, "派单系统消息发送完成");
+                
+                // 生成CSV文件
+                if(!empty($csvData)){
+                    $this->generateRenewalCSV($csvFile, $csvData);
+                    $this->writeRenewalLog($logFile, "\nCSV报表已生成: ".$csvFile);
+                    $this->writeRenewalLog($logFile, "CSV记录数: ".count($csvData)." 条");
+                }
+                
+                $this->writeRenewalLog($logFile, "\n========== 自动续约完成 ==========");
+                $this->writeRenewalLog($logFile, "实际续约主合约数量: {$renewalCount}");
+                $this->writeRenewalLog($logFile, "涉及虚拟合约ID: ".$virIDs);
+                $this->writeRenewalLog($logFile, "结束时间: ".date("Y-m-d H:i:s"));
+                $this->writeRenewalLog($logFile, "========================================\n");
+            } else {
+                $this->writeRenewalLog($logFile, "没有符合条件的合约需要续约");
+                $this->writeRenewalLog($logFile, "========================================\n");
             }
+        } else {
+            $this->writeRenewalLog($logFile, "未找到续约配置(computeRenewal)或配置值为0");
+            $this->writeRenewalLog($logFile, "========================================\n");
         }
     }
 
@@ -672,6 +754,60 @@ class TimerCommand extends CConsoleCommand {
                 $shiftList[$row["city"]][$staff_id][]=$row;
             }
         }
+    }
+    
+    //写入续约日志到文件
+    private function writeRenewalLog($logFile, $message, $echoOutput = true){
+        $logMessage = $message."\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        if($echoOutput){
+            echo $logMessage;
+        }
+    }
+    
+    //生成续约CSV报表
+    private function generateRenewalCSV($csvFile, $csvData){
+        $fp = fopen($csvFile, 'w');
+        fprintf($fp, chr(0xEF).chr(0xBB).chr(0xBF));
+        // CSV表头
+        $headers = array(
+            '类型',
+            '主合约ID',
+            '虚拟合约ID',
+            '客户名称',
+            '产品名称',
+            '原开始日期',
+            '原结束日期',
+            '新开始日期',
+            '新结束日期',
+            '年度金额',
+            '月度金额',
+            '状态',
+            '续约时间'
+        );
+        fputcsv($fp, $headers);
+        
+        // 写入数据行
+        foreach($csvData as $row){
+            $dataRow = array(
+                $row['type'],
+                $row['cont_id'],
+                $row['vir_id'],
+                $row['company_name'],
+                $row['product_name'],
+                $row['old_start_dt'],
+                $row['old_end_dt'],
+                $row['new_start_dt'],
+                $row['new_end_dt'],
+                $row['year_amt'],
+                $row['month_amt'],
+                $row['vir_status'],
+                $row['renewal_time']
+            );
+            fputcsv($fp, $dataRow);
+        }
+        
+        fclose($fp);
     }
 }
 ?>
